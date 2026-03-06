@@ -57,3 +57,5 @@ tests/
 relay/
 
 *.html
+
+.claude

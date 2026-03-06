@@ -65,6 +65,13 @@ def _load_integration(value: str) -> dict:
         raise SystemExit(1)
 
 
+def _print_next(suggestions: list):
+    """Print Next: suggestions block."""
+    console.print("\n[dim]Next:[/dim]")
+    for cmd, desc in suggestions:
+        console.print(f"  [bold]{cmd}[/bold]  {desc}")
+
+
 @click.command("test")
 @click.option(
     "--test-category", "-t",
@@ -101,6 +108,23 @@ def _load_integration(value: str) -> dict:
          "Same shape as 'hb init --endpoint'. Overrides the project's default integration."
 )
 @click.option(
+    "--category",
+    default=None,
+    help="Shorthand alias for --test-category (e.g. humanbound/behavioral/qa)"
+)
+@click.option(
+    "--deep",
+    is_flag=True,
+    default=False,
+    help="Shortcut for --testing-level system (deeper analysis)"
+)
+@click.option(
+    "--full",
+    is_flag=True,
+    default=False,
+    help="Shortcut for --testing-level acceptance (full analysis)"
+)
+@click.option(
     "--no-auto-start",
     is_flag=True,
     default=False,
@@ -118,6 +142,7 @@ def _load_integration(value: str) -> dict:
 )
 def test_command(test_category: str, testing_level: str, name: str, description: str,
                  lang: str, provider_id: str, endpoint: str,
+                 category: str, deep: bool, full: bool,
                  no_auto_start: bool,
                  wait: bool, fail_on: str):
     """Run security tests on the current project.
@@ -130,9 +155,20 @@ def test_command(test_category: str, testing_level: str, name: str, description:
       hb test                                     # Uses project's default integration
       hb test -e ./bot-config.json                # Override with config file
       hb test -t humanbound/adversarial/owasp_single_turn
+      hb test --deep                              # System-level test
+      hb test --full                              # Acceptance-level test
+      hb test --category humanbound/behavioral/qa # Shorthand
       hb test --wait --fail-on=high               # CI/CD mode
       hb test --no-auto-start                     # Manual mode (create only)
     """
+    # Resolve shorthand flags — explicit --testing-level / --test-category win
+    if category and test_category == DEFAULT_TEST_CATEGORY:
+        test_category = category
+    if deep and testing_level == "unit":
+        testing_level = "system"
+    if full and testing_level == "unit":
+        testing_level = "acceptance"
+
     client = HumanboundClient()
 
     if not client.is_authenticated():
@@ -239,7 +275,15 @@ def test_command(test_category: str, testing_level: str, name: str, description:
         stats = results.get("stats", {})
 
         # Display results
-        _display_results(experiment, results, stats)
+        _display_results(experiment, results, stats, client=client)
+
+        # Next suggestions
+        _print_next([
+            ("hb findings", "Detailed breakdown"),
+            ("hb test --deep", "Deeper analysis"),
+            ("hb posture", "View posture score"),
+            ("hb monitor", "Start continuous monitoring"),
+        ])
 
         # Check fail-on condition
         if fail_on:
@@ -300,8 +344,9 @@ def _wait_for_completion(client: HumanboundClient, experiment_id: str) -> str:
     return current_status
 
 
-def _display_results(experiment: dict, results: dict, stats: dict):
-    """Display experiment results."""
+def _display_results(experiment: dict, results: dict, stats: dict,
+                     client: HumanboundClient = None):
+    """Display experiment results with posture grade and findings summary."""
     status = experiment.get("status", "Unknown")
     status_color = {
         "Finished": "green",
@@ -309,12 +354,68 @@ def _display_results(experiment: dict, results: dict, stats: dict):
         "Failed": "red",
     }.get(status, "white")
 
+    # Build results panel content
+    panel_lines = [
+        f"[bold]Status:[/bold] [{status_color}]{status}[/{status_color}]\n",
+        f"[bold]Results:[/bold]",
+        f"  Total logs: {stats.get('total', 0)}",
+        f"  [green]Pass:[/green] {stats.get('pass', 0)}",
+        f"  [red]Fail:[/red] {stats.get('fail', 0)}",
+    ]
+
+    # Fetch posture grade and finding count if client is available
+    posture_grade = None
+    posture_score = None
+    finding_count = None
+    if client and client.project_id:
+        try:
+            posture = client.get(
+                f"projects/{client.project_id}/posture",
+                include_project=True,
+            )
+            posture_grade = posture.get("grade")
+            posture_score = posture.get("overall_score")
+        except Exception:
+            pass
+
+        try:
+            findings_resp = client.list_findings(
+                client.project_id, status="open", page=1, size=1,
+            )
+            # Paginated response: {"data": [...], "total": N, ...}
+            finding_count = findings_resp.get("total", 0) if isinstance(findings_resp, dict) else None
+        except Exception:
+            pass
+
+    if posture_grade is not None:
+        grade_color = {
+            "A": "green bold", "B": "green", "C": "yellow",
+            "D": "red", "F": "red bold",
+        }.get(posture_grade, "white")
+        score_str = f" ({posture_score:.0f}/100)" if posture_score is not None else ""
+        panel_lines.append("")
+        panel_lines.append(f"[bold]Posture Grade:[/bold] [{grade_color}]{posture_grade}{score_str}[/{grade_color}]")
+
+    if finding_count is not None:
+        panel_lines.append(f"[bold]Open Findings:[/bold] {finding_count}")
+
+    # Check for previous posture snapshot to show delta
+    if client and client.project_id and posture_grade:
+        try:
+            trends = client.get_posture_trends(client.project_id)
+            data_points = trends.get("data_points", []) if isinstance(trends, dict) else []
+            if len(data_points) >= 2:
+                prev = data_points[-2]
+                prev_grade = prev.get("grade", "")
+                prev_score = prev.get("score")
+                if prev_grade and prev_grade != posture_grade:
+                    prev_score_str = f" ({prev_score:.0f})" if prev_score is not None else ""
+                    panel_lines.append(f"[dim]Previously: {prev_grade}{prev_score_str}[/dim]")
+        except Exception:
+            pass
+
     console.print(Panel(
-        f"[bold]Status:[/bold] [{status_color}]{status}[/{status_color}]\n\n"
-        f"[bold]Results:[/bold]\n"
-        f"  Total logs: {stats.get('total', 0)}\n"
-        f"  [green]Pass:[/green] {stats.get('pass', 0)}\n"
-        f"  [red]Fail:[/red] {stats.get('fail', 0)}\n",
+        "\n".join(panel_lines),
         title="Experiment Complete",
         border_style=status_color
     ))

@@ -30,6 +30,10 @@ from .commands import (
     connectors,
     inventory,
     completion,
+    connect,
+    report,
+    monitor,
+    webhooks,
     mcp,
 )
 
@@ -52,31 +56,34 @@ def get_client() -> HumanboundClient:
 def cli(ctx, base_url: str):
     """Humanbound CLI - AI agent security testing from the command line.
 
-    Use 'hb login' to authenticate, then create a project and run tests.
+    Use 'hb login' to authenticate, then connect your agent and run tests.
 
     \b
     Quick Start:
-      hb login                      # Authenticate
-      hb switch <id>              # Select organisation
-      hb init --name "Bot" --prompt ./prompt.txt  # Create project
-      hb test                       # Run security tests
-      hb status                     # Check progress
-      hb logs                       # Get results
+      hb login                                # Authenticate
+      hb connect --endpoint ./bot-config.json # Connect your agent
+      hb test                                 # Run security tests
+      hb status                               # Check progress
+      hb findings                             # View results
+      hb posture                              # View posture score
+      hb report                               # Share with team
+      hb monitor                              # Start continuous monitoring
 
     \b
-    Project Sources:
-      hb init --prompt ./prompt.txt   # From system prompt
-      hb init --endpoint ./config.json  # From live chatbot
-      hb init --repo ./agent-code     # From repository
-      hb init --openapi ./spec.yaml   # From OpenAPI spec
+    Platform Discovery:
+      hb connect --vendor microsoft           # Scan cloud for shadow AI
     """
     ctx.ensure_object(dict)
     ctx.obj["base_url"] = base_url
 
 
-# Register command groups
-cli.add_command(auth.auth_group)
-cli.add_command(orgs.orgs_group)
+# ---------------------------------------------------------------------------
+# Layer 1 — The 9 Verbs (top-level commands)
+# login, connect, test, status, findings, posture, logs, report, monitor
+# These are registered below as aliases or direct commands.
+# ---------------------------------------------------------------------------
+
+# Layer 2 — Noun groups (always available)
 cli.add_command(projects.projects_group)
 cli.add_command(experiments.experiments_group)
 cli.add_command(providers.providers_group)
@@ -84,25 +91,41 @@ cli.add_command(findings.findings_group)
 cli.add_command(api_keys.api_keys_group)
 cli.add_command(members.members_group)
 cli.add_command(campaigns.campaigns_group)
-cli.add_command(sentinel.sentinel_group)
-cli.add_command(discover.discover_command)
+cli.add_command(webhooks.webhooks_group)
 cli.add_command(connectors.connectors_group)
 cli.add_command(inventory.inventory_group)
+cli.add_command(auth.auth_group)
+cli.add_command(orgs.orgs_group)
 cli.add_command(completion.completion_command)
+cli.add_command(guardrails.guardrails_command)
+cli.add_command(docs.docs_command)
 
 # MCP server (optional — requires mcp SDK)
 if mcp is not None:
     cli.add_command(mcp.mcp_command)
 
-# Register top-level commands
-cli.add_command(init.init_project)
+# Layer 1 — Top-level verbs
+cli.add_command(connect.connect_command)
 cli.add_command(test.test_command)
-cli.add_command(logs.logs_command)
+cli.add_command(logs.logs_group)
 cli.add_command(posture.posture_command)
-cli.add_command(guardrails.guardrails_command)
-cli.add_command(docs.docs_command)
+cli.add_command(report.report_command)
+cli.add_command(monitor.monitor_command)
+
+# ---------------------------------------------------------------------------
+# DEPRECATED commands — kept for backward compatibility, remove after v2.0
+# Each prints a deprecation warning and delegates to the replacement.
+# ---------------------------------------------------------------------------
+# DEPRECATED: hb init → use hb connect --endpoint (remove after v2.0)
+cli.add_command(init.init_project)
+# DEPRECATED: hb discover → use hb connect --vendor (remove after v2.0)
+cli.add_command(discover.discover_command)
+# DEPRECATED: hb coverage → use hb posture --coverage (remove after v2.0)
 cli.add_command(coverage.coverage_command)
+# DEPRECATED: hb upload-logs → use hb logs upload (remove after v2.0)
 cli.add_command(upload_logs.upload_logs_command)
+# DEPRECATED: hb sentinel → use hb webhooks (remove after v2.0)
+cli.add_command(sentinel.sentinel_group)
 
 
 # Convenience aliases at top level

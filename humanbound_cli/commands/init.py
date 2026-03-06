@@ -1,9 +1,14 @@
-"""Project initialization commands — thin client for POST /scan."""
+"""Project initialization commands — thin client for POST /scan.
+
+DEPRECATED: 'hb init' is deprecated in favour of 'hb connect --endpoint'.
+This module is kept for backward compatibility. Remove after v2.0.
+"""
 
 import click
 import time
 import random
 import threading
+import warnings
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
@@ -18,6 +23,12 @@ from ..exceptions import NotAuthenticatedError, APIError, ServeError, TunnelErro
 SCAN_TIMEOUT = 180
 
 console = Console()
+
+# DEPRECATED: remove after v2.0 — replaced by 'hb connect --endpoint'
+_DEPRECATION_MSG = (
+    "[yellow]Warning:[/yellow] 'hb init' is deprecated. "
+    "Use [bold]hb connect --endpoint[/bold] instead."
+)
 
 # Phase headers shown during scan (based on source types)
 _SCAN_PHASES = {
@@ -77,6 +88,9 @@ _PLAYFUL_MESSAGES = [
 def init_project(name: str, prompt: str, endpoint: str, repo: str, openapi: str, serve: bool, description: str, yes: bool, timeout: int):
     """Initialize a new project with automatic scope extraction.
 
+    DEPRECATED: Use 'hb connect --endpoint' instead. This command will be
+    removed in a future version.
+
     Calls POST /scan with one or more sources, displays the extracted scope
     and risk profile, then creates the project.
 
@@ -113,6 +127,10 @@ def init_project(name: str, prompt: str, endpoint: str, repo: str, openapi: str,
     hb init -n "My Bot" --prompt ./system.txt --endpoint ./bot-config.json
     hb init -n "My Bot" --endpoint ./config.json -y
     """
+    # DEPRECATED: remove after v2.0
+    console.print(_DEPRECATION_MSG)
+    console.print()
+
     client = HumanboundClient()
 
     if not client.is_authenticated():

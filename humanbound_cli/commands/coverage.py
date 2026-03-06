@@ -1,4 +1,8 @@
-"""Coverage command for viewing test coverage."""
+"""Coverage command for viewing test coverage.
+
+DEPRECATED: 'hb coverage' is deprecated in favour of 'hb posture --coverage'.
+This module is kept for backward compatibility. Remove after v2.0.
+"""
 
 import json
 import click
@@ -11,6 +15,12 @@ from ..exceptions import NotAuthenticatedError, APIError
 
 console = Console()
 
+# DEPRECATED: remove after v2.0 — replaced by 'hb posture --coverage'
+_DEPRECATION_MSG = (
+    "[yellow]Warning:[/yellow] 'hb coverage' is deprecated. "
+    "Use [bold]hb posture --coverage[/bold] instead."
+)
+
 
 @click.command("coverage")
 @click.option("--project", "-p", help="Project ID (uses current if not specified)")
@@ -18,6 +28,9 @@ console = Console()
 @click.option("--json", "as_json", is_flag=True, help="Output as JSON")
 def coverage_command(project: str, gaps: bool, as_json: bool):
     """View test coverage for a project.
+
+    DEPRECATED: Use 'hb posture --coverage' instead. This command will be
+    removed in a future version.
 
     Shows how much of the attack surface has been tested, broken down
     by category and test family.
@@ -28,6 +41,10 @@ def coverage_command(project: str, gaps: bool, as_json: bool):
       hb coverage --gaps             # Show untested areas
       hb coverage --json             # JSON output
     """
+    # DEPRECATED: remove after v2.0
+    console.print(_DEPRECATION_MSG)
+    console.print()
+
     client = HumanboundClient()
 
     if not client.is_authenticated():

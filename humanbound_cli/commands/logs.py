@@ -14,7 +14,7 @@ console = Console()
 console_err = Console(stderr=True)
 
 
-@click.command("logs")
+@click.group("logs", invoke_without_command=True)
 @click.argument("experiment_id", required=False)
 @click.option(
     "--format", "-f", "output_format",
@@ -57,7 +57,8 @@ console_err = Console(stderr=True)
 @click.option(
     "--days", type=int, help="Last N days (shortcut for --from)"
 )
-def logs_command(experiment_id, output_format, output, verdict, page, size, fetch_all, last_n, test_category, from_date, until_date, days):
+@click.pass_context
+def logs_group(ctx, experiment_id, output_format, output, verdict, page, size, fetch_all, last_n, test_category, from_date, until_date, days):
     """Get logs from an experiment or across a project.
 
     If no experiment_id or scope flags are provided, uses the most recent experiment.
@@ -73,6 +74,9 @@ def logs_command(experiment_id, output_format, output, verdict, page, size, fetc
       hb logs --days 7 --format json -o week.json
       hb logs --from 2026-01-01 --until 2026-02-01 --format html -o jan.html
     """
+    if ctx.invoked_subcommand is not None:
+        return
+
     client = HumanboundClient()
 
     if not client.is_authenticated():
@@ -477,3 +481,102 @@ def _export_html(client: HumanboundClient, experiment_id: str, output: str):
     filename = output or f"experiment_{experiment_id[:8]}_report.html"
     Path(filename).write_text(report_html)
     console.print(f"[green]HTML report exported to:[/green] {filename}")
+
+
+# ---------------------------------------------------------------------------
+# Upload subcommand
+# ---------------------------------------------------------------------------
+
+@logs_group.command("upload")
+@click.argument("file", type=click.Path(exists=True))
+@click.option("--tag", help="Tag for the dataset (used to reference in test runs)")
+@click.option("--lang", help="Language of the conversations (e.g., english)")
+@click.option("--force", is_flag=True, help="Skip confirmation prompt")
+def upload_command(file: str, tag: str, lang: str, force: bool):
+    """Upload conversation logs for evaluation.
+
+    FILE: Path to a JSON file containing conversations.
+
+    \b
+    Expected file format:
+      [
+        {
+          "conversation": [
+            {"u": "user message", "a": "bot response"},
+            {"u": "follow up", "a": "bot reply"}
+          ],
+          "thread_id": "optional-id"
+        },
+        ...
+      ]
+
+    \b
+    Examples:
+      hb logs upload conversations.json
+      hb logs upload conversations.json --tag prod-v2
+      hb logs upload conversations.json --lang english
+    """
+    client = HumanboundClient()
+
+    if not client.is_authenticated():
+        console_err.print("[red]Not authenticated.[/red] Run 'hb login' first.")
+        raise SystemExit(1)
+
+    project_id = client.project_id
+    if not project_id:
+        console_err.print("[yellow]No project selected.[/yellow]")
+        console_err.print("Use 'hb projects use <id>' to select a project first.")
+        raise SystemExit(1)
+
+    # Read and parse file
+    file_path = Path(file)
+    try:
+        content = file_path.read_text()
+        conversations = json.loads(content)
+    except json.JSONDecodeError as e:
+        console_err.print(f"[red]Invalid JSON file:[/red] {e}")
+        raise SystemExit(1)
+
+    if not isinstance(conversations, list):
+        console_err.print("[red]File must contain a JSON array of conversations.[/red]")
+        raise SystemExit(1)
+
+    if not conversations:
+        console_err.print("[yellow]File contains no conversations.[/yellow]")
+        raise SystemExit(1)
+
+    # Show summary
+    console.print(f"  File: [bold]{file_path.name}[/bold]")
+    console.print(f"  Conversations: [bold]{len(conversations)}[/bold]")
+    if tag:
+        console.print(f"  Tag: [bold]{tag}[/bold]")
+    if lang:
+        console.print(f"  Language: [bold]{lang}[/bold]")
+
+    if not force:
+        from rich.prompt import Confirm
+        if not Confirm.ask(f"\nUpload {len(conversations)} conversations?"):
+            console.print("[dim]Cancelled.[/dim]")
+            return
+
+    try:
+        with console.status(f"Uploading {len(conversations)} conversations..."):
+            response = client.upload_conversations(project_id, conversations, tag=tag, lang=lang)
+
+        console.print(f"\n[green]Upload complete.[/green]")
+
+        dataset_id = response.get("dataset_id", response.get("id", ""))
+        if dataset_id:
+            console.print(f"  Dataset ID: [bold]{dataset_id}[/bold]")
+
+        test_category_val = response.get("test_category", "")
+        if test_category_val:
+            console.print(f"  Test category: [bold]{test_category_val}[/bold]")
+            console.print(f"\n[dim]Run evaluation with: hb test --category \"{test_category_val}\"[/dim]")
+
+    except NotAuthenticatedError:
+        console_err.print("[red]Not authenticated.[/red] Run 'hb login' first.")
+        raise SystemExit(1)
+    except APIError as e:
+        console_err.print(f"[red]Error:[/red] {e}")
+        raise SystemExit(1)

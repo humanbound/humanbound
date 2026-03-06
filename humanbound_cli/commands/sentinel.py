@@ -1,4 +1,8 @@
-"""Azure Sentinel integration commands."""
+"""Azure Sentinel integration commands.
+
+DEPRECATED: 'hb sentinel' is deprecated in favour of 'hb webhooks'.
+This module is kept for backward compatibility. Remove after v2.0.
+"""
 
 import json
 import os
@@ -22,6 +26,12 @@ from ..config import CONFIG_DIR
 from ..exceptions import NotAuthenticatedError, APIError
 
 console = Console()
+
+# DEPRECATED: remove after v2.0 — replaced by 'hb webhooks'
+_DEPRECATION_MSG = (
+    "[yellow]Warning:[/yellow] 'hb sentinel' is deprecated. "
+    "Use [bold]hb webhooks[/bold] instead."
+)
 
 SENTINEL_CONFIG_FILE = CONFIG_DIR / "sentinel.json"
 
@@ -136,6 +146,9 @@ def _require_sentinel_config() -> dict:
 def sentinel_group(ctx):
     """Azure Sentinel integration for security events.
 
+    DEPRECATED: Use 'hb webhooks' instead. This command group will be
+    removed in a future version.
+
     \b
     Deliver Humanbound security events to Azure Sentinel via a
     customer-deployed connector Azure Function.
@@ -147,6 +160,10 @@ def sentinel_group(ctx):
       3. hb sentinel test
       4. hb sentinel sync --since 2026-01-01
     """
+    # DEPRECATED: remove after v2.0
+    console.print(_DEPRECATION_MSG)
+    console.print()
+
     if ctx.invoked_subcommand is not None:
         return
 

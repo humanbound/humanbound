@@ -16,7 +16,9 @@ console = Console()
 @click.option("--project", "-p", help="Project ID (uses current if not specified)")
 @click.option("--json", "as_json", is_flag=True, help="Output as JSON")
 @click.option("--trends", is_flag=True, help="Show posture history over time")
-def posture_command(project: str, as_json: bool, trends: bool):
+@click.option("--org", is_flag=True, help="Show org-level posture (3 dimensions)")
+@click.option("--coverage", is_flag=True, help="Include test coverage breakdown")
+def posture_command(project: str, as_json: bool, trends: bool, org: bool, coverage: bool):
     """View security posture score for a project.
 
     The posture score is a composite metric (0-100) reflecting:
@@ -30,6 +32,8 @@ def posture_command(project: str, as_json: bool, trends: bool):
       hb posture                    # Show current project posture
       hb posture --project abc123   # Show specific project
       hb posture --trends           # Show posture history
+      hb posture --org              # Org-level posture (3 dimensions)
+      hb posture --coverage         # Include test coverage
       hb posture --json             # Output as JSON
     """
     client = HumanboundClient()
@@ -37,6 +41,32 @@ def posture_command(project: str, as_json: bool, trends: bool):
     if not client.is_authenticated():
         console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
         raise SystemExit(1)
+
+    # Org-level posture does not require a project
+    if org:
+        try:
+            org_id = client.organisation_id
+            if not org_id:
+                console.print("[yellow]No organisation selected.[/yellow]")
+                console.print("Use 'hb switch <id>' to select an organisation.")
+                raise SystemExit(1)
+
+            with console.status("Calculating organisation posture..."):
+                response = client.get(f"organisations/{org_id}/posture", include_project=False)
+
+            if as_json:
+                import json
+                print(json.dumps(response, indent=2, default=str))
+                return
+
+            _display_org_posture(response)
+            return
+        except NotAuthenticatedError:
+            console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
+            raise SystemExit(1)
+        except APIError as e:
+            console.print(f"[red]Error:[/red] {e}")
+            raise SystemExit(1)
 
     project_id = project or client.project_id
 
@@ -68,6 +98,16 @@ def posture_command(project: str, as_json: bool, trends: bool):
             return
 
         _display_posture(response)
+
+        if coverage:
+            try:
+                with console.status("Fetching coverage data..."):
+                    cov_response = client.get_coverage(project_id, include_gaps=True)
+                _display_coverage_section(cov_response)
+            except APIError:
+                console.print("[dim]Coverage data not available.[/dim]")
+
+        _print_next(org=False, has_coverage=coverage)
 
     except NotAuthenticatedError:
         console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
@@ -294,3 +334,134 @@ def _calculate_fallback_posture(client: HumanboundClient, project_id: str):
 
     except Exception as e:
         console.print(f"[red]Error calculating posture:[/red] {e}")
+
+
+def _display_org_posture(response: dict):
+    """Display org-level posture with 3 dimensions."""
+    score = response.get("score", 0)
+    grade = response.get("grade", _score_to_grade(score))
+
+    # Color based on score
+    if score >= 80:
+        score_color = "green"
+        emoji = "✓"
+    elif score >= 60:
+        score_color = "yellow"
+        emoji = "⚠"
+    else:
+        score_color = "red"
+        emoji = "✗"
+
+    # Main score panel
+    console.print(Panel(
+        f"[bold {score_color}]{emoji} {score}/100[/bold {score_color}]  [dim]Grade: {grade}[/dim]",
+        title="Organisation Posture",
+        border_style=score_color,
+        padding=(1, 4),
+    ))
+
+    # Dimension breakdown
+    dimensions = response.get("dimensions", {})
+    if dimensions:
+        console.print("\n[bold]Dimensions:[/bold]\n")
+
+        table = Table(show_header=True, header_style="bold")
+        table.add_column("Dimension", width=20)
+        table.add_column("Score", width=10, justify="right")
+        table.add_column("Bar", width=30)
+
+        dimension_labels = {
+            "agent_security": "Agent Security",
+            "shadow_ai": "Shadow AI",
+            "quality": "Quality",
+        }
+
+        for key, label in dimension_labels.items():
+            dim_data = dimensions.get(key, {})
+            dim_score = dim_data.get("score", 0) if isinstance(dim_data, dict) else dim_data
+            bar = _score_bar(dim_score)
+            color = "green" if dim_score >= 80 else ("yellow" if dim_score >= 60 else "red")
+            table.add_row(
+                label,
+                f"[{color}]{dim_score:.0f}[/{color}]",
+                bar,
+            )
+
+        console.print(table)
+
+    _print_next(org=True)
+
+
+def _display_coverage_section(response: dict):
+    """Display coverage as a section below posture."""
+    overall = response.get("overall_coverage", response.get("coverage_percentage", 0))
+
+    # Color based on coverage
+    if overall >= 80:
+        cov_color = "green"
+    elif overall >= 50:
+        cov_color = "yellow"
+    else:
+        cov_color = "red"
+
+    # Overall coverage bar
+    bar_width = 30
+    filled = int(overall / 100 * bar_width)
+    empty = bar_width - filled
+    bar = f"[{cov_color}]{'█' * filled}[/{cov_color}][dim]{'░' * empty}[/dim]"
+
+    console.print(f"\n[bold]Test Coverage:[/bold]  {bar}  [{cov_color}]{overall:.0f}%[/{cov_color}]")
+
+    # Category breakdown
+    categories = response.get("categories", response.get("by_category", []))
+    if categories:
+        table = Table(show_header=True, header_style="bold")
+        table.add_column("Category", width=25)
+        table.add_column("Tests", justify="right", width=8)
+        table.add_column("Pass Rate", justify="right", width=10)
+
+        for cat in categories:
+            name = cat.get("category", cat.get("name", ""))
+            total = cat.get("total", cat.get("tests_run", 0))
+            passed = cat.get("pass", cat.get("passed", 0))
+
+            if total > 0:
+                rate = (passed / total) * 100
+                rate_color = "green" if rate >= 80 else ("yellow" if rate >= 50 else "red")
+                rate_str = f"[{rate_color}]{rate:.0f}%[/{rate_color}]"
+            else:
+                rate_str = "[dim]-[/dim]"
+
+            table.add_row(name, str(total), rate_str)
+
+        console.print(table)
+
+    # Gaps
+    gap_list = response.get("gaps", response.get("untested", []))
+    if gap_list:
+        console.print(f"\n[yellow]Gaps ({len(gap_list)} untested):[/yellow]")
+        for gap in gap_list[:5]:
+            name = gap.get("category", gap.get("name", str(gap))) if isinstance(gap, dict) else str(gap)
+            console.print(f"  - {name}")
+        if len(gap_list) > 5:
+            console.print(f"  [dim]... and {len(gap_list) - 5} more[/dim]")
+
+
+def _print_next(org: bool = False, has_coverage: bool = False):
+    """Print contextual next-step suggestions."""
+    console.print()
+    suggestions = []
+    if org:
+        suggestions.append("hb posture -p <id>      View project-level posture")
+        suggestions.append("hb findings             Review open findings")
+        suggestions.append("hb report --org         Generate org posture report")
+    else:
+        if not has_coverage:
+            suggestions.append("hb posture --coverage   Include test coverage breakdown")
+        suggestions.append("hb posture --trends     View posture over time")
+        suggestions.append("hb posture --org        View org-level posture")
+        suggestions.append("hb test                 Run tests to improve posture")
+
+    console.print("[dim]Next:[/dim]")
+    for s in suggestions:
+        console.print(f"  [dim]{s}[/dim]")

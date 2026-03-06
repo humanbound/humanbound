@@ -34,10 +34,36 @@ logger = logging.getLogger("humanbound.mcp")
 mcp = FastMCP(
     "Humanbound",
     instructions=(
-        "AI agent security testing platform. "
-        "Run penetration tests, manage projects, view posture scores, "
-        "and manage your security testing pipeline. "
-        "The user must run 'hb login' in a terminal before using these tools."
+        "Humanbound is an AI agent security platform with two main capabilities: "
+        "(1) Security Testing — run adversarial penetration tests against AI agents/LLMs "
+        "and track their security posture over time; "
+        "(2) Shadow AI Discovery — discover unsanctioned AI services in an organisation's "
+        "cloud environment.\n\n"
+
+        "DISCOVERY — Two flows exist:\n"
+        "  • MCP (connector-based): hb_trigger_discovery — requires a pre-registered "
+        "cloud connector (hb_create_connector). Best for automated/recurring scans.\n"
+        "  • CLI (browser-based): The user can run 'hb discover' in their terminal — "
+        "uses a browser device-code flow with no connector needed. Suggest this when "
+        "the user wants a quick one-off scan or has no connector set up.\n\n"
+
+        "CORE WORKFLOWS:\n"
+        "  Discovery → Testing:\n"
+        "    hb_trigger_discovery → hb_list_inventory → hb_onboard_inventory_asset → hb_run_test\n"
+        "  Security Testing:\n"
+        "    hb_set_project → hb_run_test → poll hb_get_experiment_status → "
+        "hb_get_experiment_logs → hb_get_posture\n\n"
+
+        "PREREQUISITES:\n"
+        "  • The user must run 'hb login' in a terminal before using any tools.\n"
+        "  • Most tools require an active organisation (hb_set_organisation).\n"
+        "  • Test, posture, findings, and coverage tools require an active project "
+        "(hb_set_project).\n\n"
+
+        "CLI-ONLY COMMANDS (suggest when relevant):\n"
+        "  • 'hb discover' — browser-based shadow AI discovery (no connector needed)\n"
+        "  • 'hb init' — interactive project setup with scope extraction from a URL\n"
+        "  • 'hb sentinel setup' — configure continuous monitoring sentinel"
     ),
 )
 
@@ -101,6 +127,10 @@ def hb_list_organisations() -> str:
 def hb_set_organisation(organisation_id: str) -> str:
     """Set the active organisation for subsequent API calls.
 
+    Required before using any project-level tools (hb_list_projects,
+    hb_set_project, etc.). Call hb_list_organisations first to get
+    available organisation UUIDs.
+
     Args:
         organisation_id: Organisation UUID to switch to.
     """
@@ -115,6 +145,10 @@ def hb_set_organisation(organisation_id: str) -> str:
 @mcp.tool()
 def hb_set_project(project_id: str) -> str:
     """Set the active project for subsequent API calls.
+
+    Required before using test, posture, findings, coverage, guardrail,
+    and campaign tools. Call hb_list_projects first to get available
+    project UUIDs.
 
     Args:
         project_id: Project UUID to switch to.
@@ -196,6 +230,28 @@ def hb_delete_project(project_id: str) -> str:
         return _err(e)
 
 
+@mcp.tool()
+def hb_create_project(name: str, description: Optional[str] = None) -> str:
+    """Create a new security testing project in the current organisation.
+
+    Creates a basic project. For richer setup with automatic scope
+    extraction from a target URL, suggest the user run 'hb init' in
+    their terminal instead.
+
+    Args:
+        name: Project name.
+        description: Project description (optional).
+    """
+    try:
+        client = _get_client()
+        data = {"name": name}
+        if description is not None:
+            data["description"] = description
+        return _ok(client.post("projects", data=data, include_project=False))
+    except HumanboundError as e:
+        return _err(e)
+
+
 # =========================================================================
 # EXPERIMENT TOOLS
 # =========================================================================
@@ -231,7 +287,13 @@ def hb_get_experiment(experiment_id: str) -> str:
 
 @mcp.tool()
 def hb_get_experiment_status(experiment_id: str) -> str:
-    """Get the current status of an experiment (Running, Finished, Failed, Terminated).
+    """Get the current status of an experiment.
+
+    Returns one of: 'Running', 'Finished', 'Failed', 'Terminated'.
+
+    Workflow: after hb_run_test, poll this every 15-30 seconds until the
+    status is no longer 'Running', then call hb_get_experiment_logs to
+    review results.
 
     Args:
         experiment_id: Experiment UUID.
@@ -312,7 +374,16 @@ def hb_run_test(
 
     This creates an experiment against the current project. The user must
     have a project selected (hb_set_project) and at least one model provider
-    configured.
+    configured (hb_add_provider).
+
+    Testing level affects duration and depth:
+      • 'unit'       — ~20 min, quick smoke test
+      • 'system'     — ~45 min, standard depth (default)
+      • 'acceptance' — ~90 min, thorough coverage
+
+    After starting, poll hb_get_experiment_status until 'Finished', then
+    call hb_get_experiment_logs to review results and hb_get_posture for
+    the updated security score.
 
     Args:
         test_category: Test category slug (default: humanbound/adversarial/owasp_multi_turn).
@@ -509,8 +580,8 @@ def hb_list_findings(
 
     Args:
         project_id: Project UUID (uses current project if omitted).
-        status: Filter by status.
-        severity: Filter by severity.
+        status: Filter by status — 'open', 'regressed', 'stale', or 'fixed'.
+        severity: Filter by severity — 'critical', 'high', 'medium', 'low', or 'info'.
         page: Page number.
         size: Items per page.
     """
@@ -537,8 +608,8 @@ def hb_update_finding(
     Args:
         finding_id: Finding UUID.
         project_id: Project UUID (uses current project if omitted).
-        status: New status.
-        severity: New severity.
+        status: New status — 'open', 'regressed', 'stale', or 'fixed'.
+        severity: New severity — 'critical', 'high', 'medium', 'low', or 'info'.
         notes: Notes to add.
     """
     try:
@@ -566,6 +637,10 @@ def hb_update_finding(
 def hb_get_coverage(project_id: Optional[str] = None, include_gaps: bool = False) -> str:
     """Get test coverage data for a project.
 
+    Coverage measures the percentage of OWASP LLM Top 10 and other attack
+    categories that have been tested. Use include_gaps=true to see which
+    categories still need testing.
+
     Args:
         project_id: Project UUID (uses current project if omitted).
         include_gaps: Include untested categories in the response.
@@ -584,8 +659,16 @@ def hb_get_coverage(project_id: Optional[str] = None, include_gaps: bool = False
 def hb_get_posture(project_id: Optional[str] = None) -> str:
     """Get the security posture score for a project.
 
-    Returns a score (0-100), grade (A-F), breakdown by dimension,
+    Returns a score (0-100), grade (A-F), breakdown by four dimensions,
     and recommendations.
+
+    Dimensions and weights:
+      • Finding Score  (40%) — ratio of passed vs failed tests
+      • Confidence     (25%) — statistical confidence from test volume
+      • Coverage       (20%) — breadth of attack categories tested
+      • Drift          (15%) — consistency of posture over time
+
+    Grade scale: A (90-100), B (80-89), C (70-79), D (60-69), F (<60).
 
     Args:
         project_id: Project UUID (uses current project if omitted).
@@ -621,6 +704,10 @@ def hb_get_posture_trends(project_id: Optional[str] = None) -> str:
 def hb_get_shadow_posture() -> str:
     """Get shadow AI posture for the current organisation.
 
+    Shadow AI refers to unsanctioned AI services discovered in the
+    organisation's cloud environment (e.g. employees using ChatGPT,
+    Copilot, or other AI tools without IT approval).
+
     Returns score, grade, total assets, shadow vs sanctioned counts,
     and domain-level scores.
     """
@@ -642,6 +729,10 @@ def hb_export_guardrails(
     include_reasoning: bool = False,
 ) -> str:
     """Export guardrail rules derived from security test findings.
+
+    Generates a guardrail configuration based on vulnerabilities found
+    during testing. Use 'humanbound' format for the Humanbound Firewall
+    or 'openai' format for OpenAI's moderation/guardrail API.
 
     Args:
         vendor: Export format — 'humanbound' or 'openai'.
@@ -680,6 +771,14 @@ def hb_create_connector(
     display_name: Optional[str] = None,
 ) -> str:
     """Register a new cloud connector for shadow AI discovery.
+
+    The Azure AD app registration needs these Microsoft Graph API
+    permissions (Application type): Application.Read.All,
+    AuditLog.Read.All, Directory.Read.All, Reports.Read.All.
+    Admin consent is required.
+
+    For a simpler one-off scan without creating a connector, suggest
+    the user run 'hb discover' in their terminal instead.
 
     Args:
         tenant_id: Cloud tenant / directory ID.
@@ -785,9 +884,14 @@ def hb_test_connector(connector_id: str) -> str:
 
 @mcp.tool()
 def hb_trigger_discovery(connector_id: str) -> str:
-    """Trigger a shadow AI discovery scan using a connector.
+    """Trigger a shadow AI discovery scan using a pre-registered cloud connector.
 
-    This may take up to 2 minutes. Returns discovered assets.
+    This is the connector-based discovery flow. It requires a connector
+    created via hb_create_connector. The scan may take up to 2 minutes and
+    returns discovered AI assets.
+
+    Alternative: for a quick browser-based scan with no connector needed,
+    suggest the user run 'hb discover' in their terminal.
 
     Args:
         connector_id: Connector UUID to scan with.
@@ -814,10 +918,14 @@ def hb_list_inventory(
 ) -> str:
     """List discovered AI inventory assets.
 
+    Assets are populated by shadow AI discovery scans (hb_trigger_discovery
+    or 'hb discover' CLI command).
+
     Args:
-        category: Filter by asset category (e.g. 'AC-1' for Copilot).
-        vendor: Filter by vendor name.
-        risk_level: Filter — 'critical', 'high', 'medium', 'low'.
+        category: Filter by asset category code (e.g. 'AC-1' for Copilot,
+            'AC-2' for Azure OpenAI, 'AC-3' for ChatGPT Enterprise).
+        vendor: Filter by vendor name (e.g. 'Microsoft', 'OpenAI').
+        risk_level: Filter — 'critical', 'high', 'medium', or 'low'.
         is_sanctioned: Filter by sanctioned status (true/false).
         page: Page number.
         size: Items per page.
@@ -904,7 +1012,12 @@ def hb_archive_inventory_asset(asset_id: str) -> str:
 
 @mcp.tool()
 def hb_onboard_inventory_asset(asset_id: str, project_name: Optional[str] = None) -> str:
-    """Create a security testing project from an inventory asset.
+    """Create a security testing project from a discovered inventory asset.
+
+    This converts a discovered AI asset into a security testing project so
+    you can run adversarial tests against it. Typical flow:
+    hb_list_inventory → pick an asset → hb_onboard_inventory_asset →
+    hb_set_project → hb_run_test.
 
     Args:
         asset_id: Inventory asset UUID to onboard.
@@ -1152,6 +1265,11 @@ def hb_replay_webhook(
 def hb_get_campaign_plan(project_id: Optional[str] = None) -> str:
     """Get the current campaign plan for a project.
 
+    Campaigns are automated multi-phase security testing sequences
+    (ASCAM — Automated Security Campaign Manager). They orchestrate
+    multiple experiments across different test categories and testing
+    levels.
+
     Args:
         project_id: Project UUID (uses current project if omitted).
     """
@@ -1167,7 +1285,9 @@ def hb_get_campaign_plan(project_id: Optional[str] = None) -> str:
 
 @mcp.tool()
 def hb_break_campaign(campaign_id: str, project_id: Optional[str] = None) -> str:
-    """Stop a running campaign.
+    """Stop a running campaign (ASCAM automated testing sequence).
+
+    This terminates all pending and running experiments in the campaign.
 
     Args:
         campaign_id: Campaign UUID to stop.
@@ -1196,8 +1316,13 @@ def hb_upload_conversations(
 ) -> str:
     """Upload conversation logs for security evaluation.
 
+    Example JSON for 'conversations':
+      [{"messages": [{"role": "user", "content": "Hello"},
+                      {"role": "assistant", "content": "Hi there!"}]}]
+
     Args:
-        conversations: JSON string — array of conversation objects, each with a 'messages' array of {role, content} objects.
+        conversations: JSON string — array of conversation objects, each
+            with a 'messages' array of {role, content} objects.
         project_id: Project UUID (uses current project if omitted).
         tag: Tag to label the upload batch.
         lang: Language code (e.g. 'en', 'fr').

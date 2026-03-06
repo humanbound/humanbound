@@ -43,6 +43,7 @@ def findings_group(ctx, status, severity, page, size, as_json):
       hb findings --severity high        # Filter by severity
       hb findings --json                 # JSON output
       hb findings update <id> --status fixed
+      hb findings assign <id> --assignee <member-id>
     """
     if ctx.invoked_subcommand is not None:
         return
@@ -154,6 +155,59 @@ def update_finding(finding_id: str, status: str, severity: str):
             console.print(f"  Status: {STATUS_STYLES.get(status, status)}")
         if severity:
             console.print(f"  Severity: {SEVERITY_STYLES.get(severity, severity)}")
+
+    except NotAuthenticatedError:
+        console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
+        raise SystemExit(1)
+    except APIError as e:
+        console.print(f"[red]Error:[/red] {e}")
+        raise SystemExit(1)
+
+
+@findings_group.command("assign")
+@click.argument("finding_id")
+@click.option("--assignee", required=True, help="Member ID to assign the finding to")
+@click.option("--status", "delegation_status",
+              type=click.Choice(["assigned", "in_progress", "verified"]),
+              default="assigned",
+              help="Delegation status (default: assigned)")
+def assign_finding(finding_id: str, assignee: str, delegation_status: str):
+    """Assign a finding to a team member.
+
+    FINDING_ID: Finding UUID (or partial ID).
+
+    \b
+    Examples:
+      hb findings assign abc123 --assignee member-uuid
+      hb findings assign abc123 --assignee member-uuid --status in_progress
+    """
+    client = HumanboundClient()
+
+    if not client.is_authenticated():
+        console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
+        raise SystemExit(1)
+
+    project_id = client.project_id
+    if not project_id:
+        console.print("[yellow]No project selected.[/yellow]")
+        console.print("Use 'hb projects use <id>' to select a project first.")
+        raise SystemExit(1)
+
+    try:
+        finding_id = _resolve_finding_id(client, project_id, finding_id)
+
+        payload = {
+            "assignee_id": assignee,
+            "delegation_status": delegation_status,
+        }
+
+        with console.status("Assigning finding..."):
+            client.update_finding(project_id, finding_id, payload)
+
+        console.print(f"[green]Finding assigned.[/green]")
+        console.print(f"[dim]ID: {finding_id}[/dim]")
+        console.print(f"  Assignee: {assignee}")
+        console.print(f"  Status: {delegation_status}")
 
     except NotAuthenticatedError:
         console.print("[red]Not authenticated.[/red] Run 'hb login' first.")

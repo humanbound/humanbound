@@ -1,4 +1,8 @@
-"""Upload conversation logs command."""
+"""Upload conversation logs command.
+
+DEPRECATED: 'hb upload-logs' is deprecated in favour of 'hb logs upload'.
+This module is kept for backward compatibility. Remove after v2.0.
+"""
 
 import json
 import click
@@ -11,6 +15,12 @@ from ..exceptions import NotAuthenticatedError, APIError
 
 console = Console()
 
+# DEPRECATED: remove after v2.0 — replaced by 'hb logs upload'
+_DEPRECATION_MSG = (
+    "[yellow]Warning:[/yellow] 'hb upload-logs' is deprecated. "
+    "Use [bold]hb logs upload[/bold] instead."
+)
+
 
 @click.command("upload-logs")
 @click.argument("file", type=click.Path(exists=True))
@@ -19,6 +29,9 @@ console = Console()
 @click.option("--force", is_flag=True, help="Skip confirmation prompt")
 def upload_logs_command(file: str, tag: str, lang: str, force: bool):
     """Upload conversation logs for evaluation.
+
+    DEPRECATED: Use 'hb logs upload' instead. This command will be
+    removed in a future version.
 
     FILE: Path to a JSON file containing conversations.
 
@@ -38,9 +51,13 @@ def upload_logs_command(file: str, tag: str, lang: str, force: bool):
     \b
     Examples:
       hb upload-logs conversations.json
-      hb upload-logs conversations.json --tag prod-v2
+      hb upload-logs conversations.json --tag prod-v2  # DEPRECATED: use 'hb logs upload' instead
       hb upload-logs conversations.json --lang english
     """
+    # DEPRECATED: remove after v2.0
+    console.print(_DEPRECATION_MSG)
+    console.print()
+
     client = HumanboundClient()
 
     if not client.is_authenticated():

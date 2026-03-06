@@ -1,4 +1,8 @@
-"""Discover command — AI service discovery across cloud platforms."""
+"""Discover command — AI service discovery across cloud platforms.
+
+DEPRECATED: 'hb discover' is deprecated in favour of 'hb connect --vendor'.
+This module is kept for backward compatibility. Remove after v2.0.
+"""
 
 import json
 import os
@@ -12,6 +16,12 @@ from rich.syntax import Syntax
 from rich.table import Table
 
 console = Console()
+
+# DEPRECATED: remove after v2.0 — replaced by 'hb connect --vendor'
+_DEPRECATION_MSG = (
+    "[yellow]Warning:[/yellow] 'hb discover' is deprecated. "
+    "Use [bold]hb connect --vendor[/bold] instead."
+)
 
 # Humanbound Discovery Service — multi-tenant app (owned by Humanbound)
 HUMANBOUND_DISCOVERY_APP_ID = "c6e4dcce-fce4-45a5-bf40-c8459ee2e180"
@@ -87,6 +97,9 @@ def _get_connector(vendor: str, verbose: bool = False):
 def discover_command(vendor: str, as_json: bool, yes: bool, verbose: bool, save: bool, report_path: str):
     """Discover AI services in your cloud environment.
 
+    DEPRECATED: Use 'hb connect --vendor' instead. This command will be
+    removed in a future version.
+
     Signs you in via browser device-code flow, scans for AI services
     client-side, sends results to the Humanbound platform for full
     security analysis (38 evidence signals, 15 SAI threat classes),
@@ -104,6 +117,10 @@ def discover_command(vendor: str, as_json: bool, yes: bool, verbose: bool, save:
       hb discover --json             # Raw JSON output
       hb discover -V                 # Print raw API responses
     """
+    # DEPRECATED: remove after v2.0
+    console.print(_DEPRECATION_MSG)
+    console.print()
+
     # ── 1. Check platform auth FIRST ──────────────────────────────────
     from ..client import HumanboundClient
 
