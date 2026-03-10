@@ -104,8 +104,8 @@ def _print_next(suggestions: list):
 )
 @click.option(
     "--endpoint", "-e",
-    help="Bot integration config — JSON string or path to JSON file. "
-         "Same shape as 'hb init --endpoint'. Overrides the project's default integration."
+    help="Agent integration config — JSON string or path to JSON file. "
+         "Same shape as 'hb connect --endpoint'. Overrides the project's default integration."
 )
 @click.option(
     "--category",

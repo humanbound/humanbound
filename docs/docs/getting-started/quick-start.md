@@ -21,18 +21,18 @@ hb orgs list
 hb switch <org-id>
 ```
 
-## Step 3: Connect Your Bot
+## Step 3: Connect Your Agent
 
-The `hb connect` command probes your bot, extracts scope, creates a project, and runs a first test -- all in one step:
+The `hb connect` command probes your agent, extracts scope, creates a project, and runs a first test -- all in one step:
 
-### From a Bot Endpoint (Recommended)
+### From an Agent Endpoint (Recommended)
 
 ```bash
 hb connect --endpoint ./bot-config.json
 ```
 
 !!! success "Recommended"
-    Using `--endpoint` (or `-e`) saves the bot integration as the project's default. Subsequent `hb test` commands work without specifying endpoints again.
+    Using `--endpoint` (or `-e`) saves the agent integration as the project's default. Subsequent `hb test` commands work without specifying endpoints again.
 
 ### With Additional Sources
 
@@ -65,18 +65,18 @@ hb connect -e ./config.json -y
 
 | Option | Description |
 |---|---|
-| `-e, --endpoint` | Bot integration config (JSON string or file path) -- agent path |
+| `-e, --endpoint` | Agent integration config (JSON string or file path) -- agent path |
 | `-v, --vendor` | Cloud vendor: `microsoft` -- platform path |
 | `-p, --prompt` | Path to system prompt file (agent path) |
 | `-r, --repo` | Path to repository to scan (agent path) |
 | `-o, --openapi` | Path to OpenAPI spec file (agent path) |
-| `-s, --serve` | Launch repo bot locally (requires `--repo`) |
+| `-s, --serve` | Launch repo agent locally (requires `--repo`) |
 | `-c, --context` | Extra context for the judge (string or .txt file path) |
 | `-n, --name` | Project name (auto-generated from hostname) |
 | `-y, --yes` | Skip confirmations |
 | `-t, --timeout` | Request timeout in seconds (default: 180) |
 
-The `--endpoint / -e` flag accepts a JSON config file (or inline JSON string) describing your bot's API. See the [Bot Configuration File](bot-config.md) section for the full specification.
+The `--endpoint / -e` flag accepts a JSON config file (or inline JSON string) describing your agent's API. See the [Agent Configuration File](agent-config.md) section for the full specification.
 
 !!! info "Note"
     `hb init` is deprecated in favor of `hb connect`. It still works but will be removed in a future release.
@@ -210,7 +210,7 @@ Define your AI application by answering three key questions in plain language:
 Click **Analyze** -- Humanbound summarizes your inputs into structured security rules. You can edit or re-run the analysis, then click **Save**.
 
 !!! success "CLI equivalent"
-    `hb connect -n "My Bot" --endpoint ./bot-config.json` -- see [Quick Start](#step-3-connect-your-bot).
+    `hb connect -n "My Agent" --endpoint ./bot-config.json` -- see [Quick Start](#step-3-connect-your-agent).
 
 ### Running an Experiment
 
@@ -234,7 +234,7 @@ Once started, the experiment runs automatically through three stages:
 | Stage | Description |
 |---|---|
 | **1. Adversarial Data Generation** | Humanbound auto-generates adversarial prompts based on your project scope. Simulates real-world edge cases and unexpected user interactions. |
-| **2. AI Assistant Testing** | Each prompt is sent to your bot. Responses are evaluated against expected behavior by the LLM-as-a-Judge with pass/fail verdicts. |
+| **2. AI Assistant Testing** | Each prompt is sent to your agent. Responses are evaluated against expected behavior by the LLM-as-a-Judge with pass/fail verdicts. |
 | **3. Results & Insights** | Humanbound compiles findings, detailed logs for auditing, and recommendations for improving AI robustness. |
 
 !!! success "CLI equivalent"
@@ -247,13 +247,13 @@ After completion, view the experiment overview in the dashboard:
 ![Experiment Overview](../images/experiment_overview.png)
 *Experiment results showing pass/fail breakdown and findings.*
 
-Each log entry shows the conversation between the attacker prompt and your bot's response, along with the judge's verdict:
+Each log entry shows the conversation between the attacker prompt and your agent's response, along with the judge's verdict:
 
 ![Passing Log Entry](../images/log_rec_pass.png)
-*A passing log entry -- bot correctly refused the attack.*
+*A passing log entry -- agent correctly refused the attack.*
 
 ![Failing Log Entry](../images/log_rec_fail.png)
-*A failing log entry -- bot was exploited by the attack.*
+*A failing log entry -- agent was exploited by the attack.*
 
 !!! success "CLI equivalent"
     `hb logs` or `hb logs --format html -o report.html` -- see [Experiments](../management/experiments.md).

@@ -19,7 +19,7 @@ $ hb posture
 
 ## What is Humanbound?
 
-Humanbound is an AI agent security testing platform. Point it at your bot's endpoint, define the scope (or let it auto-extract one), and get structured findings mapped to OWASP LLM & Agentic AI categories. Works with any chatbot or agent -- cloud or on-prem.
+Humanbound is an AI agent security testing platform. Point it at your agent's endpoint, define the scope (or let it auto-extract one), and get structured findings mapped to OWASP LLM & Agentic AI categories. Works with any chatbot or agent -- cloud or on-prem.
 
 <div class="grid cards" markdown>
 
@@ -33,7 +33,7 @@ Humanbound is an AI agent security testing platform. Point it at your bot's endp
 
     ---
 
-    Validate intent boundaries, response quality, and functional correctness against your bot's defined scope.
+    Validate intent boundaries, response quality, and functional correctness against your agent's defined scope.
 
 - :dna: **Evolutionary Red Teaming**
 
@@ -78,34 +78,34 @@ Humanbound is an AI agent security testing platform. Point it at your bot's endp
 Humanbound follows a simple hierarchy:
 
 - **Organisation** -- The top-level management unit. Handles team collaboration, security settings, and billing.
-- **Projects** -- Each AI model (chatbot, GenAI assistant) is managed under a project. Projects define business rules, safety checks, and testing workflows.
+- **Projects** -- Each AI agent (chatbot, GenAI assistant) is managed under a project. Projects define business rules, safety checks, and testing workflows.
 - **Experiments** -- Individual test executions that generate attack prompts, converse with your agent, and produce security verdicts.
 
-Example: A company with a customer support bot and an internal knowledge bot would create **two projects** under one organisation.
+Example: A company with a customer support agent and an internal knowledge agent would create **two projects** under one organisation.
 
 ### Three Phases of AI Security
 
 | Phase | Description |
 |---|---|
 | **1. Development: Testing & Security** | Before deployment, test your AI under real-world adversarial conditions. Automated stress tests, LLM-as-a-Judge evaluation, and iterative refinement based on security insights. |
-| **2. Production: Real-Time Protection** | Once live, the [Humanbound Firewall](integrations/firewall.md) monitors and filters user prompts in real time. Blocks risky or out-of-scope queries before they reach your bot. |
+| **2. Production: Real-Time Protection** | Once live, the [Humanbound Firewall](integrations/firewall.md) monitors and filters user prompts in real time. Blocks risky or out-of-scope queries before they reach your agent. |
 | **3. Post-Deployment: Auditing & Monitoring** | Continuous security checks via [log auditing](testing/log-upload.md), [SIEM integration](integrations/siem.md), and [ASCAM campaigns](concepts/campaigns.md). Catch regressions and drift before users notice. |
 
 ### How it Works
 
-1. **Scan** -- `hb connect` extracts scope & risk profile from your bot
+1. **Scan** -- `hb connect` extracts scope & risk profile from your agent
 2. **Test** -- `hb test` runs adversarial + behavioral attacks
 3. **Harden** -- Review findings, export guardrails, track posture
 
 ### Continuous Assurance Engine
 
-Humanbound doesn't just run one-off tests. Under the hood, the **ASCAM** (AI Security Continuous Assurance Model) engine cycles through four activities -- scan, assess, investigate, and monitor -- adapting automatically to changes in your bot's behavior.
+Humanbound doesn't just run one-off tests. Under the hood, the **ASCAM** (AI Security Continuous Assurance Model) engine cycles through four activities -- scan, assess, investigate, and monitor -- adapting automatically to changes in your agent's behavior.
 
 Inspired by coverage-guided fuzzing (AFL-style), ASCAM uses a Decision Engine that evaluates 9 signals each cycle (critical findings, regressions, posture drops, stale coverage, drift, and more), coverage tracking to prioritize unexplored attack surfaces, statistical drift detection to spot behavioral regressions, and a findings lifecycle to deduplicate and track vulnerabilities across runs. The result is an always-on feedback loop that gets smarter with every test cycle.
 
-### Bot Configuration in 30 Seconds
+### Agent Configuration in 30 Seconds
 
-Create a JSON file that tells Humanbound how to talk to your bot. The `$PROMPT` placeholder is where Humanbound injects test prompts during testing -- just place it where your bot expects user input.
+Create a JSON file that tells Humanbound how to talk to your agent. The `$PROMPT` placeholder is where Humanbound injects test prompts during testing -- just place it where your agent expects user input.
 
 ```json
 {
@@ -138,17 +138,17 @@ Create a JSON file that tells Humanbound how to talk to your bot. The `$PROMPT` 
 
 | Field | Required | Description |
 |---|---|---|
-| `chat_completion` | Yes | The endpoint your bot listens on for chat messages. Use `$PROMPT` in the payload where user input goes. |
-| `thread_auth` | No | OAuth/token endpoint called before testing begins. The response payload (`access_token`, `refresh_token`, etc.) is captured and injected into subsequent `thread_init` and `chat_completion` requests. |
+| `chat_completion` | Yes | The endpoint your agent listens on for chat messages. Use `$PROMPT` in the payload where user input goes. |
+| `thread_auth` | No | OAuth/token endpoint called before testing begins. The response payload (`access_token`, `refresh_token`, etc.) is captured and injected into subsequent requests. |
 | `thread_init` | Yes | Session/thread creation endpoint. Called once per conversation to initialize a thread before sending chat messages. |
-| `streaming` | No | Set `true` if your bot uses WebSocket/SSE streaming. |
+| `streaming` | No | Set `true` if your agent uses WebSocket/SSE streaming. |
 
 !!! info "Minimal config"
-    `chat_completion` and `thread_init` are required. Skip `thread_auth` if your bot uses simple API key auth and doesn't need OAuth.
+    `chat_completion` and `thread_init` are required. Skip `thread_auth` if your agent uses simple API key auth and doesn't need OAuth.
 
 Then point Humanbound at it:
 
 ```bash
-hb connect -n "My Bot" -e ./bot-config.json  # Connect your agent
+hb connect -n "My Agent" -e ./bot-config.json  # Connect your agent
 hb test                                      # Run tests (uses saved config)
 ```

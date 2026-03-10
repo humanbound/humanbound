@@ -1,6 +1,6 @@
 # Firewall
 
-The Humanbound Firewall is an open-source, context-aware security layer that sits between your users and your AI agent. It uses an LLM-as-a-Judge approach to evaluate incoming messages in real time -- blocking prompt injections, off-topic requests, and policy violations before they reach your bot.
+The Humanbound Firewall is an open-source, context-aware security layer that sits between your users and your AI agent. It uses an LLM-as-a-Judge approach to evaluate incoming messages in real time -- blocking prompt injections, off-topic requests, and policy violations before they reach your agent.
 
 ## Installation
 
@@ -43,8 +43,8 @@ except AIANDME_Firewall_CannotDecide:
 
 | Verdict | Description |
 |---|---|
-| **Pass** | Input is safe and within scope. Forward to your bot. |
-| **Off-Topic** | Input is outside the bot's defined scope. Reject with explanation. |
+| **Pass** | Input is safe and within scope. Forward to your agent. |
+| **Off-Topic** | Input is outside the agent's defined scope. Reject with explanation. |
 | **Violation** | Input contains prompt injection, jailbreak attempt, or security threat. |
 | **Restriction** | Input touches a restricted intent (e.g., competitor comparison). |
 

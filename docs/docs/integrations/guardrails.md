@@ -1,6 +1,6 @@
 # Guardrails Export
 
-Export security rules and guardrails learned from testing for integration with your bot's runtime defense layer.
+Export security rules and guardrails learned from testing for integration with your agent's runtime defense layer.
 
 ## Export (Humanbound Format)
 

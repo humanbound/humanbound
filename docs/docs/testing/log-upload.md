@@ -29,14 +29,14 @@ hb logs upload conversations.json --lang english
 [
   {
     "conversation": [
-      {"u": "user message", "a": "bot response"},
-      {"u": "follow up", "a": "bot reply"}
+      {"u": "user message", "a": "agent response"},
+      {"u": "follow up", "a": "agent reply"}
     ],
     "thread_id": "optional-thread-id"
   },
   {
     "conversation": [
-      {"u": "another conversation", "a": "bot response"}
+      {"u": "another conversation", "a": "agent response"}
     ],
     "thread_id": "thread-2"
   }

@@ -43,7 +43,7 @@ def _derive_agent_name(endpoint: str) -> str:
 
 
 @click.command("connect")
-@click.option("--endpoint", "-e", help="Bot config JSON or file path (agent path)")
+@click.option("--endpoint", "-e", help="Agent config JSON or file path (agent path)")
 @click.option(
     "--vendor", "-v",
     type=click.Choice(["microsoft"]),
@@ -53,7 +53,7 @@ def _derive_agent_name(endpoint: str) -> str:
 @click.option("--prompt", "-p", type=click.Path(exists=True), help="System prompt file (agent path)")
 @click.option("--repo", "-r", type=click.Path(exists=True), help="Repository path (agent path)")
 @click.option("--openapi", "-o", type=click.Path(exists=True), help="OpenAPI spec file (agent path)")
-@click.option("--serve", "-s", is_flag=True, help="Launch repo bot locally (agent path, requires --repo)")
+@click.option("--serve", "-s", is_flag=True, help="Launch repo agent locally (agent path, requires --repo)")
 @click.option("--tenant", help="Azure tenant ID (platform path, bypasses browser)")
 @click.option("--client-id", "client_id", help="Service principal client ID (platform path)")
 @click.option("--client-secret", "client_secret", help="Service principal secret (platform path)")
@@ -69,7 +69,7 @@ def connect_command(endpoint, vendor, name, prompt, repo, openapi, serve,
     \b
     Agent path (--endpoint):
       hb connect --endpoint ./bot-config.json
-      Probes your bot, extracts scope, creates project, runs first test.
+      Probes your agent, extracts scope, creates project, runs first test.
 
     \b
     Platform path (--vendor):
@@ -97,10 +97,10 @@ def connect_command(endpoint, vendor, name, prompt, repo, openapi, serve,
     else:
         console.print("[yellow]Specify a path:[/yellow]")
         console.print()
-        console.print("  [bold]Agent:[/bold]     hb connect --endpoint ./bot-config.json")
+        console.print("  [bold]Agent:[/bold]      hb connect --endpoint ./bot-config.json")
         console.print("  [bold]Platform:[/bold]  hb connect --vendor microsoft")
         console.print()
-        console.print("[dim]Use --endpoint to connect an AI agent, or --vendor to scan your cloud.[/dim]")
+        console.print("[dim]Use --endpoint to connect your AI agent, or --vendor to scan your cloud.[/dim]")
         raise SystemExit(1)
 
 
@@ -192,7 +192,7 @@ def _connect_agent(endpoint, name, prompt, repo, openapi, serve, context, yes, t
 
             if runtime_info and not serve and not endpoint and not yes:
                 console.print()
-                console.print(f"  [cyan]i[/cyan] Detected runnable bot: [bold]{runtime_info.framework.title()}[/bold] ({runtime_info.entry_point})")
+                console.print(f"  [cyan]i[/cyan] Detected runnable agent: [bold]{runtime_info.framework.title()}[/bold] ({runtime_info.entry_point})")
                 console.print(f"    Start command: [dim]{runtime_info.start_cmd.replace('{port}', str(runtime_info.port))}[/dim]")
                 from rich.prompt import Confirm
                 if Confirm.ask("    Launch it for live probing?", default=False):
@@ -209,7 +209,7 @@ def _connect_agent(endpoint, name, prompt, repo, openapi, serve, context, yes, t
             if spec_result:
                 operations = spec_result.get("operations", [])
                 console.print(f"  [green]\u2713[/green] OpenAPI spec: {len(operations)} operations")
-                summary_parts = [spec_result.get("description", "API-based bot")]
+                summary_parts = [spec_result.get("description", "API-based agent")]
                 for op in operations:
                     summary_parts.append(
                         f"- {op.get('method', 'GET')} {op.get('path', '')}: {op.get('summary', '')}"
@@ -228,7 +228,7 @@ def _connect_agent(endpoint, name, prompt, repo, openapi, serve, context, yes, t
         # -- Serve lifecycle: start server + tunnel ----------------------------
         if serve and repo:
             if not runtime_info:
-                console.print("[yellow]Could not detect a runnable bot in the repository.[/yellow]")
+                console.print("[yellow]Could not detect a runnable agent in the repository.[/yellow]")
                 console.print("[dim]Continuing with static analysis only.[/dim]")
             else:
                 _server, _tunnel, serve_source = _start_serve(
@@ -513,7 +513,7 @@ def _connect_platform(vendor, name, tenant, client_id, client_secret, yes, timeo
 def _auto_test(client, project_id, default_integration, context=None):
     """Run first test automatically and show results inline."""
     if not default_integration:
-        console.print("\n[dim]No bot integration configured -- skipping auto-test.[/dim]")
+        console.print("\n[dim]No agent integration configured -- skipping auto-test.[/dim]")
         console.print("[dim]Run 'hb test -e ./bot-config.json' to test manually.[/dim]")
         return
 

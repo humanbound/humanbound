@@ -1,6 +1,6 @@
 # Projects
 
-Projects represent AI agents or chatbots under test. Each project contains configuration, scope definitions, and associated test experiments.
+Projects represent AI agents under test. Each project contains configuration, scope definitions, and associated test experiments.
 
 ## List Projects
 

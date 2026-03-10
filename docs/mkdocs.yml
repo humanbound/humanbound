@@ -29,7 +29,7 @@ nav:
   - Getting Started:
     - Installation: getting-started/installation.md
     - Quick Start: getting-started/quick-start.md
-    - Bot Configuration: getting-started/bot-config.md
+    - Agent Configuration: getting-started/agent-config.md
   - Concepts:
     - LLM-as-a-Judge: concepts/llm-as-judge.md
     - Security Posture: concepts/security-posture.md
