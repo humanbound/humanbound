@@ -1,10 +1,329 @@
+/* ============================================================
+   Brand tokens
+   ============================================================ */
 :root {
   --md-primary-fg-color: #FD9506;
-  --md-primary-bg-color: #1E2323;
+  --md-primary-bg-color: #0d1111;
   --md-accent-fg-color: #FD9506;
+
+  /* Surface / background tones derived from #1E2323 */
+  --md-default-bg-color: #0d1111;
+  --md-default-fg-color: #E0E0E0;
+
+  /* Sidebar */
+  --md-sidebar-bg-color: #0a0e0e;
+
+  /* Code blocks */
+  --md-code-bg-color: #080b0b;
+  --md-code-fg-color: #E0E0E0;
+
+  /* Footer */
+  --md-footer-bg-color: #080b0b;
+  --md-footer-fg-color: #a0a0a0;
+
+  /* Typeset */
+  --md-typeset-color: #E0E0E0;
+  --md-typeset-a-color: #FD9506;
 }
 
-/* Hero gradient for index.md title */
+/* ============================================================
+   Override slate scheme defaults
+   ============================================================ */
+[data-md-color-scheme="slate"] {
+  --md-default-bg-color: #0d1111;
+  --md-default-fg-color: #E0E0E0;
+  --md-default-fg-color--light: #b0b0b0;
+  --md-default-fg-color--lighter: #808080;
+  --md-default-fg-color--lightest: #505050;
+  --md-primary-fg-color: #FD9506;
+  --md-primary-bg-color: #0d1111;
+  --md-accent-fg-color: #FD9506;
+  --md-code-bg-color: #080b0b;
+  --md-code-fg-color: #E0E0E0;
+  --md-typeset-color: #E0E0E0;
+  --md-typeset-a-color: #FD9506;
+  --md-footer-bg-color: #080b0b;
+  --md-footer-fg-color: #a0a0a0;
+  --md-footer-bg-color--dark: #060909;
+}
+
+/* ============================================================
+   Global background & text
+   ============================================================ */
+body,
+.md-main,
+.md-container {
+  background-color: var(--md-default-bg-color);
+}
+
+/* ============================================================
+   Header
+   ============================================================ */
+.md-header {
+  background-color: var(--md-primary-bg-color);
+  border-bottom: 1px solid rgba(253, 149, 6, 0.15);
+}
+
+/* GitHub source link in header */
+.md-header__source {
+  color: #E0E0E0;
+}
+
+.md-source {
+  color: #E0E0E0;
+}
+
+.md-source__icon svg {
+  fill: #E0E0E0;
+}
+
+.md-source__repository,
+.md-source__facts {
+  color: #b0b0b0;
+}
+
+
+/* ============================================================
+   Mobile drawer & header
+   ============================================================ */
+/* Drawer background */
+.md-dialog,
+.md-nav--primary,
+.md-nav--primary .md-nav {
+  background-color: #0d1111;
+}
+
+/* Mobile header uses primary-fg as bg — override it */
+@media screen and (max-width: 76.1875em) {
+  .md-nav--primary .md-nav__title,
+  .md-nav--primary .md-nav__title[for],
+  .md-nav--primary > .md-nav__title {
+    background-color: #0d1111 !important;
+    color: #E0E0E0;
+    box-shadow: none;
+  }
+
+  .md-nav--primary .md-nav__title .md-logo {
+    background-color: transparent;
+    top: 0.5rem;
+    left: 0.2rem;
+  }
+
+  .md-nav--primary .md-nav__title .md-logo img {
+    height: 1rem;
+    width: auto;
+  }
+
+  .md-nav--primary .md-nav__title {
+    min-height: 48px;
+    max-height: 48px;
+  }
+
+  /* GitHub source in mobile drawer */
+  .md-nav--primary .md-nav__source {
+    background-color: #151919;
+    color: #E0E0E0;
+  }
+
+  /* Back button arrow and nav icons in mobile nav */
+  .md-nav--primary .md-nav__title .md-icon,
+  .md-nav__icon {
+    color: #E0E0E0;
+  }
+
+  .md-nav__icon svg {
+    fill: #E0E0E0;
+  }
+
+  /* Hamburger menu icon */
+  .md-header .md-icon svg {
+    fill: #E0E0E0;
+  }
+}
+
+/* ============================================================
+   Sidebar / Navigation
+   ============================================================ */
+.md-sidebar {
+  background-color: var(--md-sidebar-bg-color);
+}
+
+.md-nav__link {
+  color: #b0b0b0;
+}
+
+.md-nav__link:hover,
+.md-nav__link--active {
+  color: #FD9506;
+}
+
+.md-nav__item--active > .md-nav__link {
+  color: #FD9506;
+  font-weight: 600;
+}
+
+/* Section labels (non-clickable group headers) */
+.md-nav--primary > .md-nav__list > .md-nav__item > .md-nav__link,
+.md-nav--primary > .md-nav__list > .md-nav__item > label .md-nav__link {
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 1em;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid rgba(253, 149, 6, 0.15);
+}
+
+/* ============================================================
+   Content area
+   ============================================================ */
+.md-content {
+  background-color: var(--md-default-bg-color);
+}
+
+.md-typeset h1,
+.md-typeset h2,
+.md-typeset h3,
+.md-typeset h4,
+.md-typeset h5,
+.md-typeset h6 {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.md-typeset a {
+  color: #FD9506;
+}
+
+.md-typeset a:hover {
+  color: #FFB74D;
+}
+
+/* ============================================================
+   Code blocks
+   ============================================================ */
+.md-typeset code {
+  background-color: var(--md-code-bg-color);
+  color: var(--md-code-fg-color);
+  border-radius: 4px;
+}
+
+.md-typeset pre {
+  background-color: var(--md-code-bg-color);
+  border-radius: 8px;
+  border: 1px solid rgba(253, 149, 6, 0.1);
+}
+
+/* ============================================================
+   Admonitions
+   ============================================================ */
+.md-typeset .admonition,
+.md-typeset details {
+  background-color: #151919;
+  border-radius: 8px;
+}
+
+/* ============================================================
+   Tables
+   ============================================================ */
+.md-typeset table:not([class]) {
+  background-color: #151919;
+  border-radius: 8px;
+}
+
+.md-typeset table:not([class]) th {
+  background-color: #1a1f1f;
+  color: #ffffff;
+}
+
+.md-typeset table:not([class]) tr:hover td {
+  background-color: rgba(253, 149, 6, 0.05);
+}
+
+/* ============================================================
+   Search
+   ============================================================ */
+.md-search__input {
+  background-color: #1a1f1f;
+  color: #E0E0E0;
+}
+
+.md-search__icon svg {
+  fill: #E0E0E0;
+}
+
+/* ============================================================
+   Footer
+   ============================================================ */
+.md-footer {
+  background-color: var(--md-footer-bg-color);
+  border-top: 1px solid rgba(253, 149, 6, 0.1);
+}
+
+/* ============================================================
+   Buttons (e.g. "Get Started")
+   ============================================================ */
+.md-typeset .md-button {
+  background-color: #FD9506;
+  color: #0d1111;
+  border: none;
+  border-radius: 5px;
+  font-weight: 600;
+  padding: 0.6em 1.6em;
+}
+
+.md-typeset .md-button:hover {
+  background-color: #FFB74D;
+  color: #0d1111;
+}
+
+/* ============================================================
+   Tabs
+   ============================================================ */
+.md-typeset .tabbed-labels > label {
+  color: #b0b0b0;
+}
+
+.md-typeset .tabbed-labels > label--active,
+.md-typeset .tabbed-labels > label:hover {
+  color: #FD9506;
+}
+
+/* ============================================================
+   Scrollbar (subtle)
+   ============================================================ */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--md-default-bg-color);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2a3030;
+  border-radius: 3px;
+}
+
+/* ============================================================
+   Grid cards
+   ============================================================ */
+.md-typeset .grid.cards > ul > li {
+  background-color: #151919;
+  border: 1px solid rgba(253, 149, 6, 0.1);
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+}
+
+.md-typeset .grid.cards > ul > li:hover {
+  background-color: #1a2020;
+  border-color: rgba(253, 149, 6, 0.25);
+}
+
+/* ============================================================
+   Hero gradient for index.md title
+   ============================================================ */
 .md-typeset h1 .hero-title {
   background: linear-gradient(90deg, #FD9506, #FFB74D);
   -webkit-background-clip: text;
