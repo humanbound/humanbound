@@ -72,8 +72,18 @@ Extracts metadata from each chat response using `extraction_map`. No separate AP
 **Setup:**
 
 1. Enable LangFuse tracing in your agent (e.g., `langfuse.langchain.CallbackHandler`)
-2. Ensure your agent passes `session_id` to LangFuse via `propagate_attributes(session_id=session_id)`
-3. Create a Basic auth token from your LangFuse public + secret keys: `base64(public_key:secret_key)`
+2. Create a Basic auth token from your LangFuse public + secret keys: `base64(public_key:secret_key)`
+
+!!! warning "Session ID alignment is critical"
+    Humanbound uses `$session_id` in the telemetry endpoint URL to fetch traces from LangFuse. This variable is replaced with the value of `session_id` returned by your agent's `thread_init` response.
+
+    **Your agent must do two things:**
+
+    1. **Return the session ID as `session_id` in the `thread_init` response.** When Humanbound calls your agent's session creation endpoint, the response must include a field called `session_id`. This is what `$session_id` gets replaced with. If your agent returns the session ID under a different name (e.g., `thread_id`, `conversation_id`), use that name instead: `$thread_id`, `$conversation_id`, etc.
+
+    2. **Register traces in LangFuse under the same session ID.** Your agent must pass the exact same session ID to LangFuse when logging traces. For LangGraph/LangChain agents, this means using `propagate_attributes(session_id=session_id)` or passing `session_id` to the `CallbackHandler`. If LangFuse traces are registered under a different ID than what your agent returns to Humanbound, the telemetry fetch will return empty data.
+
+    In short: the session ID your agent gives Humanbound and the session ID your agent gives LangFuse must be the same value.
 
 **Configuration:**
 
@@ -88,6 +98,12 @@ Extracts metadata from each chat response using `extraction_map`. No separate AP
     }
   }
 }
+```
+
+If your agent returns the session under a different field name, adjust the meta-variable accordingly:
+
+```json
+"endpoint": "https://cloud.langfuse.com/api/public/sessions/$conversation_id"
 ```
 
 Generate the Basic auth token:
