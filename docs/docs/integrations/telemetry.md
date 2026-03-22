@@ -119,9 +119,12 @@ echo -n "pk-lf-YOUR-PUBLIC-KEY:sk-lf-YOUR-SECRET-KEY" | base64
 - Token usage and cost (from `GENERATION` observation usage data)
 - External API calls (from `EVENT` observations)
 
-### LangSmith
+### LangSmith `[PREVIEW]`
 
 [LangSmith](https://smith.langchain.com) is LangChain's tracing and evaluation platform.
+
+!!! note "Preview"
+    This integration has not been validated end-to-end. Turn-level granularity may be limited. Please report issues.
 
 **Configuration:**
 
@@ -144,9 +147,12 @@ echo -n "pk-lf-YOUR-PUBLIC-KEY:sk-lf-YOUR-SECRET-KEY" | base64
 - Token usage (from run metadata)
 - Run hierarchy (parent/child relationships)
 
-### OpenAI Assistants
+### OpenAI Assistants `[PREVIEW]`
 
 For agents built on the [OpenAI Assistants API](https://platform.openai.com/docs/assistants). Fetches run steps including tool calls, code interpreter, and retrieval.
+
+!!! note "Preview"
+    This integration has not been validated end-to-end. Please report issues.
 
 **Configuration:**
 
@@ -170,9 +176,12 @@ For agents built on the [OpenAI Assistants API](https://platform.openai.com/docs
 - Token usage per step
 - Step execution order and timing
 
-### Weights & Biases (W&B)
+### Weights & Biases (W&B) `[PREVIEW]`
 
 [Weights & Biases](https://wandb.ai) tracing for LLM applications.
+
+!!! note "Preview"
+    This integration has not been validated end-to-end. Please report issues.
 
 **Configuration:**
 
@@ -189,9 +198,12 @@ For agents built on the [OpenAI Assistants API](https://platform.openai.com/docs
 }
 ```
 
-### Helicone
+### Helicone `[PREVIEW]`
 
 [Helicone](https://helicone.ai) is an observability layer for LLM APIs.
+
+!!! note "Preview"
+    This integration has not been validated end-to-end. Please report issues.
 
 **Configuration:**
 
@@ -208,9 +220,12 @@ For agents built on the [OpenAI Assistants API](https://platform.openai.com/docs
 }
 ```
 
-### AgentOps
+### AgentOps `[PREVIEW]`
 
 [AgentOps](https://agentops.ai) provides session-level observability for AI agents.
+
+!!! note "Preview"
+    This integration has not been validated end-to-end. Turn-level granularity may be limited. Please report issues.
 
 **Configuration:**
 
