@@ -5,7 +5,7 @@ from . import (
     guardrails, docs, providers, findings, api_keys, members,
     coverage, campaigns, upload_logs, sentinel, discover,
     connectors, inventory, completion, connect, report, monitor,
-    webhooks, assessments,
+    webhooks, assessments, firewall,
 )
 
 # MCP command is optional — only available when mcp SDK is installed
@@ -42,5 +42,6 @@ __all__ = [
     "monitor",
     "webhooks",
     "assessments",
+    "firewall",
     "mcp",
 ]
