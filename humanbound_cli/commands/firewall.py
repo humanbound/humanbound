@@ -131,10 +131,25 @@ def train_command(model_path, last_n, from_date, until_date, min_samples,
 
         val = performance.get("validation")
         if val:
-            console.print(f"  Validation ({val.get('val_samples', '?')} samples):")
-            console.print(f"    Precision: {val.get('precision', '?')}")
-            console.print(f"    Recall:    {val.get('recall', '?')}")
-            console.print(f"    F1:        {val.get('f1', '?')}")
+            af = val.get("adversarial_fail", {})
+            ap = val.get("adversarial_pass", {})
+            bn = val.get("benign", {})
+            console.print(f"\n  [bold]Validation (conversation replay)[/bold]")
+            if af.get("total"):
+                r = af.get("rate", 0)
+                s = "green" if r >= 0.8 else "yellow" if r >= 0.5 else "red"
+                console.print(f"    Failed adversarial caught: [{s}]{af['caught']}/{af['total']} ({r:.0%})[/{s}]")
+            if ap.get("total"):
+                r = ap.get("rate", 0)
+                s = "green" if r >= 0.5 else "dim"
+                console.print(f"    Passed adversarial caught: [{s}]{ap['caught']}/{ap['total']} ({r:.0%})[/{s}]")
+            if bn.get("total"):
+                r = bn.get("rate", 0)
+                s = "green" if r >= 0.8 else "yellow" if r >= 0.5 else "red"
+                console.print(f"    Benign allowed: [{s}]{bn['correct']}/{bn['total']} ({r:.0%})[/{s}]")
+                if bn.get("blocked"):
+                    console.print(f"    [red]Benign blocked: {bn['blocked']}[/red]")
+
         console.print(f"  Training complete.")
 
         # Save
@@ -180,8 +195,16 @@ def show_command(model_path):
         console.print(f"  Benign samples: {stats.get('benign_samples', '?')}")
     val = perf.get("validation")
     if val:
-        console.print(f"  Validation: precision={val.get('precision','?')} "
-                      f"recall={val.get('recall','?')} f1={val.get('f1','?')}")
+        af = val.get("adversarial_fail", {})
+        ap = val.get("adversarial_pass", {})
+        bn = val.get("benign", {})
+        console.print(f"  Validation:")
+        if af.get("total"):
+            console.print(f"    Failed adversarial caught: {af['caught']}/{af['total']} ({af.get('rate',0):.0%})")
+        if ap.get("total"):
+            console.print(f"    Passed adversarial caught: {ap['caught']}/{ap['total']} ({ap.get('rate',0):.0%})")
+        if bn.get("total"):
+            console.print(f"    Benign allowed: {bn['correct']}/{bn['total']} ({bn.get('rate',0):.0%})")
 
 
 
