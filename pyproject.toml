@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "humanbound-cli"
-version = "0.9.0"
+version = "0.9.1"
 authors = [
   { name="Kostas Siabanis", email="hello@humanbound.ai" },
   { name="Demetris Gerogiannis", email="hello@humanbound.ai" },

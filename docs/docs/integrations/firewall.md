@@ -387,14 +387,40 @@ hb firewall train --model detectors/setfit_classifier.py
 | `--until DATE` | Filter experiments until this date. |
 | `--min-samples N` | Minimum conversations required (default: 30). |
 | `--output PATH` | Output .hbfw file path (default: `firewall_<project>.hbfw`). |
+| `--import FILE` | Import external logs (repeatable). Auto-detects format. |
 
 The command:
 
 1. Fetches your adversarial and QA experiment logs
-2. Curates attack data (failed adversarial turns, stratified by fail category)
-3. Curates benign data (passed QA turns, stratified by user persona)
-4. Trains your AgentClassifier
-5. Saves the model as a `.hbfw` file
+2. Imports external logs if `--import` provided (PromptFoo, PyRIT)
+3. Curates attack data (failed adversarial turns, stratified by fail category)
+4. Curates benign data (passed QA turns, stratified by user persona)
+5. Trains your AgentClassifier
+6. Saves the model as a `.hbfw` file
+
+### Importing External Logs
+
+Combine data from other red-teaming frameworks with your Humanbound test data:
+
+```bash
+# Auto-detect format from file structure
+hb firewall train --import pyrit_results.json
+
+# Explicit format
+hb firewall train --import results.json:promptfoo
+
+# Multiple sources
+hb firewall train --import pyrit.json --import promptfoo.json
+```
+
+Supported frameworks:
+
+| Framework | Format | Auto-detected by |
+|-----------|--------|-----------------|
+| [PyRIT](https://github.com/Azure/PyRIT) (Microsoft) | JSON scan output | `redteaming_data` key |
+| [PromptFoo](https://github.com/promptfoo/promptfoo) | JSON eval export | `evalId` + `results` keys |
+
+Imported logs are merged with Humanbound logs before training. More data sources → better Tier 2 coverage.
 
 ### Show
 

@@ -101,7 +101,7 @@ def train_command(model_path, last_n, from_date, until_date, min_samples,
 
         # Import external logs if provided
         if import_files:
-            from hb_firewall.adapters import convert_file
+            from humanbound_cli.adapters import convert_file
             for import_arg in import_files:
                 # Parse file:format syntax
                 if ":" in import_arg and not import_arg.startswith("/"):
