@@ -35,8 +35,10 @@ def firewall_group():
 @click.option("--until", "until_date", type=str, default=None)
 @click.option("--min-samples", type=int, default=30)
 @click.option("--output", "-o", type=click.Path(), default=None)
+@click.option("--import", "import_files", type=str, multiple=True,
+              help="Import external logs (e.g. results.json or results.json:promptfoo)")
 def train_command(model_path, last_n, from_date, until_date, min_samples,
-                  output):
+                  output, import_files):
     """Train Tier 2 classifiers from adversarial + QA test logs."""
     if not model_path:
         # Default to SetFit classifier shipped with hb-firewall
@@ -96,6 +98,23 @@ def train_command(model_path, last_n, from_date, until_date, min_samples,
         # Step 2: Fetch logs
         console.print(f"\n[bold]Step 2:[/bold] Pulling conversation logs...")
         logs = _fetch_logs(client, adv_exps + qa_exps)
+
+        # Import external logs if provided
+        if import_files:
+            from hb_firewall.adapters import convert_file
+            for import_arg in import_files:
+                # Parse file:format syntax
+                if ":" in import_arg and not import_arg.startswith("/"):
+                    file_path, fmt = import_arg.rsplit(":", 1)
+                else:
+                    file_path, fmt = import_arg, ""
+                try:
+                    imported = convert_file(file_path, fmt)
+                    logs.extend(imported)
+                    console.print(f"  Imported {len(imported)} logs from {file_path}")
+                except (ValueError, FileNotFoundError) as e:
+                    console.print(f"  [red]Import failed: {e}[/red]")
+
         if len(logs) < min_samples:
             console.print(f"[red]Only {len(logs)} conversations (min: {min_samples}).[/red]")
             sys.exit(1)
