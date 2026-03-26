@@ -384,12 +384,12 @@ The command:
 4. Trains your AgentClassifier
 5. Saves the model as a `.hbfw` file
 
-### Evaluate
+### Show
 
-View performance metrics for a trained model:
+Show model info from a trained .hbfw file:
 
 ```bash
-hb firewall eval firewall.hbfw
+hb firewall show firewall.hbfw
 ```
 
 ### Test

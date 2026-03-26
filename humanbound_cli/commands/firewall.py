@@ -158,10 +158,10 @@ def train_command(model_path, last_n, from_date, until_date, min_samples,
         sys.exit(1)
 
 
-@firewall_group.command("eval")
+@firewall_group.command("show")
 @click.argument("model_path", type=click.Path(exists=True))
-def eval_command(model_path):
-    """Show performance metrics for a trained model."""
+def show_command(model_path):
+    """Show model info from a trained .hbfw file."""
     try:
         from hb_firewall.hbfw import load_hbfw
     except ImportError:
@@ -178,6 +178,10 @@ def eval_command(model_path):
     if stats:
         console.print(f"  Attack samples: {stats.get('attack_samples', '?')}")
         console.print(f"  Benign samples: {stats.get('benign_samples', '?')}")
+    val = perf.get("validation")
+    if val:
+        console.print(f"  Validation: precision={val.get('precision','?')} "
+                      f"recall={val.get('recall','?')} f1={val.get('f1','?')}")
 
 
 @firewall_group.command("test")
