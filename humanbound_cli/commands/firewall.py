@@ -103,7 +103,6 @@ def train_command(model_path, last_n, from_date, until_date, min_samples,
         console.print(f"\n[bold]Step 3:[/bold] Preparing training data...")
         hbfw = HBFW(attack_detector=detector_cls("attack"),
                      benign_detector=detector_cls("benign"))
-        hbfw.clf_attack._model_path = model_path
         data = hbfw.prepare(logs, restricted_intents=restricted, permitted_intents=permitted)
 
         stats = data.get("stats", {})
