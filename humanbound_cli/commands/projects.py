@@ -11,16 +11,26 @@ from ..exceptions import NotAuthenticatedError, APIError, ValidationError
 console = Console()
 
 
-@click.group("projects")
-def projects_group():
-    """Project management commands."""
-    pass
+@click.group("projects", invoke_without_command=True)
+@click.option("--page", default=1, help="Page number")
+@click.option("--size", default=20, help="Items per page")
+@click.pass_context
+def projects_group(ctx, page: int, size: int):
+    """Project management commands. Run without subcommand to list projects."""
+    if ctx.invoked_subcommand is not None:
+        return
+    _list_projects(page, size)
 
 
 @projects_group.command("list")
 @click.option("--page", default=1, help="Page number")
 @click.option("--size", default=20, help="Items per page")
-def list_projects(page: int, size: int):
+def list_projects_cmd(page: int, size: int):
+    """List projects in the current organisation."""
+    _list_projects(page, size)
+
+
+def _list_projects(page: int, size: int):
     """List projects in the current organisation."""
     client = HumanboundClient()
 

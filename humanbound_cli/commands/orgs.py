@@ -13,14 +13,22 @@ from ..exceptions import NotAuthenticatedError, APIError
 console = Console()
 
 
-@click.group("orgs")
-def orgs_group():
-    """Organisation management commands."""
-    pass
+@click.group("orgs", invoke_without_command=True)
+@click.pass_context
+def orgs_group(ctx):
+    """Organisation management. Run without subcommand to list organisations."""
+    if ctx.invoked_subcommand is not None:
+        return
+    _list_orgs()
 
 
 @orgs_group.command("list")
-def list_orgs():
+def list_orgs_cmd():
+    """List organisations you have access to."""
+    _list_orgs()
+
+
+def _list_orgs():
     """List organisations you have access to."""
     client = HumanboundClient()
 
@@ -49,8 +57,37 @@ def list_orgs():
         console.print(table)
 
         if not client.organisation_id:
-            console.print("\n[dim]Tip: Use 'hb switch <id>' to select an organisation.[/dim]")
+            console.print("\n[dim]Tip: Use 'hb orgs use <id>' to select an organisation.[/dim]")
 
+    except NotAuthenticatedError:
+        console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
+        raise SystemExit(1)
+    except APIError as e:
+        console.print(f"[red]Error:[/red] {e}")
+        raise SystemExit(1)
+
+
+@orgs_group.command("use")
+@click.argument("org_id")
+def use_org(org_id: str):
+    """Switch to a different organisation.
+
+    \b
+    Examples:
+      hb orgs use <id>
+    """
+    client = HumanboundClient()
+    try:
+        orgs_list = client.list_organisations()
+        org = next((o for o in orgs_list if o.get("id") == org_id), None)
+        if not org:
+            console.print(f"[red]Organisation not found:[/red] {org_id}")
+            console.print("\nAvailable organisations:")
+            for o in orgs_list:
+                console.print(f"  {o.get('id')} - {o.get('name')}")
+            raise SystemExit(1)
+        client.set_organisation(org_id)
+        console.print(f"[green]Switched to organisation:[/green] {org.get('name')}")
     except NotAuthenticatedError:
         console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
         raise SystemExit(1)

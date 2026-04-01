@@ -12,7 +12,6 @@ from .commands import (
     orgs,
     projects,
     experiments,
-    init,
     test,
     logs,
     posture,
@@ -22,11 +21,7 @@ from .commands import (
     findings,
     api_keys,
     members,
-    coverage,
     campaigns,
-    upload_logs,
-    sentinel,
-    discover,
     connectors,
     inventory,
     completion,
@@ -68,7 +63,7 @@ def cli(ctx, base_url: str):
       hb status                               # Check progress
       hb findings                             # View results
       hb posture                              # View posture score
-      hb report                               # Share with team
+      hb projects report                       # Share with team
       hb monitor                              # Start continuous monitoring
 
     \b
@@ -116,20 +111,6 @@ cli.add_command(posture.posture_command)
 cli.add_command(monitor.monitor_command)
 cli.add_command(redteam.redteam_group)
 
-# ---------------------------------------------------------------------------
-# DEPRECATED commands — kept for backward compatibility, remove after v2.0
-# Each prints a deprecation warning and delegates to the replacement.
-# ---------------------------------------------------------------------------
-# DEPRECATED: hb init → use hb connect --endpoint (remove after v2.0)
-cli.add_command(init.init_project)
-# DEPRECATED: hb discover → use hb connect --vendor (remove after v2.0)
-cli.add_command(discover.discover_command)
-# DEPRECATED: hb coverage → use hb posture --coverage (remove after v2.0)
-cli.add_command(coverage.coverage_command)
-# DEPRECATED: hb upload-logs → use hb logs upload (remove after v2.0)
-cli.add_command(upload_logs.upload_logs_command)
-# DEPRECATED: hb sentinel → use hb webhooks (remove after v2.0)
-cli.add_command(sentinel.sentinel_group)
 
 
 # Convenience aliases at top level
@@ -155,39 +136,6 @@ def whoami_alias(ctx):
     """Show current authentication status (alias for 'auth whoami')."""
     ctx.invoke(auth.whoami)
 
-
-@cli.command("switch")
-@click.argument("org_id")
-def switch_org(org_id: str):
-    """Switch to a different organisation.
-
-    ORG_ID: Organisation UUID to use.
-    """
-    from .client import HumanboundClient
-    from .exceptions import NotAuthenticatedError, APIError
-
-    client = HumanboundClient()
-
-    try:
-        # Verify the org exists by listing and checking
-        orgs_list = client.list_organisations()
-        org = next((o for o in orgs_list if o.get("id") == org_id), None)
-
-        if not org:
-            console.print(f"[red]Organisation not found:[/red] {org_id}")
-            console.print("\nAvailable organisations:")
-            for o in orgs_list:
-                console.print(f"  {o.get('id')} - {o.get('name')}")
-            raise SystemExit(1)
-
-        client.set_organisation(org_id)
-        console.print(f"[green]Switched to organisation:[/green] {org.get('name')}")
-
-    except NotAuthenticatedError:
-        console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
-        raise SystemExit(1)
-    except APIError as e:
-        console.print(f"[red]Error:[/red] {e}")
 
 
 @cli.command("status")

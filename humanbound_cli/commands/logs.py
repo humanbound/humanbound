@@ -57,22 +57,33 @@ console_err = Console(stderr=True)
 @click.option(
     "--days", type=int, help="Last N days (shortcut for --from)"
 )
+@click.option(
+    "--assessment", "assessment_id", help="Logs from a specific assessment"
+)
+@click.option(
+    "--finding", "finding_id", help="Logs linked to a specific finding"
+)
 @click.pass_context
-def logs_group(ctx, experiment_id, output_format, output, verdict, page, size, fetch_all, last_n, test_category, from_date, until_date, days):
-    """Get logs from an experiment or across a project.
+def logs_group(ctx, experiment_id, output_format, output, verdict, page, size, fetch_all, last_n, test_category, from_date, until_date, days, assessment_id, finding_id):
+    """Get logs from an experiment, assessment, finding, or across a project.
 
-    If no experiment_id or scope flags are provided, uses the most recent experiment.
-    Use scope flags (--last, --category, --from, --until, --days) for project-wide logs.
+    \b
+    Scopes (from narrowest to broadest):
+      hb logs <experiment-id>           # Single experiment
+      hb logs --assessment <id>         # All logs from an assessment
+      hb logs --finding <id>            # Logs linked to a finding
+      hb logs --last 5                  # Project: last N experiments
+      hb logs --days 7                  # Project: last N days
+      hb logs                           # Latest experiment
 
     \b
     Examples:
-      hb logs                                    # Latest experiment logs
       hb logs abc123                             # Specific experiment
-      hb logs --last 5                           # Last 5 experiments
-      hb logs --last 3 --verdict fail            # Failed logs from last 3
-      hb logs --category owasp_multi_turn        # All multi-turn logs
-      hb logs --days 7 --format json -o week.json
-      hb logs --from 2026-01-01 --until 2026-02-01 --format html -o jan.html
+      hb logs abc123 --result fail               # Only failed
+      hb logs --assessment def456                # Assessment logs
+      hb logs --finding ghi789                   # Finding evidence
+      hb logs --last 5 --format json -o logs.json
+      hb logs --days 7 --category adversarial
     """
     if ctx.invoked_subcommand is not None:
         return
@@ -90,9 +101,9 @@ def logs_group(ctx, experiment_id, output_format, output, verdict, page, size, f
 
     # Validation
     scope_flags = any([last_n, test_category, from_date, until_date, days])
-    if experiment_id and scope_flags:
-        console_err.print("[red]Cannot combine experiment ID with scope flags.[/red]")
-        console_err.print("Use either an experiment ID OR scope flags (--last, --category, --from, --until, --days).")
+    exclusive_count = sum(bool(x) for x in [experiment_id, assessment_id, finding_id, scope_flags])
+    if exclusive_count > 1:
+        console_err.print("[red]Use only one scope: experiment ID, --assessment, --finding, or project flags (--last, --from, etc.).[/red]")
         raise SystemExit(1)
     if days and from_date:
         console_err.print("[red]Cannot combine --days with --from.[/red]")
@@ -103,6 +114,34 @@ def logs_group(ctx, experiment_id, output_format, output, verdict, page, size, f
         from_date = (datetime.utcnow() - timedelta(days=days)).strftime("%Y-%m-%dT00:00:00")
 
     try:
+        # Assessment or finding scope → use consolidated endpoint with headers
+        if assessment_id or finding_id:
+            result_filter = verdict if verdict != "all" else None
+            if assessment_id:
+                endpoint = f"assessments/{assessment_id}/logs"
+                if result_filter:
+                    endpoint = f"assessments/{assessment_id}/logs/{result_filter}"
+            else:
+                endpoint = f"findings/{finding_id}/logs"
+                if result_filter:
+                    endpoint = f"findings/{finding_id}/logs/{result_filter}"
+
+            params = {"page": page, "size": size}
+            response = client.get(endpoint, params=params)
+            logs = response.get("data", response) if isinstance(response, dict) else response
+
+            if output_format == "json":
+                import json as _json
+                json_str = _json.dumps(response, indent=2, default=str)
+                if output:
+                    Path(output).write_text(json_str)
+                    console_err.print(f"[green]JSON exported to:[/green] {output}")
+                else:
+                    print(json_str)
+            else:
+                _show_logs_table(logs if isinstance(logs, list) else [], verdict)
+            return
+
         if scope_flags:
             _project_level_logs(
                 client, output_format, output, verdict, page, size, fetch_all,
@@ -351,6 +390,37 @@ def _resolve_experiment_id(client: HumanboundClient, partial_id: str) -> str:
 
     # Not found, return as-is and let API handle error
     return partial_id
+
+
+def _show_logs_table(logs: list, verdict: str = "all"):
+    """Show a list of logs in table format (for assessment/finding scoped queries)."""
+    if not logs:
+        console.print("[yellow]No logs found.[/yellow]")
+        return
+
+    if verdict != "all":
+        logs = [l for l in logs if l.get("result") == verdict]
+
+    table = Table(title=f"Logs ({len(logs)})")
+    table.add_column("Verdict", width=6)
+    table.add_column("Severity", width=8)
+    table.add_column("Category", width=20)
+    table.add_column("Explanation", max_width=50)
+
+    for log in logs:
+        result_val = log.get("result", "")
+        result_style = "[green]pass[/green]" if result_val == "pass" else "[red]fail[/red]"
+        cat = log.get("fail_category") or log.get("gen_category") or ""
+        explanation = (log.get("explanation") or "")[:50]
+
+        table.add_row(
+            result_style,
+            str(log.get("severity", "")),
+            cat,
+            explanation,
+        )
+
+    console.print(table)
 
 
 def _show_table(client: HumanboundClient, experiment_id: str, verdict: str, page: int, size: int):

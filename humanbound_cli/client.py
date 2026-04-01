@@ -893,7 +893,7 @@ class HumanboundClient:
         size: int = 50,
         result: Optional[str] = None,
     ) -> dict:
-        """Get logs for an experiment via consolidated /v2/logs endpoint.
+        """Get logs for an experiment.
 
         Args:
             experiment_id: Experiment UUID.
@@ -905,15 +905,11 @@ class HumanboundClient:
             Paginated response with logs.
         """
         params: Dict[str, Any] = {"page": page, "size": size}
-        endpoint = "v2/logs"
+        endpoint = f"experiments/{experiment_id}/logs"
         if result:
-            endpoint = f"v2/logs/{result}"
+            endpoint = f"experiments/{experiment_id}/logs/{result}"
 
-        return self.get(
-            endpoint,
-            params=params,
-            extra_headers={"experiment_id": experiment_id},
-        )
+        return self.get(endpoint, params=params)
 
     def get_project_logs(
         self,
@@ -925,7 +921,7 @@ class HumanboundClient:
         test_category: Optional[str] = None,
         last: Optional[int] = None,
     ) -> dict:
-        """Get logs for the current project via consolidated /v2/logs endpoint.
+        """Get logs for the current project.
 
         Args:
             page: Page number.
@@ -952,11 +948,11 @@ class HumanboundClient:
         if last:
             params["last"] = last
 
-        endpoint = "v2/logs"
+        endpoint = f"projects/{self._project_id}/logs"
         if result:
-            endpoint = f"v2/logs/{result}"
+            endpoint = f"projects/{self._project_id}/logs/{result}"
 
-        return self.get(endpoint, params=params, include_project=True)
+        return self.get(endpoint, params=params)
 
     # -------------------------------------------------------------------------
     # Provider Methods

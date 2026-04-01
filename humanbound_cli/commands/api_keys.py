@@ -13,22 +13,24 @@ from ..exceptions import NotAuthenticatedError, APIError
 console = Console()
 
 
-@click.group("api-keys")
-def api_keys_group():
-    """Manage API keys for CI/CD and programmatic access.
-
-    \b
-    Examples:
-      hb api-keys list
-      hb api-keys create --name "CI Key"
-      hb api-keys revoke <id>
-    """
-    pass
+@click.group("api-keys", invoke_without_command=True)
+@click.option("--json", "as_json", is_flag=True, help="Output as JSON")
+@click.pass_context
+def api_keys_group(ctx, as_json: bool):
+    """Manage API keys. Run without subcommand to list keys."""
+    if ctx.invoked_subcommand is not None:
+        return
+    _list_keys(as_json)
 
 
 @api_keys_group.command("list")
 @click.option("--json", "as_json", is_flag=True, help="Output as JSON")
-def list_keys(as_json: bool):
+def list_keys_cmd(as_json: bool):
+    """List all API keys."""
+    _list_keys(as_json)
+
+
+def _list_keys(as_json: bool):
     """List all API keys."""
     client = HumanboundClient()
 
@@ -171,7 +173,7 @@ def update_key(key_id: str, name: str, scopes: str, active):
         raise SystemExit(1)
 
 
-@api_keys_group.command("revoke")
+@api_keys_group.command("delete")
 @click.argument("key_id")
 @click.option("--force", is_flag=True, help="Skip confirmation prompt")
 def revoke_key(key_id: str, force: bool):

@@ -12,22 +12,24 @@ from ..exceptions import NotAuthenticatedError, APIError
 console = Console()
 
 
-@click.group("members")
-def members_group():
-    """Manage organisation members.
-
-    \b
-    Examples:
-      hb members list
-      hb members invite user@example.com
-      hb members remove <id>
-    """
-    pass
+@click.group("members", invoke_without_command=True)
+@click.option("--json", "as_json", is_flag=True, help="Output as JSON")
+@click.pass_context
+def members_group(ctx, as_json: bool):
+    """Manage organisation members. Run without subcommand to list members."""
+    if ctx.invoked_subcommand is not None:
+        return
+    _list_members(as_json)
 
 
 @members_group.command("list")
 @click.option("--json", "as_json", is_flag=True, help="Output as JSON")
-def list_members(as_json: bool):
+def list_members_cmd(as_json: bool):
+    """List organisation members."""
+    _list_members(as_json)
+
+
+def _list_members(as_json: bool):
     """List organisation members."""
     client = HumanboundClient()
 
@@ -122,7 +124,7 @@ def invite_member(email: str, role: str):
         raise SystemExit(1)
 
 
-@members_group.command("remove")
+@members_group.command("delete")
 @click.argument("member_id")
 @click.option("--force", is_flag=True, help="Skip confirmation prompt")
 def remove_member(member_id: str, force: bool):

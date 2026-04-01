@@ -15,17 +15,22 @@ console_err = Console(stderr=True)
 SUPPORTED_PROVIDERS = ["openai", "claude", "azureopenai", "gemini", "grok", "custom"]
 
 
-@click.group("providers")
-def providers_group():
-    """Model provider management commands.
-
-    Manage LLM providers used for running security tests.
-    """
-    pass
+@click.group("providers", invoke_without_command=True)
+@click.pass_context
+def providers_group(ctx):
+    """Model provider management. Run without subcommand to list providers."""
+    if ctx.invoked_subcommand is not None:
+        return
+    _list_providers()
 
 
 @providers_group.command("list")
-def list_providers():
+def list_providers_cmd():
+    """List configured model providers."""
+    _list_providers()
+
+
+def _list_providers():
     """List configured model providers."""
     client = HumanboundClient()
 
@@ -76,7 +81,7 @@ def list_providers():
         raise SystemExit(1)
 
 
-@providers_group.command("add")
+@providers_group.command("create")
 @click.option(
     "--name", "-n",
     type=click.Choice(SUPPORTED_PROVIDERS, case_sensitive=False),
@@ -205,7 +210,7 @@ def add_provider(name: str, api_key: str, endpoint: str, model: str, is_default:
         raise SystemExit(1)
 
 
-@providers_group.command("remove")
+@providers_group.command("delete")
 @click.argument("provider_id")
 @click.option("--force", "-f", is_flag=True, help="Skip confirmation prompt")
 def remove_provider(provider_id: str, force: bool):

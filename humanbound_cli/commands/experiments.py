@@ -14,16 +14,26 @@ from ..exceptions import NotAuthenticatedError, APIError, ValidationError
 console = Console()
 
 
-@click.group("experiments")
-def experiments_group():
-    """Experiment management commands."""
-    pass
+@click.group("experiments", invoke_without_command=True)
+@click.option("--page", default=1, help="Page number")
+@click.option("--size", default=20, help="Items per page")
+@click.pass_context
+def experiments_group(ctx, page: int, size: int):
+    """Experiment management commands. Run without subcommand to list experiments."""
+    if ctx.invoked_subcommand is not None:
+        return
+    _list_experiments(page, size)
 
 
 @experiments_group.command("list")
 @click.option("--page", default=1, help="Page number")
 @click.option("--size", default=20, help="Items per page")
-def list_experiments(page: int, size: int):
+def list_experiments_cmd(page: int, size: int):
+    """List experiments in the current project."""
+    _list_experiments(page, size)
+
+
+def _list_experiments(page: int, size: int):
     """List experiments in the current project."""
     client = HumanboundClient()
 
@@ -414,66 +424,6 @@ def experiment_wait(experiment_id: str, timeout: int):
         console.print(f"Resume with: hb experiments wait {experiment_id}")
         raise SystemExit(0)
 
-
-@experiments_group.command("logs")
-@click.argument("experiment_id")
-@click.option("--page", default=1, help="Page number")
-@click.option("--size", default=20, help="Items per page")
-@click.option("--result", type=click.Choice(["pass", "fail"]), help="Filter by result")
-def experiment_logs(experiment_id: str, page: int, size: int, result: str):
-    """List logs for an experiment.
-
-    EXPERIMENT_ID: Experiment UUID.
-    """
-    client = HumanboundClient()
-
-    if not client.project_id:
-        console.print("[yellow]No project selected.[/yellow]")
-        raise SystemExit(1)
-
-    try:
-        response = client.get_experiment_logs(
-            experiment_id,
-            page=page,
-            size=size,
-            result=result,
-        )
-        logs = response.get("data", [])
-
-        if not logs:
-            console.print("[yellow]No logs found.[/yellow]")
-            return
-
-        table = Table(title=f"Experiment Logs (page {page})")
-        table.add_column("ID", style="dim")
-        table.add_column("Result")
-        table.add_column("Severity")
-        table.add_column("Category")
-        table.add_column("Prompt", max_width=40)
-
-        for log in logs:
-            result_val = log.get("result", "")
-            result_style = "[green]pass[/green]" if result_val == "pass" else "[red]fail[/red]"
-
-            table.add_row(
-                log.get("id", ""),
-                result_style,
-                str(log.get("severity", "")),
-                log.get("fail_category") or log.get("gen_category") or "",
-                (log.get("prompt", "") or "")[:40],
-            )
-
-        console.print(table)
-
-        if response.get("has_next_page"):
-            console.print(f"\n[dim]Use --page to see more results.[/dim]")
-
-    except NotAuthenticatedError:
-        console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
-        raise SystemExit(1)
-    except APIError as e:
-        console.print(f"[red]Error:[/red] {e}")
-        raise SystemExit(1)
 
 
 @experiments_group.command("terminate")

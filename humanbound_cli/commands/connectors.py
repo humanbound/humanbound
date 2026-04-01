@@ -133,7 +133,7 @@ def connectors_group(ctx, as_json, report_path):
         raise SystemExit(1)
 
 
-@connectors_group.command("add")
+@connectors_group.command("create")
 @click.option("--vendor", default="microsoft", help="Cloud vendor (default: microsoft)")
 @click.option("--tenant-id", required=True, help="Cloud tenant ID")
 @click.option("--client-id", required=True, help="App registration client ID")
@@ -298,7 +298,7 @@ def update_connector(connector_id, name, client_secret, new_status):
         raise SystemExit(1)
 
 
-@connectors_group.command("remove")
+@connectors_group.command("delete")
 @click.argument("connector_id")
 @click.option("--force", is_flag=True, help="Skip confirmation prompt")
 def remove_connector(connector_id, force):
