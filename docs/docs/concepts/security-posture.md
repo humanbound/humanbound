@@ -40,10 +40,9 @@ hb posture --project <id>
 hb posture --org
 ```
 
-Org posture aggregates three dimensions:
+Org posture aggregates two dimensions:
 
 - **Agent Security** -- posture across all security-tested projects
-- **AI Discovery** -- risk posture of discovered AI inventory assets
 - **Quality** -- behavioral quality across all tested agents
 
 ## Include Coverage Breakdown

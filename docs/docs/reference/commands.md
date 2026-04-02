@@ -50,7 +50,18 @@ Complete reference of all available commands, organized by category.
 
 | Command | Description |
 |---|---|
-| `hb logs` | View logs from latest experiment or project-wide with scope flags (--last, --category, --days, --from, --until, --assessment \<id\>, --finding \<id\>) |
+| `hb logs` | List logs from the latest experiment |
+| `hb logs <experiment-id>` | View logs for a specific experiment |
+| `hb logs --assessment <id>` | List logs for a specific assessment |
+| `hb logs --finding <id>` | List logs linked to a specific finding |
+| `hb logs --verdict pass\|fail` | Filter by verdict |
+| `hb logs --category <name>` | Filter by test category (substring match) |
+| `hb logs --from DATE --until DATE` | Filter by date range (ISO 8601) |
+| `hb logs --days N` | Shorthand for last N days |
+| `hb logs --last N` | Show logs from last N experiments |
+| `hb logs --format json\|html\|table` | Output format (default: table) |
+| `hb logs -o FILE` | Save output to file |
+| `hb logs upload <file>` | Upload conversation logs for evaluation |
 | `hb posture` | View security posture score and grade |
 | `hb posture --trends` | View historical posture timeline |
 | `hb coverage` | View test coverage summary and gaps |
@@ -71,25 +82,7 @@ Complete reference of all available commands, organized by category.
 | `hb guardrails` | Export learned security rules and patterns |
 | `hb campaigns` | View current ASCAM campaign plan |
 | `hb campaigns terminate` | Stop running campaign |
-| `hb logs upload` | Upload production conversations for evaluation |
 | `hb monitor` | Start, pause, or resume continuous monitoring |
-
-## AI Discovery
-
-| Command | Description |
-|---|---|
-| `hb connect --vendor <name>` | Scan cloud platform for AI services |
-| `hb connectors` | List registered cloud connectors |
-| `hb connectors create` | Register new cloud connector with credentials |
-| `hb connectors test <id>` | Test connector connectivity |
-| `hb connectors update <id>` | Update connector name, credentials, or status |
-| `hb connectors delete <id>` | Delete a connector |
-| `hb inventory` | List discovered AI assets with filters |
-| `hb inventory view <id>` | View detailed asset information |
-| `hb inventory update <id>` | Update governance fields (owner, sanctioned, policy) |
-| `hb inventory posture` | View AI discovery posture score |
-| `hb inventory onboard <id>` | Create security testing project from asset |
-| `hb inventory archive <id>` | Archive an inventory asset |
 
 ## SIEM / Sentinel
 

@@ -47,13 +47,6 @@ hb connect -e ./bot-config.json --repo ./agent-code --serve
 hb connect -e ./bot-config.json --context "Authenticated as Alice"
 ```
 
-### Scan Cloud Platform (AI Discovery)
-
-```bash
-# Browser-based scan, no connector needed
-hb connect --vendor microsoft
-```
-
 ### Non-Interactive Mode
 
 ```bash
