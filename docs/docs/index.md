@@ -9,7 +9,6 @@ pip install humanbound-cli
 
 $ hb login
 $ hb connect --endpoint ./bot-config.json
-$ hb test
 $ hb posture
 ```
 
@@ -93,9 +92,9 @@ Example: A company with a customer support agent and an internal knowledge agent
 
 ### How it Works
 
-1. **Scan** -- `hb connect` extracts scope & risk profile from your agent
-2. **Test** -- `hb test` runs adversarial + behavioral attacks
-3. **Harden** -- Review findings, export guardrails, track posture
+1. **Connect** -- `hb connect` scans your agent, extracts scope, and auto-runs security tests
+2. **Harden** -- Review findings, export guardrails, track posture
+3. **Monitor** -- Continuous assurance via ASCAM keeps your posture up to date
 
 ### Continuous Assurance Engine
 
@@ -149,6 +148,5 @@ Create a JSON file that tells Humanbound how to talk to your agent. The `$PROMPT
 Then point Humanbound at it:
 
 ```bash
-hb connect -n "My Agent" -e ./bot-config.json  # Connect your agent
-hb test                                      # Run tests (uses saved config)
+hb connect -n "My Agent" -e ./bot-config.json  # Connect, scan, and auto-test
 ```
