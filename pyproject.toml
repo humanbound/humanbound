@@ -67,6 +67,9 @@ Issues = "https://github.com/Humanbound/humanbound-cli/issues"
 [tool.setuptools.packages.find]
 where = ["."]
 
+[tool.setuptools.package-data]
+humanbound_cli = ["templates/*.html", "templates/*.svg"]
+
 [tool.pytest.ini_options]
 markers = [
     "hb: mark test as a Humanbound security test",
