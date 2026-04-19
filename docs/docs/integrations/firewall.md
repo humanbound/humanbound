@@ -2,7 +2,7 @@
 
 The Humanbound Firewall is an open-source, multi-tier security layer that sits between your users and your AI agent. It evaluates every incoming message through up to four tiers of protection — from zero-cost input sanitization to deep LLM-based contextual analysis — blocking prompt injections, jailbreaks, and scope violations before they reach your agent.
 
-The firewall is available as a standalone Python library ([hb-firewall](https://github.com/humanbound/firewall)) and integrates with the Humanbound CLI for training agent-specific classifiers from your adversarial test data.
+The firewall is available as a standalone Python library ([hb-firewall](https://github.com/humanbound/hb-firewall)) and integrates with the Humanbound CLI for training agent-specific classifiers from your adversarial test data.
 
 ## How It Works
 
@@ -299,7 +299,7 @@ class AgentClassifier:
 
 Your classifier receives raw text — how you process it (embeddings, NLI, zero-shot, fine-tuning) is entirely up to you. The orchestrator doesn't impose any ML framework or approach.
 
-See `detectors/example_classifier.py` in the [hb-firewall repo](https://github.com/humanbound/firewall) for a documented scaffold to build your own.
+See `detectors/example_classifier.py` in the [hb-firewall repo](https://github.com/humanbound/hb-firewall) for a documented scaffold to build your own.
 ```
 
 ---
@@ -512,4 +512,4 @@ def handle_user_message(conversation):
 ```
 
 !!! info "Open Source"
-    The Humanbound Firewall is AGPL-3.0 licensed. Free to use and modify — if you run a modified version as a service, you must open-source your changes. Commercial licensing available. Source code and detector examples at [github.com/humanbound/firewall](https://github.com/humanbound/firewall).
+    The Humanbound Firewall is AGPL-3.0 licensed. Free to use and modify — if you run a modified version as a service, you must open-source your changes. Commercial licensing available. Source code and detector examples at [github.com/humanbound/hb-firewall](https://github.com/humanbound/hb-firewall).
