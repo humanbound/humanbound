@@ -47,12 +47,12 @@ nav:
     - Assessments: testing/assessments.md
     - Reports: testing/reports.md
   - 🛡️ Defence:
-    - Firewall: integrations/firewall.md
-    - Guardrails: integrations/guardrails.md
+    - Firewall: defence/firewall.md
+    - Guardrails: defence/guardrails.md
   - 🔄 AISecOps:
-    - Continuous Monitoring: concepts/campaigns.md
-    - Findings: concepts/findings.md
-    - Test Coverage: concepts/coverage.md
+    - Continuous Monitoring: aisecops/continuous-monitoring.md
+    - Findings: aisecops/findings.md
+    - Test Coverage: aisecops/coverage.md
   - ⚙️ Management:
     - Projects: management/projects.md
     - Experiments: management/experiments.md

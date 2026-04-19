@@ -224,7 +224,7 @@ hb mcp
 
 Multiple team members can run concurrent red team sessions against the same agent. Each user gets their own experiment (scoped by user ID), so sessions don't interfere with each other.
 
-Strategies discovered by one tester (that cause failures) are automatically extracted and made available to future automated tests and other testers' sessions through the platform's [strategy learning system](../concepts/campaigns.md).
+Strategies discovered by one tester (that cause failures) are automatically extracted and made available to future automated tests and other testers' sessions through the platform's [strategy learning system](../aisecops/continuous-monitoring.md).
 
 ---
 
