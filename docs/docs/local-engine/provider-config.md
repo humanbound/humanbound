@@ -75,11 +75,13 @@ hb test --endpoint ./config.json --scope ./scope.json --wait
 
 ## After Login: Humanbound Provider
 
-When logged in, you can use Humanbound as your LLM provider — no external API key needed:
+When logged in, every Humanbound account includes an LLM provider — no external API key required. Tests run on the platform automatically use it:
 
 ```bash
 hb login
-hb config set provider managed
+hb connect --endpoint ./config.json
+hb test --wait
+# Uses Humanbound's LLM provider — no HB_PROVIDER or HB_API_KEY needed
 ```
 
-Every Humanbound account includes an LLM provider — no external API key required. Your local API key is removed when switching to the Humanbound provider.
+You can still use your own provider on the platform by adding it via `hb providers add`.
