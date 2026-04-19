@@ -12,6 +12,9 @@ hb test --endpoint ./config.json --scope ./scope-fca.yaml --wait
 
 On the platform, add the same restrictions to your project scope in the dashboard. Every `hb test` and ASCAM cycle includes them automatically.
 
+!!! tip "Customize for your organization"
+    The templates below are a starting point based on standard regulatory frameworks. Add your own organization-specific policies, internal compliance rules, or industry-specific requirements to the `restricted` list. The `more_info` field accepts any additional context — internal risk classifications, specific regulation references, or business-specific constraints that should influence severity scoring.
+
 ## Scope Templates
 
 Copy the template for your domain, customize the permitted intents for your agent, and test.
