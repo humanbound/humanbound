@@ -6,7 +6,7 @@ AI agents are non-deterministic systems built on foundation models that evolve i
 
 The risks are well-documented. Model provider updates can alter boundary enforcement. System prompt modifications can weaken intent restrictions. New tool integrations can expand the attack surface. Even without any configuration change, stochastic model behavior means that identical inputs may produce different outputs across sessions. These factors create a continuous security gap that point-in-time testing cannot address.
 
-Industry frameworks increasingly recognise this reality. The NIST AI Risk Management Framework (AI RMF) calls for ongoing monitoring of AI systems in production. The EU AI Act mandates continuous post-market surveillance for high-risk AI systems. OWASP's guidance on LLM security emphasises the need for recurring evaluation as models and attack techniques evolve.
+Industry frameworks increasingly recognize this reality. The NIST AI Risk Management Framework (AI RMF) calls for ongoing monitoring of AI systems in production. The EU AI Act mandates continuous post-market surveillance for high-risk AI systems. OWASP's guidance on LLM security emphasizes the need for recurring evaluation as models and attack techniques evolve.
 
 ## Continuous Assurance: From Snapshots to Signals
 

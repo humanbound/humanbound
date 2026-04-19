@@ -2,7 +2,7 @@
 
 ## The Challenge: Runtime Protection for AI Agents
 
-Testing identifies vulnerabilities. Monitoring tracks them over time. But neither prevents attacks from reaching the agent in production. The gap between "knowing an agent is vulnerable" and "preventing exploitation" requires a runtime defence layer — a firewall purpose-built for the semantics of natural language interaction.
+Testing identifies vulnerabilities. Monitoring tracks them over time. But neither prevents attacks from reaching the agent in production. The gap between "knowing an agent is vulnerable" and "preventing exploitation" requires a runtime defense layer — a firewall purpose-built for the semantics of natural language interaction.
 
 Traditional web application firewalls (WAFs) operate on HTTP requests, matching patterns against known attack signatures. AI agent security requires a fundamentally different approach. Attacks arrive as natural language — syntactically valid, contextually plausible, and semantically indistinguishable from legitimate requests when examined in isolation. A prompt injection disguised as a customer support query cannot be caught by regex or keyword matching. It requires understanding of the agent's intended scope, the user's conversational trajectory, and the semantic distance between what was asked and what should be permitted.
 

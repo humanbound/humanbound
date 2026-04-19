@@ -92,7 +92,7 @@ Example: A company with a customer support agent and an internal knowledge agent
 | Phase | Description |
 |---|---|
 | **1. Development: Testing & Security** | Before deployment, test your AI under real-world adversarial conditions. Automated stress tests, LLM-as-a-Judge evaluation, and iterative refinement based on security insights. |
-| **2. Production: Real-Time Protection** | Once live, the [Humanbound Firewall](defence/firewall.md) monitors and filters user prompts in real time. Blocks risky or out-of-scope queries before they reach your agent. |
+| **2. Production: Real-Time Protection** | Once live, the [Humanbound Firewall](defense/firewall.md) monitors and filters user prompts in real time. Blocks risky or out-of-scope queries before they reach your agent. |
 | **3. Post-Deployment: Auditing & Monitoring** | Continuous security checks via [log auditing](testing/log-upload.md), [SIEM integration](integrations/siem.md), and [ASCAM campaigns](aisecops/continuous-monitoring.md). Catch regressions and drift before users notice. |
 
 ### How it Works

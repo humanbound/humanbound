@@ -46,9 +46,9 @@ nav:
     - Log Upload: testing/log-upload.md
     - Assessments: testing/assessments.md
     - Reports: testing/reports.md
-  - 🛡️ Defence:
-    - Firewall: defence/firewall.md
-    - Guardrails: defence/guardrails.md
+  - 🛡️ Defense:
+    - Firewall: defense/firewall.md
+    - Guardrails: defense/guardrails.md
   - 🔄 AISecOps:
     - Continuous Monitoring: aisecops/continuous-monitoring.md
     - Findings: aisecops/findings.md

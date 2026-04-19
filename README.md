@@ -122,7 +122,7 @@ hb test --endpoint ./config.json --wait                      # Auto-probe the bo
 
 ---
 
-## Defence
+## Defense
 
 ### Guardrails Export
 
