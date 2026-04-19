@@ -68,6 +68,7 @@ nav:
   - 🔐 Authentication: authentication.md
   - 📖 Reference:
     - Commands: reference/commands.md
+    - Glossary: reference/glossary.md
   - 🐚 Shell Completion: shell-completion.md
   - 🤝 Community: community.md
 
