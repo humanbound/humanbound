@@ -4,7 +4,7 @@ from ...schemas import TestingLevel
 class TestingConfiguration:
     config = {
         "name": "Functional Test 1",
-        "key": "custom/erl/functional_1",
+        "key": "humanbound/behavioral/qa",
         "description": "Step by Step Happy Flow without questions",
         "category": "qa",
         "data": {

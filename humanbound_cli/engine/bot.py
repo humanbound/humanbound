@@ -31,33 +31,20 @@ def truncate(match):
 
 
 #
-# Custom vendor specific response extraction logic
+# Advanced response extraction for non-standard response formats
 #
 class AdvancedVendorResponseExtractor:
-    #
-    # OPEN.CX CASE
-    #
-    def opencx_extract_response(self, chunk):
-        if "success" not in chunk or not chunk["success"]:
-            return "<ERROR_1>"
 
-        if "data" not in chunk or not "autopilotResponse" in chunk["data"]:
-            return "<ERROR_2>"
-        if (
-            "type" not in chunk["data"]["autopilotResponse"]
-            or chunk["data"]["autopilotResponse"]["type"] != "text"
-        ):
-            return "<ERROR_3>"
-
-        if "value" not in chunk["data"]["autopilotResponse"]:
-            return "<ERROR_4>"
-        if "error" not in chunk["data"]["autopilotResponse"]["value"]:
-            return "<ERROR_5>"
-
-        if "content" not in chunk["data"]["autopilotResponse"]["value"]:
-            return "<ERROR_6>"
-
-        return chunk["data"]["autopilotResponse"]["value"]["content"]
+    def _extract_nested_response(self, chunk):
+        """Extract response from deeply nested response structures."""
+        try:
+            if "data" in chunk and "autopilotResponse" in chunk.get("data", {}):
+                value = chunk["data"]["autopilotResponse"].get("value", {})
+                if isinstance(value, dict) and "content" in value:
+                    return value["content"]
+        except (KeyError, TypeError):
+            pass
+        return None
 
 
 #
@@ -97,10 +84,10 @@ class Bot(AdvancedVendorResponseExtractor):
                 if key in chunk and isinstance(chunk[key], str):
                     return chunk[key]
 
-            #
-            # after this part start deeper integrations with vendors
-            #
-            return self.opencx_extract_response(chunk)
+            # Try nested response extraction for non-standard formats
+            nested = self._extract_nested_response(chunk)
+            if nested:
+                return nested
 
         return str(chunk)
 
