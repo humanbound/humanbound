@@ -19,11 +19,6 @@ TOKEN_FILE = CONFIG_DIR / "credentials.json"
 DEFAULT_TIMEOUT = 30
 LONG_TIMEOUT = 120  # For operations like report generation
 
-# Serve / tunnel settings
-DEFAULT_RELAY_URL = "wss://relay.humanbound.ai/tunnel"
-SERVE_HEALTH_CHECK_TIMEOUT = 60  # seconds to wait for server health
-SERVE_INSTALL_TIMEOUT = 120  # seconds to wait for dep install
-SERVE_PORT_RANGE = (8000, 9000)  # fallback port scan range
 
 
 def get_base_url() -> str:

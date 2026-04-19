@@ -7,6 +7,8 @@ import sys
 from pathlib import Path
 
 from ..client import HumanboundClient
+from ..engine import get_runner
+from ..engine.platform_runner import PlatformTestRunner
 from ..exceptions import NotAuthenticatedError, APIError
 
 console = Console()
@@ -59,11 +61,14 @@ def guardrails_command(output: str, output_format: str, vendor: str, model: str,
       hb guardrails --format=yaml            # Output as YAML
       hb guardrails --include-reasoning      # Include reasoning in output
     """
-    client = HumanboundClient()
+    runner = get_runner()
+    is_platform = isinstance(runner, PlatformTestRunner)
 
-    if not client.is_authenticated():
-        console_err.print("[red]Not authenticated.[/red] Run 'hb login' first.")
-        raise SystemExit(1)
+    if not is_platform:
+        _local_guardrails(output, output_format, vendor)
+        return
+
+    client = runner.client
 
     if not client.project_id:
         console_err.print("[yellow]No project selected.[/yellow]")
@@ -111,6 +116,75 @@ def guardrails_command(output: str, output_format: str, vendor: str, model: str,
     except APIError as e:
         console_err.print(f"[red]Error:[/red] {e}")
         raise SystemExit(1)
+
+
+def _local_guardrails(output, output_format, vendor):
+    """Generate guardrails from local test results."""
+    results_dir = Path(".humanbound/results")
+    if not results_dir.exists():
+        console_err.print("[yellow]No local test results found.[/yellow]")
+        console_err.print("Run a test first: hb test --endpoint ./config.json --repo . --wait")
+        raise SystemExit(1)
+
+    # Find latest experiment
+    exp_dirs = sorted(results_dir.iterdir(), reverse=True)
+    if not exp_dirs:
+        console_err.print("[yellow]No experiments found.[/yellow]")
+        raise SystemExit(1)
+
+    meta_file = exp_dirs[0] / "meta.json"
+    logs_file = exp_dirs[0] / "logs.jsonl"
+
+    if not meta_file.exists():
+        console_err.print(f"[yellow]No results in {exp_dirs[0].name}.[/yellow]")
+        raise SystemExit(1)
+
+    meta = json.loads(meta_file.read_text())
+    insights = meta.get("insights", [])
+
+    # Read logs for pattern extraction
+    logs = []
+    if logs_file.exists():
+        for line in logs_file.read_text().strip().split("\n"):
+            if line.strip():
+                logs.append(json.loads(line))
+
+    # Generate rules from fail insights
+    rules = []
+    for i, insight in enumerate(insights):
+        if insight.get("result") != "fail":
+            continue
+        rules.append({
+            "id": f"gr-{i+1:03d}",
+            "threat_class": insight.get("category", "unknown"),
+            "pattern": insight.get("explanation", "")[:200],
+            "action": "block",
+            "severity": insight.get("severity", "medium"),
+            "source": f"{exp_dirs[0].name}",
+        })
+
+    guardrails = {
+        "version": "1.0",
+        "vendor": vendor,
+        "rules": rules,
+        "metadata": {
+            "experiment": exp_dirs[0].name,
+            "total_rules": len(rules),
+        },
+    }
+
+    # Format output
+    if output_format == "yaml":
+        formatted = _format_yaml(guardrails)
+    else:
+        formatted = json.dumps(guardrails, indent=2, default=str)
+
+    if output:
+        Path(output).write_text(formatted)
+        console.print(f"[green]Guardrails exported to:[/green] {output}")
+        console.print(f"[dim]Rules: {len(rules)} | Source: {exp_dirs[0].name}[/dim]")
+    else:
+        print(formatted)
 
 
 def _format_yaml(guardrails: dict) -> str:

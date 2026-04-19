@@ -7,6 +7,8 @@ from rich.table import Table
 from rich.progress import Progress, BarColumn, TextColumn
 
 from ..client import HumanboundClient
+from ..engine import get_runner
+from ..engine.platform_runner import PlatformTestRunner
 from ..exceptions import NotAuthenticatedError, APIError
 
 console = Console()
@@ -38,11 +40,26 @@ def posture_command(
       hb posture --coverage         # Include test coverage
       hb posture --json             # Output as JSON
     """
-    client = HumanboundClient()
+    # --- Runner selection ---
+    runner = get_runner()
+    is_platform = isinstance(runner, PlatformTestRunner)
 
-    if not client.is_authenticated():
-        console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
-        raise SystemExit(1)
+    if not is_platform:
+        # Local mode
+        if trends:
+            console.print("[yellow]Posture history requires login.[/yellow]")
+            console.print("Track score trends, finding lifecycle, and regressions across scans.\n")
+            console.print("  hb login (free, 3 scans/month)")
+            raise SystemExit(0)
+        if org:
+            console.print("[yellow]Organisation posture requires login.[/yellow]")
+            console.print("  hb login")
+            raise SystemExit(0)
+        _local_posture(as_json)
+        return
+
+    # Platform mode
+    client = runner.client
 
     # Org-level posture does not require a project
     if org:
@@ -130,6 +147,55 @@ def posture_command(
         else:
             console.print(f"[red]Error:[/red] {e}")
             raise SystemExit(1)
+
+
+def _local_posture(as_json: bool):
+    """Read posture from latest local results. Full implementation in Phase 3."""
+    from pathlib import Path
+    import json
+
+    results_dir = Path(".humanbound/results")
+    if not results_dir.exists():
+        console.print("[yellow]No local test results found.[/yellow]")
+        console.print("Run a test first: hb test --endpoint ./config.json --repo . --wait")
+        raise SystemExit(1)
+
+    # Find latest experiment dir
+    exp_dirs = sorted(results_dir.iterdir(), reverse=True) if results_dir.is_dir() else []
+    if not exp_dirs:
+        console.print("[yellow]No experiments found.[/yellow]")
+        raise SystemExit(1)
+
+    meta_file = exp_dirs[0] / "meta.json"
+    if not meta_file.exists():
+        console.print(f"[yellow]No results in {exp_dirs[0].name}.[/yellow]")
+        raise SystemExit(1)
+
+    meta = json.loads(meta_file.read_text())
+    results = meta.get("results", {})
+    posture_data = results.get("posture") or meta.get("posture") or {}
+
+    if as_json:
+        print(json.dumps(posture_data, indent=2, default=str))
+        return
+
+    # Map local format (posture key) to display format (overall_score key)
+    if "posture" in posture_data and "overall_score" not in posture_data:
+        posture_data["overall_score"] = posture_data["posture"]
+
+    if not posture_data:
+        console.print("[yellow]No posture data in latest experiment.[/yellow]")
+        return
+
+    _display_posture(posture_data)
+
+    # Local-specific next steps
+    console.print()
+    console.print("[dim]Next:[/dim]")
+    console.print("  [dim]hb logs                View conversation details[/dim]")
+    console.print("  [dim]hb report -o report.html  Generate report[/dim]")
+    console.print("  [dim]hb guardrails          Export firewall rules[/dim]")
+    console.print("  [dim]hb login               Track posture over time[/dim]")
 
 
 def _display_posture(posture: dict):

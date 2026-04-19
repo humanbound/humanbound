@@ -8,6 +8,8 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 from ..client import HumanboundClient
+from ..engine import get_runner
+from ..engine.platform_runner import PlatformTestRunner
 from ..exceptions import NotAuthenticatedError, APIError
 
 console = Console()
@@ -88,11 +90,18 @@ def logs_group(ctx, experiment_id, output_format, output, verdict, page, size, f
     if ctx.invoked_subcommand is not None:
         return
 
-    client = HumanboundClient()
+    # --- Runner selection ---
+    runner = get_runner()
+    is_platform = isinstance(runner, PlatformTestRunner)
 
-    if not client.is_authenticated():
-        console_err.print("[red]Not authenticated.[/red] Run 'hb login' first.")
-        raise SystemExit(1)
+    if not is_platform:
+        # Local mode: read from files (Phase 3+)
+        # For now, only experiment-level table/json/html from local results
+        _local_logs(experiment_id, output_format, output, verdict, page, size)
+        return
+
+    # Platform mode: full feature set (assessments, findings, project-level, etc.)
+    client = runner.client
 
     if not client.project_id:
         console_err.print("[yellow]No project selected.[/yellow]")
@@ -551,6 +560,87 @@ def _export_html(client: HumanboundClient, experiment_id: str, output: str):
     filename = output or f"experiment_{experiment_id[:8]}_report.html"
     Path(filename).write_text(report_html)
     console.print(f"[green]HTML report exported to:[/green] {filename}")
+
+
+# ---------------------------------------------------------------------------
+# Local mode handler (reads from .humanbound/results/)
+# ---------------------------------------------------------------------------
+
+def _local_logs(experiment_id, output_format, output, verdict, page, size):
+    """Read logs from local results files. Full implementation in Phase 3."""
+    from pathlib import Path
+
+    results_dir = Path(".humanbound/results")
+    if not results_dir.exists():
+        console_err.print("[yellow]No local test results found.[/yellow]")
+        console_err.print("Run a test first: hb test --endpoint ./config.json --repo . --wait")
+        raise SystemExit(1)
+
+    # Find latest experiment dir (or match experiment_id)
+    exp_dirs = sorted(results_dir.iterdir(), reverse=True) if results_dir.is_dir() else []
+    if experiment_id:
+        exp_dirs = [d for d in exp_dirs if experiment_id in d.name]
+
+    if not exp_dirs:
+        console_err.print("[yellow]No matching experiment found.[/yellow]")
+        raise SystemExit(1)
+
+    logs_file = exp_dirs[0] / "logs.jsonl"
+    if not logs_file.exists():
+        console_err.print(f"[yellow]No logs in {exp_dirs[0].name}.[/yellow]")
+        raise SystemExit(1)
+
+    # Read logs
+    import json as _json
+    logs = []
+    for line in logs_file.read_text().strip().split("\n"):
+        if line.strip():
+            logs.append(_json.loads(line))
+
+    # Filter by verdict
+    if verdict and verdict != "all":
+        logs = [l for l in logs if l.get("result") == verdict]
+
+    # Paginate
+    start = (page - 1) * size
+    page_logs = logs[start:start + size]
+
+    if output_format == "json":
+        json_output = _json.dumps({"logs": page_logs, "total": len(logs)}, indent=2, default=str)
+        if output:
+            Path(output).write_text(json_output)
+            console_err.print(f"[green]JSON exported to:[/green] {output}")
+        else:
+            print(json_output)
+    elif output_format == "html":
+        # Build pseudo-experiment for report template
+        exp_name = exp_dirs[0].name
+        meta_file = exp_dirs[0] / "meta.json"
+        meta = _json.loads(meta_file.read_text()) if meta_file.exists() else {}
+
+        experiment = {
+            "id": meta.get("id", exp_name),
+            "name": meta.get("name", "Local Experiment"),
+            "status": meta.get("status", "Finished"),
+            "test_category": meta.get("test_category", ""),
+            "testing_level": meta.get("testing_level", ""),
+            "created_at": meta.get("created_at", ""),
+            "results": {
+                "stats": meta.get("stats", {}),
+                "insights": meta.get("insights", []),
+            },
+        }
+
+        from ..report import generate_html_report
+        report_html = generate_html_report(experiment, logs)
+
+        filename = output or f"logs_{exp_name}.html"
+        Path(filename).write_text(report_html)
+        console_err.print(f"[green]HTML report exported to:[/green] {filename}")
+    else:
+        _show_logs_table(page_logs, verdict or "all")
+        if len(logs) > start + size:
+            console.print(f"\n[dim]Showing {len(page_logs)} of {len(logs)}. Use --page to see more.[/dim]")
 
 
 # ---------------------------------------------------------------------------

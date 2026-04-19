@@ -31,6 +31,12 @@ nav:
     - Installation: getting-started/installation.md
     - Quick Start: getting-started/quick-start.md
     - Agent Configuration: getting-started/agent-config.md
+  - 🖥️ Local Engine:
+    - Overview: local-engine/index.md
+    - Provider Configuration: local-engine/provider-config.md
+    - Scope Discovery: local-engine/scope-discovery.md
+    - Orchestrators: local-engine/orchestrators.md
+    - Output & Export: local-engine/output-formats.md
   - 💡 Concepts:
     - LLM-as-a-Judge: concepts/llm-as-judge.md
     - Security Posture: concepts/security-posture.md

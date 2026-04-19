@@ -59,3 +59,7 @@ relay/
 *.html
 
 .claude
+
+# Internal plans (not for distribution)
+docs/plans/
+.humanbound/

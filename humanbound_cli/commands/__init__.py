@@ -1,11 +1,11 @@
 """CLI command modules."""
 
 from . import (
-    auth, orgs, projects, experiments, init, test, logs, posture,
+    auth, orgs, projects, experiments, test, logs, posture,
     guardrails, docs, providers, findings, api_keys, members,
-    coverage, campaigns, upload_logs, sentinel, discover,
-    connectors, inventory, completion, connect, report, monitor,
-    webhooks, assessments, firewall,
+    campaigns, upload_logs, sentinel,
+    completion, connect, report, monitor,
+    webhooks, assessments, firewall, config_cmd,
 )
 
 # MCP command is optional — only available when mcp SDK is installed
@@ -19,7 +19,6 @@ __all__ = [
     "orgs",
     "projects",
     "experiments",
-    "init",
     "test",
     "logs",
     "posture",
@@ -29,13 +28,9 @@ __all__ = [
     "findings",
     "api_keys",
     "members",
-    "coverage",
     "campaigns",
     "upload_logs",
     "sentinel",
-    "discover",
-    "connectors",
-    "inventory",
     "completion",
     "connect",
     "report",

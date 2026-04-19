@@ -4,15 +4,20 @@
 
 AI agent security testing platform. Automated adversarial and behavioral testing, LLM-as-a-Judge evaluation, runtime firewall, OWASP-aligned attack scenarios, posture scoring, and guardrails export -- from your terminal to your CI/CD pipeline.
 
-```
+```bash
 pip install humanbound-cli
 
+# Local (no login required)
+$ hb test --endpoint ./bot-config.json --scope ./scope.yaml --wait
+
+# Platform (with login)
 $ hb login
 $ hb connect --endpoint ./bot-config.json
 $ hb posture
 ```
 
 [Get Started](getting-started/installation.md){ .md-button .md-button--primary }
+[Local Engine](local-engine/index.md){ .md-button }
 
 ---
 

@@ -29,7 +29,9 @@ from .commands import (
     assessments,
     firewall,
     redteam,
+    report,
     mcp,
+    config_cmd,
 )
 
 console = Console()
@@ -51,22 +53,24 @@ def get_client() -> HumanboundClient:
 def cli(ctx, base_url: str):
     """Humanbound CLI - AI agent security testing from the command line.
 
-    Use 'hb login' to authenticate, then connect your agent and run tests.
+    \b
+    Local (no login required):
+      hb test --endpoint ./config.json --repo . --wait    # Run test
+      hb posture                                          # View score
+      hb logs                                             # View logs
+      hb report -o report.html                            # Export report
+      hb guardrails -o rules.yaml                         # Export rules
 
     \b
-    Quick Start:
-      hb login                                # Authenticate
-      hb connect --endpoint ./bot-config.json # Connect your agent
-      hb test                                 # Run security tests
-      hb status                               # Check progress
-      hb findings                             # View results
-      hb posture                              # View posture score
-      hb projects report                       # Share with team
-      hb monitor                              # Start continuous monitoring
+    Platform (with login):
+      hb login                                            # Authenticate
+      hb connect --endpoint ./config.json                 # Connect agent
+      hb test --wait                                      # Run test
+      hb posture --history                                # Score trends
+      hb monitor enable --schedule daily                  # Continuous testing
 
     \b
-    Platform Discovery:
-      hb connect --vendor microsoft           # Scan cloud for shadow AI
+    Docs: https://docs.humanbound.ai
     """
     ctx.ensure_object(dict)
     ctx.obj["base_url"] = base_url
@@ -94,6 +98,7 @@ cli.add_command(orgs.orgs_group)
 cli.add_command(completion.completion_command)
 cli.add_command(guardrails.guardrails_command)
 cli.add_command(docs.docs_command)
+cli.add_command(config_cmd.config_group)
 
 # MCP server (optional — requires mcp SDK)
 if mcp is not None:
@@ -106,6 +111,7 @@ cli.add_command(logs.logs_group)
 cli.add_command(posture.posture_command)
 cli.add_command(monitor.monitor_command)
 cli.add_command(redteam.redteam_group)
+cli.add_command(report.report_command)
 
 
 

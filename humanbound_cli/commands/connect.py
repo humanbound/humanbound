@@ -66,7 +66,6 @@ def _derive_agent_name(endpoint: str) -> str:
 @click.option("--prompt", "-p", type=click.Path(exists=True), help="System prompt file (agent path)")
 @click.option("--repo", "-r", type=click.Path(exists=True), help="Repository path (agent path)")
 @click.option("--openapi", "-o", type=click.Path(exists=True), help="OpenAPI spec file (agent path)")
-@click.option("--serve", "-s", is_flag=True, help="Launch repo agent locally (agent path, requires --repo)")
 @click.option("--tenant", help="Azure tenant ID (platform path, bypasses browser)")
 @click.option("--client-id", "client_id", help="Service principal client ID (platform path)")
 @click.option("--client-secret", "client_secret", help="Service principal secret (platform path)")
@@ -74,7 +73,7 @@ def _derive_agent_name(endpoint: str) -> str:
 @click.option("--level", "-l", type=click.Choice(["unit", "system", "acceptance"]), default="unit", help="Testing depth: unit (quick), system (deep), acceptance (full)")
 @click.option("--yes", "-y", is_flag=True, help="Skip confirmations")
 @click.option("--timeout", "-t", type=int, default=SCAN_TIMEOUT, help="Request timeout in seconds")
-def connect_command(endpoint, vendor, name, prompt, repo, openapi, serve,
+def connect_command(endpoint, vendor, name, prompt, repo, openapi,
                     tenant, client_id, client_secret, context, level, yes, timeout):
     """Connect your AI agent or scan your cloud platform.
 
@@ -97,7 +96,7 @@ def connect_command(endpoint, vendor, name, prompt, repo, openapi, serve,
       hb connect --vendor microsoft
       hb connect --vendor microsoft --tenant abc-123 --client-id x --client-secret y
     """
-    has_agent_flags = any([endpoint, prompt, repo, openapi, serve])
+    has_agent_flags = any([endpoint, prompt, repo, openapi])
     has_platform_flags = any([vendor, tenant, client_id, client_secret])
 
     if has_agent_flags and has_platform_flags:
@@ -107,7 +106,7 @@ def connect_command(endpoint, vendor, name, prompt, repo, openapi, serve,
     if has_platform_flags:
         _connect_platform(vendor, name, tenant, client_id, client_secret, yes, timeout)
     elif has_agent_flags:
-        _connect_agent(endpoint, name, prompt, repo, openapi, serve, context, level, yes, timeout)
+        _connect_agent(endpoint, name, prompt, repo, openapi, context, level, yes, timeout)
     else:
         console.print("[yellow]Specify a path:[/yellow]")
         console.print()
@@ -121,14 +120,8 @@ def connect_command(endpoint, vendor, name, prompt, repo, openapi, serve,
 # -- Agent path ----------------------------------------------------------------
 
 
-def _connect_agent(endpoint, name, prompt, repo, openapi, serve, context, level, yes, timeout):
+def _connect_agent(endpoint, name, prompt, repo, openapi, context, level, yes, timeout):
     """Agent path: probe -> create project -> auto-test -> show results."""
-    from .init import (
-        _scan_with_progress, _display_scope, _display_dashboard,
-        _load_integration, _detect_runtime, _start_serve, _cleanup_serve,
-        _get_source_description, _SCAN_PHASES,
-    )
-
     client = HumanboundClient()
 
     if not client.is_authenticated():
@@ -138,11 +131,6 @@ def _connect_agent(endpoint, name, prompt, repo, openapi, serve, context, level,
     if not client.organisation_id:
         console.print("[yellow]No organisation selected.[/yellow]")
         console.print("Use 'hb switch <id>' to select an organisation first.")
-        raise SystemExit(1)
-
-    # Validate --serve requires --repo
-    if serve and not repo:
-        console.print("[red]--serve requires --repo.[/red] Provide a repository path.")
         raise SystemExit(1)
 
     # Count extraction sources
@@ -157,9 +145,6 @@ def _connect_agent(endpoint, name, prompt, repo, openapi, serve, context, level,
         name = _derive_agent_name(endpoint)
 
     console.print(f"\n[bold]Connecting agent:[/bold] {name}\n")
-
-    _server = None
-    _tunnel = None
 
     try:
         # -- Build sources array for POST /scan --------------------------------
@@ -202,16 +187,6 @@ def _connect_agent(endpoint, name, prompt, repo, openapi, serve, context, level,
             else:
                 console.print(f"  [yellow]![/yellow] Repository: no relevant files found")
 
-            runtime_info = _detect_runtime(repo)
-
-            if runtime_info and not serve and not endpoint and not yes:
-                console.print()
-                console.print(f"  [cyan]i[/cyan] Detected runnable agent: [bold]{runtime_info.framework.title()}[/bold] ({runtime_info.entry_point})")
-                console.print(f"    Start command: [dim]{runtime_info.start_cmd.replace('{port}', str(runtime_info.port))}[/dim]")
-                from rich.prompt import Confirm
-                if Confirm.ask("    Launch it for live probing?", default=False):
-                    serve = True
-
         # --openapi -> text source
         if openapi:
             from ..extractors.openapi import OpenAPIParser
@@ -238,18 +213,6 @@ def _connect_agent(endpoint, name, prompt, repo, openapi, serve, context, level,
             chat_ep = bot_config.get("chat_completion", {}).get("endpoint", "")
             console.print(f"  [green]\u2713[/green] Endpoint source: [dim]{chat_ep or '(from config)'}[/dim]")
             sources.append({"source": "endpoint", "data": bot_config})
-
-        # -- Serve lifecycle: start server + tunnel ----------------------------
-        if serve and repo:
-            if not runtime_info:
-                console.print("[yellow]Could not detect a runnable agent in the repository.[/yellow]")
-                console.print("[dim]Continuing with static analysis only.[/dim]")
-            else:
-                _server, _tunnel, serve_source = _start_serve(
-                    client, repo, runtime_info, yes
-                )
-                if serve_source:
-                    sources.append(serve_source)
 
         # Merge accumulated text parts into a single text source
         if text_parts:
@@ -350,8 +313,6 @@ def _connect_agent(endpoint, name, prompt, repo, openapi, serve, context, level,
     except APIError as e:
         console.print(f"[red]Error:[/red] {e}")
         raise SystemExit(1)
-    finally:
-        _cleanup_serve(_tunnel, _server)
 
 
 # -- Platform path -------------------------------------------------------------
@@ -511,7 +472,7 @@ def _connect_platform(vendor, name, tenant, client_id, client_secret, yes, timeo
                 persist_result = client.persist_discovery(nonce)
             _display_persist_summary(persist_result)
         else:
-            console.print("\n[yellow]Cannot persist:[/yellow] no nonce returned (Redis may be unavailable).")
+            console.print("\n[yellow]Cannot persist:[/yellow] server did not return a session token.")
 
         # -- Next suggestions --------------------------------------------------
         _print_next([

@@ -1,10 +1,13 @@
 """Report generation command."""
 
 import click
+import json as _json
 from pathlib import Path
 from rich.console import Console
 
 from ..client import HumanboundClient
+from ..engine import get_runner
+from ..engine.platform_runner import PlatformTestRunner
 from ..exceptions import NotAuthenticatedError, APIError
 
 console = Console()
@@ -18,22 +21,34 @@ console = Console()
 def report_command(org: bool, assessment_id: str, output: str, as_json: bool):
     """Generate a shareable security report.
 
-    Default: project-level report for current project.
-    Use --org for organisation-wide report (all projects + inventory).
-    Use --assessment for a specific campaign/assessment report.
+    \b
+    Local mode:
+      hb report                          # Report from latest local test
+      hb report -o report.html           # Custom output path
+      hb report --json -o results.json   # JSON format
 
     \b
-    Examples:
+    Platform mode:
       hb report                          # Current project report
       hb report --org                    # Org-wide report
       hb report --assessment abc123      # Specific assessment
-      hb report -o ./report.html         # Custom output path
     """
-    client = HumanboundClient()
+    runner = get_runner()
+    is_platform = isinstance(runner, PlatformTestRunner)
 
-    if not client.is_authenticated():
-        console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
-        raise SystemExit(1)
+    if not is_platform:
+        if org:
+            console.print("[yellow]Organisation report requires login.[/yellow]")
+            console.print("  hb login")
+            raise SystemExit(0)
+        if assessment_id:
+            console.print("[yellow]Assessment report requires login.[/yellow]")
+            console.print("  hb login")
+            raise SystemExit(0)
+        _local_report(output, as_json)
+        return
+
+    client = runner.client
 
     try:
         if org:
@@ -103,3 +118,69 @@ def report_command(org: bool, assessment_id: str, output: str, as_json: bool):
     except APIError as e:
         console.print(f"[red]Error:[/red] {e}")
         raise SystemExit(1)
+
+
+def _local_report(output: str, as_json: bool):
+    """Generate report from local test results."""
+    results_dir = Path(".humanbound/results")
+    if not results_dir.exists():
+        console.print("[yellow]No local test results found.[/yellow]")
+        console.print("Run a test first: hb test --endpoint ./config.json --repo . --wait")
+        raise SystemExit(1)
+
+    # Find latest experiment
+    exp_dirs = sorted(results_dir.iterdir(), reverse=True)
+    if not exp_dirs:
+        console.print("[yellow]No experiments found.[/yellow]")
+        raise SystemExit(1)
+
+    exp_dir = exp_dirs[0]
+    meta_file = exp_dir / "meta.json"
+    logs_file = exp_dir / "logs.jsonl"
+
+    if not meta_file.exists():
+        console.print(f"[yellow]No results in {exp_dir.name}.[/yellow]")
+        raise SystemExit(1)
+
+    meta = _json.loads(meta_file.read_text())
+
+    # Read logs
+    logs = []
+    if logs_file.exists():
+        for line in logs_file.read_text().strip().split("\n"):
+            if line.strip():
+                logs.append(_json.loads(line))
+
+    if as_json:
+        export = {
+            "experiment": meta,
+            "logs": logs,
+            "total_logs": len(logs),
+        }
+        content = _json.dumps(export, indent=2, default=str)
+        filepath = output or f"report-{exp_dir.name}.json"
+    else:
+        # Build experiment dict matching what generate_html_report expects
+        experiment = {
+            "id": meta.get("id", exp_dir.name),
+            "name": meta.get("name", "Local Experiment"),
+            "status": meta.get("status", "Finished"),
+            "test_category": meta.get("test_category", ""),
+            "testing_level": meta.get("testing_level", ""),
+            "lang": meta.get("lang", ""),
+            "created_at": meta.get("created_at", ""),
+            "results": {
+                "stats": meta.get("stats", {}),
+                "insights": meta.get("insights", []),
+                "posture": meta.get("posture", {}),
+                "exec_t": meta.get("exec_t", {}),
+                "tests": {},
+            },
+        }
+
+        from ..report import generate_html_report
+        content = generate_html_report(experiment, logs)
+        filepath = output or f"report-{exp_dir.name}.html"
+
+    Path(filepath).write_text(content)
+    console.print(f"[green]Report saved to:[/green] {filepath}")

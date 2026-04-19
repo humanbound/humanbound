@@ -9,6 +9,8 @@ from rich.console import Console
 from rich.progress import Progress
 
 from ..client import HumanboundClient
+from ..engine import get_runner
+from ..engine.platform_runner import PlatformTestRunner
 from ..exceptions import NotAuthenticatedError, APIError
 
 console = Console()
@@ -61,11 +63,18 @@ def train_command(model_path, last_n, from_date, until_date, min_samples,
             sys.exit(1)
 
     try:
-        client = HumanboundClient()
-        project_id = client.project_id
-        if not project_id:
-            console.print("[red]No active project.[/red] Run: hb projects use <id>")
-            sys.exit(1)
+        runner = get_runner()
+        is_platform = isinstance(runner, PlatformTestRunner)
+
+        if is_platform:
+            client = runner.client
+            project_id = client.project_id
+            if not project_id:
+                console.print("[red]No active project.[/red] Run: hb projects use <id>")
+                sys.exit(1)
+        else:
+            client = None
+            project_id = "local"
 
         # Load detector
         try:
@@ -84,20 +93,38 @@ def train_command(model_path, last_n, from_date, until_date, min_samples,
         console.print(f"  Project: {project_id[:8]}...")
         console.print(f"  Model: {model_path}")
 
-        # Step 1: Fetch experiments
-        console.print(f"\n[bold]Step 1:[/bold] Fetching experiments...")
-        adv_exps = _fetch_experiments(client, "adversarial", last_n=last_n,
-                                       from_date=from_date, until_date=until_date)
-        qa_exps = _fetch_experiments(client, "adversarial", exclude=True,
-                                      last_n=last_n, from_date=from_date, until_date=until_date)
-        if not adv_exps:
-            console.print("[red]No finished adversarial experiments.[/red] Run: hb test")
-            sys.exit(1)
-        console.print(f"  Found {len(adv_exps)} adversarial + {len(qa_exps)} QA experiments")
+        # Step 1: Fetch logs
+        logs = []
+        if is_platform:
+            console.print(f"\n[bold]Step 1:[/bold] Fetching experiments...")
+            adv_exps = _fetch_experiments(client, "adversarial", last_n=last_n,
+                                           from_date=from_date, until_date=until_date)
+            qa_exps = _fetch_experiments(client, "adversarial", exclude=True,
+                                          last_n=last_n, from_date=from_date, until_date=until_date)
+            if not adv_exps and not import_files:
+                console.print("[red]No finished adversarial experiments.[/red] Run: hb test")
+                sys.exit(1)
+            console.print(f"  Found {len(adv_exps)} adversarial + {len(qa_exps)} QA experiments")
 
-        # Step 2: Fetch logs
-        console.print(f"\n[bold]Step 2:[/bold] Pulling conversation logs...")
-        logs = _fetch_logs(client, adv_exps + qa_exps)
+            console.print(f"\n[bold]Step 2:[/bold] Pulling conversation logs...")
+            logs = _fetch_logs(client, adv_exps + qa_exps)
+        else:
+            # Local mode: read from .humanbound/results/
+            console.print(f"\n[bold]Step 1:[/bold] Reading local test results...")
+            import json as _json
+            results_dir = Path(".humanbound/results")
+            if results_dir.exists():
+                for d in sorted(results_dir.iterdir(), reverse=True)[:last_n]:
+                    logs_file = d / "logs.jsonl"
+                    if logs_file.exists():
+                        for line in logs_file.read_text().strip().split("\n"):
+                            if line.strip():
+                                logs.append(_json.loads(line))
+            if not logs and not import_files:
+                console.print("[yellow]No local test results found.[/yellow]")
+                console.print("Run a test first: hb test --endpoint ./config.json --repo . --wait")
+                sys.exit(1)
+            console.print(f"  Found {len(logs)} conversations from local results")
 
         # Import external logs if provided
         if import_files:
@@ -127,7 +154,10 @@ def train_command(model_path, last_n, from_date, until_date, min_samples,
         console.print(f"  Collected {len(logs)} conversations ({n_pass} pass, {n_fail} fail)")
         console.print(f"  Training on {adv_fail} failed adversarial conversations")
 
-        permitted, restricted = _fetch_intents(client, project_id)
+        if is_platform:
+            permitted, restricted = _fetch_intents(client, project_id)
+        else:
+            permitted, restricted = [], []
         if permitted or restricted:
             console.print(f"  Intents: {len(permitted or [])} permitted, {len(restricted or [])} restricted")
 

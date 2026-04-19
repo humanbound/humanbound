@@ -7,7 +7,6 @@ hb test [OPTIONS]
 
 Test Configuration:
   -t, --test-category     Test to run (default: humanbound/adversarial/owasp_agentic)
-                          Accepts any category path (e.g. viva/behavioral/sofia_kb_quoting)
   --category              Shorthand alias for --test-category
   -l, --testing-level     Depth: unit | system | acceptance
   --deep                  Shortcut for --testing-level system
