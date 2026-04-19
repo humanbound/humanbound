@@ -52,13 +52,40 @@ Development                    Operations                    Production
 └──────────────┘          └──────────────────┘          └──────────────┘
 ```
 
-Each layer feeds the next:
+Each layer feeds the next — and the system improves at every stage.
 
-- **Testing** produces findings and guardrail rules. These represent the security baseline.
-- **Monitoring** runs tests on a schedule, tracks findings across cycles, detects regressions, and accumulates attack intelligence. It answers: "has the baseline changed?"
-- **Firewall** uses guardrail rules and trained classifiers at runtime to block attacks before they reach the agent. Its effectiveness improves as monitoring produces more training data.
+## From Point-in-Time to Continuous Improvement
 
-The feedback loop is bidirectional. Production firewall verdicts — real attacks blocked, false positives identified — flow back into the monitoring layer as training signals. Monitoring discoveries — new vulnerability patterns, evolved attack strategies — flow forward into updated firewall rules.
+A single `hb test` run produces a security snapshot: posture score, findings, guardrail rules. This is valuable, but it's frozen in time. The agent will change. The model behind it will change. The attacks targeting it will change.
+
+Enabling continuous monitoring transforms this snapshot into a living system:
+
+**Stage 1: Testing produces the baseline.**
+A one-time test identifies vulnerabilities, generates guardrail rules, and trains a firewall classifier. This is the starting point — the agent's security posture at a single moment.
+
+**Stage 2: Monitoring evolves the attacker.**
+With each monitoring cycle, the attack engine accumulates intelligence. Strategies that breached defenses are preserved and refined. New vulnerability patterns are discovered autonomously. The attacker doesn't start from scratch each cycle — it builds on everything it learned before. By the tenth cycle, the engine knows the agent's weak points, its response patterns, its edge cases. It attacks with precision that no static test suite can match.
+
+**Stage 3: The firewall absorbs the intelligence.**
+Every monitoring cycle produces richer data: more diverse attack patterns, more boundary conditions, more examples of what legitimate vs malicious interaction looks like for *this specific agent*. This data flows into the firewall's training pipeline. Classifier accuracy improves with every cycle. Guardrail rules become more precise. The firewall doesn't just block known attacks — it learns to recognize the attack patterns that Humanbound's engine discovered through autonomous exploration.
+
+**Stage 4: Production verdicts close the loop.**
+In production, the firewall makes real-time decisions on real user input — blocking attacks, allowing legitimate requests, flagging uncertain cases. These verdicts are ground truth: verified outcomes from actual interactions, not synthetic test data. When this ground truth flows back into the monitoring layer, it creates a signal that no amount of testing alone can produce. The monitoring engine uses production verdicts to refine its attack strategies, prioritize its testing, and validate its own effectiveness.
+
+```
+Testing ──→ Monitoring ──→ Firewall ──→ Production
+   ↑              ↑              ↑             │
+   │              │              │             │
+   │              │              └─ classifier  │
+   │              │                 retraining ←┘
+   │              └── strategy                 
+   │                  evolution ←── verdicts    
+   └── baseline                                
+       reset on ←── regression                 
+       deployment    detection                 
+```
+
+The result is a system where security doesn't degrade with time — it compounds. Every day the agent is monitored, the attacker gets smarter, the firewall gets more accurate, and the feedback loop gets tighter. This is the fundamental shift from point-in-time testing to continuous security assurance.
 
 ## Campaigns
 
