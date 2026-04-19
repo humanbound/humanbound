@@ -55,11 +55,12 @@ nav:
     - Model Providers: management/providers.md
     - API Keys: management/api-keys.md
     - Team Members: management/members.md
+  - 🛡️ Defence:
+    - Firewall: integrations/firewall.md
+    - Guardrails: integrations/guardrails.md
   - 🔌 Integrations:
     - Telemetry (Whitebox): integrations/telemetry.md
     - CI/CD: integrations/cicd.md
-    - Guardrails: integrations/guardrails.md
-    - Firewall: integrations/firewall.md
     - SIEM: integrations/siem.md
     - MCP Server: integrations/mcp.md
   - 📦 Deployment: deployment.md
