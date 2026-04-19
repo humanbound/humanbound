@@ -46,7 +46,6 @@ async def __do_single_pipeline_run(
     telemetry_client=None,
     opening=None,
     cross_conv_registry=None,
-    canary_meta=None,
     callbacks=None,
 ):
     e_id = experiment["id"]
@@ -106,8 +105,6 @@ async def __do_single_pipeline_run(
 
         # Build meta array
         meta = []
-        if canary_meta:
-            meta.append(canary_meta)
         if telemetry_data:
             tool_names = [t.get("tool_name", "") for t in telemetry_data.get("tool_executions", [])]
             usage = telemetry_data.get("resource_usage", {})
@@ -253,27 +250,6 @@ def __do_thread_run(
         if telemetry_config:
             telemetry_client = Telemetry(telemetry_config, experiment["id"])
 
-        # Canary planting for cross-session leakage detection
-        canary_meta = None
-        canary_config = config_data[test_sub_category].get("canary")
-        if canary_config and canary_config.get("enabled"):
-            from .generator import CanaryGenerator
-            canary_gen = CanaryGenerator()
-            canaries, marker, planting_strategy = canary_gen.generate(
-                get_llm_pinger(model_provider),
-                experiment["configuration"]["scope"]["overall_business_scope"],
-                canary_config.get("count", 3),
-            )
-            canary_tokens = [c["token"] for c in canaries]
-
-            # Plant canaries in a single natural conversation
-            await conversationer.plant(planting_strategy)
-
-            # Pass canary tokens to judge
-            judge.set_canary_tokens(canary_tokens)
-
-            canary_meta = {"canary": {"tokens": canary_tokens, "marker": marker}}
-
         num_iterations = conversationer.number_of_iterations
         openings = prompts
 
@@ -303,7 +279,6 @@ def __do_thread_run(
                     telemetry_client=telemetry_client,
                     opening=opening,
                     cross_conv_registry=cross_conv_registry,
-                    canary_meta=canary_meta,
                     callbacks=callbacks,
                 )
 

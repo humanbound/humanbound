@@ -25,6 +25,7 @@ hb test --endpoint ./config.json --scope ./scope.json --wait
 | HTML/JSON reports | Yes | Yes |
 | Guardrails export | Yes | Yes (richer) |
 | Firewall training | Yes | Yes (richer) |
+| Cross-session leakage detection | No | Yes |
 | Finding lifecycle | No | Yes |
 | Posture history | No | Yes |
 | Continuous monitoring | No | Yes |

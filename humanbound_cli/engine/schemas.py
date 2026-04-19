@@ -80,7 +80,7 @@ class LogEntry(BaseModel):
     severity: float = 0
     confidence: float = 0
     exec_t: float = 0
-    meta: Optional[dict] = {}           # telemetry + canary (flattened from List[dict])
+    meta: Optional[dict] = {}           # telemetry data (flattened)
 
 
 class LogsAnonymous(BaseModel):
