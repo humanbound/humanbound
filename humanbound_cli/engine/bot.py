@@ -31,26 +31,24 @@ def truncate(match):
 
 
 #
-# Advanced response extraction for non-standard response formats
+# Override this method to handle non-standard bot response formats.
 #
-class AdvancedVendorResponseExtractor:
+class ResponseExtractor:
+    """Base class for custom response extraction.
 
-    def _extract_nested_response(self, chunk):
-        """Extract response from deeply nested response structures."""
-        try:
-            if "data" in chunk and "autopilotResponse" in chunk.get("data", {}):
-                value = chunk["data"]["autopilotResponse"].get("value", {})
-                if isinstance(value, dict) and "content" in value:
-                    return value["content"]
-        except (KeyError, TypeError):
-            pass
+    Override `extract_custom_response` if your bot returns responses
+    in a non-standard format (not one of: content, text, response, answer).
+    """
+
+    def extract_custom_response(self, chunk):
+        """Override to handle custom response formats. Return None to fall back to default extraction."""
         return None
 
 
 #
-# Chat Client (customer specific)
+# Chat Client
 #
-class Bot(AdvancedVendorResponseExtractor):
+class Bot(ResponseExtractor):
     def __init__(self, bot_config, e_id):
         self.bot_config = bot_config
         self.e_id = e_id
@@ -75,8 +73,7 @@ class Bot(AdvancedVendorResponseExtractor):
             return False
         return True
 
-    # extract the actual response from the chunk
-    # basic wrapper function to handle the various vendor specific response formats
+    # extract the AI agent's response from the API response
     def __extract_ai_response(self, chunk):
         if isinstance(chunk, dict):
             # Basic extraction logic -> check for the various common response formats
@@ -84,10 +81,10 @@ class Bot(AdvancedVendorResponseExtractor):
                 if key in chunk and isinstance(chunk[key], str):
                     return chunk[key]
 
-            # Try nested response extraction for non-standard formats
-            nested = self._extract_nested_response(chunk)
-            if nested:
-                return nested
+            # Try custom extraction for non-standard formats
+            custom = self.extract_custom_response(chunk)
+            if custom:
+                return custom
 
         return str(chunk)
 
