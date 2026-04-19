@@ -16,9 +16,25 @@ The approach is grounded in three principles:
 
 **1. Regression detection.** Security improvements must be verified to persist. A vulnerability that was fixed in one release can reappear in the next — through code changes, model updates, or configuration drift. Continuous monitoring tracks the lifecycle of every finding: when it was first detected, whether it was fixed, and whether it has regressed.
 
-**2. Adaptive testing.** Attack strategies evolve. What works against an agent today may not work tomorrow — and new attack patterns may emerge that previous tests did not cover. An effective continuous monitoring system accumulates intelligence from past test cycles: which strategies succeeded, which categories showed weakness, and where coverage gaps remain. This intelligence shapes future test cycles, making each iteration more targeted than the last.
+**2. Adaptive attack intelligence.** Humanbound's attack engine is not a static scanner replaying known prompts. It is a reasoning system that observes, learns, and evolves.
+
+Within each test cycle, the engine reasons about every agent response in real time — detecting resistance patterns, identifying partial compliance, and pivoting its approach mid-conversation. When an attack strategy fails, the engine doesn't retry — it reasons about *why* it failed and selects a fundamentally different angle. When a strategy partially succeeds, it doubles down with layered techniques calibrated to the specific weakness it observed.
+
+Across test cycles, the engine accumulates attack intelligence. Strategies that breached defenses are preserved, refined, and redeployed in future cycles. Strategies that consistently fail against a specific agent are retired. New attack patterns are discovered autonomously — the engine doesn't just apply known techniques, it generates novel attack strategies from first principles based on the agent's observed behavior, tool capabilities, and domain context.
+
+This creates a compounding effect: each monitoring cycle is more dangerous than the last. An agent that passes today's test faces a smarter, more informed attacker tomorrow. The attack surface doesn't shrink with time — the attacker's knowledge of it grows.
 
 **3. Posture trending.** A single posture score is a data point. A series of posture scores over time is a signal. Upward trends indicate hardening. Downward trends indicate regression. Flat trends despite remediation efforts indicate that fixes are not reaching production. This trend data is essential for engineering teams tracking progress and for leadership reporting on security posture.
+
+## Autonomous Vulnerability Discovery
+
+The most significant limitation of traditional red teaming — whether manual or automated — is that it can only find what it knows to look for. Pre-defined attack templates test for known vulnerability classes. Human red teamers apply experience-based intuition. Both are bounded by prior knowledge.
+
+Humanbound's monitoring engine goes beyond this. It doesn't just apply attacks — it reasons about the target agent's behavior to discover vulnerability classes that weren't in any template. When the engine observes unexpected agent behavior — a tool it didn't know existed, a data source it can access, a permission boundary that shifts under pressure — it formulates novel hypotheses about what might be exploitable and tests them autonomously.
+
+This capability is fundamental to continuous monitoring. As AI agents evolve — new tools integrated, new data sources connected, new capabilities deployed — the attack surface changes in ways that no pre-built test suite can anticipate. An effective monitoring system must discover what changed and probe whether it introduced new risk, without human intervention.
+
+The result is a security system that matches the pace of AI development. Your agent ships new capabilities continuously. The monitoring engine discovers and tests those capabilities continuously. The gap between deployment and security assessment approaches zero.
 
 ## The Test–Monitor–Protect Lifecycle
 
