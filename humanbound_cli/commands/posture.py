@@ -49,7 +49,7 @@ def posture_command(
         if trends:
             console.print("[yellow]Posture history requires login.[/yellow]")
             console.print("Track score trends, finding lifecycle, and regressions across scans.\n")
-            console.print("  hb login (free, 3 scans/month)")
+            console.print("  hb login")
             raise SystemExit(0)
         if org:
             console.print("[yellow]Organisation posture requires login.[/yellow]")

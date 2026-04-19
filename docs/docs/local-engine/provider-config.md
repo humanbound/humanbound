@@ -82,4 +82,4 @@ hb login
 hb config set provider managed
 ```
 
-Every Humanbound account includes a free LLM provider — no external API key required. Free tier includes 3 scans per month. Your local API key is removed when switching to the Humanbound provider.
+Every Humanbound account includes an LLM provider — no external API key required. Your local API key is removed when switching to the Humanbound provider.
