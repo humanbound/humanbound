@@ -37,12 +37,16 @@ nav:
     - Scope Discovery: local-engine/scope-discovery.md
     - Orchestrators: local-engine/orchestrators.md
     - Output & Export: local-engine/output-formats.md
+  - 🛡️ Defence:
+    - Firewall: integrations/firewall.md
+    - Guardrails: integrations/guardrails.md
+  - 🔄 AISecOps:
+    - Continuous Monitoring: concepts/campaigns.md
+    - Findings: concepts/findings.md
+    - Test Coverage: concepts/coverage.md
   - 💡 Concepts:
     - LLM-as-a-Judge: concepts/llm-as-judge.md
     - Security Posture: concepts/security-posture.md
-    - Findings: concepts/findings.md
-    - Test Coverage: concepts/coverage.md
-    - Continuous Monitoring: concepts/campaigns.md
   - 🧪 Testing:
     - Test Command: testing/test-command.md
     - Red Coworker [Preview]: testing/red-coworker.md
@@ -55,9 +59,6 @@ nav:
     - Model Providers: management/providers.md
     - API Keys: management/api-keys.md
     - Team Members: management/members.md
-  - 🛡️ Defence:
-    - Firewall: integrations/firewall.md
-    - Guardrails: integrations/guardrails.md
   - 🔌 Integrations:
     - Telemetry (Whitebox): integrations/telemetry.md
     - CI/CD: integrations/cicd.md
