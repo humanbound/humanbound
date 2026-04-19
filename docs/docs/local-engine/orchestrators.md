@@ -89,6 +89,23 @@ The `callbacks` parameter abstracts I/O. Your orchestrator should:
 - Check `callbacks.is_terminated()` before starting each conversation
 - Call `callbacks.on_error(title, details)` on non-fatal errors
 
+### Custom Bot Response Formats
+
+The `Bot` class handles standard response formats (`content`, `text`, `response`, `answer` fields). If your bot returns responses in a non-standard format, override `extract_custom_response()`:
+
+```python
+from humanbound_cli.engine.bot import Bot
+
+class MyBot(Bot):
+    def extract_custom_response(self, chunk):
+        """Handle my bot's custom response format."""
+        if isinstance(chunk, dict) and "data" in chunk:
+            return chunk["data"].get("message", {}).get("text")
+        return None  # fall back to default extraction
+```
+
+Pass your custom bot class to the orchestrator via the `Bot` constructor — it accepts the same endpoint config format.
+
 ### manifest.yaml
 
 ```yaml
