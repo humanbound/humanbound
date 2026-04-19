@@ -40,6 +40,8 @@ nav:
   - 💡 Concepts:
     - LLM-as-a-Judge: concepts/llm-as-judge.md
     - Security Posture: concepts/security-posture.md
+  - 🔬 Methodology:
+    - Adversarial Engine: methodology/adversarial-engine.md
   - 🧪 Testing:
     - Test Command: testing/test-command.md
     - Red Coworker [Preview]: testing/red-coworker.md
