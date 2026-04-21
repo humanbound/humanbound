@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """Pydantic models for the engine.
 
 These models define the data structures for experiments, logs, and posture scoring.

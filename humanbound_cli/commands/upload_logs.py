@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """Upload conversation logs command.
 
 DEPRECATED: 'hb upload-logs' is deprecated in favour of 'hb logs upload'.

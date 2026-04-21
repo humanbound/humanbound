@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """Collaborative red team command — interactive human-AI adversarial testing."""
 
 import click

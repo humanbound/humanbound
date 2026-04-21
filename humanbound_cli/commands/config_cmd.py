@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """Config command — view and edit local provider configuration.
 
 Reads/writes ~/.humanbound/config.yaml. No database, no API calls.

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """Engine callbacks — injected into the orchestrator to decouple from external I/O.
 
 These callbacks abstract the I/O layer so the engine can run in any environment.

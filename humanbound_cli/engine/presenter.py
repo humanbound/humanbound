@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """Presenter — computes stats, insights, and posture from in-memory logs.
 
 - Posture formula: ASR-first, worst-case penalty, breadth penalty

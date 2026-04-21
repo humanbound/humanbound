@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """HTML report generator — platform-branded, self-contained.
 
 Uses the same template and styling as the platform's report_base.html.

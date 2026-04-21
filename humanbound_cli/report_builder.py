@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """Generic Humanbound-branded HTML report builder.
 
 Constructs self-contained HTML pages from typed sections, reusing the

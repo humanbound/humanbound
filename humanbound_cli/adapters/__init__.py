@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """Log adapters — convert external framework results to hb-firewall format.
 
 Auto-detects format from file structure. Add new adapters by creating a module

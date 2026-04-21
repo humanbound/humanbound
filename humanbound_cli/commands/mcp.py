@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """hb mcp — start the Humanbound MCP server on stdio."""
 
 import click

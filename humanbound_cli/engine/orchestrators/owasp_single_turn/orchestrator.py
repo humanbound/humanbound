@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 #
 # OWASP Single-Turn orchestrator — forked for local engine.
 # Coupling points replaced with EngineCallbacks.

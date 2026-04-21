@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """OrchestratorModule ABC — standard interface for all orchestrators.
 
 Each orchestrator (owasp_agentic, owasp_single_turn, behavioral_qa) implements

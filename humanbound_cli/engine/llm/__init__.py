@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """LLM pinger factory — returns the right pinger for the configured provider."""
 
 

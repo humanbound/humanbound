@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """Humanbound MCP Server — exposes the full Humanbound CLI as MCP tools.
 
 Runs on stdio transport.  All logging goes to stderr (stdout is reserved

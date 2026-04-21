@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """Firewall commands — train and manage Tier 2 classifiers for hb-firewall."""
 
 import sys

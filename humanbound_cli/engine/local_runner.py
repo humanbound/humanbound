@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """LocalTestRunner — runs engine in-process, results to files.
 
 Provider from env vars or ~/.humanbound/config.yaml.

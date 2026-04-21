@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """Ollama LLM pinger — OpenAI-compatible client for local ollama.
 
 Ollama exposes an OpenAI-compatible API at /v1/chat/completions.

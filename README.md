@@ -1,17 +1,54 @@
-# Humanbound CLI
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/logo-light.svg"/>
+    <source media="(prefers-color-scheme: light)" srcset="assets/logo-dark.svg"/>
+    <img src="assets/logo-dark.svg" alt="Humanbound" width="280"/>
+  </picture>
+</p>
 
-> AI agent security testing — adversarial attacks, posture scoring, guardrails export, and firewall training. Runs locally or on the platform. No login required.
+<h3 align="center">humanbound</h3>
 
-[![PyPI](https://img.shields.io/pypi/v/humanbound-cli)](https://pypi.org/project/humanbound-cli/)
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue)](https://www.apache.org/licenses/LICENSE-2.0)
+<p align="center">
+  Open-source AI agent red-team engine, SDK, and CLI.
+  <br/>
+  Runs locally or against the Humanbound Platform. No login required to start.
+</p>
 
-```bash
-pip install humanbound-cli
-```
+<p align="center">
+  <a href="#quick-start">Quick Start</a> &middot;
+  <a href="#cli-usage">CLI</a> &middot;
+  <a href="#python-sdk">SDK</a> &middot;
+  <a href="https://docs.humanbound.ai/">Documentation</a> &middot;
+  <a href="#contributing">Contributing</a>
+</p>
+
+<p align="center">
+  <a href="https://pypi.org/project/humanbound/"><img src="https://img.shields.io/pypi/v/humanbound?style=flat-square&color=FD9506" alt="PyPI version"/></a>
+  <a href="https://pypi.org/project/humanbound/"><img src="https://img.shields.io/pypi/pyversions/humanbound?style=flat-square&color=FD9506" alt="Python versions"/></a>
+  <a href="https://pypi.org/project/humanbound/"><img src="https://img.shields.io/pypi/dm/humanbound?style=flat-square&color=FD9506" alt="Downloads"/></a>
+  <a href="https://github.com/humanbound/humanbound/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/humanbound/humanbound/ci.yml?style=flat-square&color=FD9506" alt="CI"/></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-FD9506?style=flat-square" alt="License"/></a>
+  <a href="https://discord.gg/gQyXjVBF"><img src="https://img.shields.io/badge/discord-community-FD9506?style=flat-square" alt="Discord"/></a>
+  <a href="https://docs.humanbound.ai/"><img src="https://img.shields.io/badge/docs-humanbound.ai-FD9506?style=flat-square" alt="Docs"/></a>
+</p>
 
 ---
 
+> 📖 **Full documentation** lives at [**docs.humanbound.ai**](https://docs.humanbound.ai/) —
+> this README covers the essentials; the docs have the depth.
+
 ## Quick Start
+
+### Install
+
+```bash
+pip install humanbound                       # CLI + SDK, core deps
+pip install humanbound[engine]               # + OpenAI / Anthropic / Gemini providers
+pip install humanbound[firewall]             # + humanbound-firewall runtime
+pip install humanbound[engine,firewall]      # everything
+```
+
+### CLI usage
 
 ```bash
 # Configure your LLM provider
@@ -22,13 +59,13 @@ export HB_API_KEY=sk-...
 hb test --endpoint ./bot-config.json --repo . --wait
 
 # View results
-hb posture                         # Security score (0-100, A-F)
-hb logs                            # Conversation logs
+hb posture                         # security score (0-100, A-F)
+hb logs                            # conversation logs
 hb report -o report.html           # HTML report
-hb guardrails -o rules.yaml        # Firewall rules
+hb guardrails -o rules.yaml        # firewall rules
 ```
 
-Full isolation with [ollama](https://ollama.com) — zero external API calls:
+Full air-gap with [Ollama](https://ollama.com) — zero external API calls:
 
 ```bash
 export HB_PROVIDER=ollama
@@ -36,200 +73,70 @@ export HB_MODEL=llama3.1:8b
 hb test --endpoint ./bot-config.json --scope ./scope.yaml --wait
 ```
 
----
-
-## What It Does
-
-Humanbound runs multi-turn adversarial attacks against your AI agent's live endpoint, evaluates responses using LLM-as-a-Judge, and produces structured findings aligned with [OWASP Top 10 for LLM Applications](https://owasp.org/www-project-top-10-for-large-language-model-applications/) and [OWASP Agentic AI Threats](https://genai.owasp.org/resource/agentic-ai-threats-and-mitigations/).
-
-| Feature | Local | Platform |
-|---------|-------|----------|
-| Multi-turn adversarial testing (OWASP) | Yes | Yes |
-| Behavioral/QA testing | Yes | Yes |
-| Posture score (0-100, A-F) | Yes | Yes + trends |
-| HTML/JSON reports | Yes | Yes |
-| Guardrails export | Yes | Yes (richer) |
-| Firewall training | Yes | Yes (richer) |
-| Finding lifecycle tracking | — | Yes |
-| Continuous monitoring | — | Yes |
-| Cross-session leakage detection | — | Yes |
-| Managed LLM (no key needed) | — | Yes |
-
----
-
-## Agent Configuration
-
-Create a JSON file describing how to talk to your agent:
-
-```json
-{
-  "streaming": false,
-  "thread_auth": {"endpoint": "", "headers": {}, "payload": {}},
-  "thread_init": {
-    "endpoint": "https://your-bot.com/sessions",
-    "headers": {"Authorization": "Bearer token"},
-    "payload": {}
-  },
-  "chat_completion": {
-    "endpoint": "https://your-bot.com/chat",
-    "headers": {"Authorization": "Bearer token"},
-    "payload": {"message": "$PROMPT"}
-  }
-}
-```
-
-`$PROMPT` is where Humanbound injects test prompts.
-
----
-
-## Test Modes
-
-```bash
-# Default: threaded, progress spinner (~20 min)
-hb test --endpoint ./config.json --wait
-
-# Verbose: live progress bar + final results table
-hb test --endpoint ./config.json --wait --verbose
-
-# Debug: single-threaded, full turn-by-turn output
-hb test --endpoint ./config.json --wait --debug
-```
-
-## Test Categories
-
-| Category | Flag | Description |
-|----------|------|-------------|
-| OWASP Agentic | `-t owasp_agentic` (default) | Multi-turn adversarial with score-guided escalation |
-| OWASP Single-Turn | `-t owasp_single_turn` | Maximum-strength single prompts |
-| Behavioral QA | `--qa` | Intent boundary + response quality testing |
-
-## Testing Levels
-
-| Level | Flag | Duration |
-|-------|------|----------|
-| Unit (default) | `-l unit` | ~20 min |
-| System | `--deep` | ~45 min |
-| Acceptance | `--full` | ~90 min |
-
-## Scope Discovery
-
-```bash
-hb test --endpoint ./config.json --repo . --wait            # Scan code for scope + tools (recommended)
-hb test --endpoint ./config.json --scope ./scope.yaml --wait # Explicit scope file
-hb test --endpoint ./config.json --prompt ./system.txt --wait # Extract from system prompt
-hb test --endpoint ./config.json --wait                      # Auto-probe the bot
-```
-
----
-
-## Defense
-
-### Guardrails Export
-
-```bash
-hb guardrails -o rules.yaml
-hb guardrails --vendor openai -o openai_rules.json
-```
-
-### Firewall Training
-
-Train a Tier 2 classifier from test results:
-
-```bash
-hb firewall train                                  # From local test data
-hb firewall train --import pyrit_results.json      # From PyRIT
-hb firewall train --import results.json:promptfoo  # From promptfoo
-```
-
-Use with [hb-firewall](https://github.com/humanbound/hb-firewall) for runtime protection.
-
----
-
-## CI/CD
-
-```yaml
-# .github/workflows/security.yml
-- run: pip install humanbound-cli
-- run: hb test --endpoint ./config.json --repo . --wait --fail-on high
-  env:
-    HB_PROVIDER: openai
-    HB_API_KEY: ${{ secrets.OPENAI_KEY }}
-```
-
----
-
-## Platform (With Login)
-
-For posture tracking, finding lifecycle, continuous monitoring, and team collaboration:
-
-```bash
-hb login
-hb connect --endpoint ./bot-config.json    # Create project + first test
-hb test --wait                              # Re-test (project remembered)
-hb posture --history                        # Posture trends
-hb findings                                 # Finding lifecycle
-hb monitor enable --schedule daily          # Continuous monitoring
-```
-
----
-
-## Providers
-
-| Provider | `HB_PROVIDER` | Notes |
-|----------|---------------|-------|
-| OpenAI | `openai` | GPT-4o, GPT-4.1 |
-| Anthropic | `claude` | Claude 3.5, Claude 4 |
-| Google | `gemini` | Gemini Pro |
-| Azure OpenAI | `azureopenai` | Requires `HB_ENDPOINT` |
-| Grok (xAI) | `grok` | |
-| Ollama | `ollama` | Full local isolation |
-
-```bash
-hb config set provider openai
-hb config set api-key sk-...
-```
-
----
-
-## pytest Integration
+### Python SDK
 
 ```python
-import pytest
+from humanbound import Bot, LocalRunner, OwaspAgentic, TestingLevel, EngineCallbacks
 
-@pytest.mark.hb
-def test_prompt_injection(hb):
-    result = hb.test("llm001")
-    assert result.passed
+# Compose your own test pipeline
+bot = Bot(endpoint="https://my-agent/chat", api_key="...")
 
-@pytest.mark.hb
-def test_posture_threshold(hb_posture):
-    assert hb_posture["score"] >= 70
+class Callbacks(EngineCallbacks):
+    def on_finding(self, insight): ...
+    def on_progress(self, pct): ...
+
+runner = LocalRunner()
+# See docs.humanbound.ai for the full example
 ```
 
-```bash
-pytest --hb tests/ --hb-fail-on=high
-```
+## Stability contract
+
+| Import path | Stability |
+|---|---|
+| `from humanbound import X` | **Stable** — semver-protected |
+| `from humanbound.<module> import Y` | **Stable** — semver-protected |
+| `from humanbound_cli.* import Z` | **Internal** — may change any release, do not import from user code |
+
+The full Tier-by-Tier walkthrough, orchestrator authoring guide, Platform
+integration, and API reference all live on
+[docs.humanbound.ai](https://docs.humanbound.ai/).
+
+## What's shipping in 2.0
+
+- **Clean name**: `humanbound` is the new PyPI install. The old
+  `humanbound-cli` is a transitional stub that will be yanked after
+  2026-06-20.
+- **Public SDK namespace** alongside the CLI — use the CLI or drive the
+  engine from Python. Both share the same implementation, so they can't
+  drift.
+- **Firewall integration**: `pip install humanbound[firewall]` pulls the
+  renamed [`humanbound-firewall`](https://github.com/humanbound/humanbound-firewall)
+  (formerly `hb-firewall`) alongside the CLI.
+
+See [CHANGELOG.md](./CHANGELOG.md) for the full 2.0.0 release notes.
+
+## Contributing
+
+Contributions welcome. See [CONTRIBUTING.md](./CONTRIBUTING.md) for the dev
+loop, release process, and DCO sign-off requirement (`git commit -s`).
+
+- 🐛 [Report a bug](https://github.com/humanbound/humanbound/issues/new/choose)
+- 💡 [Request a feature](https://github.com/humanbound/humanbound/issues/new/choose)
+- 🔒 [Report a security issue](./SECURITY.md) — **not via public Issues**
+- 💬 [Join Discord](https://discord.gg/gQyXjVBF)
+
+## License
+
+[Apache-2.0](./LICENSE). Free to use in any context — commercial or
+open-source — with attribution. See [TRADEMARK.md](./TRADEMARK.md) for the
+trademark policy. The code is open; the name is not.
+
+The sibling project [`humanbound-firewall`](https://github.com/humanbound/humanbound-firewall)
+is dual-licensed (AGPL-3.0 + commercial) — different product, different
+license strategy.
 
 ---
 
-## MCP Server
-
-Expose CLI capabilities as tools for AI assistants:
-
-```bash
-pip install humanbound-cli[mcp]
-
-# Claude Code
-claude mcp add humanbound -- hb mcp
-
-# Cursor (.cursor/mcp.json)
-{"mcpServers": {"humanbound": {"command": "hb", "args": ["mcp"]}}}
-```
-
----
-
-## Links
-
-- [Documentation](https://docs.humanbound.ai)
-- [Firewall (hb-firewall)](https://github.com/humanbound/hb-firewall)
-- [PyPI](https://pypi.org/project/humanbound-cli/)
+<p align="center">
+  <sub><em>Humanbound is the trading name of AI and Me Single-Member Private Company, incorporated in Greece.</em></sub>
+</p>

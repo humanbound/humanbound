@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """PlatformTestRunner — wraps existing HumanboundClient into TestRunner interface.
 
 This is a thin adapter. No new logic — just translates between the TestRunner

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """Shared report download + open helper for entity-level report commands."""
 
 import webbrowser

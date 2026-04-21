@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """PromptFoo adapter — converts evaluation results to hb-firewall format.
 
 Handles the export format from: promptfoo export eval <id> -o results.json

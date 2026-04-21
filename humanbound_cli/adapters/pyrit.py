@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """PyRIT (Microsoft) adapter — converts red teaming scan results to hb-firewall format."""
 
 SIGNATURES = ["redteaming_data"]

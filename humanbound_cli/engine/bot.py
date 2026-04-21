@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 import copy
 import requests, re, json, ssl, certifi, time, asyncio, re, traceback
 from websockets.asyncio.client import connect

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """Humanbound pytest plugin for AI agent security testing.
 
 This plugin provides pytest integration for running Humanbound security tests

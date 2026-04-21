@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """Azure Sentinel integration commands.
 
 DEPRECATED: 'hb sentinel' is deprecated in favour of 'hb webhooks'.

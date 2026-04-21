@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """Scope discovery — extracts agent scope from various sources.
 
 Progressive depth:
