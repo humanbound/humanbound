@@ -1,10 +1,11 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """Humanbound pytest reporter for terminal output."""
 
-from typing import List, Optional
 import json
 from pathlib import Path
 
-from .fixtures import TestResult, Finding, SEVERITY_LEVELS
+from .fixtures import SEVERITY_LEVELS, Finding, TestResult
 
 
 class HumanboundReporter:
@@ -12,8 +13,8 @@ class HumanboundReporter:
 
     def __init__(self, config):
         self.config = config
-        self.results: List[TestResult] = []
-        self.findings: List[Finding] = []
+        self.results: list[TestResult] = []
+        self.findings: list[Finding] = []
 
     def add_result(self, result: TestResult):
         """Add a test result to the report."""
@@ -70,12 +71,13 @@ class HumanboundReporter:
 
             # Sort by severity
             sorted_findings = sorted(
-                self.findings,
-                key=lambda f: SEVERITY_LEVELS.index(f.severity.lower())
+                self.findings, key=lambda f: SEVERITY_LEVELS.index(f.severity.lower())
             )
 
             for finding in sorted_findings[:5]:
-                tr.write_line(f"  [{finding.severity.upper()}] {finding.category}: {finding.title[:60]}")
+                tr.write_line(
+                    f"  [{finding.severity.upper()}] {finding.category}: {finding.title[:60]}"
+                )
 
         # Posture score if available
         posture_scores = [r.posture_score for r in self.results if r.posture_score]

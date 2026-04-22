@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/humanbound/humanbound/security/advisories/new
+    about: Report security issues privately. Do NOT open a public Issue.
+  - name: Question or discussion
+    url: https://github.com/humanbound/humanbound/discussions
+    about: Use Discussions for questions, ideas, and show-and-tell.
+  - name: Discord community
+    url: https://discord.gg/gQyXjVBF
+    about: Chat with the community and the maintainers.
+  - name: Documentation
+    url: https://docs.humanbound.ai/
+    about: Full documentation for humanbound.

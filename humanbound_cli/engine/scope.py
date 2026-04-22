@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """Scope discovery — extracts agent scope from various sources.
 
 Progressive depth:
@@ -25,8 +27,7 @@ from pathlib import Path
 logger = logging.getLogger("humanbound.engine.scope")
 
 
-def resolve(repo_path=None, prompt_path=None, scope_path=None,
-            integration=None, llm_pinger=None):
+def resolve(repo_path=None, prompt_path=None, scope_path=None, integration=None, llm_pinger=None):
     """Resolve scope from available sources. Returns scope dict.
 
     Args:
@@ -100,6 +101,7 @@ def from_scope_file(path):
     if path.suffix in (".yaml", ".yml"):
         try:
             import yaml
+
             data = yaml.safe_load(content)
         except ImportError:
             logger.warning("PyYAML not installed. Install with: pip install pyyaml")
@@ -109,7 +111,9 @@ def from_scope_file(path):
 
     # Normalize to expected shape
     return {
-        "overall_business_scope": data.get("business_scope", data.get("overall_business_scope", "")),
+        "overall_business_scope": data.get(
+            "business_scope", data.get("overall_business_scope", "")
+        ),
         "intents": {
             "permitted": data.get("permitted", data.get("intents", {}).get("permitted", [])),
             "restricted": data.get("restricted", data.get("intents", {}).get("restricted", [])),
@@ -122,6 +126,7 @@ def from_repo(repo_path):
     """Scan repository for system prompt and tools using RepoScanner."""
     try:
         from ..extractors.repo import RepoScanner
+
         scanner = RepoScanner(repo_path)
         result = scanner.scan()
         return result
@@ -137,7 +142,9 @@ def extract_scope_from_text(text, tools, llm_pinger):
     """Use LLM to extract structured scope from text."""
     tools_section = ""
     if tools:
-        tools_list = "\n".join(f"- {t}" if isinstance(t, str) else f"- {t.get('name', t)}" for t in tools)
+        tools_list = "\n".join(
+            f"- {t}" if isinstance(t, str) else f"- {t.get('name', t)}" for t in tools
+        )
         tools_section = f"\n\nAvailable Tools:\n{tools_list}"
 
     prompt = f"""Analyse this AI agent's system prompt and extract its scope.
@@ -164,7 +171,7 @@ Output JSON only, no explanation."""
         start = response.find("{")
         end = response.rfind("}")
         if start != -1 and end != -1:
-            data = json.loads(response[start:end + 1])
+            data = json.loads(response[start : end + 1])
             return {
                 "overall_business_scope": data.get("overall_business_scope", ""),
                 "intents": {
@@ -183,6 +190,7 @@ def from_probe(integration, llm_pinger):
     """Auto-probe the bot to infer scope from its responses."""
     try:
         from ..bot import Bot
+
         bot = Bot(integration, "scope-probe")
         payload = bot.init()
 
@@ -197,6 +205,7 @@ def from_probe(integration, llm_pinger):
         for probe in probes:
             try:
                 import asyncio
+
                 response, _, _ = asyncio.run(bot.ping(payload, probe))
                 responses.append(f"Q: {probe}\nA: {response}")
             except Exception:

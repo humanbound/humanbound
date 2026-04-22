@@ -1,5 +1,9 @@
-import requests, time
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
+import time
 from os import getenv
+
+import requests
 from openai import OpenAI
 
 #
@@ -56,11 +60,7 @@ class LLMStreamer:
 class LLMPinger:
     def __init__(self, model_provider=None):
         self.model_provider = (
-            dict(
-                integration=dict(
-                    api_key=getenv("LLM_API_KEY"), model=getenv("LLM_MODEL")
-                )
-            )
+            dict(integration=dict(api_key=getenv("LLM_API_KEY"), model=getenv("LLM_MODEL")))
             if model_provider is None
             else model_provider
         )
@@ -95,9 +95,7 @@ class LLMPinger:
         max_tokens = min(max_tokens, ALLOWED_MAX_OUT_TOKENS)
         while do_retry_counter <= MAX_RETRY_COUNTER:
             # api call to serverless LLM
-            resp = self.__do_completion_api_call(
-                system_p, user_p, max_tokens, temperature
-            )
+            resp = self.__do_completion_api_call(system_p, user_p, max_tokens, temperature)
 
             # handle response
             if resp.status_code == 200:
@@ -120,11 +118,7 @@ class LLMPinger:
                 # eventually retrying failed -> error
                 raise Exception("502/Rate limit error.")
             elif resp.status_code == 400:
-                raise Exception(
-                    f"502/Inappropriate content ({resp.text}). Please try again."
-                )
+                raise Exception(f"502/Inappropriate content ({resp.text}). Please try again.")
             else:
                 # not sucess and also not rate limit error -> total error
-                raise Exception(
-                    f"502/Error while pinging the LLM - {resp.status_code}/{resp.text}"
-                )
+                raise Exception(f"502/Error while pinging the LLM - {resp.status_code}/{resp.text}")

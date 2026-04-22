@@ -1,14 +1,17 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """Campaign management commands."""
 
 import json
+
 import click
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
 from rich.prompt import Confirm
+from rich.table import Table
 
 from ..client import HumanboundClient
-from ..exceptions import NotAuthenticatedError, APIError
+from ..exceptions import APIError, NotAuthenticatedError
 
 console = Console()
 
@@ -73,16 +76,22 @@ def _display_campaign(response: dict):
     campaign_id = campaign.get("id", "")
 
     phase_display = PHASE_STYLES.get(phase, phase)
-    status_color = "green" if status in ("completed", "active") else ("yellow" if status == "running" else "white")
+    status_color = (
+        "green"
+        if status in ("completed", "active")
+        else ("yellow" if status == "running" else "white")
+    )
 
-    console.print(Panel(
-        f"Phase: {phase_display}\n"
-        f"Status: [{status_color}]{status}[/{status_color}]\n"
-        f"[dim]ID: {campaign_id}[/dim]",
-        title="Campaign Plan",
-        border_style="blue",
-        padding=(1, 2),
-    ))
+    console.print(
+        Panel(
+            f"Phase: {phase_display}\n"
+            f"Status: [{status_color}]{status}[/{status_color}]\n"
+            f"[dim]ID: {campaign_id}[/dim]",
+            title="Campaign Plan",
+            border_style="blue",
+            padding=(1, 2),
+        )
+    )
 
     # Experiments in plan
     experiments = campaign.get("experiments", campaign.get("plan", []))
@@ -154,14 +163,16 @@ def terminate_campaign(force: bool):
             return
 
         if not force:
-            if not Confirm.ask(f"Terminate campaign [bold]{campaign_id}[/bold]? Running experiments will be stopped"):
+            if not Confirm.ask(
+                f"Terminate campaign [bold]{campaign_id}[/bold]? Running experiments will be stopped"
+            ):
                 console.print("[dim]Cancelled.[/dim]")
                 return
 
         with console.status("Terminating campaign..."):
             client.terminate_campaign(project_id, campaign_id)
 
-        console.print(f"[green]Campaign terminated.[/green]")
+        console.print("[green]Campaign terminated.[/green]")
         console.print(f"[dim]ID: {campaign_id}[/dim]")
 
     except NotAuthenticatedError:

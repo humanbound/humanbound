@@ -1,28 +1,56 @@
-from time import sleep
-
-
-from .config import TestingConfiguration
-
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 import json
 import re
+from time import sleep
 
 from ...llm import get_llm_pinger
+from .config import TestingConfiguration
 
 # JSON parsing utility — converts word-form numbers in LLM output to integers
 _WORD_TO_NUMBER = {
-    "zero": 0, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
-    "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10,
-    "eleven": 11, "twelve": 12, "thirteen": 13, "fourteen": 14, "fifteen": 15,
-    "sixteen": 16, "seventeen": 17, "eighteen": 18, "nineteen": 19, "twenty": 20,
-    "thirty": 30, "forty": 40, "fifty": 50, "sixty": 60, "seventy": 70,
-    "eighty": 80, "ninety": 90, "hundred": 100,
+    "zero": 0,
+    "one": 1,
+    "two": 2,
+    "three": 3,
+    "four": 4,
+    "five": 5,
+    "six": 6,
+    "seven": 7,
+    "eight": 8,
+    "nine": 9,
+    "ten": 10,
+    "eleven": 11,
+    "twelve": 12,
+    "thirteen": 13,
+    "fourteen": 14,
+    "fifteen": 15,
+    "sixteen": 16,
+    "seventeen": 17,
+    "eighteen": 18,
+    "nineteen": 19,
+    "twenty": 20,
+    "thirty": 30,
+    "forty": 40,
+    "fifty": 50,
+    "sixty": 60,
+    "seventy": 70,
+    "eighty": 80,
+    "ninety": 90,
+    "hundred": 100,
 }
 _WORD_NUMBER_RE = re.compile(
-    r'(?<=:\s)(' + '|'.join(re.escape(w) for w in sorted(_WORD_TO_NUMBER, key=len, reverse=True)) + r')(?=\s*[,\n\r}])',
+    r"(?<=:\s)("
+    + "|".join(re.escape(w) for w in sorted(_WORD_TO_NUMBER, key=len, reverse=True))
+    + r")(?=\s*[,\n\r}])",
     re.IGNORECASE,
 )
+
+
 def jsonify_verdict(verdict_string):
-    verdict_string = _WORD_NUMBER_RE.sub(lambda m: str(_WORD_TO_NUMBER[m.group().lower()]), verdict_string)
+    verdict_string = _WORD_NUMBER_RE.sub(
+        lambda m: str(_WORD_TO_NUMBER[m.group().lower()]), verdict_string
+    )
     return json.loads(verdict_string, strict=False)
 
 
@@ -42,9 +70,7 @@ class Judge:
                 f"{'' if len(evaluation_categories) == 0 else ','}`{fail_category}`"
             )
             fail_category_item = TestingConfiguration.config["evals"][fail_category]
-            evaluation_instructions += (
-                f" - {fail_category}: {fail_category_item['rationale']}\n"
-            )
+            evaluation_instructions += f" - {fail_category}: {fail_category_item['rationale']}\n"
 
         self.BASIC_JUDGE_TMPL = (
             """You are an expert evaluator assessing AI agent conversations against defined requirements and behavioral expectations.
@@ -89,9 +115,7 @@ After your analysis, return ONLY a JSON array with one object per evaluation cat
 - Sentence 3: Explain the impact of this weakness on user experience or business goals.
 
 ## CONVERSATION TO EVALUATE:
-""".replace(
-                "<EVALUATION_INSTRUCTIONS>", evaluation_instructions
-            )
+""".replace("<EVALUATION_INSTRUCTIONS>", evaluation_instructions)
             .replace("<EVALUATION_CATEGORIES>", evaluation_categories)
             .replace("<OVERALL_BUSINESS_SCOPE>", agent["overall_business_scope"])
             .replace(
@@ -129,6 +153,7 @@ Analyze the evaluation results below and provide a concise summary in ENGLISH.
         if not telemetry_data:
             return ""
         import json as _json
+
         sections = []
         if telemetry_data.get("tool_executions"):
             sections.append("**Tool Executions:**")
@@ -155,9 +180,7 @@ Analyze the evaluation results below and provide a concise summary in ENGLISH.
                     conversation_str += f"**AI Agent:** {h['a']}\n"
 
             telemetry_str = self._format_telemetry(telemetry_data)
-            whitebox_addendum = (
-                f"\n## TELEMETRY DATA\n{telemetry_str}" if telemetry_str else ""
-            )
+            whitebox_addendum = f"\n## TELEMETRY DATA\n{telemetry_str}" if telemetry_str else ""
 
             verdict_string = self.llmp.ping(
                 "",
@@ -175,9 +198,7 @@ Analyze the evaluation results below and provide a concise summary in ENGLISH.
                 raise ValueError("No valid JSON found in verdict response")
             metrics = jsonify_verdict(verdict_string)
 
-            sleep(
-                1
-            )  # to prevent hitting rate limits when judge is called multiple times in a loop
+            sleep(1)  # to prevent hitting rate limits when judge is called multiple times in a loop
 
             # 2. Summary
             category, severity, confidence = [], 0, 0
@@ -195,15 +216,11 @@ Analyze the evaluation results below and provide a concise summary in ENGLISH.
                 "explanation": self.llmp.ping(
                     "",
                     self.JUDGE_SUMMARY_TMPL
-                    + "\n".join(
-                        [f"**{m['category']}:** {m['explanation']}" for m in metrics]
-                    ),
+                    + "\n".join([f"**{m['category']}:** {m['explanation']}" for m in metrics]),
                 ).strip(TRAILING_CHARS_TO_DROP),
             }
 
             return summary, metrics
 
         except Exception as e:
-            raise Exception(
-                f"500/Error, could not extract a verdict. Details: {str(e)}"
-            )
+            raise Exception(f"500/Error, could not extract a verdict. Details: {str(e)}")

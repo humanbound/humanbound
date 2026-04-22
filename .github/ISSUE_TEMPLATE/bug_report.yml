@@ -1,0 +1,71 @@
+name: Bug report
+description: Something is broken or unexpected
+title: "bug: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing a bug. **Security issues must not be reported here** —
+        see [SECURITY.md](https://github.com/humanbound/humanbound/blob/main/SECURITY.md)
+        for the private disclosure channel.
+
+  - type: input
+    id: version
+    attributes:
+      label: humanbound version
+      description: Output of `pip show humanbound | grep Version` (or `hb --version`)
+      placeholder: "2.0.0"
+    validations:
+      required: true
+
+  - type: input
+    id: python-version
+    attributes:
+      label: Python version
+      placeholder: "3.12.3"
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: "macOS 14.5 / Ubuntu 22.04 / etc."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Which surface is affected?
+      options:
+        - CLI (`hb` command)
+        - Python SDK (`from humanbound import ...`)
+        - Pytest plugin
+        - Both CLI and SDK
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: A clear description of the bug and what you expected instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproduction
+      description: Exact command or minimal code snippet.
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or traceback
+      render: shell

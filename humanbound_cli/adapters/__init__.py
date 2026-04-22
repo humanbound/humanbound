@@ -1,4 +1,6 @@
-"""Log adapters — convert external framework results to hb-firewall format.
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
+"""Log adapters — convert external framework results to humanbound-firewall format.
 
 Auto-detects format from file structure. Add new adapters by creating a module
 with SIGNATURES (list of keys to match) and convert(data) → list[dict].
@@ -25,7 +27,7 @@ def detect_format(data: dict) -> str:
 
 
 def convert_file(file_path: str, format_tag: str = "") -> list[dict]:
-    """Convert an external log file to hb-firewall standard format.
+    """Convert an external log file to humanbound-firewall standard format.
 
     Args:
         file_path: path to JSON file
@@ -53,7 +55,8 @@ def convert_file(file_path: str, format_tag: str = "") -> list[dict]:
         raise ValueError(
             f"Unrecognized format in '{file_path}'. "
             f"Specify format: --import {file_path}:<format> "
-            f"(available: {available})")
+            f"(available: {available})"
+        )
 
     if tag not in _ADAPTERS:
         available = ", ".join(_ADAPTERS.keys())

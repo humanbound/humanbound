@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """Ollama LLM pinger — OpenAI-compatible client for local ollama.
 
 Ollama exposes an OpenAI-compatible API at /v1/chat/completions.
@@ -33,6 +35,7 @@ class LLMPinger:
         self.endpoint = integration.get("endpoint", getenv("HB_ENDPOINT", DEFAULT_OLLAMA_ENDPOINT))
 
         from openai import OpenAI
+
         self._client = OpenAI(
             base_url=f"{self.endpoint}/v1",
             api_key="ollama",  # ollama doesn't need a key but the SDK requires one

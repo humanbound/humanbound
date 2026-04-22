@@ -1,0 +1,31 @@
+name: Contract fidelity
+
+# Public workflow — runs ONLY the fixture-vs-mirror validation.
+# Does NOT fetch the upstream `be/` repo and therefore cannot leak any
+# backend structure into public CI logs. Upstream drift detection lives
+# in the private `humanbound/contract-sentry` repo (see docs).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  fidelity:
+    name: Fixtures match mirror schemas
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install --upgrade pip
+      - run: pip install -e '.[dev]'
+      - name: Validate fixtures against contract mirrors
+        run: pytest tests/unit/test_contract_fidelity.py -v

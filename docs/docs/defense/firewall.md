@@ -44,7 +44,7 @@ The firewall is the third component of the test–monitor–protect lifecycle. I
 - **From testing + monitoring**: adversarial test logs provide training data for Tier 2 classifiers. More test cycles over time produce richer, more diverse training data — and therefore better Tier 2 accuracy.
 - **Back to monitoring**: production firewall verdicts (attacks blocked, false positives identified) can feed back into the monitoring layer as ground-truth signals, improving future test cycle targeting and Tier 2 retraining.
 
-The firewall is available as an open-source Python library ([hb-firewall](https://github.com/humanbound/hb-firewall), AGPL-3.0) and integrates with the Humanbound CLI for training agent-specific classifiers.
+The firewall is available as an open-source Python library ([humanbound-firewall](https://github.com/humanbound/humanbound-firewall), AGPL-3.0) and integrates with the Humanbound CLI for training agent-specific classifiers.
 
 ### Firewall Verdicts
 
@@ -64,14 +64,14 @@ The firewall is available as an open-source Python library ([hb-firewall](https:
 
 ```bash
 # Core (Tiers 0 + 3)
-pip install hb-firewall
+pip install humanbound-firewall
 
 # With Tier 1 attack detection
-pip install hb-firewall[tier1]
+pip install humanbound-firewall[tier1]
 
 
 # Everything
-pip install hb-firewall[all]
+pip install humanbound-firewall[all]
 ```
 
 ### Basic Usage (Tier 1 + Tier 3)
@@ -225,17 +225,29 @@ fw = Firewall.from_config(
 
 ## Tier 2: Agent-Specific Classification
 
-Tier 2 is where your data makes the firewall smarter. The `hb-firewall` library provides the **training orchestrator** — you provide the **model** as a Python script with an `AgentClassifier` class.
+Tier 2 is where your data makes the firewall smarter. The `humanbound-firewall` library provides the **training orchestrator** — you provide the **model** as a Python script with an `AgentClassifier` class.
 
 ### Default Model: SetFit
 
-hb-firewall ships with a SetFit-based classifier that fine-tunes a sentence transformer using contrastive learning on your adversarial + QA test data.
+humanbound-firewall ships with a SetFit-based classifier that fine-tunes a sentence transformer using contrastive learning on your adversarial + QA test data.
 
 ```bash
 hb firewall train --model detectors/setfit_classifier.py
 ```
 
 SetFit takes curated examples from your test logs, generates contrastive pairs (attack vs benign), and fine-tunes [all-MiniLM-L6-v2](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2) to separate them in embedding space. Training takes ~10 minutes on CPU.
+
+!!! tip "Hugging Face token (optional, recommended)"
+    The base model is downloaded from the Hugging Face Hub on first training run. Without authentication, you may hit rate limits or see a warning like `You are sending unauthenticated requests to the HF Hub`.
+
+    Create a free read-only token at [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens) and export it before training:
+
+    ```bash
+    export HF_TOKEN=hf_xxxxxxxxxxxxxxxxxxxxxxxx
+    hb firewall train --model detectors/setfit_classifier.py
+    ```
+
+    Training works without a token — it's just slower and subject to unauthenticated download limits.
 
 Tier 1 (DeBERTa) catches generic single-turn injections. Tier 2 (SetFit) catches agent-specific patterns and fast-tracks legitimate requests without LLM cost. They're complementary.
 
@@ -313,7 +325,7 @@ class AgentClassifier:
 
 Your classifier receives raw text — how you process it (embeddings, NLI, zero-shot, fine-tuning) is entirely up to you. The orchestrator doesn't impose any ML framework or approach.
 
-See `detectors/example_classifier.py` in the [hb-firewall repo](https://github.com/humanbound/hb-firewall) for a documented scaffold to build your own.
+See `detectors/example_classifier.py` in the [humanbound-firewall repo](https://github.com/humanbound/humanbound-firewall) for a documented scaffold to build your own.
 ```
 
 ---
@@ -526,4 +538,4 @@ def handle_user_message(conversation):
 ```
 
 !!! info "Open Source"
-    The Humanbound Firewall is AGPL-3.0 licensed. Free to use and modify — if you run a modified version as a service, you must open-source your changes. Commercial licensing available. Source code and detector examples at [github.com/humanbound/hb-firewall](https://github.com/humanbound/hb-firewall).
+    The Humanbound Firewall is AGPL-3.0 licensed. Free to use and modify — if you run a modified version as a service, you must open-source your changes. Commercial licensing available. Source code and detector examples at [github.com/humanbound/humanbound-firewall](https://github.com/humanbound/humanbound-firewall).

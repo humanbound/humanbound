@@ -1,6 +1,6 @@
 site_name: ""
 site_url: https://docs.humanbound.ai
-repo_url: https://github.com/humanbound/humanbound-cli
+repo_url: https://github.com/humanbound/humanbound
 
 theme:
   name: material

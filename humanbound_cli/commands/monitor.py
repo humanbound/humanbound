@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """Monitor command — start/stop continuous security monitoring."""
 
 import click
@@ -5,7 +7,7 @@ from rich.console import Console
 from rich.panel import Panel
 
 from ..client import HumanboundClient
-from ..exceptions import NotAuthenticatedError, APIError
+from ..exceptions import APIError, NotAuthenticatedError
 
 console = Console()
 
@@ -84,6 +86,7 @@ def _show_status(client, project_id, as_json):
 
     if as_json:
         import json
+
         print(json.dumps(project_data, indent=2, default=str))
         return
 
@@ -98,16 +101,18 @@ def _show_status(client, project_id, as_json):
     else:
         status_line = f"[green]active[/green] ({ascam_activity})"
 
-    posture_line = f"{last_posture:.1f} / {last_grade}" if last_posture else "[dim]not yet scored[/dim]"
+    posture_line = (
+        f"{last_posture:.1f} / {last_grade}" if last_posture else "[dim]not yet scored[/dim]"
+    )
 
-    console.print(Panel(
-        f"  Status   {status_line}\n"
-        f"  Posture  {posture_line}\n"
-        f"  Project  [dim]{name}[/dim]",
-        title="[bold]Continuous Monitoring[/bold]",
-        border_style="green" if not ascam_paused else "yellow",
-        padding=(1, 2),
-    ))
+    console.print(
+        Panel(
+            f"  Status   {status_line}\n  Posture  {posture_line}\n  Project  [dim]{name}[/dim]",
+            title="[bold]Continuous Monitoring[/bold]",
+            border_style="green" if not ascam_paused else "yellow",
+            padding=(1, 2),
+        )
+    )
 
     if ascam_paused:
         console.print("\n[dim]Use 'hb monitor --resume' to start monitoring.[/dim]")

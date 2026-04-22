@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """Humanbound SDK configuration."""
 
 import os
@@ -18,7 +20,6 @@ TOKEN_FILE = CONFIG_DIR / "credentials.json"
 # API timeout settings (in seconds)
 DEFAULT_TIMEOUT = 30
 LONG_TIMEOUT = 120  # For operations like report generation
-
 
 
 def get_base_url() -> str:

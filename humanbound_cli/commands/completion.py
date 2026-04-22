@@ -1,10 +1,11 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """Shell tab-completion setup for the hb CLI."""
 
 import os
 import subprocess
 
 import click
-
 
 _SHELL_ENV_VARS = {
     "bash": "_HB_COMPLETE=bash_source",

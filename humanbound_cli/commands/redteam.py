@@ -1,15 +1,16 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """Collaborative red team command — interactive human-AI adversarial testing."""
 
 import click
-import json
 import requests as requests_lib
 from rich.console import Console
 from rich.panel import Panel
+from rich.prompt import Confirm, Prompt
 from rich.table import Table
-from rich.prompt import Prompt, Confirm
 
 from ..client import HumanboundClient
-from ..exceptions import NotAuthenticatedError, APIError
+from ..exceptions import APIError, NotAuthenticatedError
 
 console = Console()
 console_err = Console(stderr=True)
@@ -64,11 +65,13 @@ def redteam_group(ctx, experiment_id, name, endpoint):
             console.print(f"\n[bold]Resuming:[/bold] {exp.get('name', experiment_id)}")
         else:
             import time
+
             exp_name = name or f"redteam-{time.strftime('%Y%m%d-%H%M%S')}"
             configuration = {"scope": _get_project_scope(client)}
 
             if endpoint:
                 from .test import _load_integration
+
                 configuration["integration"] = _load_integration(endpoint)
 
             # Resolve provider (same as hb test)
@@ -81,31 +84,40 @@ def redteam_group(ctx, experiment_id, name, endpoint):
             provider_id = provider.get("id")
 
             try:
-                exp = client.post("experiments", data={
-                    "name": exp_name,
-                    "description": "Collaborative red team session",
-                    "test_category": COLLABORATIVE_TEST_CATEGORY,
-                    "testing_level": "unit",
-                    "configuration": configuration,
-                    "auto_start": False,
-                    "provider_id": provider_id,
-                }, include_project=True)
+                exp = client.post(
+                    "experiments",
+                    data={
+                        "name": exp_name,
+                        "description": "Collaborative red team session",
+                        "test_category": COLLABORATIVE_TEST_CATEGORY,
+                        "testing_level": "unit",
+                        "configuration": configuration,
+                        "auto_start": False,
+                        "provider_id": provider_id,
+                    },
+                    include_project=True,
+                )
 
                 experiment_id = exp.get("id")
                 console.print(f"\n[green]Experiment created:[/green] {experiment_id}")
 
             except APIError as e:
-                if "409" in str(e.status_code if hasattr(e, 'status_code') else e):
+                if "409" in str(e.status_code if hasattr(e, "status_code") else e):
                     # Find the active experiment and offer to resume
                     response = client.list_experiments(page=1, size=50)
                     active = next(
-                        (x for x in response.get("data", [])
-                         if "collaborative_red_team" in x.get("test_category", "")
-                         and x.get("status") in ("Running", "Dataset Generated", "Created")),
+                        (
+                            x
+                            for x in response.get("data", [])
+                            if "collaborative_red_team" in x.get("test_category", "")
+                            and x.get("status") in ("Running", "Dataset Generated", "Created")
+                        ),
                         None,
                     )
                     if active:
-                        console.print(f"\n[yellow]Active session found:[/yellow] {active.get('name')} ({active.get('id')})")
+                        console.print(
+                            f"\n[yellow]Active session found:[/yellow] {active.get('name')} ({active.get('id')})"
+                        )
                         if Confirm.ask("Resume this session?", default=True):
                             experiment_id = active.get("id")
                         else:
@@ -184,6 +196,7 @@ def sessions_command(experiment_id):
 # Interactive loop
 # ---------------------------------------------------------------------------
 
+
 def _interactive_loop(client, experiment_id):
     """Run the interactive red team session.
 
@@ -199,7 +212,9 @@ def _interactive_loop(client, experiment_id):
         try:
             analysis = client.post(
                 f"experiments/{experiment_id}/actions/analyze",
-                data={}, include_project=True, timeout=120,
+                data={},
+                include_project=True,
+                timeout=120,
             )
             _display_analysis(analysis)
         except APIError as e:
@@ -230,13 +245,31 @@ def _interactive_loop(client, experiment_id):
 
             # Normalize aliases — single letter shortcuts
             ALIASES = {
-                "q": "quit", "exit": "quit",
-                "a": "attack", "attack": "attack", "start": "attack", "new": "attack",
-                "g": "go", "go": "go", "run": "go", "execute": "go", "e": "go",
-                "p": "pivot", "pivot": "pivot", "direct": "pivot", "d": "pivot",
-                "j": "judge", "judge": "judge", "eval": "judge",
-                "c": "complete", "complete": "complete", "finish": "complete", "done": "complete",
-                "analyze": "analyze", "analyse": "analyze", "analysis": "analyze",
+                "q": "quit",
+                "exit": "quit",
+                "a": "attack",
+                "attack": "attack",
+                "start": "attack",
+                "new": "attack",
+                "g": "go",
+                "go": "go",
+                "run": "go",
+                "execute": "go",
+                "e": "go",
+                "p": "pivot",
+                "pivot": "pivot",
+                "direct": "pivot",
+                "d": "pivot",
+                "j": "judge",
+                "judge": "judge",
+                "eval": "judge",
+                "c": "complete",
+                "complete": "complete",
+                "finish": "complete",
+                "done": "complete",
+                "analyze": "analyze",
+                "analyse": "analyze",
+                "analysis": "analyze",
             }
             cmd = ALIASES.get(cmd, cmd)
 
@@ -251,7 +284,9 @@ def _interactive_loop(client, experiment_id):
                 with console.status("Analyzing..."):
                     analysis = client.post(
                         f"experiments/{experiment_id}/actions/analyze",
-                        data={}, include_project=True, timeout=120,
+                        data={},
+                        include_project=True,
+                        timeout=120,
                     )
                 _display_analysis(analysis)
 
@@ -261,7 +296,10 @@ def _interactive_loop(client, experiment_id):
                     if not Confirm.ask("You have an active session. Start a new one?"):
                         continue
 
-                goal = Prompt.ask("[bold]Attack goal[/bold] [dim](Enter for platform suggestion)[/dim]", default="")
+                goal = Prompt.ask(
+                    "[bold]Attack goal[/bold] [dim](Enter for platform suggestion)[/dim]",
+                    default="",
+                )
                 data = {}
                 if goal:
                     method = Prompt.ask("[dim]Method[/dim]", default="")
@@ -270,12 +308,13 @@ def _interactive_loop(client, experiment_id):
                 with console.status("Starting attack session..."):
                     result = client.post(
                         f"experiments/{experiment_id}/actions/start",
-                        data=data, include_project=True,
+                        data=data,
+                        include_project=True,
                     )
 
                 active_session = result.get("session_id")
-                strategy_goal = result.get('strategy', {}).get('goal', '')
-                console.print(f"\n[green]Session started[/green]")
+                strategy_goal = result.get("strategy", {}).get("goal", "")
+                console.print("\n[green]Session started[/green]")
                 console.print(f"  Strategy: [bold]{strategy_goal}[/bold]")
 
                 # Auto-execute first burst
@@ -284,7 +323,8 @@ def _interactive_loop(client, experiment_id):
                     checkpoint = client.post(
                         f"experiments/{experiment_id}/actions/execute",
                         data={"session_id": active_session, "burst_turns": 5},
-                        include_project=True, timeout=300,
+                        include_project=True,
+                        timeout=300,
                     )
 
                 _display_checkpoint(checkpoint)
@@ -299,7 +339,8 @@ def _interactive_loop(client, experiment_id):
                     checkpoint = client.post(
                         f"experiments/{experiment_id}/actions/execute",
                         data={"session_id": active_session, "burst_turns": 5},
-                        include_project=True, timeout=300,
+                        include_project=True,
+                        timeout=300,
                     )
 
                 _display_checkpoint(checkpoint)
@@ -318,10 +359,11 @@ def _interactive_loop(client, experiment_id):
                     strategy = client.post(
                         f"experiments/{experiment_id}/actions/direct",
                         data={"session_id": active_session, "input": guidance},
-                        include_project=True, timeout=120,
+                        include_project=True,
+                        timeout=120,
                     )
 
-                console.print(f"[green]Strategy pivoted:[/green]")
+                console.print("[green]Strategy pivoted:[/green]")
                 console.print(f"  Goal: {strategy.get('goal', '')}")
                 console.print(f"  Method: {strategy.get('method', '')}")
 
@@ -331,7 +373,8 @@ def _interactive_loop(client, experiment_id):
                     checkpoint = client.post(
                         f"experiments/{experiment_id}/actions/execute",
                         data={"session_id": active_session, "burst_turns": 5},
-                        include_project=True, timeout=300,
+                        include_project=True,
+                        timeout=300,
                     )
 
                 _display_checkpoint(checkpoint)
@@ -346,7 +389,8 @@ def _interactive_loop(client, experiment_id):
                     verdict = client.post(
                         f"experiments/{experiment_id}/actions/judge",
                         data={"session_id": active_session},
-                        include_project=True, timeout=60,
+                        include_project=True,
+                        timeout=60,
                     )
 
                 _display_verdict(verdict)
@@ -360,7 +404,8 @@ def _interactive_loop(client, experiment_id):
                 with console.status("Completing experiment..."):
                     result = client.post(
                         f"experiments/{experiment_id}/actions/complete",
-                        data={}, include_project=True,
+                        data={},
+                        include_project=True,
                     )
 
                 console.print("[green]Experiment completed.[/green]")
@@ -374,8 +419,10 @@ def _interactive_loop(client, experiment_id):
 
         except APIError as e:
             console_err.print(f"[red]Error:[/red] {e}")
-        except (requests_lib.exceptions.Timeout, requests_lib.exceptions.ConnectionError) as e:
-            console_err.print(f"[red]Connection error:[/red] Request timed out. The server may be busy — try again.")
+        except (requests_lib.exceptions.Timeout, requests_lib.exceptions.ConnectionError):
+            console_err.print(
+                "[red]Connection error:[/red] Request timed out. The server may be busy — try again."
+            )
         except KeyboardInterrupt:
             console.print("\n[dim]Type 'quit' to pause or 'complete' to finalize.[/dim]")
 
@@ -384,9 +431,10 @@ def _interactive_loop(client, experiment_id):
 # Display helpers
 # ---------------------------------------------------------------------------
 
+
 def _display_analysis(analysis):
     """Display attack surface analysis."""
-    console.print(f"\n[bold]Attack Surface Analysis[/bold]\n")
+    console.print("\n[bold]Attack Surface Analysis[/bold]\n")
     console.print(f"  {analysis.get('summary', 'No summary available.')}\n")
 
     weak = analysis.get("weak_spots", [])
@@ -394,18 +442,25 @@ def _display_analysis(analysis):
         console.print("[bold]Weak Spots:[/bold]")
         for w in weak:
             sev = w.get("severity", "unknown").upper()
-            sev_color = {"CRITICAL": "red bold", "HIGH": "red", "MEDIUM": "yellow", "LOW": "blue"}.get(sev, "white")
-            console.print(f"  [{sev_color}]{sev}[/{sev_color}] {w.get('area', '')} — {w.get('reason', '')}")
+            sev_color = {
+                "CRITICAL": "red bold",
+                "HIGH": "red",
+                "MEDIUM": "yellow",
+                "LOW": "blue",
+            }.get(sev, "white")
+            console.print(
+                f"  [{sev_color}]{sev}[/{sev_color}] {w.get('area', '')} — {w.get('reason', '')}"
+            )
 
     gaps = analysis.get("coverage_gaps", [])
     if gaps:
-        console.print(f"\n[bold]Coverage Gaps:[/bold]")
+        console.print("\n[bold]Coverage Gaps:[/bold]")
         for g in gaps:
             console.print(f"  {g.get('area', '')} — {g.get('reason', '')}")
 
     recs = analysis.get("recommended_strategies", [])
     if recs:
-        console.print(f"\n[bold]Recommended Strategies:[/bold]")
+        console.print("\n[bold]Recommended Strategies:[/bold]")
         for i, r in enumerate(recs, 1):
             console.print(f"  {i}. [cyan]{r.get('goal', '')}[/cyan]")
             console.print(f"     {r.get('method', '')}")
@@ -452,12 +507,14 @@ def _display_checkpoint(checkpoint):
         "max_session_turns": "Max Turns Reached",
     }.get(trigger, trigger)
 
-    console.print(Panel(
-        f"[{trigger_color}]{trigger_label}[/{trigger_color}] at turn {checkpoint.get('turn', '?')}\n\n"
-        f"{checkpoint.get('summary', 'No summary.')}",
-        title="Checkpoint",
-        border_style=trigger_color,
-    ))
+    console.print(
+        Panel(
+            f"[{trigger_color}]{trigger_label}[/{trigger_color}] at turn {checkpoint.get('turn', '?')}\n\n"
+            f"{checkpoint.get('summary', 'No summary.')}",
+            title="Checkpoint",
+            border_style=trigger_color,
+        )
+    )
 
     pivots = checkpoint.get("suggested_pivots", [])
     if pivots:
@@ -471,15 +528,17 @@ def _display_verdict(verdict):
     result = verdict.get("result", "error")
     result_color = "green" if result == "pass" else "red" if result == "fail" else "yellow"
 
-    console.print(Panel(
-        f"[bold]Result:[/bold] [{result_color}]{result.upper()}[/{result_color}]\n"
-        f"[bold]Turns:[/bold] {verdict.get('turns', 0)}\n"
-        f"[bold]Severity:[/bold] {verdict.get('severity', 0)}\n"
-        f"[bold]Category:[/bold] {verdict.get('category', 'N/A')}\n\n"
-        f"{verdict.get('explanation', '')}",
-        title="Session Verdict",
-        border_style=result_color,
-    ))
+    console.print(
+        Panel(
+            f"[bold]Result:[/bold] [{result_color}]{result.upper()}[/{result_color}]\n"
+            f"[bold]Turns:[/bold] {verdict.get('turns', 0)}\n"
+            f"[bold]Severity:[/bold] {verdict.get('severity', 0)}\n"
+            f"[bold]Category:[/bold] {verdict.get('category', 'N/A')}\n\n"
+            f"{verdict.get('explanation', '')}",
+            title="Session Verdict",
+            border_style=result_color,
+        )
+    )
 
 
 def _get_project_scope(client):

@@ -1,5 +1,8 @@
-"""Firewall commands — train and manage Tier 2 classifiers for hb-firewall."""
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
+"""Firewall commands — train and manage Tier 2 classifiers for humanbound-firewall."""
 
+import os
 import sys
 import time
 from pathlib import Path
@@ -8,17 +11,16 @@ import click
 from rich.console import Console
 from rich.progress import Progress
 
-from ..client import HumanboundClient
 from ..engine import get_runner
 from ..engine.platform_runner import PlatformTestRunner
-from ..exceptions import NotAuthenticatedError, APIError
+from ..exceptions import APIError, NotAuthenticatedError
 
 console = Console()
 
 
 @click.group("firewall")
 def firewall_group():
-    """Train and manage Tier 2 classifiers for hb-firewall.
+    """Train and manage Tier 2 classifiers for humanbound-firewall.
 
     \b
     Workflow:
@@ -29,25 +31,36 @@ def firewall_group():
 
 
 @firewall_group.command("train")
-@click.option("--model", "model_path", type=str, required=False, default=None,
-              help="Path to AgentClassifier script (e.g. detectors/one_class_svm.py)")
-@click.option("--last", "last_n", type=int, default=10,
-              help="Last N finished experiments (default: 10)")
+@click.option(
+    "--model",
+    "model_path",
+    type=str,
+    required=False,
+    default=None,
+    help="Path to AgentClassifier script (e.g. detectors/one_class_svm.py)",
+)
+@click.option(
+    "--last", "last_n", type=int, default=10, help="Last N finished experiments (default: 10)"
+)
 @click.option("--from", "from_date", type=str, default=None)
 @click.option("--until", "until_date", type=str, default=None)
 @click.option("--min-samples", type=int, default=30)
 @click.option("--output", "-o", type=click.Path(), default=None)
-@click.option("--import", "import_files", type=str, multiple=True,
-              help="Import external logs (e.g. results.json or results.json:promptfoo)")
-def train_command(model_path, last_n, from_date, until_date, min_samples,
-                  output, import_files):
+@click.option(
+    "--import",
+    "import_files",
+    type=str,
+    multiple=True,
+    help="Import external logs (e.g. results.json or results.json:promptfoo)",
+)
+def train_command(model_path, last_n, from_date, until_date, min_samples, output, import_files):
     """Train Tier 2 classifiers from adversarial + QA test logs."""
     if not model_path:
-        # Default to SetFit classifier shipped with hb-firewall
-        import importlib.resources
+        # Default to SetFit classifier shipped with humanbound-firewall
         try:
             # Try to find setfit_classifier.py relative to hb_firewall package
             import hb_firewall
+
             pkg_dir = Path(hb_firewall.__file__).parent.parent.parent
             default = pkg_dir / "detectors" / "setfit_classifier.py"
             if default.exists():
@@ -80,7 +93,7 @@ def train_command(model_path, last_n, from_date, until_date, min_samples,
         try:
             from hb_firewall.hbfw import HBFW, load_model_class, save_hbfw
         except ImportError:
-            console.print("[red]Install: pip install hb-firewall[/red]")
+            console.print("[red]Install: pip install humanbound-firewall[/red]")
             sys.exit(1)
 
         try:
@@ -89,29 +102,42 @@ def train_command(model_path, last_n, from_date, until_date, min_samples,
             console.print(f"[red]{e}[/red]")
             sys.exit(1)
 
-        console.print(f"\n[bold]Training firewall classifiers[/bold]")
+        console.print("\n[bold]Training firewall classifiers[/bold]")
         console.print(f"  Project: {project_id[:8]}...")
         console.print(f"  Model: {model_path}")
+
+        if not os.environ.get("HF_TOKEN") and not os.environ.get("HUGGING_FACE_HUB_TOKEN"):
+            console.print(
+                "  [dim]Tip: set HF_TOKEN for faster model downloads — https://huggingface.co/settings/tokens[/dim]"
+            )
 
         # Step 1: Fetch logs
         logs = []
         if is_platform:
-            console.print(f"\n[bold]Step 1:[/bold] Fetching experiments...")
-            adv_exps = _fetch_experiments(client, "adversarial", last_n=last_n,
-                                           from_date=from_date, until_date=until_date)
-            qa_exps = _fetch_experiments(client, "adversarial", exclude=True,
-                                          last_n=last_n, from_date=from_date, until_date=until_date)
+            console.print("\n[bold]Step 1:[/bold] Fetching experiments...")
+            adv_exps = _fetch_experiments(
+                client, "adversarial", last_n=last_n, from_date=from_date, until_date=until_date
+            )
+            qa_exps = _fetch_experiments(
+                client,
+                "adversarial",
+                exclude=True,
+                last_n=last_n,
+                from_date=from_date,
+                until_date=until_date,
+            )
             if not adv_exps and not import_files:
                 console.print("[red]No finished adversarial experiments.[/red] Run: hb test")
                 sys.exit(1)
             console.print(f"  Found {len(adv_exps)} adversarial + {len(qa_exps)} QA experiments")
 
-            console.print(f"\n[bold]Step 2:[/bold] Pulling conversation logs...")
+            console.print("\n[bold]Step 2:[/bold] Pulling conversation logs...")
             logs = _fetch_logs(client, adv_exps + qa_exps)
         else:
             # Local mode: read from .humanbound/results/
-            console.print(f"\n[bold]Step 1:[/bold] Reading local test results...")
+            console.print("\n[bold]Step 1:[/bold] Reading local test results...")
             import json as _json
+
             results_dir = Path(".humanbound/results")
             if results_dir.exists():
                 for d in sorted(results_dir.iterdir(), reverse=True)[:last_n]:
@@ -129,6 +155,7 @@ def train_command(model_path, last_n, from_date, until_date, min_samples,
         # Import external logs if provided
         if import_files:
             from humanbound_cli.adapters import convert_file
+
             for import_arg in import_files:
                 # Parse file:format syntax
                 if ":" in import_arg and not import_arg.startswith("/"):
@@ -148,9 +175,11 @@ def train_command(model_path, last_n, from_date, until_date, min_samples,
 
         n_pass = sum(1 for l in logs if l.get("result") == "pass")
         n_fail = len(logs) - n_pass
-        adv_fail = sum(1 for l in logs
-                       if "adversarial" in (l.get("test_category") or "")
-                       and l.get("result") == "fail")
+        adv_fail = sum(
+            1
+            for l in logs
+            if "adversarial" in (l.get("test_category") or "") and l.get("result") == "fail"
+        )
         console.print(f"  Collected {len(logs)} conversations ({n_pass} pass, {n_fail} fail)")
         console.print(f"  Training on {adv_fail} failed adversarial conversations")
 
@@ -159,47 +188,57 @@ def train_command(model_path, last_n, from_date, until_date, min_samples,
         else:
             permitted, restricted = [], []
         if permitted or restricted:
-            console.print(f"  Intents: {len(permitted or [])} permitted, {len(restricted or [])} restricted")
+            console.print(
+                f"  Intents: {len(permitted or [])} permitted, {len(restricted or [])} restricted"
+            )
 
         # Step 3: Prepare
-        console.print(f"\n[bold]Step 3:[/bold] Preparing training data...")
-        hbfw = HBFW(attack_detector=detector_cls("attack"),
-                     benign_detector=detector_cls("benign"))
+        console.print("\n[bold]Step 3:[/bold] Preparing training data...")
+        hbfw = HBFW(attack_detector=detector_cls("attack"), benign_detector=detector_cls("benign"))
         data = hbfw.prepare(logs, restricted_intents=restricted, permitted_intents=permitted)
 
         stats = data.get("stats", {})
-        console.print(f"  Attack samples: {stats.get('attack_samples', 0)} (curated: {stats.get('curated_attack', 0)})")
-        console.print(f"  Benign samples: {stats.get('benign_samples', 0)} (curated: {stats.get('curated_benign', 0)})")
+        console.print(
+            f"  Attack samples: {stats.get('attack_samples', 0)} (curated: {stats.get('curated_attack', 0)})"
+        )
+        console.print(
+            f"  Benign samples: {stats.get('benign_samples', 0)} (curated: {stats.get('curated_benign', 0)})"
+        )
         if not data.get("has_qa"):
-            console.print(f"  [yellow]No QA tests. Using permitted intents as benign data.[/yellow]")
+            console.print("  [yellow]No QA tests. Using permitted intents as benign data.[/yellow]")
 
         # Step 4: Train
-        console.print(f"\n[bold]Step 4:[/bold] Training...")
-        performance = hbfw.train(data, permitted_intents=permitted,
-                                  restricted_intents=restricted)
+        console.print("\n[bold]Step 4:[/bold] Training...")
+        performance = hbfw.train(data, permitted_intents=permitted, restricted_intents=restricted)
 
         val = performance.get("validation")
         if val:
             af = val.get("adversarial_fail", {})
             ap = val.get("adversarial_pass", {})
             bn = val.get("benign", {})
-            console.print(f"\n  [bold]Validation (conversation replay)[/bold]")
+            console.print("\n  [bold]Validation (conversation replay)[/bold]")
             if af.get("total"):
                 r = af.get("rate", 0)
                 s = "green" if r >= 0.8 else "yellow" if r >= 0.5 else "red"
-                console.print(f"    Failed adversarial caught: [{s}]{af['caught']}/{af['total']} ({r:.1%})[/{s}]")
+                console.print(
+                    f"    Failed adversarial caught: [{s}]{af['caught']}/{af['total']} ({r:.1%})[/{s}]"
+                )
             if ap.get("total"):
                 r = ap.get("rate", 0)
                 s = "green" if r >= 0.5 else "dim"
-                console.print(f"    Passed adversarial caught: [{s}]{ap['caught']}/{ap['total']} ({r:.1%})[/{s}]")
+                console.print(
+                    f"    Passed adversarial caught: [{s}]{ap['caught']}/{ap['total']} ({r:.1%})[/{s}]"
+                )
             if bn.get("total"):
                 r = bn.get("rate", 0)
                 s = "green" if r >= 0.8 else "yellow" if r >= 0.5 else "red"
-                console.print(f"    Benign allowed: [{s}]{bn['correct']}/{bn['total']} ({r:.1%})[/{s}]")
+                console.print(
+                    f"    Benign allowed: [{s}]{bn['correct']}/{bn['total']} ({r:.1%})[/{s}]"
+                )
                 if bn.get("blocked"):
                     console.print(f"    [red]Benign blocked: {bn['blocked']}[/red]")
 
-        console.print(f"  Training complete.")
+        console.print("  Training complete.")
 
         # Save
         if output is None:
@@ -229,7 +268,7 @@ def show_command(model_path):
     try:
         from hb_firewall.hbfw import load_hbfw
     except ImportError:
-        console.print("[red]hb-firewall not installed.[/red]")
+        console.print("[red]humanbound-firewall not installed.[/red]")
         sys.exit(1)
 
     config, _ = load_hbfw(model_path)
@@ -247,23 +286,27 @@ def show_command(model_path):
         af = val.get("adversarial_fail", {})
         ap = val.get("adversarial_pass", {})
         bn = val.get("benign", {})
-        console.print(f"  Validation:")
+        console.print("  Validation:")
         if af.get("total"):
-            console.print(f"    Failed adversarial caught: {af['caught']}/{af['total']} ({af.get('rate',0):.1%})")
+            console.print(
+                f"    Failed adversarial caught: {af['caught']}/{af['total']} ({af.get('rate', 0):.1%})"
+            )
         if ap.get("total"):
-            console.print(f"    Passed adversarial caught: {ap['caught']}/{ap['total']} ({ap.get('rate',0):.1%})")
+            console.print(
+                f"    Passed adversarial caught: {ap['caught']}/{ap['total']} ({ap.get('rate', 0):.1%})"
+            )
         if bn.get("total"):
-            console.print(f"    Benign allowed: {bn['correct']}/{bn['total']} ({bn.get('rate',0):.1%})")
-
-
+            console.print(
+                f"    Benign allowed: {bn['correct']}/{bn['total']} ({bn.get('rate', 0):.1%})"
+            )
 
 
 # ---------------------------------------------------------------------------
 # Data fetching
 # ---------------------------------------------------------------------------
 
-def _fetch_experiments(client, category, exclude=False, last_n=10,
-                       from_date=None, until_date=None):
+
+def _fetch_experiments(client, category, exclude=False, last_n=10, from_date=None, until_date=None):
     experiments = []
     page = 1
     while True:
@@ -315,5 +358,3 @@ def _fetch_intents(client, project_id):
         return intents.get("permitted", []), intents.get("restricted", [])
     except Exception:
         return None, None
-
-

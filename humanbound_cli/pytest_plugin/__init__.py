@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """Humanbound pytest plugin for AI agent security testing.
 
 This plugin provides pytest integration for running Humanbound security tests
@@ -5,7 +7,7 @@ as part of your test suite.
 
 Usage:
     # Install with pytest support
-    pip install humanbound-cli[pytest]
+    pip install humanbound[pytest]
 
     # Run security tests
     pytest --hb tests/
@@ -21,10 +23,11 @@ Usage:
         assert result.passed, f"Failed: {result.findings}"
 """
 
-import pytest
-from typing import Optional
 import json
 import sys
+from typing import Optional
+
+import pytest
 
 from .fixtures import HumanboundTestClient
 from .report import HumanboundReporter
@@ -95,18 +98,11 @@ def pytest_addoption(parser):
 def pytest_configure(config):
     """Configure pytest with Humanbound markers and settings."""
     # Register markers
+    config.addinivalue_line("markers", "hb: mark test as a Humanbound security test")
     config.addinivalue_line(
-        "markers",
-        "hb: mark test as a Humanbound security test"
+        "markers", "hb_category(name): mark test for a specific category (e.g., adversarial)"
     )
-    config.addinivalue_line(
-        "markers",
-        "hb_category(name): mark test for a specific category (e.g., adversarial)"
-    )
-    config.addinivalue_line(
-        "markers",
-        "hb_skip_ci: skip this test in CI environments"
-    )
+    config.addinivalue_line("markers", "hb_skip_ci: skip this test in CI environments")
 
     # Initialize reporter if Humanbound is enabled
     if config.getoption("--hb"):
@@ -132,9 +128,9 @@ def pytest_collection_modifyitems(config, items):
                 category_marker = item.get_closest_marker("hb_category")
                 if category_marker:
                     if category_marker.args[0] != category_filter:
-                        item.add_marker(pytest.mark.skip(
-                            reason=f"filtered by --hb-category={category_filter}"
-                        ))
+                        item.add_marker(
+                            pytest.mark.skip(reason=f"filtered by --hb-category={category_filter}")
+                        )
 
 
 def pytest_sessionstart(session):
@@ -175,7 +171,7 @@ def hb(request) -> HumanboundTestClient:
 
 
 @pytest.fixture
-def hb_baseline(request) -> Optional[dict]:
+def hb_baseline(request) -> dict | None:
     """Fixture providing baseline results for regression detection.
 
     Usage:

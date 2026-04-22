@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """Azure Sentinel integration commands.
 
 DEPRECATED: 'hb sentinel' is deprecated in favour of 'hb webhooks'.
@@ -17,20 +19,19 @@ from pathlib import Path
 
 import click
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
 from rich.prompt import Confirm
+from rich.table import Table
 
 from ..client import HumanboundClient
 from ..config import CONFIG_DIR
-from ..exceptions import NotAuthenticatedError, APIError
+from ..exceptions import APIError, NotAuthenticatedError
 
 console = Console()
 
 # DEPRECATED: remove after v2.0 — replaced by 'hb webhooks'
 _DEPRECATION_MSG = (
-    "[yellow]Warning:[/yellow] 'hb sentinel' is deprecated. "
-    "Use [bold]hb webhooks[/bold] instead."
+    "[yellow]Warning:[/yellow] 'hb sentinel' is deprecated. Use [bold]hb webhooks[/bold] instead."
 )
 
 SENTINEL_CONFIG_FILE = CONFIG_DIR / "sentinel.json"
@@ -113,7 +114,7 @@ def _load_sentinel_config() -> dict:
     if SENTINEL_CONFIG_FILE.exists():
         try:
             return json.loads(SENTINEL_CONFIG_FILE.read_text())
-        except (json.JSONDecodeError, IOError):
+        except (OSError, json.JSONDecodeError):
             pass
     return {}
 
@@ -216,12 +217,14 @@ def connect(url: str, secret: str, name: str):
             raise SystemExit(1)
 
         # Save config
-        _save_sentinel_config({
-            "webhook_id": webhook_id,
-            "webhook_secret": webhook_secret,
-            "connector_url": url,
-            "connected_at": datetime.now(timezone.utc).isoformat(),
-        })
+        _save_sentinel_config(
+            {
+                "webhook_id": webhook_id,
+                "webhook_secret": webhook_secret,
+                "connector_url": url,
+                "connected_at": datetime.now(timezone.utc).isoformat(),
+            }
+        )
 
         console.print(f"[green]Webhook created.[/green] ID: {webhook_id}")
 
@@ -232,14 +235,20 @@ def connect(url: str, secret: str, name: str):
                 console.print("[green]Test ping delivered successfully.[/green]")
             except APIError as e:
                 console.print(f"[yellow]Test ping failed:[/yellow] {e}")
-                console.print("[dim]The webhook was created but connectivity could not be verified.[/dim]")
+                console.print(
+                    "[dim]The webhook was created but connectivity could not be verified.[/dim]"
+                )
 
         console.print(f"\n[dim]Webhook secret (save this):[/dim] {webhook_secret}")
         console.print("[dim]Config saved to ~/.humanbound/sentinel.json[/dim]")
 
         # Remind user to sync secret to their Azure Function
-        console.print(f"\n[yellow]Important:[/yellow] Set the signing secret on your connector Function App:")
-        console.print(f"  [green]az functionapp config appsettings set \\\n    --resource-group <your-rg> \\\n    --name <func-name> \\\n    --settings WEBHOOK_SECRET={webhook_secret}[/green]")
+        console.print(
+            "\n[yellow]Important:[/yellow] Set the signing secret on your connector Function App:"
+        )
+        console.print(
+            f"  [green]az functionapp config appsettings set \\\n    --resource-group <your-rg> \\\n    --name <func-name> \\\n    --settings WEBHOOK_SECRET={webhook_secret}[/green]"
+        )
         console.print("[dim]Then run 'hb sentinel test' to verify.[/dim]")
 
     except NotAuthenticatedError:
@@ -289,7 +298,9 @@ def sync(since: str, until: str, project_id: str, event_type: str):
             console.print("[yellow]No matching events found.[/yellow]")
         else:
             console.print(f"[green]Replay started[/green] — {queued} events queued for delivery.")
-            console.print("[dim]Events are being delivered asynchronously. Use 'hb sentinel status' to monitor.[/dim]")
+            console.print(
+                "[dim]Events are being delivered asynchronously. Use 'hb sentinel status' to monitor.[/dim]"
+            )
 
     except NotAuthenticatedError:
         console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
@@ -321,22 +332,28 @@ def status(as_json: bool):
             deliveries = client.list_webhook_deliveries(webhook_id, page=1, size=10)
 
         if as_json:
-            print(json.dumps({"webhook": webhook, "recent_deliveries": deliveries}, indent=2, default=str))
+            print(
+                json.dumps(
+                    {"webhook": webhook, "recent_deliveries": deliveries}, indent=2, default=str
+                )
+            )
             return
 
         # Webhook info
         is_active = webhook.get("is_active", False)
         active_str = "[green]active[/green]" if is_active else "[red]inactive[/red]"
-        console.print(Panel(
-            f"Status: {active_str}\n"
-            f"URL: [dim]{webhook.get('url', 'N/A')}[/dim]\n"
-            f"Name: {webhook.get('name', 'N/A')}\n"
-            f"[dim]ID: {webhook_id}[/dim]\n"
-            f"[dim]Connected: {config.get('connected_at', 'N/A')}[/dim]",
-            title="Sentinel Connector",
-            border_style="blue",
-            padding=(1, 2),
-        ))
+        console.print(
+            Panel(
+                f"Status: {active_str}\n"
+                f"URL: [dim]{webhook.get('url', 'N/A')}[/dim]\n"
+                f"Name: {webhook.get('name', 'N/A')}\n"
+                f"[dim]ID: {webhook_id}[/dim]\n"
+                f"[dim]Connected: {config.get('connected_at', 'N/A')}[/dim]",
+                title="Sentinel Connector",
+                border_style="blue",
+                padding=(1, 2),
+            )
+        )
 
         # Recent deliveries
         delivery_data = deliveries.get("data", [])
@@ -369,7 +386,9 @@ def status(as_json: bool):
             table.add_row(event_id, status_str, attempt, error[:30] if error else "")
 
         console.print(table)
-        console.print(f"\n[dim]Success rate (last {len(delivery_data)}): {success_count}/{len(delivery_data)}[/dim]")
+        console.print(
+            f"\n[dim]Success rate (last {len(delivery_data)}): {success_count}/{len(delivery_data)}[/dim]"
+        )
 
     except NotAuthenticatedError:
         console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
@@ -416,7 +435,9 @@ def disconnect(force: bool):
     webhook_id = config["webhook_id"]
 
     if not force:
-        if not Confirm.ask(f"Disconnect Sentinel webhook [bold]{webhook_id}[/bold]? Events will stop flowing."):
+        if not Confirm.ask(
+            f"Disconnect Sentinel webhook [bold]{webhook_id}[/bold]? Events will stop flowing."
+        ):
             console.print("[dim]Cancelled.[/dim]")
             return
 
@@ -453,7 +474,7 @@ def disconnect(force: bool):
 # Deploy script generation + execution
 # ---------------------------------------------------------------------------
 
-DEPLOY_SCRIPT_TEMPLATE = r'''#!/usr/bin/env bash
+DEPLOY_SCRIPT_TEMPLATE = r"""#!/usr/bin/env bash
 set -euo pipefail
 
 # =============================================================================
@@ -711,17 +732,30 @@ else
     echo "    az deployment operation list --resource-group $RESOURCE_GROUP --name sentinel-content"
     echo ""
 fi
-'''
+"""
 
 
 @sentinel_group.command("deploy")
 @click.option("--resource-group", "--rg", required=True, help="Azure resource group name")
 @click.option("--location", default="northeurope", help="Azure region (default: northeurope)")
-@click.option("--workspace", default="la-humanbound", help="Log Analytics workspace name (default: la-humanbound)")
+@click.option(
+    "--workspace",
+    default="la-humanbound",
+    help="Log Analytics workspace name (default: la-humanbound)",
+)
 @click.option("--export-only", is_flag=True, help="Export the script without running it")
-@click.option("--output", "output_path", default=None, help="Save script to file (implies --export-only)")
+@click.option(
+    "--output", "output_path", default=None, help="Save script to file (implies --export-only)"
+)
 @click.option("--no-connect", is_flag=True, help="Deploy infrastructure only, skip webhook setup")
-def deploy(resource_group: str, location: str, workspace: str, export_only: bool, output_path: str, no_connect: bool):
+def deploy(
+    resource_group: str,
+    location: str,
+    workspace: str,
+    export_only: bool,
+    output_path: str,
+    no_connect: bool,
+):
     """Deploy Sentinel infrastructure, content, and connector in one command.
 
     \b
@@ -764,7 +798,9 @@ def deploy(resource_group: str, location: str, workspace: str, export_only: bool
             console.print("[dim]Or use --no-connect to deploy infrastructure only.[/dim]")
             raise SystemExit(1)
         if not client.organisation_id:
-            console.print("[yellow]No organisation selected.[/yellow] Run 'hb switch <org-id>' first.")
+            console.print(
+                "[yellow]No organisation selected.[/yellow] Run 'hb switch <org-id>' first."
+            )
             console.print("[dim]Or use --no-connect to deploy infrastructure only.[/dim]")
             raise SystemExit(1)
 
@@ -782,7 +818,13 @@ def deploy(resource_group: str, location: str, workspace: str, export_only: bool
         if not shutil.which("az"):
             missing.append(("Azure CLI", "az", "https://aka.ms/install-azure-cli"))
         if not shutil.which("func"):
-            missing.append(("Azure Functions Core Tools", "func", "https://aka.ms/install-azure-functions-core-tools"))
+            missing.append(
+                (
+                    "Azure Functions Core Tools",
+                    "func",
+                    "https://aka.ms/install-azure-functions-core-tools",
+                )
+            )
 
         if missing:
             console.print("[red]Missing required tools:[/red]\n")
@@ -809,7 +851,7 @@ def deploy(resource_group: str, location: str, workspace: str, export_only: bool
 
     # Run mode — execute directly
     panel_lines = [
-        f"[bold]Deploying Sentinel to Azure[/bold]\n",
+        "[bold]Deploying Sentinel to Azure[/bold]\n",
         f"  Resource Group:  [cyan]{resource_group}[/cyan]",
         f"  Location:        [cyan]{location}[/cyan]",
         f"  Workspace:       [cyan]{workspace}[/cyan]",
@@ -860,11 +902,23 @@ def deploy(resource_group: str, location: str, workspace: str, export_only: bool
         # Retrieve deployment outputs
         console.print("\n[bold]Connecting Humanbound to Sentinel...[/bold]")
         outputs_result = subprocess.run(
-            ["az", "deployment", "group", "show",
-             "--resource-group", resource_group,
-             "--name", "main",
-             "--query", "properties.outputs", "-o", "json"],
-            capture_output=True, text=True, check=True,
+            [
+                "az",
+                "deployment",
+                "group",
+                "show",
+                "--resource-group",
+                resource_group,
+                "--name",
+                "main",
+                "--query",
+                "properties.outputs",
+                "-o",
+                "json",
+            ],
+            capture_output=True,
+            text=True,
+            check=True,
         )
         outputs = json.loads(outputs_result.stdout)
         connector_url = outputs["connectorUrl"]["value"]
@@ -873,7 +927,9 @@ def deploy(resource_group: str, location: str, workspace: str, export_only: bool
         # Check for existing connection
         existing = _load_sentinel_config()
         if existing.get("webhook_id"):
-            console.print(f"  [yellow]Existing connection found.[/yellow] Webhook: {existing['webhook_id']}")
+            console.print(
+                f"  [yellow]Existing connection found.[/yellow] Webhook: {existing['webhook_id']}"
+            )
             if not Confirm.ask("  Replace existing connection?"):
                 console.print("[dim]Skipping webhook setup. Infrastructure was deployed.[/dim]")
                 return
@@ -895,11 +951,21 @@ def deploy(resource_group: str, location: str, workspace: str, export_only: bool
         # Set signing secret on connector Function App
         console.print("  Setting webhook secret on connector...")
         subprocess.run(
-            ["az", "functionapp", "config", "appsettings", "set",
-             "--resource-group", resource_group,
-             "--name", func_name,
-             "--settings", f"WEBHOOK_SECRET={webhook_secret}",
-             "--output", "none"],
+            [
+                "az",
+                "functionapp",
+                "config",
+                "appsettings",
+                "set",
+                "--resource-group",
+                resource_group,
+                "--name",
+                func_name,
+                "--settings",
+                f"WEBHOOK_SECRET={webhook_secret}",
+                "--output",
+                "none",
+            ],
             check=True,
         )
         console.print("  Secret configured.")
@@ -924,9 +990,13 @@ def deploy(resource_group: str, location: str, workspace: str, export_only: bool
         _save_sentinel_config(config_data)
 
         # Final summary
-        workbook_label = f"Humanbound AI Security — {org_name}" if org_name else "Humanbound AI Security — CISO Dashboard"
+        workbook_label = (
+            f"Humanbound AI Security — {org_name}"
+            if org_name
+            else "Humanbound AI Security — CISO Dashboard"
+        )
         summary_lines = [
-            f"[bold green]Sentinel is fully deployed and connected![/bold green]\n",
+            "[bold green]Sentinel is fully deployed and connected![/bold green]\n",
             f"  Connector URL:  [cyan]{connector_url}[/cyan]",
             f"  Function App:   [cyan]{func_name}[/cyan]",
             f"  Workspace:      [cyan]{workspace}[/cyan]",
@@ -934,26 +1004,36 @@ def deploy(resource_group: str, location: str, workspace: str, export_only: bool
         if org_name:
             summary_lines.append(f"  Organisation:    [cyan]{org_name}[/cyan]")
         summary_lines.append(f"  Webhook ID:     [dim]{webhook_id}[/dim]")
-        summary_lines.append(f"\n  Open the CISO Dashboard in Azure Portal:")
+        summary_lines.append("\n  Open the CISO Dashboard in Azure Portal:")
         summary_lines.append(f"  [dim]Sentinel > Workbooks > '{workbook_label}'[/dim]")
-        console.print(Panel(
-            "\n".join(summary_lines),
-            border_style="green",
-            padding=(1, 2),
-            title="All Done",
-        ))
+        console.print(
+            Panel(
+                "\n".join(summary_lines),
+                border_style="green",
+                padding=(1, 2),
+                title="All Done",
+            )
+        )
 
     except (APIError, NotAuthenticatedError) as e:
         console.print(f"\n[yellow]Auto-connect failed:[/yellow] {e}")
         console.print("Infrastructure was deployed successfully.")
         if connector_url:
-            console.print(f"Connect manually: [green]hb sentinel connect --url {connector_url}[/green]")
+            console.print(
+                f"Connect manually: [green]hb sentinel connect --url {connector_url}[/green]"
+            )
         else:
-            console.print("Run 'az deployment group show ...' to get the connector URL, then use 'hb sentinel connect'.")
+            console.print(
+                "Run 'az deployment group show ...' to get the connector URL, then use 'hb sentinel connect'."
+            )
     except Exception as e:
         console.print(f"\n[yellow]Post-deployment setup failed:[/yellow] {e}")
         console.print("Infrastructure was deployed successfully.")
         if connector_url:
-            console.print(f"Connect manually: [green]hb sentinel connect --url {connector_url}[/green]")
+            console.print(
+                f"Connect manually: [green]hb sentinel connect --url {connector_url}[/green]"
+            )
         else:
-            console.print("Run 'az deployment group show ...' to get the connector URL, then use 'hb sentinel connect'.")
+            console.print(
+                "Run 'az deployment group show ...' to get the connector URL, then use 'hb sentinel connect'."
+            )

@@ -1,14 +1,17 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """API key management commands."""
 
 import json
+
 import click
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
 from rich.prompt import Confirm
+from rich.table import Table
 
 from ..client import HumanboundClient
-from ..exceptions import NotAuthenticatedError, APIError
+from ..exceptions import APIError, NotAuthenticatedError
 
 console = Console()
 
@@ -52,7 +55,7 @@ def _list_keys(as_json: bool):
 
         if not keys:
             console.print("[yellow]No API keys found.[/yellow]")
-            console.print("[dim]Create one with: hb api-keys create --name \"My Key\"[/dim]")
+            console.print('[dim]Create one with: hb api-keys create --name "My Key"[/dim]')
             return
 
         table = Table(title="API Keys")
@@ -89,7 +92,12 @@ def _list_keys(as_json: bool):
 
 @api_keys_group.command("create")
 @click.option("--name", required=True, help="Name for the API key")
-@click.option("--scopes", type=click.Choice(["admin", "write", "read"]), default="admin", help="Key permission scope")
+@click.option(
+    "--scopes",
+    type=click.Choice(["admin", "write", "read"]),
+    default="admin",
+    help="Key permission scope",
+)
 def create_key(name: str, scopes: str):
     """Create a new API key.
 
@@ -107,13 +115,15 @@ def create_key(name: str, scopes: str):
 
         key_value = response.get("key", response.get("api_key", ""))
 
-        console.print(Panel(
-            f"[bold green]{key_value}[/bold green]",
-            title="New API Key",
-            subtitle="[red bold]Save this key now - it will not be shown again[/red bold]",
-            border_style="yellow",
-            padding=(1, 2),
-        ))
+        console.print(
+            Panel(
+                f"[bold green]{key_value}[/bold green]",
+                title="New API Key",
+                subtitle="[red bold]Save this key now - it will not be shown again[/red bold]",
+                border_style="yellow",
+                padding=(1, 2),
+            )
+        )
 
         console.print(f"\n  Name: [bold]{name}[/bold]")
         console.print(f"  Scopes: {scopes}")
@@ -130,7 +140,9 @@ def create_key(name: str, scopes: str):
 @api_keys_group.command("update")
 @click.argument("key_id")
 @click.option("--name", help="New key name")
-@click.option("--scopes", type=click.Choice(["admin", "write", "read"]), help="New permission scope")
+@click.option(
+    "--scopes", type=click.Choice(["admin", "write", "read"]), help="New permission scope"
+)
 @click.option("--active/--inactive", default=None, help="Activate or deactivate key")
 def update_key(key_id: str, name: str, scopes: str, active):
     """Update an API key.
@@ -144,7 +156,9 @@ def update_key(key_id: str, name: str, scopes: str, active):
         raise SystemExit(1)
 
     if name is None and scopes is None and active is None:
-        console.print("[yellow]Nothing to update.[/yellow] Provide --name, --scopes, or --active/--inactive.")
+        console.print(
+            "[yellow]Nothing to update.[/yellow] Provide --name, --scopes, or --active/--inactive."
+        )
         raise SystemExit(1)
 
     try:
@@ -162,7 +176,7 @@ def update_key(key_id: str, name: str, scopes: str, active):
         with console.status("Updating API key..."):
             client.update_api_key(key_id, payload)
 
-        console.print(f"[green]API key updated.[/green]")
+        console.print("[green]API key updated.[/green]")
         console.print(f"[dim]ID: {key_id}[/dim]")
 
     except NotAuthenticatedError:
@@ -192,14 +206,16 @@ def revoke_key(key_id: str, force: bool):
         key_id = _resolve_key_id(client, key_id)
 
         if not force:
-            if not Confirm.ask(f"Revoke API key [bold]{key_id}[/bold]? Any integrations using this key will stop working"):
+            if not Confirm.ask(
+                f"Revoke API key [bold]{key_id}[/bold]? Any integrations using this key will stop working"
+            ):
                 console.print("[dim]Cancelled.[/dim]")
                 return
 
         with console.status("Revoking API key..."):
             client.delete_api_key(key_id)
 
-        console.print(f"[green]API key revoked.[/green]")
+        console.print("[green]API key revoked.[/green]")
         console.print(f"[dim]ID: {key_id}[/dim]")
 
     except NotAuthenticatedError:

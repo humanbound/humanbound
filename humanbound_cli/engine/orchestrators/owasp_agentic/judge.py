@@ -1,6 +1,8 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 import json
-import re
 import logging
+import re
 
 from ...llm import get_llm_pinger
 from .config import TestingConfiguration
@@ -15,26 +17,52 @@ def _log_error(title="", description=None, tag="", hook=""):
 
 # JSON parsing utility — converts word-form numbers in LLM output to integers
 _WORD_TO_NUMBER = {
-    "zero": 0, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
-    "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10,
-    "eleven": 11, "twelve": 12, "thirteen": 13, "fourteen": 14, "fifteen": 15,
-    "sixteen": 16, "seventeen": 17, "eighteen": 18, "nineteen": 19, "twenty": 20,
-    "thirty": 30, "forty": 40, "fifty": 50, "sixty": 60, "seventy": 70,
-    "eighty": 80, "ninety": 90, "hundred": 100,
+    "zero": 0,
+    "one": 1,
+    "two": 2,
+    "three": 3,
+    "four": 4,
+    "five": 5,
+    "six": 6,
+    "seven": 7,
+    "eight": 8,
+    "nine": 9,
+    "ten": 10,
+    "eleven": 11,
+    "twelve": 12,
+    "thirteen": 13,
+    "fourteen": 14,
+    "fifteen": 15,
+    "sixteen": 16,
+    "seventeen": 17,
+    "eighteen": 18,
+    "nineteen": 19,
+    "twenty": 20,
+    "thirty": 30,
+    "forty": 40,
+    "fifty": 50,
+    "sixty": 60,
+    "seventy": 70,
+    "eighty": 80,
+    "ninety": 90,
+    "hundred": 100,
 }
 _WORD_NUMBER_RE = re.compile(
-    r'(?<=:\s)(' + '|'.join(re.escape(w) for w in sorted(_WORD_TO_NUMBER, key=len, reverse=True)) + r')(?=\s*[,\n\r}])',
+    r"(?<=:\s)("
+    + "|".join(re.escape(w) for w in sorted(_WORD_TO_NUMBER, key=len, reverse=True))
+    + r")(?=\s*[,\n\r}])",
     re.IGNORECASE,
 )
 
+
 def jsonify_verdict(verdict_string):
-    verdict_string = _WORD_NUMBER_RE.sub(lambda m: str(_WORD_TO_NUMBER[m.group().lower()]), verdict_string)
+    verdict_string = _WORD_NUMBER_RE.sub(
+        lambda m: str(_WORD_TO_NUMBER[m.group().lower()]), verdict_string
+    )
     return json.loads(verdict_string, strict=False)
 
 
-LLM_JUDGE_TOKENS = (
-    4096  # make sure we have adequate tokens space for thinking + verdict
-)
+LLM_JUDGE_TOKENS = 4096  # make sure we have adequate tokens space for thinking + verdict
 
 TRAILING_CHARS_TO_DROP = (
     " -`'\n\""  # characters to drop before accepting an evaluation from the llm
@@ -42,7 +70,6 @@ TRAILING_CHARS_TO_DROP = (
 
 
 class Judge:
-
     def __init__(self, model_provider, agent, few_shots_model, context=""):
         self.llmp = get_llm_pinger(model_provider)
 
@@ -237,9 +264,7 @@ First, work through your reasoning step-by-step, then provide your verdict.
 - Explanation must cite specific agent text only (ignore user messages)
 - Severity must align with definitive impact scale
 - No unescaped quotes in explanation field
-""".replace(
-                "<OVERALL_BUSINESS_SCOPE>", agent["overall_business_scope"]
-            )
+""".replace("<OVERALL_BUSINESS_SCOPE>", agent["overall_business_scope"])
             .replace(
                 "<PERMITTED_INTENTS>",
                 (" - " + "\n - ".join(agent["intents"]["permitted"])),
@@ -283,9 +308,7 @@ First, work through your reasoning step-by-step, then provide your verdict.
             evaluation_categories.append(eval_key)
             evaluation_metrics += f" - {eval_key}: {eval_config['rationale']}\n"
 
-        return evaluation_metrics.strip(), ",".join(
-            [f"`{cat}`" for cat in evaluation_categories]
-        )
+        return evaluation_metrics.strip(), ",".join([f"`{cat}`" for cat in evaluation_categories])
 
     def _extract_verdict_json(self, verdict_string):
         """Extract and parse JSON verdict with robust error handling"""
@@ -321,9 +344,7 @@ First, work through your reasoning step-by-step, then provide your verdict.
             thinking = response_string[
                 thinking_start + len("### THINKING:") : verdict_start
             ].strip()
-            verdict_section = response_string[
-                verdict_start + len("### VERDICT:") :
-            ].strip()
+            verdict_section = response_string[verdict_start + len("### VERDICT:") :].strip()
             return thinking, verdict_section
         else:
             return "", response_string
@@ -373,21 +394,17 @@ First, work through your reasoning step-by-step, then provide your verdict.
 
             # Format telemetry for whitebox analysis
             telemetry_str = self._format_telemetry(telemetry_data)
-            whitebox_addendum = (
-                f"\n## TELEMETRY DATA\n{telemetry_str}" if telemetry_str else ""
-            )
+            whitebox_addendum = f"\n## TELEMETRY DATA\n{telemetry_str}" if telemetry_str else ""
 
             verdict_string = self.llmp.ping(
                 "",
-                self.BASIC_JUDGE_TMPL.replace(
-                    "<CONVERSATION_CONTEXT>", conversation_str
-                ).replace("<WHITEBOX_ADDENDUM>", whitebox_addendum),
+                self.BASIC_JUDGE_TMPL.replace("<CONVERSATION_CONTEXT>", conversation_str).replace(
+                    "<WHITEBOX_ADDENDUM>", whitebox_addendum
+                ),
                 max_tokens=LLM_JUDGE_TOKENS,
             )
         except Exception as e:
-            raise Exception(
-                f"500/Error, could not extract a verdict. Details: {str(e)}"
-            )
+            raise Exception(f"500/Error, could not extract a verdict. Details: {str(e)}")
 
         # Extract thinking and verdict from response
         thinking, verdict_json = self._extract_thinking_and_verdict(verdict_string)

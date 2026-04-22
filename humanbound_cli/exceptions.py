@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """Humanbound SDK exceptions."""
 
 
@@ -62,5 +64,3 @@ class ConfigurationError(HumanboundError):
     """Raised when SDK configuration is invalid."""
 
     pass
-
-

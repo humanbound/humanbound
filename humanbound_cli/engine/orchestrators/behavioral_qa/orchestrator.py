@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 #
 # Behavioral QA orchestrator — forked for local engine.
 # Coupling points replaced with EngineCallbacks.
@@ -11,11 +13,11 @@ import uuid
 from concurrent.futures import ThreadPoolExecutor
 
 from ...bot import Bot, Telemetry
-from ...schemas import Status, LogsAnonymous, Turn
 from ...callbacks import EngineCallbacks
+from ...schemas import LogsAnonymous, Status, Turn
 from .config import TestingConfiguration
-from .judge import Judge
 from .generator import Conversationer, Synthesizer
+from .judge import Judge
 
 logger = logging.getLogger("humanbound.engine.orchestrator.behavioral_qa")
 
@@ -33,7 +35,9 @@ def __do_register_logs(organisation_id, experiment, logs, callbacks=None):
         callbacks.on_logs(list(logs))
 
 
-def __do_partial_generate(model_provider, agent, test_sub_category, lang, testing_level, prompts, lock):
+def __do_partial_generate(
+    model_provider, agent, test_sub_category, lang, testing_level, prompts, lock
+):
     synthesizer = Synthesizer(model_provider, agent, lang, test_sub_category, testing_level)
     result = synthesizer.run()
     with lock:
@@ -41,12 +45,23 @@ def __do_partial_generate(model_provider, agent, test_sub_category, lang, testin
 
 
 def __do_thread_run(
-    organisation_id, experiment, model_provider, test_sub_category,
-    clientbot, prompts, telemetry_config=None, callbacks=None,
+    organisation_id,
+    experiment,
+    model_provider,
+    test_sub_category,
+    clientbot,
+    prompts,
+    telemetry_config=None,
+    callbacks=None,
 ):
     async def run_async(
-        organisation_id, experiment, model_provider, test_sub_category,
-        clientbot, prompts, callbacks,
+        organisation_id,
+        experiment,
+        model_provider,
+        test_sub_category,
+        clientbot,
+        prompts,
+        callbacks,
     ):
         logs, conversation, thread_id = [], [], str(uuid.uuid4())
         conversationer = Conversationer(
@@ -58,9 +73,7 @@ def __do_thread_run(
             experiment["configuration"].get("context", ""),
             clientbot,
         )
-        judge = Judge(
-            model_provider, experiment["configuration"]["scope"], test_sub_category
-        )
+        judge = Judge(model_provider, experiment["configuration"]["scope"], test_sub_category)
         logs_buffer_len = min(INIT_LOGS_BUFFER_LENGTH, LOGS_BUFFER_LENGTH)
 
         telemetry_client = None
@@ -68,9 +81,9 @@ def __do_thread_run(
             telemetry_client = Telemetry(telemetry_config, experiment["id"])
 
         for _ in range(conversationer.number_of_iterations):
-            for testing_scenario in TestingConfiguration.config["data"][
-                test_sub_category
-            ]["epic"]["testing_scenarios"]:
+            for testing_scenario in TestingConfiguration.config["data"][test_sub_category]["epic"][
+                "testing_scenarios"
+            ]:
                 if callbacks and callbacks.is_terminated():
                     break
 
@@ -85,7 +98,10 @@ def __do_thread_run(
 
                     meta = {}
                     if telemetry_data:
-                        tool_names = [t.get("tool_name", "") for t in telemetry_data.get("tool_executions", [])]
+                        tool_names = [
+                            t.get("tool_name", "")
+                            for t in telemetry_data.get("tool_executions", [])
+                        ]
                         usage = telemetry_data.get("resource_usage", {})
                         meta["telemetry"] = {
                             "trace_id": thread_id,
@@ -103,8 +119,7 @@ def __do_thread_run(
                         LogsAnonymous(
                             thread_id=thread_id,
                             conversation=[
-                                Turn(u=c["u"], a=c["a"]).model_dump()
-                                for c in conversation
+                                Turn(u=c["u"], a=c["a"]).model_dump() for c in conversation
                             ],
                             prompt=conversation[0]["u"],
                             response=conversation[0]["a"],
@@ -130,9 +145,7 @@ def __do_thread_run(
                         LogsAnonymous(
                             thread_id=thread_id,
                             conversation=(
-                                [dict(u="", a="<ERROR>")]
-                                if conversation is None
-                                else conversation
+                                [dict(u="", a="<ERROR>")] if conversation is None else conversation
                             ),
                             prompt="",
                             response="",
@@ -147,15 +160,22 @@ def __do_thread_run(
                     )
 
                     if callbacks:
-                        callbacks.on_error(e.__class__.__name__, {"where": "Behavioral QA", "e": str(e)})
+                        callbacks.on_error(
+                            e.__class__.__name__, {"where": "Behavioral QA", "e": str(e)}
+                        )
 
         if len(logs) > 0:
             __do_register_logs(organisation_id, experiment, logs, callbacks=callbacks)
 
     return asyncio.run(
         run_async(
-            organisation_id, experiment, model_provider,
-            test_sub_category, clientbot, prompts, callbacks,
+            organisation_id,
+            experiment,
+            model_provider,
+            test_sub_category,
+            clientbot,
+            prompts,
+            callbacks,
         )
     )
 
@@ -169,10 +189,14 @@ def orchestrator_generate(model_provider, experiment):
         futures = []
         for test_sub_category in TestingConfiguration.config["data"].keys():
             future = executor.submit(
-                __do_partial_generate, model_provider,
+                __do_partial_generate,
+                model_provider,
                 experiment["configuration"]["scope"],
-                test_sub_category, experiment["lang"],
-                experiment["testing_level"], prompts, lock,
+                test_sub_category,
+                experiment["lang"],
+                experiment["testing_level"],
+                prompts,
+                lock,
             )
             futures.append(future)
         for future in futures:
@@ -192,7 +216,11 @@ def compute_quota(testing_level, dataset_len):
 
 
 def orchestrator_run(
-    organisation_id, model_provider, experiment, prompts, few_shots_model,
+    organisation_id,
+    model_provider,
+    experiment,
+    prompts,
+    few_shots_model,
     callbacks=None,
 ):
     if callbacks is None:
@@ -201,17 +229,24 @@ def orchestrator_run(
     max_workers = max(1, min(len(TestingConfiguration.config["data"].keys()), 10))
 
     clientbot = Bot(experiment["configuration"]["integration"], experiment["id"])
-    telemetry_config = experiment.get("configuration", {}).get("integration", {}).get("telemetry") or None
+    telemetry_config = (
+        experiment.get("configuration", {}).get("integration", {}).get("telemetry") or None
+    )
 
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         futures = []
         for test_sub_category in TestingConfiguration.config["data"].keys():
             futures.append(
                 executor.submit(
-                    __do_thread_run, organisation_id, experiment,
-                    model_provider, test_sub_category, clientbot,
+                    __do_thread_run,
+                    organisation_id,
+                    experiment,
+                    model_provider,
+                    test_sub_category,
+                    clientbot,
                     prompts[test_sub_category],
-                    telemetry_config=telemetry_config, callbacks=callbacks,
+                    telemetry_config=telemetry_config,
+                    callbacks=callbacks,
                 )
             )
         for future in futures:

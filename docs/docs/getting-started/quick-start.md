@@ -78,7 +78,7 @@ hb guardrails -o rules.yaml        # Export firewall rules
 hb firewall train                   # Train a Tier 2 classifier
 ```
 
-Use with [hb-firewall](https://github.com/humanbound/hb-firewall) for runtime protection.
+Use with [humanbound-firewall](https://github.com/humanbound/humanbound-firewall) for runtime protection.
 
 ### Test Modes
 
@@ -117,13 +117,13 @@ hb test --endpoint ./config.json --wait --debug
 ### CI/CD
 
 ```bash
-pip install humanbound-cli
+pip install humanbound
 hb test --endpoint ./bot-config.json --repo . --wait --fail-on high
 ```
 
 ```yaml
 # .github/workflows/security.yml
-- run: pip install humanbound-cli
+- run: pip install humanbound
 - run: hb test --endpoint ./bot-config.json --repo . --wait --fail-on high
   env:
     HB_PROVIDER: openai

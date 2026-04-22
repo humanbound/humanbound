@@ -1,5 +1,9 @@
-import requests, time
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
+import time
 from os import getenv
+
+import requests
 from openai import AzureOpenAI
 
 #
@@ -83,7 +87,8 @@ class LLMPinger:
         if not integration.get("api_version") and integration.get("endpoint"):
             endpoint = integration["endpoint"]
             if "api-version=" in endpoint:
-                from urllib.parse import urlparse, parse_qs
+                from urllib.parse import parse_qs, urlparse
+
                 qs = parse_qs(urlparse(endpoint).query)
                 if "api-version" in qs:
                     integration["api_version"] = qs["api-version"][0]
@@ -160,14 +165,10 @@ class LLMPinger:
                     continue
 
                 # Other 400 errors
-                raise Exception(
-                    f"502/Inappropriate content ({error_text}). Please try again."
-                )
+                raise Exception(f"502/Inappropriate content ({error_text}). Please try again.")
             else:
                 # not sucess and also not rate limit error -> total error
-                raise Exception(
-                    f"502/Error while pinging the LLM - {resp.status_code}/{resp.text}"
-                )
+                raise Exception(f"502/Error while pinging the LLM - {resp.status_code}/{resp.text}")
 
 
 class EmbeddingsExtractor:
@@ -204,9 +205,7 @@ class EmbeddingsExtractor:
             timeout=90,  # 90 second timeout (cold start: model download + load + inference)
         )
         if response.status_code != 200:
-            raise Exception(
-                f"Embeddings API error {response.status_code}: {response.text[:500]}"
-            )
+            raise Exception(f"Embeddings API error {response.status_code}: {response.text[:500]}")
         return response.json()["data"]
 
     def encode(self, data):

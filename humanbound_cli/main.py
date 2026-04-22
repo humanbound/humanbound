@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """Humanbound CLI entry point."""
 
 import click
@@ -5,33 +7,31 @@ from rich.console import Console
 
 from . import __version__
 from .client import HumanboundClient
-from .config import get_base_url
-
 from .commands import (
-    auth,
-    orgs,
-    projects,
-    experiments,
-    test,
-    logs,
-    posture,
-    guardrails,
-    docs,
-    providers,
-    findings,
     api_keys,
-    members,
+    assessments,
+    auth,
     campaigns,
     completion,
+    config_cmd,
     connect,
-    monitor,
-    webhooks,
-    assessments,
+    docs,
+    experiments,
+    findings,
     firewall,
+    guardrails,
+    logs,
+    mcp,
+    members,
+    monitor,
+    orgs,
+    posture,
+    projects,
+    providers,
     redteam,
     report,
-    mcp,
-    config_cmd,
+    test,
+    webhooks,
 )
 
 console = Console()
@@ -114,7 +114,6 @@ cli.add_command(redteam.redteam_group)
 cli.add_command(report.report_command)
 
 
-
 # Convenience aliases at top level
 @cli.command("login")
 @click.pass_context
@@ -139,11 +138,12 @@ def whoami_alias(ctx):
     ctx.invoke(auth.whoami)
 
 
-
 @cli.command("status")
 @click.argument("experiment_id", required=False)
 @click.option("--watch", "-w", is_flag=True, help="Watch status until completion")
-@click.option("--all", "show_all", is_flag=True, help="Show all project experiments (polls every 60s)")
+@click.option(
+    "--all", "show_all", is_flag=True, help="Show all project experiments (polls every 60s)"
+)
 @click.pass_context
 def status_alias(ctx, experiment_id: str, watch: bool, show_all: bool):
     """Check experiment status (alias for 'experiments status').
@@ -193,6 +193,7 @@ def status_alias(ctx, experiment_id: str, watch: bool, show_all: bool):
 def main():
     """Entrypoint with session expiry handling."""
     from .exceptions import SessionExpiredError
+
     try:
         cli(standalone_mode=False)
     except SystemExit as e:

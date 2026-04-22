@@ -12,7 +12,7 @@ The default deployment. Humanbound hosts and manages everything.
 - SOC 2 compliant infrastructure
 
 ```bash
-pip install humanbound-cli
+pip install humanbound
 hb login
 ```
 

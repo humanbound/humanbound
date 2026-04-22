@@ -1,4 +1,6 @@
-"""PromptFoo adapter — converts evaluation results to hb-firewall format.
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
+"""PromptFoo adapter — converts evaluation results to humanbound-firewall format.
 
 Handles the export format from: promptfoo export eval <id> -o results.json
 """
@@ -43,14 +45,16 @@ def convert(data: dict) -> list[dict]:
         else:
             severity = 50.0
 
-        logs.append({
-            "conversation": [{"u": prompt, "a": response}],
-            "result": "pass" if success else "fail",
-            "test_category": "adversarial",
-            "fail_category": fail_category,
-            "severity": severity,
-            "confidence": 80.0,
-            "gen_category": "promptfoo",
-        })
+        logs.append(
+            {
+                "conversation": [{"u": prompt, "a": response}],
+                "result": "pass" if success else "fail",
+                "test_category": "adversarial",
+                "fail_category": fail_category,
+                "severity": severity,
+                "confidence": 80.0,
+                "gen_category": "promptfoo",
+            }
+        )
 
     return logs

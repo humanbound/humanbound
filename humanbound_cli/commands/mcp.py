@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """hb mcp — start the Humanbound MCP server on stdio."""
 
 import click
@@ -12,7 +14,7 @@ def mcp_command():
 
     \b
     Prerequisites:
-      pip install humanbound-cli[mcp]   # install MCP dependencies
+      pip install humanbound[mcp]   # install MCP dependencies
       hb login                          # authenticate first
 
     \b
@@ -28,6 +30,6 @@ def mcp_command():
         from ..mcp_server import main
     except ImportError:
         raise click.ClickException(
-            "MCP dependencies not installed. Run: pip install humanbound-cli[mcp]"
+            "MCP dependencies not installed. Run: pip install humanbound[mcp]"
         )
     main()

@@ -1,8 +1,10 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """OpenAPI/Swagger specification parser for extracting bot capabilities."""
 
 import json
 from pathlib import Path
-from typing import Optional, Dict, Any, List
+from typing import Any
 
 
 class OpenAPIParser:
@@ -16,7 +18,7 @@ class OpenAPIParser:
         """
         self.spec_path = Path(spec_path).resolve()
 
-    def parse(self) -> Optional[Dict[str, Any]]:
+    def parse(self) -> dict[str, Any] | None:
         """Parse the OpenAPI specification.
 
         Returns:
@@ -31,6 +33,7 @@ class OpenAPIParser:
             elif suffix in (".yaml", ".yml"):
                 try:
                     import yaml
+
                     spec = yaml.safe_load(content)
                 except ImportError:
                     # Try to parse as JSON anyway (some .yaml files are actually JSON)
@@ -45,6 +48,7 @@ class OpenAPIParser:
                 except json.JSONDecodeError:
                     try:
                         import yaml
+
                         spec = yaml.safe_load(content)
                     except (ImportError, Exception):
                         return None
@@ -54,7 +58,7 @@ class OpenAPIParser:
         except Exception:
             return None
 
-    def _extract_from_spec(self, spec: Dict[str, Any]) -> Dict[str, Any]:
+    def _extract_from_spec(self, spec: dict[str, Any]) -> dict[str, Any]:
         """Extract relevant information from parsed spec.
 
         Args:
@@ -115,7 +119,7 @@ class OpenAPIParser:
 
         return result
 
-    def _extract_parameters(self, operation: Dict, path_item: Dict) -> List[Dict]:
+    def _extract_parameters(self, operation: dict, path_item: dict) -> list[dict]:
         """Extract parameters from an operation.
 
         Args:
@@ -138,13 +142,15 @@ class OpenAPIParser:
             if "$ref" in param:
                 continue
 
-            params.append({
-                "name": param.get("name", ""),
-                "in": param.get("in", ""),
-                "required": param.get("required", False),
-                "description": param.get("description", "")[:200],
-                "type": param.get("schema", {}).get("type", param.get("type", "string")),
-            })
+            params.append(
+                {
+                    "name": param.get("name", ""),
+                    "in": param.get("in", ""),
+                    "required": param.get("required", False),
+                    "description": param.get("description", "")[:200],
+                    "type": param.get("schema", {}).get("type", param.get("type", "string")),
+                }
+            )
 
         # Extract request body parameters (OpenAPI 3.x)
         request_body = operation.get("requestBody", {})
@@ -155,17 +161,19 @@ class OpenAPIParser:
 
             if schema.get("properties"):
                 for name, prop in schema.get("properties", {}).items():
-                    params.append({
-                        "name": name,
-                        "in": "body",
-                        "required": name in schema.get("required", []),
-                        "description": prop.get("description", "")[:200],
-                        "type": prop.get("type", "string"),
-                    })
+                    params.append(
+                        {
+                            "name": name,
+                            "in": "body",
+                            "required": name in schema.get("required", []),
+                            "description": prop.get("description", "")[:200],
+                            "type": prop.get("type", "string"),
+                        }
+                    )
 
         return params
 
-    def _extract_responses(self, operation: Dict) -> Dict[str, str]:
+    def _extract_responses(self, operation: dict) -> dict[str, str]:
         """Extract response descriptions from an operation.
 
         Args:
@@ -182,7 +190,7 @@ class OpenAPIParser:
 
         return responses
 
-    def to_intents(self) -> Dict[str, List[str]]:
+    def to_intents(self) -> dict[str, list[str]]:
         """Convert parsed spec to permitted/restricted intents.
 
         Returns:

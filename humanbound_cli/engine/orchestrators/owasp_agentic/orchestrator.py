@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 #
 # OWASP Agentic orchestrator — multi-turn adversarial testing.
 # Uses EngineCallbacks for I/O abstraction.
@@ -10,12 +12,11 @@ import traceback
 from concurrent.futures import ThreadPoolExecutor
 
 from ...bot import Bot, Telemetry
-from ...schemas import Status, LogsAnonymous
-from ...llm import get_llm_pinger
 from ...callbacks import EngineCallbacks
+from ...schemas import LogsAnonymous, Status
 from .config import TestingConfiguration
-from .judge import Judge
 from .generator import Conversationer, Synthesizer
+from .judge import Judge
 
 logger = logging.getLogger("humanbound.engine.orchestrator")
 
@@ -23,9 +24,7 @@ logger = logging.getLogger("humanbound.engine.orchestrator")
 EXPERIMENT_THREAD_TIMEOUT = 10800  # 3 hours
 INIT_LOGS_BUFFER_LENGTH = 5
 
-LOGS_BUFFER_LENGTH = (
-    20  # number of logs to buffer before sending them in a single request
-)
+LOGS_BUFFER_LENGTH = 20  # number of logs to buffer before sending them in a single request
 
 
 #
@@ -61,43 +60,50 @@ async def __do_single_pipeline_run(
         if isinstance(attack_gen_template, str) and attack_gen_template.startswith("[PS:"):
             marker_end = attack_gen_template.index("]")
             strategy_id = attack_gen_template[4:marker_end]
-            clean_template = attack_gen_template[marker_end + 1:].lstrip("\n")
+            clean_template = attack_gen_template[marker_end + 1 :].lstrip("\n")
 
         payload = None
         pre_conversation = []
         if opening:
             pre_conversation, _, _, payload = await conversationer.prompt(opening)
         conversation, thread_id, exec_t, telemetry_data = await conversationer.chat(
-            clean_template, payload=payload, conversation=pre_conversation,
+            clean_template,
+            payload=payload,
+            conversation=pre_conversation,
             cross_conv_registry=cross_conv_registry,
-            telemetry_client=telemetry_client, telemetry_config=telemetry_config,
+            telemetry_client=telemetry_client,
+            telemetry_config=telemetry_config,
         )
 
         # Debug: emit per-turn info
         if callbacks and callbacks.on_turn.__code__ != (lambda x: None).__code__:
             for i, turn in enumerate(conversation):
-                callbacks.on_turn({
-                    "category": test_sub_category,
-                    "turn": i + 1,
-                    "total_turns": len(conversation),
-                    "user_msg": turn.get("u", ""),
-                    "bot_response": turn.get("a", ""),
-                })
+                callbacks.on_turn(
+                    {
+                        "category": test_sub_category,
+                        "turn": i + 1,
+                        "total_turns": len(conversation),
+                        "user_msg": turn.get("u", ""),
+                        "bot_response": turn.get("a", ""),
+                    }
+                )
 
         analysis = judge.evaluate(conversation, telemetry_data=telemetry_data)
 
         # Debug: emit verdict
         if callbacks and callbacks.on_verdict.__code__ != (lambda x: None).__code__:
-            callbacks.on_verdict({
-                "category": test_sub_category,
-                "strategy": clean_template[:80] if isinstance(clean_template, str) else "",
-                "result": analysis["result"],
-                "severity": analysis.get("severity", 0),
-                "confidence": analysis.get("confidence", 0),
-                "explanation": analysis.get("explanation", ""),
-                "turns": len(conversation),
-                "exec_t": exec_t if 'exec_t' in dir() else 0,
-            })
+            callbacks.on_verdict(
+                {
+                    "category": test_sub_category,
+                    "strategy": clean_template[:80] if isinstance(clean_template, str) else "",
+                    "result": analysis["result"],
+                    "severity": analysis.get("severity", 0),
+                    "confidence": analysis.get("confidence", 0),
+                    "explanation": analysis.get("explanation", ""),
+                    "turns": len(conversation),
+                    "exec_t": exec_t if "exec_t" in dir() else 0,
+                }
+            )
 
         attack_trace = None
         if strategy_id:
@@ -108,14 +114,16 @@ async def __do_single_pipeline_run(
         if telemetry_data:
             tool_names = [t.get("tool_name", "") for t in telemetry_data.get("tool_executions", [])]
             usage = telemetry_data.get("resource_usage", {})
-            meta.append({
-                "telemetry": {
-                    "trace_id": thread_id,
-                    "tools": tool_names,
-                    "tokens": usage.get("tokens_used", 0),
-                    "api_calls": usage.get("api_calls_count", 0),
+            meta.append(
+                {
+                    "telemetry": {
+                        "trace_id": thread_id,
+                        "tools": tool_names,
+                        "tokens": usage.get("tokens_used", 0),
+                        "api_calls": usage.get("api_calls_count", 0),
+                    }
                 }
-            })
+            )
 
         logs.append(
             LogsAnonymous(
@@ -144,9 +152,7 @@ async def __do_single_pipeline_run(
         logs.append(
             LogsAnonymous(
                 thread_id="",
-                conversation=(
-                    [dict(u="", a="<ERROR>")] if conversation is None else conversation
-                ),
+                conversation=([dict(u="", a="<ERROR>")] if conversation is None else conversation),
                 prompt="",
                 response="",
                 result="error",
@@ -160,11 +166,14 @@ async def __do_single_pipeline_run(
         )
 
         if callbacks:
-            callbacks.on_error(e.__class__.__name__, {
-                "where": "OWASP Agentic :: Chat",
-                "e": str(e),
-                "trace": str(traceback.format_exc()),
-            })
+            callbacks.on_error(
+                e.__class__.__name__,
+                {
+                    "where": "OWASP Agentic :: Chat",
+                    "e": str(e),
+                    "trace": str(traceback.format_exc()),
+                },
+            )
     return logs, logs_buffer_len
 
 
@@ -333,9 +342,7 @@ def compute_quota(testing_level, dataset_len):
     total_templates = 0
     for test_sub_category in TestingConfiguration.config["data"].keys():
         total_templates += len(
-            TestingConfiguration.config["data"][test_sub_category][
-                "attack_gen_template"
-            ]
+            TestingConfiguration.config["data"][test_sub_category]["attack_gen_template"]
         )
 
     t1, t2 = TestingConfiguration.get_testing_params(testing_level)
@@ -344,7 +351,11 @@ def compute_quota(testing_level, dataset_len):
 
 
 def orchestrator_run(
-    organisation_id, model_provider, experiment, prompts, few_shots_model,
+    organisation_id,
+    model_provider,
+    experiment,
+    prompts,
+    few_shots_model,
     callbacks=None,
 ):
     """Run the experiment. Logs emitted via callbacks.on_logs().
@@ -356,7 +367,9 @@ def orchestrator_run(
         callbacks = EngineCallbacks()
 
     # Extract telemetry config from integration (presence = enabled)
-    telemetry_config = experiment.get("configuration", {}).get("integration", {}).get("telemetry") or None
+    telemetry_config = (
+        experiment.get("configuration", {}).get("integration", {}).get("telemetry") or None
+    )
 
     clientbot = Bot(
         experiment["configuration"]["integration"],
@@ -400,7 +413,7 @@ def orchestrator_run(
                     future.cancel()
                     continue
                 future.result(timeout=EXPERIMENT_THREAD_TIMEOUT)
-            except Exception as e:
+            except Exception:
                 continue
 
     # Signal completion via callback

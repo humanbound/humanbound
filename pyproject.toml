@@ -1,24 +1,46 @@
 [build-system]
-requires = ["setuptools>=61.0,<75"]
+requires = ["setuptools>=77.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "humanbound-cli"
-version = "1.1.0"
-authors = [
-  { name="Kostas Siabanis", email="hello@humanbound.ai" },
-  { name="Demetris Gerogiannis", email="hello@humanbound.ai" },
-]
-description = "Humanbound CLI - command line interface for AI agent security testing."
-license = {text = "Apache-2.0"}
+name = "humanbound"
+version = "2.0.0"
+description = "Humanbound — open-source AI agent red-team engine, SDK, and CLI."
 readme = "README.md"
+license = "Apache-2.0"
 requires-python = ">=3.10"
+authors = [
+    {name = "Humanbound", email = "hello@humanbound.ai"},
+]
+maintainers = [
+    {name = "Demetris Gerogiannis", email = "hello@humanbound.ai"},
+    {name = "Kostas Siabanis", email = "hello@humanbound.ai"},
+]
+keywords = [
+    "ai",
+    "ai-security",
+    "red-team",
+    "llm",
+    "prompt-injection",
+    "agent-security",
+    "penetration-testing",
+    "humanbound",
+]
 classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: Apache Software License",
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
     "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Environment :: Console",
     "Framework :: Pytest",
+    "Topic :: Security",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: Testing",
+    "Typing :: Typed",
 ]
 
 dependencies = [
@@ -26,6 +48,7 @@ dependencies = [
     "rich>=13.0.0",
     "requests>=2.32.0",
     "pyyaml>=6.0.0",
+    "pydantic>=2.0",
     "msal>=1.31.0",
     "pyperclip>=1.8.0",
 ]
@@ -38,7 +61,7 @@ engine = [
     "websockets>=12.0",
 ]
 firewall = [
-    "hb-firewall",
+    "humanbound-firewall>=0.2",
     "scikit-learn>=1.3.0",
     "torch>=2.0.0",
 ]
@@ -51,6 +74,12 @@ pytest = [
 dev = [
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
+    "pytest-timeout>=2.3",
+    "ruff>=0.6",
+    "mypy>=1.11",
+    "build>=1.2",
+    "twine>=5.0",
+    "pre-commit>=3.8",
 ]
 
 [project.scripts]
@@ -60,18 +89,54 @@ hb = "humanbound_cli.main:main"
 hb = "humanbound_cli.pytest_plugin"
 
 [project.urls]
-Homepage = "https://github.com/Humanbound/humanbound-cli"
-Documentation = "https://docs.humanbound.ai/cli"
-Issues = "https://github.com/Humanbound/humanbound-cli/issues"
+Homepage = "https://github.com/humanbound/humanbound"
+Documentation = "https://docs.humanbound.ai/"
+Repository = "https://github.com/humanbound/humanbound"
+Issues = "https://github.com/humanbound/humanbound/issues"
+Changelog = "https://github.com/humanbound/humanbound/blob/main/CHANGELOG.md"
+Community = "https://docs.humanbound.ai/community/"
 
 [tool.setuptools.packages.find]
-where = ["."]
+include = ["humanbound*", "humanbound_cli*"]
 
 [tool.setuptools.package-data]
-humanbound_cli = ["templates/*.html", "templates/*.svg"]
+humanbound = ["py.typed"]
+humanbound_cli = ["templates/*.html", "templates/*.svg", "py.typed"]
 
 [tool.pytest.ini_options]
 markers = [
     "hb: mark test as a Humanbound security test",
     "hb_category(name): mark test for a specific category",
 ]
+timeout = 60
+# tests/unit/test_*.py does `from conftest import ...` directly, so its
+# directory must be on sys.path. (Adding an __init__.py there would also
+# work but would change test discovery semantics.)
+pythonpath = ["tests/unit"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+ignore = [
+    "E501",   # line length handled by formatter
+    "E402",   # module-level code before imports (used in shim patterns)
+    "E722",   # bare except tolerated in legacy error handlers
+    "E741",   # allow "l" as variable name in data-pipeline loops
+    "B006",   # mutable default args in legacy command signatures
+    "B007",   # unused loop vars that document intent
+    "B904",   # raise-from chaining not uniformly applied
+    "F841",   # locally-bound unused vars kept for clarity
+    "F821",   # handled via runtime imports in legacy paths
+    "W291",   # trailing whitespace (formatter handles)
+    "F401",   # unused imports at package boundaries used for re-exports
+    "E712",   # explicit `== False` reads OK in some legacy guards
+    "B005",   # .strip with multi-char string is intentional in glob-pattern helpers
+]
+
+[tool.mypy]
+python_version = "3.10"
+ignore_missing_imports = true
+check_untyped_defs = true

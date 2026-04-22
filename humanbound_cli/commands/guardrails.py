@@ -1,15 +1,16 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """Guardrails command for exporting guardrail configurations."""
+
+import json
+from pathlib import Path
 
 import click
 from rich.console import Console
-import json
-import sys
-from pathlib import Path
 
-from ..client import HumanboundClient
 from ..engine import get_runner
 from ..engine.platform_runner import PlatformTestRunner
-from ..exceptions import NotAuthenticatedError, APIError
+from ..exceptions import APIError, NotAuthenticatedError
 
 console = Console()
 console_err = Console(stderr=True)
@@ -17,35 +18,35 @@ console_err = Console(stderr=True)
 
 @click.command("guardrails")
 @click.option(
-    "--output", "-o",
-    type=click.Path(),
-    help="Output file path (prints to stdout if not specified)"
+    "--output", "-o", type=click.Path(), help="Output file path (prints to stdout if not specified)"
 )
 @click.option(
-    "--format", "-f", "output_format",
+    "--format",
+    "-f",
+    "output_format",
     type=click.Choice(["json", "yaml", "openai"]),
     default="json",
-    help="Output format (json=Humanbound format, openai=OpenAI moderation format)"
+    help="Output format (json=Humanbound format, openai=OpenAI moderation format)",
 )
 @click.option(
-    "--vendor", "-v",
+    "--vendor",
+    "-v",
     type=click.Choice(["humanbound", "openai"]),
     default="humanbound",
-    help="Vendor format for guardrails export"
+    help="Vendor format for guardrails export",
 )
 @click.option(
-    "--model",
-    type=str,
-    default=None,
-    help="Model to use for guardrails (e.g., gpt-4o-mini)"
+    "--model", type=str, default=None, help="Model to use for guardrails (e.g., gpt-4o-mini)"
 )
 @click.option(
     "--include-reasoning",
     is_flag=True,
     default=False,
-    help="Include reasoning in guardrail responses"
+    help="Include reasoning in guardrail responses",
 )
-def guardrails_command(output: str, output_format: str, vendor: str, model: str, include_reasoning: bool):
+def guardrails_command(
+    output: str, output_format: str, vendor: str, model: str, include_reasoning: bool
+):
     """Export guardrails configuration for your project.
 
     Generates guardrail configurations based on discovered vulnerabilities
@@ -154,14 +155,16 @@ def _local_guardrails(output, output_format, vendor):
     for i, insight in enumerate(insights):
         if insight.get("result") != "fail":
             continue
-        rules.append({
-            "id": f"gr-{i+1:03d}",
-            "threat_class": insight.get("category", "unknown"),
-            "pattern": insight.get("explanation", "")[:200],
-            "action": "block",
-            "severity": insight.get("severity", "medium"),
-            "source": f"{exp_dirs[0].name}",
-        })
+        rules.append(
+            {
+                "id": f"gr-{i + 1:03d}",
+                "threat_class": insight.get("category", "unknown"),
+                "pattern": insight.get("explanation", "")[:200],
+                "action": "block",
+                "severity": insight.get("severity", "medium"),
+                "source": f"{exp_dirs[0].name}",
+            }
+        )
 
     guardrails = {
         "version": "1.0",
@@ -191,10 +194,15 @@ def _format_yaml(guardrails: dict) -> str:
     """Format guardrails as YAML."""
     try:
         import yaml
+
         return yaml.dump(guardrails, default_flow_style=False, sort_keys=False)
     except ImportError:
         # Fallback to simple YAML-like format
-        lines = ["# Humanbound Guardrails Configuration", f"version: {guardrails.get('version', '1.0')}", "rules:"]
+        lines = [
+            "# Humanbound Guardrails Configuration",
+            f"version: {guardrails.get('version', '1.0')}",
+            "rules:",
+        ]
         for rule in guardrails.get("rules", []):
             lines.append(f"  - id: {rule.get('id')}")
             lines.append(f"    type: {rule.get('type')}")

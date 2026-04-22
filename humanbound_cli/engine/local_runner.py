@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """LocalTestRunner — runs engine in-process, results to files.
 
 Provider from env vars or ~/.humanbound/config.yaml.
@@ -11,11 +13,10 @@ import threading
 import time
 import traceback
 from pathlib import Path
-from typing import Optional
 
-from .runner import TestRunner, TestConfig, TestStatus, TestResult, Posture, PaginatedLogs
 from .callbacks import EngineCallbacks
 from .presenter import run as presenter_run
+from .runner import PaginatedLogs, Posture, TestConfig, TestResult, TestRunner, TestStatus
 
 logger = logging.getLogger("humanbound.engine.local")
 
@@ -37,7 +38,7 @@ class _LocalRun:
     def make_callbacks(self):
         cb = EngineCallbacks(
             on_logs=lambda logs: self.logs.extend(logs),
-            on_complete=lambda status: setattr(self, 'status', status),
+            on_complete=lambda status: setattr(self, "status", status),
             is_terminated=self._terminated.is_set,
             on_error=lambda title, details: logger.warning(f"[{title}] {details}"),
             get_strategies=lambda pid: [],  # no cross-session FSLF locally
@@ -57,8 +58,9 @@ class _LocalRun:
             provider = _resolve_provider()
 
             # Resolve scope
-            from .scope import resolve as resolve_scope
             from .llm import get_llm_pinger
+            from .scope import resolve as resolve_scope
+
             llm = get_llm_pinger(provider)
 
             scope = resolve_scope(
@@ -94,7 +96,10 @@ class _LocalRun:
             prompts = orch_module.orchestrator_generate(provider, experiment)
             if self.config.debug:
                 total_prompts = sum(len(v) for v in prompts.values())
-                print(f"  Generated {total_prompts} prompts across {len(prompts)} categories\n", flush=True)
+                print(
+                    f"  Generated {total_prompts} prompts across {len(prompts)} categories\n",
+                    flush=True,
+                )
 
             # Phase 2: Run conversations
             self.status = "Running"
@@ -110,7 +115,8 @@ class _LocalRun:
             # Phase 3: Post-processing
             self.status = "Analysing"
             self.results = presenter_run(
-                None, self.logs,
+                None,
+                self.logs,
                 test_category=self.config.test_category,
             )
 
@@ -130,8 +136,13 @@ class _LocalRun:
         Uses Pydantic models for validation — ensures output matches API schema.
         """
         from .schemas import (
-            ExperimentMeta, ExperimentResults, Stats, ExecT, Insight,
-            ExperimentPosture, LogsAnonymous,
+            ExecT,
+            ExperimentMeta,
+            ExperimentPosture,
+            ExperimentResults,
+            Insight,
+            LogsAnonymous,
+            Stats,
         )
 
         results_dir = Path(".humanbound/results") / self.experiment_id
@@ -149,9 +160,12 @@ class _LocalRun:
                 ],
                 posture=(
                     ExperimentPosture(**self.results["posture"])
-                    if self.results.get("posture") else None
+                    if self.results.get("posture")
+                    else None
                 ),
-                exec_t=ExecT(**self.results.get("exec_t", {})) if self.results.get("exec_t") else ExecT(),
+                exec_t=ExecT(**self.results.get("exec_t", {}))
+                if self.results.get("exec_t")
+                else ExecT(),
             )
 
         meta = ExperimentMeta(
@@ -166,9 +180,7 @@ class _LocalRun:
             completed_at=time.strftime("%Y-%m-%dT%H:%M:%S"),
         )
 
-        (results_dir / "meta.json").write_text(
-            json.dumps(meta.model_dump(), indent=2, default=str)
-        )
+        (results_dir / "meta.json").write_text(json.dumps(meta.model_dump(), indent=2, default=str))
 
         # logs.jsonl — validated LogEntry schema
         with open(results_dir / "logs.jsonl", "w") as f:
@@ -239,8 +251,9 @@ class LocalTestRunner(TestRunner):
             exec_t=run.results.get("exec_t", {}),
         )
 
-    def get_logs(self, experiment_id: str, result: Optional[str] = None,
-                 page: int = 1, size: int = 50) -> PaginatedLogs:
+    def get_logs(
+        self, experiment_id: str, result: str | None = None, page: int = 1, size: int = 50
+    ) -> PaginatedLogs:
         run = self._runs.get(experiment_id)
         logs = run.logs if run else self._read_logs_from_files(experiment_id)
 
@@ -251,7 +264,7 @@ class LocalTestRunner(TestRunner):
         # Paginate
         total = len(logs)
         start = (page - 1) * size
-        page_logs = logs[start:start + size]
+        page_logs = logs[start : start + size]
 
         return PaginatedLogs(
             data=page_logs,
@@ -261,7 +274,7 @@ class LocalTestRunner(TestRunner):
             has_next_page=(start + size) < total,
         )
 
-    def get_posture(self, experiment_id: Optional[str] = None) -> Posture:
+    def get_posture(self, experiment_id: str | None = None) -> Posture:
         if experiment_id:
             run = self._runs.get(experiment_id)
             posture_data = run.results.get("posture", {}) if run and run.results else {}
@@ -297,7 +310,7 @@ class LocalTestRunner(TestRunner):
         total = len(experiments)
         start = (page - 1) * size
         return {
-            "data": experiments[start:start + size],
+            "data": experiments[start : start + size],
             "total": total,
             "page": page,
             "has_next_page": (start + size) < total,
@@ -380,7 +393,9 @@ def _debug_on_verdict(verdict_info: dict):
     exec_t = verdict_info.get("exec_t", 0)
 
     result_marker = "\033[32mPASS\033[0m" if result == "pass" else "\033[31mFAIL\033[0m"
-    print(f"\n  [{cat}] {result_marker} severity={severity} confidence={confidence} ({turns} turns, {exec_t:.1f}s)")
+    print(
+        f"\n  [{cat}] {result_marker} severity={severity} confidence={confidence} ({turns} turns, {exec_t:.1f}s)"
+    )
     if strategy:
         print(f"    Strategy: {strategy}...")
     if result == "fail" and explanation:
@@ -404,18 +419,22 @@ def _load_orchestrator(test_category: str):
 
     if short in ("owasp_agentic", "owasp_agentic_multi_turn"):
         from .orchestrators.owasp_agentic import orchestrator
+
         return orchestrator
     elif short in ("owasp_single_turn",):
         from .orchestrators.owasp_single_turn import orchestrator
+
         return orchestrator
     elif short in ("qa", "behavioral"):
         from .orchestrators.behavioral_qa import orchestrator
+
         return orchestrator
     else:
         # Try loading from ~/.humanbound/orchestrators/ (custom)
         custom_path = Path.home() / ".humanbound" / "orchestrators" / short
         if custom_path.exists() and (custom_path / "orchestrator.py").exists():
             import importlib.util
+
             spec = importlib.util.spec_from_file_location(
                 f"custom_orchestrator_{short}",
                 str(custom_path / "orchestrator.py"),
@@ -487,6 +506,7 @@ def _read_config_file():
 
     try:
         import yaml
+
         return yaml.safe_load(config_path.read_text()) or {}
     except ImportError:
         # Fallback to simple key=value parsing

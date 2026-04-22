@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """Pydantic models for the engine.
 
 These models define the data structures for experiments, logs, and posture scoring.
@@ -5,11 +7,12 @@ Field names, types, and nesting follow the API schema for compatibility.
 """
 
 from enum import Enum
-from typing import Optional, List, Union, Any
+from typing import Any
+
 from pydantic import BaseModel, ConfigDict, Field
 
-
 # ── Enums ─────────────────────────────────────────────────────────────────
+
 
 class TestingLevel(str, Enum):
     Unit = "unit"
@@ -63,28 +66,32 @@ def severity_to_label(severity: float) -> str:
 
 # ── Log Models ────────────────────────────────────────────────────────────
 
+
 class Turn(BaseModel):
     """A single conversation turn."""
+
     u: str = ""
     a: str = ""
 
 
 class LogEntry(BaseModel):
     """Public log entry — 10-field schema for export."""
+
     thread_id: str = ""
-    conversation: List[Turn] = []
-    result: str = ""                    # pass | fail | error
+    conversation: list[Turn] = []
+    result: str = ""  # pass | fail | error
     gen_category: str = ""
     fail_category: str = ""
     explanation: str = ""
     severity: float = 0
     confidence: float = 0
     exec_t: float = 0
-    meta: Optional[dict] = {}           # telemetry data (flattened)
+    meta: dict | None = {}  # telemetry data (flattened)
 
 
 class LogsAnonymous(BaseModel):
     """Internal log entry — used by the orchestrator during execution. Converted to LogEntry on export."""
+
     thread_id: str = ""
     conversation: list = []
     prompt: str = ""
@@ -95,14 +102,14 @@ class LogsAnonymous(BaseModel):
     explanation: str = ""
     severity: float = 0
     confidence: float = 0
-    meta: Optional[List[dict]] = []
+    meta: list[dict] | None = []
     exec_t: float = 0
-    attack_trace: Optional[List[str]] = None
+    attack_trace: list[str] | None = None
 
     def to_public(self) -> LogEntry:
         """Convert to public LogEntry (strip internal fields, flatten meta)."""
         merged_meta = {}
-        for item in (self.meta or []):
+        for item in self.meta or []:
             if isinstance(item, dict):
                 merged_meta.update(item)
         return LogEntry(
@@ -121,8 +128,10 @@ class LogsAnonymous(BaseModel):
 
 # ── Results Models ────────────────────────────────────────────────────────
 
+
 class ExecT(BaseModel):
     """Execution time statistics."""
+
     max_t: float = 0
     min_t: float = 0
     avg_t: float = 0
@@ -130,6 +139,7 @@ class ExecT(BaseModel):
 
 class Stats(BaseModel):
     """Experiment statistics. Uses 'pass' alias for Python keyword."""
+
     model_config = ConfigDict(populate_by_name=True)
 
     reliability: float = 0
@@ -138,7 +148,7 @@ class Stats(BaseModel):
     total: int = 0
     error: int = 0
     fail_impact: float = 0
-    total_perfomance_index: Optional[float] = 0
+    total_perfomance_index: float | None = 0
 
     def model_dump(self, **kwargs) -> dict[str, Any]:
         return super().model_dump(by_alias=True, **kwargs)
@@ -146,30 +156,35 @@ class Stats(BaseModel):
 
 class Insight(BaseModel):
     """Per-experiment analysis insight."""
+
     result: str = ""
-    category: Optional[str] = ""
-    severity: Optional[Union[float, str]] = 0
-    explanation: Optional[str] = ""
-    examples: Optional[list] = []
-    count: Optional[int] = None  # local-only: number of logs in this category
+    category: str | None = ""
+    severity: float | str | None = 0
+    explanation: str | None = ""
+    examples: list | None = []
+    count: int | None = None  # local-only: number of logs in this category
 
 
 # ── Posture Models ────────────────────────────────────────────────────────
 
+
 class PostureDimension(BaseModel):
     """Score for a single dimension (security or quality)."""
+
     posture: float = 0.0
     grade: str = "F"
 
 
 class PostureDimensions(BaseModel):
     """Container for dimension-level posture scores."""
-    security: Optional[PostureDimension] = None
-    quality: Optional[PostureDimension] = None
+
+    security: PostureDimension | None = None
+    quality: PostureDimension | None = None
 
 
 class ExperimentPosture(BaseModel):
     """Experiment-level posture computed from ASR."""
+
     posture: float = 0
     grade: str = "F"
     tests: int = 0
@@ -177,17 +192,19 @@ class ExperimentPosture(BaseModel):
     confidence: str = "low"
     domain: str = "security"
     breach_breadth: float = 0
-    breached: List[str] = []
-    defended: List[str] = []
+    breached: list[str] = []
+    defended: list[str] = []
 
 
 # ── Experiment Results ─────────────────────────────────────────────────────
 
+
 class ExperimentResults(BaseModel):
     """Complete experiment results — output of the presenter."""
+
     stats: Stats = Stats()
-    insights: List[Insight] = []
-    posture: Optional[ExperimentPosture] = None
+    insights: list[Insight] = []
+    posture: ExperimentPosture | None = None
     exec_t: ExecT = ExecT()
 
     def model_dump(self, **kwargs) -> dict[str, Any]:
@@ -196,8 +213,10 @@ class ExperimentResults(BaseModel):
 
 # ── Experiment Meta ───────────────────────────────────────────────────────
 
+
 class ExperimentMeta(BaseModel):
     """Experiment output — meta.json schema."""
+
     model_config = ConfigDict(populate_by_name=True)
 
     id: str
@@ -208,7 +227,7 @@ class ExperimentMeta(BaseModel):
     lang: str = "english"
     results: ExperimentResults = ExperimentResults()
     created_at: str = ""
-    completed_at: Optional[str] = None
+    completed_at: str | None = None
 
     def model_dump(self, **kwargs) -> dict[str, Any]:
         """Always dump with aliases (pass_ → pass) for API compatibility."""

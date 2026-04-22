@@ -1,16 +1,19 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """Logs command for retrieving and exporting experiment results."""
+
+import json
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 import click
 from rich.console import Console
 from rich.table import Table
-import json
-from datetime import datetime, timedelta
-from pathlib import Path
 
 from ..client import HumanboundClient
 from ..engine import get_runner
 from ..engine.platform_runner import PlatformTestRunner
-from ..exceptions import NotAuthenticatedError, APIError
+from ..exceptions import APIError, NotAuthenticatedError
 
 console = Console()
 console_err = Console(stderr=True)
@@ -19,54 +22,51 @@ console_err = Console(stderr=True)
 @click.group("logs", invoke_without_command=True)
 @click.argument("experiment_id", required=False)
 @click.option(
-    "--format", "-f", "output_format",
+    "--format",
+    "-f",
+    "output_format",
     type=click.Choice(["table", "json", "html"]),
     default="table",
-    help="Output format"
+    help="Output format",
 )
 @click.option(
-    "--output", "-o",
-    type=click.Path(),
-    help="Output file path (prints to stdout if not specified)"
+    "--output", "-o", type=click.Path(), help="Output file path (prints to stdout if not specified)"
 )
 @click.option(
-    "--verdict", "-v",
+    "--verdict",
+    "-v",
     type=click.Choice(["pass", "fail", "all"]),
     default="all",
-    help="Filter by verdict"
+    help="Filter by verdict",
 )
-@click.option(
-    "--page", default=1, help="Page number (for table format)"
-)
-@click.option(
-    "--size", default=50, help="Items per page (for table format)"
-)
-@click.option(
-    "--all", "fetch_all", is_flag=True, help="Fetch all logs (for json format)"
-)
-@click.option(
-    "--last", "last_n", type=int, help="Logs from last N experiments"
-)
-@click.option(
-    "--category", "test_category", help="Filter by test category (substring match)"
-)
-@click.option(
-    "--from", "from_date", help="Start date (ISO 8601, e.g. 2026-01-01)"
-)
-@click.option(
-    "--until", "until_date", help="End date (ISO 8601)"
-)
-@click.option(
-    "--days", type=int, help="Last N days (shortcut for --from)"
-)
-@click.option(
-    "--assessment", "assessment_id", help="Logs from a specific assessment"
-)
-@click.option(
-    "--finding", "finding_id", help="Logs linked to a specific finding"
-)
+@click.option("--page", default=1, help="Page number (for table format)")
+@click.option("--size", default=50, help="Items per page (for table format)")
+@click.option("--all", "fetch_all", is_flag=True, help="Fetch all logs (for json format)")
+@click.option("--last", "last_n", type=int, help="Logs from last N experiments")
+@click.option("--category", "test_category", help="Filter by test category (substring match)")
+@click.option("--from", "from_date", help="Start date (ISO 8601, e.g. 2026-01-01)")
+@click.option("--until", "until_date", help="End date (ISO 8601)")
+@click.option("--days", type=int, help="Last N days (shortcut for --from)")
+@click.option("--assessment", "assessment_id", help="Logs from a specific assessment")
+@click.option("--finding", "finding_id", help="Logs linked to a specific finding")
 @click.pass_context
-def logs_group(ctx, experiment_id, output_format, output, verdict, page, size, fetch_all, last_n, test_category, from_date, until_date, days, assessment_id, finding_id):
+def logs_group(
+    ctx,
+    experiment_id,
+    output_format,
+    output,
+    verdict,
+    page,
+    size,
+    fetch_all,
+    last_n,
+    test_category,
+    from_date,
+    until_date,
+    days,
+    assessment_id,
+    finding_id,
+):
     """Get logs from an experiment, assessment, finding, or across a project.
 
     \b
@@ -112,7 +112,9 @@ def logs_group(ctx, experiment_id, output_format, output, verdict, page, size, f
     scope_flags = any([last_n, test_category, from_date, until_date, days])
     exclusive_count = sum(bool(x) for x in [experiment_id, assessment_id, finding_id, scope_flags])
     if exclusive_count > 1:
-        console_err.print("[red]Use only one scope: experiment ID, --assessment, --finding, or project flags (--last, --from, etc.).[/red]")
+        console_err.print(
+            "[red]Use only one scope: experiment ID, --assessment, --finding, or project flags (--last, --from, etc.).[/red]"
+        )
         raise SystemExit(1)
     if days and from_date:
         console_err.print("[red]Cannot combine --days with --from.[/red]")
@@ -120,7 +122,9 @@ def logs_group(ctx, experiment_id, output_format, output, verdict, page, size, f
 
     # --days → --from
     if days:
-        from_date = (datetime.utcnow() - timedelta(days=days)).strftime("%Y-%m-%dT00:00:00")
+        from_date = (datetime.now(timezone.utc) - timedelta(days=days)).strftime(
+            "%Y-%m-%dT00:00:00"
+        )
 
     try:
         # Assessment or finding scope → use consolidated endpoint with headers
@@ -141,6 +145,7 @@ def logs_group(ctx, experiment_id, output_format, output, verdict, page, size, f
 
             if output_format == "json":
                 import json as _json
+
                 json_str = _json.dumps(response, indent=2, default=str)
                 if output:
                     Path(output).write_text(json_str)
@@ -153,8 +158,17 @@ def logs_group(ctx, experiment_id, output_format, output, verdict, page, size, f
 
         if scope_flags:
             _project_level_logs(
-                client, output_format, output, verdict, page, size, fetch_all,
-                last_n, test_category, from_date, until_date,
+                client,
+                output_format,
+                output,
+                verdict,
+                page,
+                size,
+                fetch_all,
+                last_n,
+                test_category,
+                from_date,
+                until_date,
             )
         elif experiment_id:
             # Resolve partial experiment ID
@@ -195,6 +209,7 @@ def logs_group(ctx, experiment_id, output_format, output, verdict, page, size, f
 # Project-level logs
 # ---------------------------------------------------------------------------
 
+
 def _build_experiment_lookup(client):
     """Fetch all experiments and build {id: {name, test_category}} lookup."""
     lookup = {}
@@ -221,8 +236,19 @@ def _enrich_log(log, exp_lookup):
     return log
 
 
-def _project_level_logs(client, output_format, output, verdict, page, size, fetch_all,
-                        last_n, test_category, from_date, until_date):
+def _project_level_logs(
+    client,
+    output_format,
+    output,
+    verdict,
+    page,
+    size,
+    fetch_all,
+    last_n,
+    test_category,
+    from_date,
+    until_date,
+):
     """Fetch and display project-level logs with scope filters."""
     result_filter = None if verdict == "all" else verdict
 
@@ -230,19 +256,49 @@ def _project_level_logs(client, output_format, output, verdict, page, size, fetc
     exp_lookup = _build_experiment_lookup(client)
 
     if output_format == "html":
-        _project_export_html(client, output, result_filter, last_n, test_category, from_date, until_date, exp_lookup)
+        _project_export_html(
+            client, output, result_filter, last_n, test_category, from_date, until_date, exp_lookup
+        )
     elif output_format == "json":
-        _project_export_json(client, output, result_filter, fetch_all, page, size, last_n, test_category, from_date, until_date, exp_lookup)
+        _project_export_json(
+            client,
+            output,
+            result_filter,
+            fetch_all,
+            page,
+            size,
+            last_n,
+            test_category,
+            from_date,
+            until_date,
+            exp_lookup,
+        )
     else:
-        _project_show_table(client, result_filter, page, size, last_n, test_category, from_date, until_date, exp_lookup)
+        _project_show_table(
+            client,
+            result_filter,
+            page,
+            size,
+            last_n,
+            test_category,
+            from_date,
+            until_date,
+            exp_lookup,
+        )
 
 
-def _project_show_table(client, result_filter, page, size, last_n, test_category, from_date, until_date, exp_lookup):
+def _project_show_table(
+    client, result_filter, page, size, last_n, test_category, from_date, until_date, exp_lookup
+):
     """Show project-level logs in table format."""
     response = client.get_project_logs(
-        page=page, size=size, result=result_filter,
-        from_date=from_date, until_date=until_date,
-        test_category=test_category, last=last_n,
+        page=page,
+        size=size,
+        result=result_filter,
+        from_date=from_date,
+        until_date=until_date,
+        test_category=test_category,
+        last=last_n,
     )
     logs = response.get("data", [])
 
@@ -291,7 +347,19 @@ def _project_show_table(client, result_filter, page, size, last_n, test_category
         console.print(f"\n[dim]Showing {len(logs)} logs. Use --page to see more.[/dim]")
 
 
-def _project_export_json(client, output, result_filter, fetch_all, page, size, last_n, test_category, from_date, until_date, exp_lookup):
+def _project_export_json(
+    client,
+    output,
+    result_filter,
+    fetch_all,
+    page,
+    size,
+    last_n,
+    test_category,
+    from_date,
+    until_date,
+    exp_lookup,
+):
     """Export project-level logs as JSON."""
     all_logs = []
 
@@ -299,9 +367,13 @@ def _project_export_json(client, output, result_filter, fetch_all, page, size, l
         current_page = 1
         while True:
             response = client.get_project_logs(
-                page=current_page, size=100, result=result_filter,
-                from_date=from_date, until_date=until_date,
-                test_category=test_category, last=last_n,
+                page=current_page,
+                size=100,
+                result=result_filter,
+                from_date=from_date,
+                until_date=until_date,
+                test_category=test_category,
+                last=last_n,
             )
             logs = response.get("data", [])
             all_logs.extend(logs)
@@ -310,9 +382,13 @@ def _project_export_json(client, output, result_filter, fetch_all, page, size, l
             current_page += 1
     else:
         response = client.get_project_logs(
-            page=page, size=size, result=result_filter,
-            from_date=from_date, until_date=until_date,
-            test_category=test_category, last=last_n,
+            page=page,
+            size=size,
+            result=result_filter,
+            from_date=from_date,
+            until_date=until_date,
+            test_category=test_category,
+            last=last_n,
         )
         all_logs = response.get("data", [])
 
@@ -342,7 +418,9 @@ def _project_export_json(client, output, result_filter, fetch_all, page, size, l
         print(json_output)
 
 
-def _project_export_html(client, output, result_filter, last_n, test_category, from_date, until_date, exp_lookup):
+def _project_export_html(
+    client, output, result_filter, last_n, test_category, from_date, until_date, exp_lookup
+):
     """Export project-level logs as HTML report."""
     with console.status("Generating HTML report...", spinner="dots"):
         # Fetch all matching logs
@@ -350,9 +428,13 @@ def _project_export_html(client, output, result_filter, last_n, test_category, f
         current_page = 1
         while True:
             response = client.get_project_logs(
-                page=current_page, size=100, result=result_filter,
-                from_date=from_date, until_date=until_date,
-                test_category=test_category, last=last_n,
+                page=current_page,
+                size=100,
+                result=result_filter,
+                from_date=from_date,
+                until_date=until_date,
+                test_category=test_category,
+                last=last_n,
             )
             all_logs.extend(response.get("data", []))
             if not response.get("has_next_page"):
@@ -375,6 +457,7 @@ def _project_export_html(client, output, result_filter, last_n, test_category, f
         }
 
         from ..report import generate_html_report
+
         report_html = generate_html_report(pseudo_experiment, all_logs)
 
     filename = output or f"project_{client.project_id[:8]}_logs.html"
@@ -385,6 +468,7 @@ def _project_export_html(client, output, result_filter, last_n, test_category, f
 # ---------------------------------------------------------------------------
 # Experiment-level helpers (unchanged)
 # ---------------------------------------------------------------------------
+
 
 def _resolve_experiment_id(client: HumanboundClient, partial_id: str) -> str:
     """Resolve a partial experiment ID to full ID."""
@@ -482,7 +566,15 @@ def _show_table(client: HumanboundClient, experiment_id: str, verdict: str, page
         console.print(f"\n[dim]Showing {len(logs)} of {total}. Use --page to see more.[/dim]")
 
 
-def _export_json(client: HumanboundClient, experiment_id: str, output: str, verdict: str, fetch_all: bool, page: int, size: int):
+def _export_json(
+    client: HumanboundClient,
+    experiment_id: str,
+    output: str,
+    verdict: str,
+    fetch_all: bool,
+    page: int,
+    size: int,
+):
     """Export logs as JSON."""
     result_filter = None if verdict == "all" else verdict
 
@@ -555,6 +647,7 @@ def _export_html(client: HumanboundClient, experiment_id: str, output: str):
             page += 1
 
         from ..report import generate_html_report
+
         report_html = generate_html_report(experiment, all_logs)
 
     filename = output or f"experiment_{experiment_id[:8]}_report.html"
@@ -565,6 +658,7 @@ def _export_html(client: HumanboundClient, experiment_id: str, output: str):
 # ---------------------------------------------------------------------------
 # Local mode handler (reads from .humanbound/results/)
 # ---------------------------------------------------------------------------
+
 
 def _local_logs(experiment_id, output_format, output, verdict, page, size):
     """Read logs from local results files. Full implementation in Phase 3."""
@@ -592,6 +686,7 @@ def _local_logs(experiment_id, output_format, output, verdict, page, size):
 
     # Read logs
     import json as _json
+
     logs = []
     for line in logs_file.read_text().strip().split("\n"):
         if line.strip():
@@ -603,7 +698,7 @@ def _local_logs(experiment_id, output_format, output, verdict, page, size):
 
     # Paginate
     start = (page - 1) * size
-    page_logs = logs[start:start + size]
+    page_logs = logs[start : start + size]
 
     if output_format == "json":
         json_output = _json.dumps({"logs": page_logs, "total": len(logs)}, indent=2, default=str)
@@ -632,6 +727,7 @@ def _local_logs(experiment_id, output_format, output, verdict, page, size):
         }
 
         from ..report import generate_html_report
+
         report_html = generate_html_report(experiment, logs)
 
         filename = output or f"logs_{exp_name}.html"
@@ -640,12 +736,15 @@ def _local_logs(experiment_id, output_format, output, verdict, page, size):
     else:
         _show_logs_table(page_logs, verdict or "all")
         if len(logs) > start + size:
-            console.print(f"\n[dim]Showing {len(page_logs)} of {len(logs)}. Use --page to see more.[/dim]")
+            console.print(
+                f"\n[dim]Showing {len(page_logs)} of {len(logs)}. Use --page to see more.[/dim]"
+            )
 
 
 # ---------------------------------------------------------------------------
 # Upload subcommand
 # ---------------------------------------------------------------------------
+
 
 @logs_group.command("upload")
 @click.argument("file", type=click.Path(exists=True))
@@ -715,6 +814,7 @@ def upload_command(file: str, tag: str, lang: str, force: bool):
 
     if not force:
         from rich.prompt import Confirm
+
         if not Confirm.ask(f"\nUpload {len(conversations)} conversations?"):
             console.print("[dim]Cancelled.[/dim]")
             return
@@ -723,7 +823,7 @@ def upload_command(file: str, tag: str, lang: str, force: bool):
         with console.status(f"Uploading {len(conversations)} conversations..."):
             response = client.upload_conversations(project_id, conversations, tag=tag, lang=lang)
 
-        console.print(f"\n[green]Upload complete.[/green]")
+        console.print("\n[green]Upload complete.[/green]")
 
         dataset_id = response.get("dataset_id", response.get("id", ""))
         if dataset_id:
@@ -732,7 +832,9 @@ def upload_command(file: str, tag: str, lang: str, force: bool):
         test_category_val = response.get("test_category", "")
         if test_category_val:
             console.print(f"  Test category: [bold]{test_category_val}[/bold]")
-            console.print(f"\n[dim]Run evaluation with: hb test --category \"{test_category_val}\"[/dim]")
+            console.print(
+                f'\n[dim]Run evaluation with: hb test --category "{test_category_val}"[/dim]'
+            )
 
     except NotAuthenticatedError:
         console_err.print("[red]Not authenticated.[/red] Run 'hb login' first.")

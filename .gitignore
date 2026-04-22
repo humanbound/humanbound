@@ -43,14 +43,21 @@ ehthumbs.db
 .pytest_cache/
 .coverage
 htmlcov/
+.ruff_cache/
+.mypy_cache/
 
 # PyPI config (contains secrets)
 .pypirc
 
-# Local tests (not for distribution)
-tests/
+# Integration tests — run against live backend, contain environment-specific
+# credentials and infrastructure URLs. Maintained privately by the team.
+tests/conftest.py
+tests/cli_integration_test.py
+tests/test_cli_commands.py
+tests/run_tests.sh
+tests/engine/
 
-# Test repositories for --repo feature testing
+# Test repositories for --repo feature testing (created by --repo feature tests)
 .test-repos/
 
 # Relay service (internal deployment, not for distribution)

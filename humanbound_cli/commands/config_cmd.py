@@ -1,13 +1,15 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """Config command — view and edit local provider configuration.
 
 Reads/writes ~/.humanbound/config.yaml. No database, no API calls.
 This is the local-mode provider configuration — separate from platform providers.
 """
 
-import click
 from pathlib import Path
+
+import click
 from rich.console import Console
-from rich.panel import Panel
 from rich.table import Table
 
 console = Console()
@@ -24,6 +26,7 @@ def _read_config():
         return {}
     try:
         import yaml
+
         return yaml.safe_load(CONFIG_FILE.read_text()) or {}
     except ImportError:
         # Fallback YAML parser
@@ -39,6 +42,7 @@ def _write_config(config):
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
     try:
         import yaml
+
         CONFIG_FILE.write_text(yaml.dump(config, default_flow_style=False))
     except ImportError:
         # Fallback YAML writer
@@ -86,7 +90,9 @@ def config_group(ctx):
     endpoint = config.get("endpoint", "")
 
     # Mask API key
-    key_display = f"{api_key[:7]}****" if api_key and len(api_key) > 7 else ("set" if api_key else "not set")
+    key_display = (
+        f"{api_key[:7]}****" if api_key and len(api_key) > 7 else ("set" if api_key else "not set")
+    )
 
     table = Table(title="Local Configuration", show_header=False)
     table.add_column("Key", style="bold")
@@ -136,9 +142,11 @@ def config_set(key, value):
     if key == "provider":
         console.print(f"[green]Provider set to:[/green] {value}")
         if value == "ollama":
-            console.print("[dim]Full local isolation. Set model: hb config set model llama3.1:8b[/dim]")
+            console.print(
+                "[dim]Full local isolation. Set model: hb config set model llama3.1:8b[/dim]"
+            )
         elif not config.get("api_key"):
-            console.print(f"[dim]Set API key: hb config set api-key <your-key>[/dim]")
+            console.print("[dim]Set API key: hb config set api-key <your-key>[/dim]")
     elif key == "api_key":
         masked = f"{value[:7]}****" if len(value) > 7 else "****"
         console.print(f"[green]API key set:[/green] {masked}")

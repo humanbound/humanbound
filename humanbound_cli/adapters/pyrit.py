@@ -1,4 +1,6 @@
-"""PyRIT (Microsoft) adapter — converts red teaming scan results to hb-firewall format."""
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
+"""PyRIT (Microsoft) adapter — converts red teaming scan results to humanbound-firewall format."""
 
 SIGNATURES = ["redteaming_data"]
 
@@ -37,14 +39,16 @@ def convert(data: dict) -> list[dict]:
                 label = cat_info.get("severity_label", "").lower()
                 severity = max(severity, SEVERITY_MAP.get(label, 0))
 
-        logs.append({
-            "conversation": conv,
-            "result": "fail" if attack_success else "pass",
-            "test_category": "adversarial",
-            "fail_category": risk_cat if attack_success else "",
-            "severity": float(severity),
-            "confidence": 90.0,
-            "gen_category": entry.get("attack_technique", ""),
-        })
+        logs.append(
+            {
+                "conversation": conv,
+                "result": "fail" if attack_success else "pass",
+                "test_category": "adversarial",
+                "fail_category": risk_cat if attack_success else "",
+                "severity": float(severity),
+                "confidence": 90.0,
+                "gen_category": entry.get("attack_technique", ""),
+            }
+        )
 
     return logs

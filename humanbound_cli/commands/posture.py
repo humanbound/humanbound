@@ -1,15 +1,16 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """Posture command for viewing security posture score."""
 
 import click
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
-from rich.progress import Progress, BarColumn, TextColumn
 
 from ..client import HumanboundClient
 from ..engine import get_runner
 from ..engine.platform_runner import PlatformTestRunner
-from ..exceptions import NotAuthenticatedError, APIError
+from ..exceptions import APIError, NotAuthenticatedError
 
 console = Console()
 
@@ -20,9 +21,7 @@ console = Console()
 @click.option("--trends", is_flag=True, help="Show posture history over time")
 @click.option("--org", is_flag=True, help="Show org-level posture (3 dimensions)")
 @click.option("--coverage", is_flag=True, help="Include test coverage breakdown")
-def posture_command(
-    project: str, as_json: bool, trends: bool, org: bool, coverage: bool
-):
+def posture_command(project: str, as_json: bool, trends: bool, org: bool, coverage: bool):
     """View security posture score for a project.
 
     The posture score is a composite metric (0-100) reflecting:
@@ -71,9 +70,7 @@ def posture_command(
                 raise SystemExit(1)
 
             with console.status("Calculating organisation posture..."):
-                response = client.get(
-                    f"organisations/{org_id}/posture", include_project=False
-                )
+                response = client.get(f"organisations/{org_id}/posture", include_project=False)
 
             if as_json:
                 import json
@@ -113,9 +110,7 @@ def posture_command(
 
         # Get posture from API
         with console.status("Calculating posture..."):
-            response = client.get(
-                f"projects/{project_id}/posture", include_project=True
-            )
+            response = client.get(f"projects/{project_id}/posture", include_project=True)
 
         if as_json:
             import json
@@ -151,8 +146,8 @@ def posture_command(
 
 def _local_posture(as_json: bool):
     """Read posture from latest local results. Full implementation in Phase 3."""
-    from pathlib import Path
     import json
+    from pathlib import Path
 
     results_dir = Path(".humanbound/results")
     if not results_dir.exists():
@@ -247,11 +242,7 @@ def _display_posture(posture: dict):
 
         for name, comp_score, weight in components:
             bar = _score_bar(comp_score)
-            color = (
-                "green"
-                if comp_score >= 80
-                else ("yellow" if comp_score >= 60 else "red")
-            )
+            color = "green" if comp_score >= 80 else ("yellow" if comp_score >= 60 else "red")
             table.add_row(
                 name,
                 f"[{color}]{comp_score:.0f}[/{color}]",
@@ -461,13 +452,9 @@ def _display_org_posture(response: dict):
 
         for key, label in dimension_labels.items():
             dim_data = dimensions.get(key, {})
-            dim_score = (
-                dim_data.get("score", 0) if isinstance(dim_data, dict) else dim_data
-            )
+            dim_score = dim_data.get("score", 0) if isinstance(dim_data, dict) else dim_data
             bar = _score_bar(dim_score)
-            color = (
-                "green" if dim_score >= 80 else ("yellow" if dim_score >= 60 else "red")
-            )
+            color = "green" if dim_score >= 80 else ("yellow" if dim_score >= 60 else "red")
             table.add_row(
                 label,
                 f"[{color}]{dim_score:.0f}[/{color}]",
@@ -516,9 +503,7 @@ def _display_coverage_section(response: dict):
 
             if total > 0:
                 rate = (passed / total) * 100
-                rate_color = (
-                    "green" if rate >= 80 else ("yellow" if rate >= 50 else "red")
-                )
+                rate_color = "green" if rate >= 80 else ("yellow" if rate >= 50 else "red")
                 rate_str = f"[{rate_color}]{rate:.0f}%[/{rate_color}]"
             else:
                 rate_str = "[dim]-[/dim]"
@@ -552,9 +537,7 @@ def _print_next(org: bool = False, has_coverage: bool = False):
         suggestions.append("hb report --org         Generate org posture report")
     else:
         if not has_coverage:
-            suggestions.append(
-                "hb posture --coverage   Include test coverage breakdown"
-            )
+            suggestions.append("hb posture --coverage   Include test coverage breakdown")
         suggestions.append("hb posture --trends     View posture over time")
         suggestions.append("hb posture --org        View org-level posture")
         suggestions.append("hb test                 Run tests to improve posture")

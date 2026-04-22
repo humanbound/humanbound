@@ -1,12 +1,12 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """PlatformTestRunner — wraps existing HumanboundClient into TestRunner interface.
 
 This is a thin adapter. No new logic — just translates between the TestRunner
 canonical shapes and the existing API responses. The platform backend is unchanged.
 """
 
-from typing import Optional
-
-from .runner import TestRunner, TestConfig, TestStatus, TestResult, Posture, PaginatedLogs
+from .runner import PaginatedLogs, Posture, TestConfig, TestResult, TestRunner, TestStatus
 
 
 class PlatformTestRunner(TestRunner):
@@ -79,10 +79,14 @@ class PlatformTestRunner(TestRunner):
             exec_t=results.get("exec_t", {}),
         )
 
-    def get_logs(self, experiment_id: str, result: Optional[str] = None,
-                 page: int = 1, size: int = 50) -> PaginatedLogs:
+    def get_logs(
+        self, experiment_id: str, result: str | None = None, page: int = 1, size: int = 50
+    ) -> PaginatedLogs:
         resp = self.client.get_experiment_logs(
-            experiment_id, page=page, size=size, result=result,
+            experiment_id,
+            page=page,
+            size=size,
+            result=result,
         )
         return PaginatedLogs(
             data=resp.get("data", []),
@@ -92,7 +96,7 @@ class PlatformTestRunner(TestRunner):
             has_next_page=resp.get("has_next_page", False),
         )
 
-    def get_posture(self, experiment_id: Optional[str] = None) -> Posture:
+    def get_posture(self, experiment_id: str | None = None) -> Posture:
         project_id = self.client.project_id
         if not project_id:
             return Posture()
@@ -116,7 +120,10 @@ class PlatformTestRunner(TestRunner):
         # Fetch open finding count
         try:
             findings_resp = self.client.list_findings(
-                project_id, status="open", page=1, size=1,
+                project_id,
+                status="open",
+                page=1,
+                size=1,
             )
             if isinstance(findings_resp, dict):
                 posture.finding_count = findings_resp.get("total", 0)

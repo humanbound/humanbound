@@ -1,13 +1,16 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """Organisation member management commands."""
 
 import json
+
 import click
 from rich.console import Console
-from rich.table import Table
 from rich.prompt import Confirm
+from rich.table import Table
 
 from ..client import HumanboundClient
-from ..exceptions import NotAuthenticatedError, APIError
+from ..exceptions import APIError, NotAuthenticatedError
 
 console = Console()
 
@@ -91,7 +94,12 @@ def _list_members(as_json: bool):
 
 @members_group.command("invite")
 @click.argument("email")
-@click.option("--role", type=click.Choice(["admin", "developer", "expert"]), default="developer", help="Access level for the member")
+@click.option(
+    "--role",
+    type=click.Choice(["admin", "developer", "expert"]),
+    default="developer",
+    help="Access level for the member",
+)
 def invite_member(email: str, role: str):
     """Invite a member to the organisation.
 
@@ -112,7 +120,7 @@ def invite_member(email: str, role: str):
         with console.status(f"Inviting {email}..."):
             client.invite_member(email, role)
 
-        console.print(f"[green]Invitation sent.[/green]")
+        console.print("[green]Invitation sent.[/green]")
         console.print(f"  Email: [bold]{email}[/bold]")
         console.print(f"  Role: {role}")
 
@@ -155,7 +163,7 @@ def remove_member(member_id: str, force: bool):
         with console.status("Removing member..."):
             client.remove_member(member_id)
 
-        console.print(f"[green]Member removed.[/green]")
+        console.print("[green]Member removed.[/green]")
         console.print(f"[dim]ID: {member_id}[/dim]")
 
     except NotAuthenticatedError:

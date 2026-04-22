@@ -33,7 +33,7 @@ Key terms used throughout the Humanbound documentation.
 
 | Term | Definition |
 |------|-----------|
-| **Firewall** | The [Humanbound Firewall](../defense/firewall.md) (hb-firewall) — a multi-tier runtime defense layer that sits between users and the AI agent. Evaluates every incoming message through graduated tiers of protection, from zero-cost input sanitization to full LLM-based contextual analysis. Open source (AGPL-3.0). |
+| **Firewall** | The [Humanbound Firewall](../defense/firewall.md) (humanbound-firewall) — a multi-tier runtime defense layer that sits between users and the AI agent. Evaluates every incoming message through graduated tiers of protection, from zero-cost input sanitization to full LLM-based contextual analysis. Open source (AGPL-3.0). |
 | **Firewall Tiers** | The firewall operates in four tiers. Tier 0: input sanitization (strips invisible characters, zero-width joiners). Tier 1: pre-trained attack detection ensemble (DeBERTa, custom APIs). Tier 2: agent-specific classification trained on your test data. Tier 3: LLM judge for ambiguous cases. Each tier either makes a confident decision or escalates. |
 | **Guardrails** | Security rules exported from test findings via `hb guardrails`. Capture attack patterns and boundary violations discovered during testing, translated into actionable rules for the firewall. The bridge between testing (what was found) and protection (what to block). |
 | **Tier 2 Classifier** | A SetFit-based model fine-tuned on your specific adversarial test data. Trained via `hb firewall train`. Detects attacks that generic Tier 1 models miss and fast-tracks legitimate requests without LLM cost. Stored as a portable `.hbfw` file. |

@@ -1,13 +1,16 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """Assessment commands — view past security assessments."""
 
 import json
+
 import click
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
+from rich.table import Table
 
 from ..client import HumanboundClient
-from ..exceptions import NotAuthenticatedError, APIError
+from ..exceptions import APIError, NotAuthenticatedError
 
 console = Console()
 
@@ -179,7 +182,7 @@ def _display_assessment(data: dict):
         f"Scope: [bold]{scope}[/bold]",
         f"Status: {STATUS_STYLES.get(status, status)}",
         f"Tests: {data.get('test_count', '—')}",
-        f"",
+        "",
         f"Posture: {grade_before_styled} {score_before} → {grade_after_styled} {score_after}",
         f"Drift: {drift_display}",
     ]
@@ -187,21 +190,25 @@ def _display_assessment(data: dict):
     started = str(data.get("started_at", ""))[:19]
     completed = str(data.get("completed_at", "") or "")[:19]
     if started:
-        lines.append(f"")
+        lines.append("")
         lines.append(f"[dim]Started: {started}[/dim]")
     if completed:
         lines.append(f"[dim]Completed: {completed}[/dim]")
 
-    console.print(Panel(
-        "\n".join(lines),
-        title=f"Assessment {str(data.get('id', ''))[:8]}…",
-        border_style="blue",
-        padding=(1, 2),
-    ))
+    console.print(
+        Panel(
+            "\n".join(lines),
+            title=f"Assessment {str(data.get('id', ''))[:8]}…",
+            border_style="blue",
+            padding=(1, 2),
+        )
+    )
 
     console.print("\n[dim]Next:[/dim]")
-    console.print(f"  [bold]hb assessments report {data.get('id', '')}[/bold]  Generate full report")
-    console.print(f"  [bold]hb findings[/bold]                              View current findings")
+    console.print(
+        f"  [bold]hb assessments report {data.get('id', '')}[/bold]  Generate full report"
+    )
+    console.print("  [bold]hb findings[/bold]                              View current findings")
 
 
 @assessments_group.command("report")

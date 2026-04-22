@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """OrchestratorModule ABC — standard interface for all orchestrators.
 
 Each orchestrator (owasp_agentic, owasp_single_turn, behavioral_qa) implements
@@ -10,13 +12,11 @@ The interface mirrors the existing backend convention:
 """
 
 from abc import ABC, abstractmethod
-from typing import Optional
 
 from ..callbacks import EngineCallbacks
 
 
 class OrchestratorModule(ABC):
-
     @staticmethod
     @abstractmethod
     def orchestrator_generate(model_provider: dict, experiment: dict) -> dict:
@@ -34,12 +34,12 @@ class OrchestratorModule(ABC):
     @staticmethod
     @abstractmethod
     def orchestrator_run(
-        organisation_id: Optional[str],
+        organisation_id: str | None,
         model_provider: dict,
         experiment: dict,
         prompts: dict,
         few_shots_model,
-        callbacks: Optional[EngineCallbacks] = None,
+        callbacks: EngineCallbacks | None = None,
     ) -> None:
         """Execute the test. Logs are emitted via callbacks.on_logs().
 

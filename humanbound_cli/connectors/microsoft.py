@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """
 Microsoft connector for AI service discovery.
 
@@ -15,7 +17,6 @@ Detection layers:
 
 import logging
 import re
-from typing import List, Tuple
 
 import msal
 import requests
@@ -169,8 +170,9 @@ class _GraphAPIError(Exception):
     def is_auth_error(self) -> bool:
         if self.status_code in (401, 403):
             return True
-        return ("InvalidAuthenticationToken" in self.body
-                or "Authorization_RequestDenied" in self.body)
+        return (
+            "InvalidAuthenticationToken" in self.body or "Authorization_RequestDenied" in self.body
+        )
 
 
 def _check_response(resp: requests.Response):
@@ -187,13 +189,16 @@ _RETRY_DELAY = 3  # seconds
 def _get_with_retry(session: requests.Session, url: str, **kwargs) -> requests.Response:
     """GET with retry on transient errors (429, 5xx)."""
     import time
+
     kwargs.setdefault("timeout", 30)
     for attempt in range(_MAX_RETRIES + 1):
         resp = session.get(url, **kwargs)
         if resp.status_code not in _TRANSIENT_CODES or attempt == _MAX_RETRIES:
             return resp
         delay = _RETRY_DELAY * (attempt + 1)
-        logger.info("Transient %s on %s, retrying in %ss...", resp.status_code, url.split("?")[0], delay)
+        logger.info(
+            "Transient %s on %s, retrying in %ss...", resp.status_code, url.split("?")[0], delay
+        )
         time.sleep(delay)
     return resp
 
@@ -258,10 +263,12 @@ class MicrosoftConnector:
             raise PermissionError(f"Sign-in failed: {error_desc}")
 
         self._graph_session = requests.Session()
-        self._graph_session.headers.update({
-            "Authorization": f"Bearer {result['access_token']}",
-            "Content-Type": "application/json",
-        })
+        self._graph_session.headers.update(
+            {
+                "Authorization": f"Bearer {result['access_token']}",
+                "Content-Type": "application/json",
+            }
+        )
 
         # Try to get ARM token silently (uses cached refresh token)
         self._init_arm_session()
@@ -277,14 +284,16 @@ class MicrosoftConnector:
         result = self._msal_app.acquire_token_silent(ARM_SCOPES, account=accounts[0])
         if result and "access_token" in result:
             self._arm_session = requests.Session()
-            self._arm_session.headers.update({
-                "Authorization": f"Bearer {result['access_token']}",
-                "Content-Type": "application/json",
-            })
+            self._arm_session.headers.update(
+                {
+                    "Authorization": f"Bearer {result['access_token']}",
+                    "Content-Type": "application/json",
+                }
+            )
         else:
             logger.info("Could not acquire ARM token — Azure resource detection skipped")
 
-    def discover(self) -> Tuple[List[dict], dict]:
+    def discover(self) -> tuple[list[dict], dict]:
         """Run all detection layers and return (services, metadata)."""
         if not self._graph_session:
             raise RuntimeError("Not authenticated. Call authenticate() first.")
@@ -374,7 +383,11 @@ class MicrosoftConnector:
 
         # ── Merge ──────────────────────────────────────────────────────
         services = self._merge_services(
-            sp_services, signin_data, copilot_data, license_services, arm_services,
+            sp_services,
+            signin_data,
+            copilot_data,
+            license_services,
+            arm_services,
         )
 
         # ── Topology ──────────────────────────────────────────────────
@@ -393,7 +406,10 @@ class MicrosoftConnector:
         for svc in services:
             evidence = svc.get("evidence", {})
             if evidence.get("resource_type") == "microsoft.cognitiveservices/accounts":
-                if evidence.get("models") is not None or evidence.get("security", {}).get("content_filtering") is not None:
+                if (
+                    evidence.get("models") is not None
+                    or evidence.get("security", {}).get("content_filtering") is not None
+                ):
                     azure_openai_inspected += 1
                 else:
                     azure_openai_inspection_failed += 1
@@ -663,11 +679,13 @@ class MicrosoftConnector:
             data = resp.json()
 
             if self.verbose:
-                self._raw_responses.setdefault("modelCatalog", []).append({
-                    "location": location,
-                    "models_count": len(data.get("value", [])),
-                    "raw": data,
-                })
+                self._raw_responses.setdefault("modelCatalog", []).append(
+                    {
+                        "location": location,
+                        "models_count": len(data.get("value", [])),
+                        "raw": data,
+                    }
+                )
 
             now = datetime.now(timezone.utc)
 
@@ -704,7 +722,9 @@ class MicrosoftConnector:
                 # Compute vendor-agnostic status
                 if ret_date_str:
                     try:
-                        ret_dt = datetime.strptime(ret_date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+                        ret_dt = datetime.strptime(ret_date_str, "%Y-%m-%d").replace(
+                            tzinfo=timezone.utc
+                        )
                         if now >= ret_dt:
                             status = "retired"
                         else:
@@ -723,7 +743,9 @@ class MicrosoftConnector:
                 }
 
         except _GraphAPIError as e:
-            logger.info("Model catalog query failed for %s/%s (HTTP %s)", sub_id, location, e.status_code)
+            logger.info(
+                "Model catalog query failed for %s/%s (HTTP %s)", sub_id, location, e.status_code
+            )
         except Exception as e:
             logger.info("Model catalog query failed for %s/%s: %s", sub_id, location, e)
 
@@ -761,13 +783,15 @@ class MicrosoftConnector:
                 props = dep.get("properties", {})
                 model = props.get("model", {})
                 sku = dep.get("sku", {})
-                result["deployments"].append({
-                    "name": dep.get("name", ""),
-                    "model": model.get("name", ""),
-                    "version": model.get("version", ""),
-                    "sku_name": sku.get("name", ""),
-                    "sku_capacity": sku.get("capacity"),
-                })
+                result["deployments"].append(
+                    {
+                        "name": dep.get("name", ""),
+                        "model": model.get("name", ""),
+                        "version": model.get("version", ""),
+                        "sku_name": sku.get("name", ""),
+                        "sku_capacity": sku.get("capacity"),
+                    }
+                )
         except _GraphAPIError as e:
             logger.info("Deployments query failed for %s (HTTP %s)", name, e.status_code)
         except Exception as e:
@@ -894,9 +918,9 @@ class MicrosoftConnector:
                 # WebChat and DirectLine have security-relevant fields
                 if channel_name in ("WebChatChannel", "DirectLineChannel"):
                     sites = inner_props.get("sites", [])
-                    is_secure = all(
-                        s.get("isSecureSiteEnabled", False) for s in sites
-                    ) if sites else False
+                    is_secure = (
+                        all(s.get("isSecureSiteEnabled", False) for s in sites) if sites else False
+                    )
                     trusted_origins = []
                     for s in sites:
                         trusted_origins.extend(s.get("trustedOrigins", []))
@@ -946,7 +970,11 @@ class MicrosoftConnector:
             if res_type == "microsoft.machinelearningservices/workspaces" and kind == "Hub":
                 continue
             # Cognitive Services that aren't AI/OpenAI — skip (e.g. ContentSafety, TextAnalytics)
-            if res_type == "microsoft.cognitiveservices/accounts" and kind not in ("AIServices", "OpenAI", ""):
+            if res_type == "microsoft.cognitiveservices/accounts" and kind not in (
+                "AIServices",
+                "OpenAI",
+                "",
+            ):
                 continue
 
             # Build descriptive name
@@ -975,7 +1003,8 @@ class MicrosoftConnector:
             if res_type == "microsoft.machinelearningservices/workspaces":
                 evidence["security"] = {
                     "public_access": row.get("publicNetworkAccess") != "Disabled"
-                                     if row.get("publicNetworkAccess") is not None else None,
+                    if row.get("publicNetworkAccess") is not None
+                    else None,
                     "local_auth_disabled": row.get("disableLocalAuth"),
                     "content_filtering": None,
                     "injection_protection": None,
@@ -987,16 +1016,19 @@ class MicrosoftConnector:
             if res_type == "microsoft.cognitiveservices/accounts":
                 inspection = self._inspect_cognitive_services(row)
                 if self.verbose:
-                    self._raw_responses.setdefault("cognitiveServices/inspect", []).append({
-                        "resource": name,
-                        "raw": inspection.get("_raw", {}),
-                    })
+                    self._raw_responses.setdefault("cognitiveServices/inspect", []).append(
+                        {
+                            "resource": name,
+                            "raw": inspection.get("_raw", {}),
+                        }
+                    )
 
                 # Build generic security schema from vendor-specific data
                 cf = inspection.get("content_filtering", {})
                 evidence["security"] = {
                     "public_access": row.get("publicNetworkAccess") != "Disabled"
-                                     if row.get("publicNetworkAccess") is not None else None,
+                    if row.get("publicNetworkAccess") is not None
+                    else None,
                     "local_auth_disabled": row.get("disableLocalAuth"),
                     "content_filtering": cf.get("has_content_filters", False) if cf else None,
                     "injection_protection": cf.get("prompt_shield_enabled", False) if cf else None,
@@ -1008,7 +1040,8 @@ class MicrosoftConnector:
                 cache_key = (row.get("subscriptionId", ""), location)
                 if cache_key not in model_catalog_cache:
                     model_catalog_cache[cache_key] = self._query_model_catalog(
-                        cache_key[0], cache_key[1],
+                        cache_key[0],
+                        cache_key[1],
                     )
                 catalog = model_catalog_cache[cache_key]
 
@@ -1039,10 +1072,12 @@ class MicrosoftConnector:
             if res_type == "microsoft.botservice/botservices":
                 inspection = self._inspect_bot_service(row)
                 if self.verbose:
-                    self._raw_responses.setdefault("botService/inspect", []).append({
-                        "resource": name,
-                        "raw": inspection.get("_raw", {}),
-                    })
+                    self._raw_responses.setdefault("botService/inspect", []).append(
+                        {
+                            "resource": name,
+                            "raw": inspection.get("_raw", {}),
+                        }
+                    )
                 # Use display name from bot properties when available
                 bot_display = inspection["properties"].get("display_name")
                 if bot_display:
@@ -1060,9 +1095,12 @@ class MicrosoftConnector:
 
                 evidence["security"] = {
                     "public_access": props.get("public_network_access") != "Enabled"
-                                     if props.get("public_network_access") is not None
-                                     else (row.get("publicNetworkAccess") != "Disabled"
-                                           if row.get("publicNetworkAccess") is not None else None),
+                    if props.get("public_network_access") is not None
+                    else (
+                        row.get("publicNetworkAccess") != "Disabled"
+                        if row.get("publicNetworkAccess") is not None
+                        else None
+                    ),
                     "local_auth_disabled": props.get("disable_local_auth"),
                     "content_filtering": None,
                     "injection_protection": None,
@@ -1072,7 +1110,10 @@ class MicrosoftConnector:
 
                 # Generic channel list for vendor-agnostic display
                 evidence["channels"] = [
-                    {"name": ch.get("name", "").replace("Channel", ""), "enabled": ch.get("is_enabled", True)}
+                    {
+                        "name": ch.get("name", "").replace("Channel", ""),
+                        "enabled": ch.get("is_enabled", True),
+                    }
                     for ch in channels
                 ]
                 evidence["auth_type"] = props.get("msa_app_type", "")
@@ -1080,7 +1121,9 @@ class MicrosoftConnector:
                 # Generic linked resources for topology
                 storage_id = props.get("storage_resource_id", "")
                 if storage_id:
-                    evidence["linked_storage"] = storage_id.split("/")[-1] if "/" in storage_id else storage_id
+                    evidence["linked_storage"] = (
+                        storage_id.split("/")[-1] if "/" in storage_id else storage_id
+                    )
                 evidence["identity_id"] = props.get("msa_app_id", "")
 
             key = display_name.lower()
@@ -1110,6 +1153,7 @@ class MicrosoftConnector:
                 props = row.get("properties", {})
                 if isinstance(props, str):
                     import json as _json
+
                     try:
                         props = _json.loads(props)
                     except Exception:
@@ -1150,9 +1194,14 @@ class MicrosoftConnector:
                         "testable": True,
                     }
         except _GraphAPIError as e:
-            logger.info("PowerPlatformResources query failed (HTTP %s) — Copilot Studio agents skipped", e.status_code)
+            logger.info(
+                "PowerPlatformResources query failed (HTTP %s) — Copilot Studio agents skipped",
+                e.status_code,
+            )
         except Exception as e:
-            logger.info("PowerPlatformResources query failed: %s — Copilot Studio agents skipped", e)
+            logger.info(
+                "PowerPlatformResources query failed: %s — Copilot Studio agents skipped", e
+            )
 
         # ── Resolve owner IDs to display names ─────────────────────────
         owner_ids = [
@@ -1221,10 +1270,7 @@ class MicrosoftConnector:
         sp_map = {}  # for verbose logging
         for app_id, agent_names in agent_identities.items():
             try:
-                url = (
-                    f"{GRAPH_BASE}/v1.0/servicePrincipals(appId='{app_id}')"
-                    "?$select=id,appId"
-                )
+                url = f"{GRAPH_BASE}/v1.0/servicePrincipals(appId='{app_id}')?$select=id,appId"
                 resp = _get_with_retry(self._graph_session, url)
                 _check_response(resp)
                 data = resp.json()
@@ -1278,11 +1324,13 @@ class MicrosoftConnector:
                 assignments = data.get("value", [])
 
                 if self.verbose:
-                    all_assignments.append({
-                        "endpoint": endpoint_name,
-                        "resource_id": resource_id,
-                        "assignments_count": len(assignments),
-                    })
+                    all_assignments.append(
+                        {
+                            "endpoint": endpoint_name,
+                            "resource_id": resource_id,
+                            "assignments_count": len(assignments),
+                        }
+                    )
 
                 for assignment in assignments:
                     props = assignment.get("properties", {})
@@ -1307,7 +1355,8 @@ class MicrosoftConnector:
                 else:
                     logger.info(
                         "Access verification failed for %s (HTTP %s)",
-                        endpoint_name, e.status_code,
+                        endpoint_name,
+                        e.status_code,
                     )
             except Exception as e:
                 logger.info("Access verification failed for %s: %s", endpoint_name, e)
@@ -1330,7 +1379,7 @@ class MicrosoftConnector:
         copilot_data: dict,
         license_services: dict,
         arm_services: dict,
-    ) -> List[dict]:
+    ) -> list[dict]:
         """Merge results from all layers into a unified, deduplicated list."""
         merged = dict(sp_services)
 
@@ -1362,7 +1411,8 @@ class MicrosoftConnector:
                         "sign_in_count": activity["total_sign_ins"],
                         "last_activity": activity["last_activity"],
                     },
-                    "testable": info.get("testable", False) or (pat.get("testable", False) if pat else False),
+                    "testable": info.get("testable", False)
+                    or (pat.get("testable", False) if pat else False),
                 }
 
         # Enrich Copilot entry with usage data (Layer 3)
@@ -1432,7 +1482,12 @@ class MicrosoftConnector:
                 if _STATUS_RANK.get(svc["status"], 0) > _STATUS_RANK.get(existing["status"], 0):
                     existing["status"] = svc["status"]
                 # Merge numeric evidence
-                for field in ("active_users", "licensed_users", "sign_in_count", "consumed_licenses"):
+                for field in (
+                    "active_users",
+                    "licensed_users",
+                    "sign_in_count",
+                    "consumed_licenses",
+                ):
                     new_val = svc["evidence"].get(field)
                     old_val = existing["evidence"].get(field)
                     if new_val and (not old_val or new_val > old_val):
@@ -1465,16 +1520,19 @@ class MicrosoftConnector:
         def _add_node(node_id, name, node_type, category):
             if node_id not in seen_nodes:
                 seen_nodes.add(node_id)
-                nodes.append({
-                    "id": node_id,
-                    "name": name,
-                    "type": node_type,
-                    "category": category,
-                })
+                nodes.append(
+                    {
+                        "id": node_id,
+                        "name": name,
+                        "type": node_type,
+                        "category": category,
+                    }
+                )
 
         # Check if any agents exist — topology is only useful with cross-resource connections
         has_agents = any(
-            svc.get("category") == "copilot_studio_agent" and (
+            svc.get("category") == "copilot_studio_agent"
+            and (
                 svc.get("evidence", {}).get("channels")
                 or svc.get("evidence", {}).get("identity_id")
                 or svc.get("evidence", {}).get("resource_group")
@@ -1508,13 +1566,15 @@ class MicrosoftConnector:
                                 if n["id"] == model_id:
                                     n["lifecycle"] = lifecycle
                                     break
-                            edges.append({
-                                "source": node_id,
-                                "target": model_id,
-                                "relation": "uses_model",
-                                "secure": True,
-                                "detail": m.get("sku", ""),
-                            })
+                            edges.append(
+                                {
+                                    "source": node_id,
+                                    "target": model_id,
+                                    "relation": "uses_model",
+                                    "secure": True,
+                                    "detail": m.get("sku", ""),
+                                }
+                            )
 
         # Process agents (services with channels, identity, or resource group)
         for svc in services:
@@ -1523,7 +1583,12 @@ class MicrosoftConnector:
             if svc.get("category") != "copilot_studio_agent":
                 continue
             # Include agent if it has channels, identity, resource group, or access connections
-            if not (channels or ev.get("identity_id") or ev.get("resource_group") or ev.get("access_connections")):
+            if not (
+                channels
+                or ev.get("identity_id")
+                or ev.get("resource_group")
+                or ev.get("access_connections")
+            ):
                 continue
 
             agent_id = f"agent:{svc['name']}"
@@ -1547,13 +1612,15 @@ class MicrosoftConnector:
                     secure = False
                     detail = "Secure Site disabled"
 
-                edges.append({
-                    "source": agent_id,
-                    "target": ch_id,
-                    "relation": "has_channel",
-                    "secure": secure,
-                    "detail": detail,
-                })
+                edges.append(
+                    {
+                        "source": agent_id,
+                        "target": ch_id,
+                        "relation": "has_channel",
+                        "secure": secure,
+                        "detail": detail,
+                    }
+                )
 
             # Agent → AI Endpoint (confirmed access or co-located fallback)
             access_conns = ev.get("access_connections", [])
@@ -1562,52 +1629,63 @@ class MicrosoftConnector:
             if confirmed_targets:
                 # Use confirmed connections
                 for ep_svc in services:
-                    if ep_svc.get("category") == "ai_platform" and ep_svc["name"] in confirmed_targets:
+                    if (
+                        ep_svc.get("category") == "ai_platform"
+                        and ep_svc["name"] in confirmed_targets
+                    ):
                         ep_node_id = f"endpoint:{ep_svc['name']}"
                         if ep_node_id not in seen_nodes:
                             _add_node(ep_node_id, ep_svc["name"], "ai_endpoint", "ai_platform")
-                        edges.append({
-                            "source": agent_id,
-                            "target": ep_node_id,
-                            "relation": "uses_model",
-                            "secure": True,
-                            "detail": "confirmed access",
-                        })
+                        edges.append(
+                            {
+                                "source": agent_id,
+                                "target": ep_node_id,
+                                "relation": "uses_model",
+                                "secure": True,
+                                "detail": "confirmed access",
+                            }
+                        )
             elif rg and rg in endpoint_by_rg:
                 # Fallback: co-located resource group (unconfirmed)
                 for ep_id in endpoint_by_rg[rg]:
-                    edges.append({
-                        "source": agent_id,
-                        "target": ep_id,
-                        "relation": "uses_model",
-                        "secure": True,
-                        "detail": "co-located (unconfirmed)",
-                    })
+                    edges.append(
+                        {
+                            "source": agent_id,
+                            "target": ep_id,
+                            "relation": "uses_model",
+                            "secure": True,
+                            "detail": "co-located (unconfirmed)",
+                        }
+                    )
 
             # Agent → Storage
             linked_storage = ev.get("linked_storage", "")
             if linked_storage:
                 storage_node_id = f"storage:{linked_storage}"
                 _add_node(storage_node_id, linked_storage, "storage", "storage")
-                edges.append({
-                    "source": agent_id,
-                    "target": storage_node_id,
-                    "relation": "uses_storage",
-                    "secure": True,
-                    "detail": "",
-                })
+                edges.append(
+                    {
+                        "source": agent_id,
+                        "target": storage_node_id,
+                        "relation": "uses_storage",
+                        "secure": True,
+                        "detail": "",
+                    }
+                )
 
             # Agent → Service Principal (identity)
             identity = ev.get("identity_id", "")
             if identity:
                 identity_node_id = f"identity:{identity}"
                 _add_node(identity_node_id, identity, "identity", "service_principal")
-                edges.append({
-                    "source": agent_id,
-                    "target": identity_node_id,
-                    "relation": "uses_identity",
-                    "secure": True,
-                    "detail": ev.get("auth_type", ""),
-                })
+                edges.append(
+                    {
+                        "source": agent_id,
+                        "target": identity_node_id,
+                        "relation": "uses_identity",
+                        "secure": True,
+                        "detail": ev.get("auth_type", ""),
+                    }
+                )
 
         return {"nodes": nodes, "edges": edges}

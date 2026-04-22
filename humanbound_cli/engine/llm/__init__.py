@@ -1,5 +1,6 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """LLM pinger factory — returns the right pinger for the configured provider."""
-
 
 SUPPORTED_PROVIDERS = ["openai", "claude", "gemini", "grok", "azureopenai", "ollama"]
 
@@ -14,11 +15,7 @@ def get_llm_pinger(model_provider):
     Returns:
         LLMPinger instance with ping(system_p, user_p, max_tokens, temperature) method.
     """
-    name = (
-        model_provider["name"]
-        if isinstance(model_provider, dict)
-        else model_provider.name
-    )
+    name = model_provider["name"] if isinstance(model_provider, dict) else model_provider.name
 
     if name == "azureopenai":
         from .azureopenai import LLMPinger

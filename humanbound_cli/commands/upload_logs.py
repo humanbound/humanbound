@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
 """Upload conversation logs command.
 
 DEPRECATED: 'hb upload-logs' is deprecated in favour of 'hb logs upload'.
@@ -5,13 +7,14 @@ This module is kept for backward compatibility. Remove after v2.0.
 """
 
 import json
-import click
 from pathlib import Path
+
+import click
 from rich.console import Console
 from rich.prompt import Confirm
 
 from ..client import HumanboundClient
-from ..exceptions import NotAuthenticatedError, APIError
+from ..exceptions import APIError, NotAuthenticatedError
 
 console = Console()
 
@@ -104,7 +107,7 @@ def upload_logs_command(file: str, tag: str, lang: str, force: bool):
         with console.status(f"Uploading {len(conversations)} conversations..."):
             response = client.upload_conversations(project_id, conversations, tag=tag, lang=lang)
 
-        console.print(f"\n[green]Upload complete.[/green]")
+        console.print("\n[green]Upload complete.[/green]")
 
         dataset_id = response.get("dataset_id", response.get("id", ""))
         if dataset_id:
@@ -113,7 +116,7 @@ def upload_logs_command(file: str, tag: str, lang: str, force: bool):
         test_category = response.get("test_category", "")
         if test_category:
             console.print(f"  Test category: [bold]{test_category}[/bold]")
-            console.print(f"\n[dim]Run evaluation with: hb test --category \"{test_category}\"[/dim]")
+            console.print(f'\n[dim]Run evaluation with: hb test --category "{test_category}"[/dim]')
 
     except NotAuthenticatedError:
         console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
