@@ -2,15 +2,13 @@
 # Copyright (c) 2024-2026 Humanbound
 """Organisation commands."""
 
-import json
-
 import click
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
+from rich.table import Table
 
 from ..client import HumanboundClient
-from ..exceptions import NotAuthenticatedError, APIError
+from ..exceptions import APIError, NotAuthenticatedError
 
 console = Console()
 
@@ -165,13 +163,14 @@ def subscription_details():
         quota = sub.get("quota", {})
         features = sub.get("features", {})
 
-        console.print(Panel(
-            f"Plan: [bold]{plan_level}[/bold] ({plan_freq})\n"
-            f"[dim]ID: {sub_id}[/dim]",
-            title="Subscription",
-            border_style="blue",
-            padding=(1, 2),
-        ))
+        console.print(
+            Panel(
+                f"Plan: [bold]{plan_level}[/bold] ({plan_freq})\n[dim]ID: {sub_id}[/dim]",
+                title="Subscription",
+                border_style="blue",
+                padding=(1, 2),
+            )
+        )
 
         # Quota
         if quota:

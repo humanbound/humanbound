@@ -64,5 +64,3 @@ class ConfigurationError(HumanboundError):
     """Raised when SDK configuration is invalid."""
 
     pass
-
-

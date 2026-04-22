@@ -2,42 +2,40 @@
 # Copyright (c) 2024-2026 Humanbound
 """Humanbound API client with OAuth authentication."""
 
+import base64
+import hashlib
+import http.server
 import json
 import os
-import time
-import webbrowser
-import http.server
-import socketserver
 import secrets
-import hashlib
-import base64
+import socketserver
+import time
 import urllib.parse
-from typing import Optional, Dict, Any, List
+import webbrowser
+from typing import Any
 
 import requests
 
 from .config import (
-    DEFAULT_BASE_URL,
-    get_base_url,
-    get_auth0_domain,
-    get_auth0_client_id,
-    get_auth0_audience,
     CONFIG_DIR,
-    TOKEN_FILE,
+    DEFAULT_BASE_URL,
     DEFAULT_TIMEOUT,
     LONG_TIMEOUT,
+    TOKEN_FILE,
+    get_auth0_audience,
+    get_auth0_client_id,
+    get_auth0_domain,
+    get_base_url,
 )
 from .exceptions import (
-    HumanboundError,
-    AuthenticationError,
-    NotAuthenticatedError,
     APIError,
-    NotFoundError,
+    AuthenticationError,
     ForbiddenError,
-    SessionExpiredError,
+    NotAuthenticatedError,
+    NotFoundError,
     RateLimitError,
+    SessionExpiredError,
 )
-
 
 # HTML templates for OAuth callback pages
 SUCCESS_HTML = """<!DOCTYPE html>
@@ -295,21 +293,21 @@ LOGOUT_HTML = """<!DOCTYPE html>
 class HumanboundClient:
     """API client for Humanbound platform with OAuth authentication."""
 
-    def __init__(self, base_url: Optional[str] = None):
+    def __init__(self, base_url: str | None = None):
         """Initialize the client.
 
         Args:
             base_url: Optional base URL override for on-prem deployments.
         """
         self.base_url = (base_url or get_base_url()).rstrip("/")
-        self._auth0_token: Optional[str] = None
-        self._api_token: Optional[str] = None
-        self._token_expires_at: Optional[float] = None
-        self._organisation_id: Optional[str] = None
-        self._project_id: Optional[str] = None
-        self._username: Optional[str] = None
-        self._email: Optional[str] = None
-        self._default_organisation_id: Optional[str] = None
+        self._auth0_token: str | None = None
+        self._api_token: str | None = None
+        self._token_expires_at: float | None = None
+        self._organisation_id: str | None = None
+        self._project_id: str | None = None
+        self._username: str | None = None
+        self._email: str | None = None
+        self._default_organisation_id: str | None = None
 
         # Try to load existing credentials
         self._load_credentials()
@@ -338,9 +336,11 @@ class HumanboundClient:
 
         # Generate PKCE code verifier and challenge
         code_verifier = secrets.token_urlsafe(64)
-        code_challenge = base64.urlsafe_b64encode(
-            hashlib.sha256(code_verifier.encode()).digest()
-        ).rstrip(b"=").decode()
+        code_challenge = (
+            base64.urlsafe_b64encode(hashlib.sha256(code_verifier.encode()).digest())
+            .rstrip(b"=")
+            .decode()
+        )
 
         # Generate state for CSRF protection
         state = secrets.token_urlsafe(32)
@@ -481,12 +481,16 @@ class HumanboundClient:
                 timeout=DEFAULT_TIMEOUT,
             )
         except requests.ConnectionError:
-            raise AuthenticationError(f"Could not connect to {self.base_url}. Is the server running?")
+            raise AuthenticationError(
+                f"Could not connect to {self.base_url}. Is the server running?"
+            )
         except requests.Timeout:
             raise AuthenticationError(f"Connection to {self.base_url} timed out.")
 
         if response.status_code != 200:
-            raise AuthenticationError(f"API authentication failed ({response.status_code}): {response.text}")
+            raise AuthenticationError(
+                f"API authentication failed ({response.status_code}): {response.text}"
+            )
 
         try:
             data = response.json()
@@ -559,11 +563,11 @@ class HumanboundClient:
         if TOKEN_FILE.exists():
             try:
                 return json.loads(TOKEN_FILE.read_text())
-            except (json.JSONDecodeError, IOError):
+            except (OSError, json.JSONDecodeError):
                 pass
         return {}
 
-    def _save_credentials(self, refresh_token: Optional[str] = None) -> None:
+    def _save_credentials(self, refresh_token: str | None = None) -> None:
         """Save credentials to disk."""
         CONFIG_DIR.mkdir(parents=True, exist_ok=True)
         TOKEN_FILE.chmod(0o600) if TOKEN_FILE.exists() else None
@@ -607,27 +611,27 @@ class HumanboundClient:
         self._save_credentials(self._load_credentials_file().get("refresh_token"))
 
     @property
-    def organisation_id(self) -> Optional[str]:
+    def organisation_id(self) -> str | None:
         """Get current organisation ID."""
         return self._organisation_id
 
     @property
-    def project_id(self) -> Optional[str]:
+    def project_id(self) -> str | None:
         """Get current project ID."""
         return self._project_id
 
     @property
-    def username(self) -> Optional[str]:
+    def username(self) -> str | None:
         """Get current username."""
         return self._username
 
     @property
-    def email(self) -> Optional[str]:
+    def email(self) -> str | None:
         """Get current email."""
         return self._email
 
     @property
-    def default_organisation_id(self) -> Optional[str]:
+    def default_organisation_id(self) -> str | None:
         """Get default organisation ID."""
         return self._default_organisation_id
 
@@ -704,11 +708,11 @@ class HumanboundClient:
     def get(
         self,
         endpoint: str,
-        params: Optional[dict] = None,
+        params: dict | None = None,
         include_org: bool = True,
         include_project: bool = False,
         timeout: int = DEFAULT_TIMEOUT,
-        extra_headers: Optional[dict] = None,
+        extra_headers: dict | None = None,
     ) -> Any:
         """Make GET request.
 
@@ -738,7 +742,7 @@ class HumanboundClient:
     def post(
         self,
         endpoint: str,
-        data: Optional[dict] = None,
+        data: dict | None = None,
         include_org: bool = True,
         include_project: bool = False,
         timeout: int = DEFAULT_TIMEOUT,
@@ -767,7 +771,7 @@ class HumanboundClient:
     def put(
         self,
         endpoint: str,
-        data: Optional[dict] = None,
+        data: dict | None = None,
         include_org: bool = True,
         include_project: bool = False,
         timeout: int = DEFAULT_TIMEOUT,
@@ -823,7 +827,7 @@ class HumanboundClient:
     # Convenience Methods
     # -------------------------------------------------------------------------
 
-    def list_organisations(self) -> List[dict]:
+    def list_organisations(self) -> list[dict]:
         """List all organisations the user has access to.
 
         Returns:
@@ -893,7 +897,7 @@ class HumanboundClient:
         experiment_id: str,
         page: int = 1,
         size: int = 50,
-        result: Optional[str] = None,
+        result: str | None = None,
     ) -> dict:
         """Get logs for an experiment.
 
@@ -906,7 +910,7 @@ class HumanboundClient:
         Returns:
             Paginated response with logs.
         """
-        params: Dict[str, Any] = {"page": page, "size": size}
+        params: dict[str, Any] = {"page": page, "size": size}
         endpoint = f"experiments/{experiment_id}/logs"
         if result:
             endpoint = f"experiments/{experiment_id}/logs/{result}"
@@ -917,11 +921,11 @@ class HumanboundClient:
         self,
         page: int = 1,
         size: int = 50,
-        result: Optional[str] = None,
-        from_date: Optional[str] = None,
-        until_date: Optional[str] = None,
-        test_category: Optional[str] = None,
-        last: Optional[int] = None,
+        result: str | None = None,
+        from_date: str | None = None,
+        until_date: str | None = None,
+        test_category: str | None = None,
+        last: int | None = None,
     ) -> dict:
         """Get logs for the current project.
 
@@ -940,7 +944,7 @@ class HumanboundClient:
         if not self._project_id:
             raise ValidationError("No project selected. Use set_project() first.")
 
-        params: Dict[str, Any] = {"page": page, "size": size}
+        params: dict[str, Any] = {"page": page, "size": size}
         if from_date:
             params["from"] = from_date
         if until_date:
@@ -960,7 +964,7 @@ class HumanboundClient:
     # Provider Methods
     # -------------------------------------------------------------------------
 
-    def list_providers(self) -> List[dict]:
+    def list_providers(self) -> list[dict]:
         """List all model providers for the current organisation.
 
         Returns:
@@ -992,7 +996,7 @@ class HumanboundClient:
                 "name": name,
                 "integration": integration,
                 "is_default": is_default,
-            }
+            },
         )
 
     def update_provider(self, provider_id: str, data: dict) -> dict:
@@ -1019,7 +1023,14 @@ class HumanboundClient:
     # Findings Methods
     # -------------------------------------------------------------------------
 
-    def list_findings(self, project_id: str, status: Optional[str] = None, severity: Optional[str] = None, page: int = 1, size: int = 50) -> dict:
+    def list_findings(
+        self,
+        project_id: str,
+        status: str | None = None,
+        severity: str | None = None,
+        page: int = 1,
+        size: int = 50,
+    ) -> dict:
         """List findings for a project."""
         params = {"page": page, "size": size}
         if status:
@@ -1119,21 +1130,26 @@ class HumanboundClient:
 
     def terminate_campaign(self, project_id: str, campaign_id: str) -> dict:
         """Terminate a running campaign."""
-        return self.post(f"projects/{project_id}/campaign/terminate", data={"campaign_id": campaign_id})
+        return self.post(
+            f"projects/{project_id}/campaign/terminate", data={"campaign_id": campaign_id}
+        )
 
     # -------------------------------------------------------------------------
     # Upload Conversations Methods
     # -------------------------------------------------------------------------
 
-    def upload_conversations(self, project_id: str, conversations: list, tag: Optional[str] = None, lang: Optional[str] = None) -> dict:
+    def upload_conversations(
+        self, project_id: str, conversations: list, tag: str | None = None, lang: str | None = None
+    ) -> dict:
         """Upload conversation logs for evaluation."""
         data = {"conversations": conversations}
         if tag:
             data["tag"] = tag
         if lang:
             data["lang"] = lang
-        return self.post(f"projects/{project_id}/datasets/conversations", data=data, include_project=True)
-
+        return self.post(
+            f"projects/{project_id}/datasets/conversations", data=data, include_project=True
+        )
 
     # -------------------------------------------------------------------------
     # Subscription Methods
@@ -1147,12 +1163,24 @@ class HumanboundClient:
     # Webhook Methods
     # -------------------------------------------------------------------------
 
-    def create_webhook(self, url: str, secret: str, name: str = "Untitled Webhook", event_types: Optional[List[str]] = None) -> dict:
+    def create_webhook(
+        self,
+        url: str,
+        secret: str,
+        name: str = "Untitled Webhook",
+        event_types: list[str] | None = None,
+    ) -> dict:
         """Create a webhook for the current organisation."""
         org_id = self._organisation_id
         if not org_id:
             raise ValidationError("No organisation selected.")
-        data = {"url": url, "secret": secret, "name": name, "event_types": event_types or [], "is_active": True}
+        data = {
+            "url": url,
+            "secret": secret,
+            "name": name,
+            "event_types": event_types or [],
+            "is_active": True,
+        }
         return self.post(f"organisations/{org_id}/webhooks", data=data, include_org=False)
 
     def delete_webhook(self, webhook_id: str) -> None:
@@ -1174,7 +1202,11 @@ class HumanboundClient:
         org_id = self._organisation_id
         if not org_id:
             raise ValidationError("No organisation selected.")
-        return self.get(f"organisations/{org_id}/webhooks/{webhook_id}/deliveries", params={"page": page, "size": size}, include_org=False)
+        return self.get(
+            f"organisations/{org_id}/webhooks/{webhook_id}/deliveries",
+            params={"page": page, "size": size},
+            include_org=False,
+        )
 
     def test_webhook(self, webhook_id: str) -> dict:
         """Send a test ping to a webhook."""
@@ -1183,7 +1215,14 @@ class HumanboundClient:
             raise ValidationError("No organisation selected.")
         return self.post(f"organisations/{org_id}/webhooks/{webhook_id}/test", include_org=False)
 
-    def replay_webhook(self, webhook_id: str, since: Optional[str] = None, until: Optional[str] = None, project_id: Optional[str] = None, event_type: Optional[str] = None) -> dict:
+    def replay_webhook(
+        self,
+        webhook_id: str,
+        since: str | None = None,
+        until: str | None = None,
+        project_id: str | None = None,
+        event_type: str | None = None,
+    ) -> dict:
         """Replay historical events through a webhook."""
         org_id = self._organisation_id
         if not org_id:
@@ -1197,14 +1236,23 @@ class HumanboundClient:
             data["project_id"] = project_id
         if event_type:
             data["event_type"] = event_type
-        return self.post(f"organisations/{org_id}/webhooks/{webhook_id}/replay", data=data, include_org=False)
+        return self.post(
+            f"organisations/{org_id}/webhooks/{webhook_id}/replay", data=data, include_org=False
+        )
 
     # -------------------------------------------------------------------------
     # Connector & Inventory Methods (Shadow AI Discovery)
     # -------------------------------------------------------------------------
 
-    def create_connector(self, vendor: str, tenant_id: str, client_id: str, client_secret: str,
-                         display_name: Optional[str] = None, scopes: Optional[List[str]] = None) -> dict:
+    def create_connector(
+        self,
+        vendor: str,
+        tenant_id: str,
+        client_id: str,
+        client_secret: str,
+        display_name: str | None = None,
+        scopes: list[str] | None = None,
+    ) -> dict:
         """Register a new cloud connector."""
         if not self._organisation_id:
             raise ValidationError("No organisation selected.")
@@ -1262,13 +1310,19 @@ class HumanboundClient:
             timeout=LONG_TIMEOUT,
         )
 
-    def list_inventory(self, category: Optional[str] = None, vendor: Optional[str] = None,
-                       risk_level: Optional[str] = None, is_sanctioned: Optional[bool] = None,
-                       page: int = 1, size: int = 50) -> dict:
+    def list_inventory(
+        self,
+        category: str | None = None,
+        vendor: str | None = None,
+        risk_level: str | None = None,
+        is_sanctioned: bool | None = None,
+        page: int = 1,
+        size: int = 50,
+    ) -> dict:
         """List discovered inventory assets."""
         if not self._organisation_id:
             raise ValidationError("No organisation selected.")
-        params: Dict[str, Any] = {"page": page, "size": size}
+        params: dict[str, Any] = {"page": page, "size": size}
         if category:
             params["category"] = category
         if vendor:
@@ -1305,8 +1359,14 @@ class HumanboundClient:
         result = self.get(f"organisations/{org_id}/posture", include_org=False)
         shadow = result.get("dimensions", {}).get("shadow_ai")
         if not shadow:
-            return {"score": 100.0, "grade": "A", "total_assets": 0,
-                    "shadow_count": 0, "sanctioned_count": 0, "domain_scores": {}}
+            return {
+                "score": 100.0,
+                "grade": "A",
+                "total_assets": 0,
+                "shadow_count": 0,
+                "sanctioned_count": 0,
+                "domain_scores": {},
+            }
         return shadow
 
     def persist_discovery(self, nonce: str) -> dict:
@@ -1334,7 +1394,7 @@ class HumanboundClient:
         )
         return self._handle_response(response)
 
-    def onboard_inventory_asset(self, asset_id: str, project_name: Optional[str] = None) -> dict:
+    def onboard_inventory_asset(self, asset_id: str, project_name: str | None = None) -> dict:
         """Create a project from an inventory asset."""
         if not self._organisation_id:
             raise ValidationError("No organisation selected.")

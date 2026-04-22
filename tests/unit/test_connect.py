@@ -5,18 +5,15 @@ Mocked HumanboundClient — no live API needed.
 Kept minimal since connect is complex and calls into init helpers.
 """
 
-import json
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from click.testing import CliRunner
+from conftest import (
+    MOCK_PROVIDER,
+    assert_exit_ok,
+)
 
 from humanbound_cli.main import cli
-from humanbound_cli.exceptions import NotAuthenticatedError, APIError
-from conftest import (
-    MOCK_EXPERIMENT, MOCK_EXPERIMENT_RUNNING, MOCK_FINDING, MOCK_FINDING_2,
-    MOCK_LOG, MOCK_LOG_PASS, MOCK_PROVIDER, MOCK_POSTURE, MOCK_POSTURE_TRENDS,
-    MOCK_PROJECT, assert_exit_ok, assert_exit_error,
-)
 
 PATCH = "humanbound_cli.commands.connect.HumanboundClient"
 runner = CliRunner()
@@ -39,6 +36,7 @@ def _make_client(**overrides):
 # ---------------------------------------------------------------------------
 # Happy path
 # ---------------------------------------------------------------------------
+
 
 class TestHappyPath:
     @patch(PATCH)
@@ -82,6 +80,7 @@ class TestHappyPath:
 # Error cases
 # ---------------------------------------------------------------------------
 
+
 class TestErrorCases:
     @patch(PATCH)
     def test_not_authenticated(self, MockCls):
@@ -107,9 +106,16 @@ class TestErrorCases:
     def test_mixed_agent_and_platform_flags(self, MockCls):
         mock = _make_client()
         MockCls.return_value = mock
-        result = runner.invoke(cli, [
-            "connect", "--endpoint", '{"chat_completion":{}}', "--vendor", "microsoft",
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "connect",
+                "--endpoint",
+                '{"chat_completion":{}}',
+                "--vendor",
+                "microsoft",
+            ],
+        )
         assert result.exit_code != 0
         assert "Cannot combine" in result.output
 
@@ -117,6 +123,7 @@ class TestErrorCases:
 # ---------------------------------------------------------------------------
 # Flags
 # ---------------------------------------------------------------------------
+
 
 class TestFlags:
     @patch(PATCH)
@@ -143,6 +150,7 @@ class TestFlags:
 # ---------------------------------------------------------------------------
 # Output
 # ---------------------------------------------------------------------------
+
 
 class TestOutputFormat:
     @patch(PATCH)

@@ -5,19 +5,18 @@ Mocked HumanboundClient — no live API needed.
 Login opens a browser so it is not tested here.
 """
 
-import json
-import sys
 import os
-import pytest
-from unittest.mock import patch, MagicMock
+import sys
+from unittest.mock import MagicMock, patch
+
 from click.testing import CliRunner
 
 sys.path.insert(0, os.path.dirname(__file__))
 
-from humanbound_cli.main import cli
-from humanbound_cli.exceptions import NotAuthenticatedError, APIError, NotFoundError
-
 from conftest import MOCK_ORG, MOCK_PROJECT
+
+from humanbound_cli.exceptions import APIError
+from humanbound_cli.main import cli
 
 runner = CliRunner()
 
@@ -47,8 +46,8 @@ def _make_client(**overrides):
 # Happy-path tests
 # ---------------------------------------------------------------------------
 
-class TestHappyPath:
 
+class TestHappyPath:
     @patch(PATCH_TARGET)
     def test_whoami_authenticated(self, MockClient):
         mock = _make_client()
@@ -110,8 +109,8 @@ class TestHappyPath:
 # Error cases
 # ---------------------------------------------------------------------------
 
-class TestErrorCases:
 
+class TestErrorCases:
     @patch(PATCH_TARGET)
     def test_whoami_not_authenticated(self, MockClient):
         mock = _make_client()
@@ -138,8 +137,8 @@ class TestErrorCases:
 # Output format
 # ---------------------------------------------------------------------------
 
-class TestOutputFormat:
 
+class TestOutputFormat:
     @patch(PATCH_TARGET)
     def test_whoami_output_contains_status_panel(self, MockClient):
         mock = _make_client()

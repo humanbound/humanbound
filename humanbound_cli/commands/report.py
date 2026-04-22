@@ -2,15 +2,15 @@
 # Copyright (c) 2024-2026 Humanbound
 """Report generation command."""
 
-import click
 import json as _json
 from pathlib import Path
+
+import click
 from rich.console import Console
 
-from ..client import HumanboundClient
 from ..engine import get_runner
 from ..engine.platform_runner import PlatformTestRunner
-from ..exceptions import NotAuthenticatedError, APIError
+from ..exceptions import APIError, NotAuthenticatedError
 
 console = Console()
 
@@ -100,6 +100,7 @@ def report_command(org: bool, assessment_id: str, output: str, as_json: bool):
 
         if as_json:
             import json
+
             content = json.dumps(response, indent=2, default=str)
         elif isinstance(response, str):
             content = response
@@ -109,6 +110,7 @@ def report_command(org: bool, assessment_id: str, output: str, as_json: bool):
             content = response.decode("utf-8")
         else:
             import json
+
             content = json.dumps(response, indent=2, default=str)
 
         Path(filepath).write_text(content)
@@ -181,6 +183,7 @@ def _local_report(output: str, as_json: bool):
         }
 
         from ..report import generate_html_report
+
         content = generate_html_report(experiment, logs)
         filepath = output or f"report-{exp_dir.name}.html"
 

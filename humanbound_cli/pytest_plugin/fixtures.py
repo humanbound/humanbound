@@ -2,13 +2,11 @@
 # Copyright (c) 2024-2026 Humanbound
 """Humanbound pytest fixtures and test client."""
 
-from dataclasses import dataclass, field
-from typing import Optional, List, Dict, Any
 import time
+from dataclasses import dataclass, field
 
 from ..client import HumanboundClient
 from ..exceptions import APIError, NotAuthenticatedError
-
 
 # Test categories available
 TEST_CATEGORIES = [
@@ -26,12 +24,13 @@ SEVERITY_LEVELS = ["critical", "high", "medium", "low", "info"]
 @dataclass
 class Finding:
     """Represents a security finding."""
+
     category: str
     severity: str
     title: str
     description: str
-    log_id: Optional[str] = None
-    attack_pattern: Optional[str] = None
+    log_id: str | None = None
+    attack_pattern: str | None = None
 
     def __str__(self):
         return f"[{self.severity.upper()}] {self.category}: {self.title}"
@@ -40,15 +39,16 @@ class Finding:
 @dataclass
 class TestResult:
     """Result of a Humanbound security test."""
+
     category: str
     passed: bool
     total_tests: int = 0
     passed_tests: int = 0
     failed_tests: int = 0
-    findings: List[Finding] = field(default_factory=list)
-    experiment_id: Optional[str] = None
+    findings: list[Finding] = field(default_factory=list)
+    experiment_id: str | None = None
     duration_seconds: float = 0.0
-    posture_score: Optional[float] = None
+    posture_score: float | None = None
 
     @property
     def pass_rate(self) -> float:
@@ -69,7 +69,7 @@ class TestResult:
                 return True
         return False
 
-    def compare(self, baseline: dict) -> List[Finding]:
+    def compare(self, baseline: dict) -> list[Finding]:
         """Compare results to baseline and return regressions."""
         regressions = []
         baseline_fingerprints = set(baseline.get("fingerprints", []))
@@ -99,9 +99,7 @@ class TestResult:
                 }
                 for f in self.findings
             ],
-            "fingerprints": [
-                f"{f.category}:{f.title}" for f in self.findings
-            ],
+            "fingerprints": [f"{f.category}:{f.title}" for f in self.findings],
             "experiment_id": self.experiment_id,
             "duration_seconds": self.duration_seconds,
             "posture_score": self.posture_score,
@@ -113,7 +111,7 @@ class HumanboundTestClient:
 
     def __init__(
         self,
-        project_id: Optional[str] = None,
+        project_id: str | None = None,
         testing_level: str = "unit",
         fail_on: str = "high",
     ):
@@ -123,19 +121,15 @@ class HumanboundTestClient:
         self.fail_on = fail_on
 
         if not self.client.is_authenticated():
-            raise NotAuthenticatedError(
-                "Not authenticated. Run 'hb login' first."
-            )
+            raise NotAuthenticatedError("Not authenticated. Run 'hb login' first.")
 
         if not self.project_id:
-            raise ValueError(
-                "No project selected. Use --hb-project or run 'hb projects use <id>'"
-            )
+            raise ValueError("No project selected. Use --hb-project or run 'hb projects use <id>'")
 
     def test(
         self,
         category: str,
-        testing_level: Optional[str] = None,
+        testing_level: str | None = None,
         wait: bool = True,
         timeout: int = 3600,
     ) -> TestResult:
@@ -179,12 +173,14 @@ class HumanboundTestClient:
             return TestResult(
                 category=category,
                 passed=False,
-                findings=[Finding(
-                    category="error",
-                    severity="critical",
-                    title="Failed to create experiment",
-                    description=str(e),
-                )],
+                findings=[
+                    Finding(
+                        category="error",
+                        severity="critical",
+                        title="Failed to create experiment",
+                        description=str(e),
+                    )
+                ],
             )
 
         if not wait:
@@ -220,12 +216,14 @@ class HumanboundTestClient:
                         category=experiment.get("test_category", "unknown"),
                         passed=False,
                         experiment_id=experiment_id,
-                        findings=[Finding(
-                            category="error",
-                            severity="critical",
-                            title=f"Experiment {status}",
-                            description=experiment.get("error_message", "Unknown error"),
-                        )],
+                        findings=[
+                            Finding(
+                                category="error",
+                                severity="critical",
+                                title=f"Experiment {status}",
+                                description=experiment.get("error_message", "Unknown error"),
+                            )
+                        ],
                     )
 
                 time.sleep(poll_interval)
@@ -235,12 +233,14 @@ class HumanboundTestClient:
                     category="unknown",
                     passed=False,
                     experiment_id=experiment_id,
-                    findings=[Finding(
-                        category="error",
-                        severity="critical",
-                        title="API error while waiting",
-                        description=str(e),
-                    )],
+                    findings=[
+                        Finding(
+                            category="error",
+                            severity="critical",
+                            title="API error while waiting",
+                            description=str(e),
+                        )
+                    ],
                 )
 
         # Timeout
@@ -248,12 +248,14 @@ class HumanboundTestClient:
             category="unknown",
             passed=False,
             experiment_id=experiment_id,
-            findings=[Finding(
-                category="error",
-                severity="high",
-                title="Experiment timeout",
-                description=f"Experiment did not complete within {timeout} seconds",
-            )],
+            findings=[
+                Finding(
+                    category="error",
+                    severity="high",
+                    title="Experiment timeout",
+                    description=f"Experiment did not complete within {timeout} seconds",
+                )
+            ],
         )
 
     def _parse_results(self, experiment: dict) -> TestResult:
@@ -264,13 +266,15 @@ class HumanboundTestClient:
 
         findings = []
         for insight in insights:
-            findings.append(Finding(
-                category=insight.get("category", "unknown"),
-                severity=insight.get("severity", "medium"),
-                title=insight.get("title", insight.get("explanation", "")[:100]),
-                description=insight.get("explanation", ""),
-                attack_pattern=insight.get("attack_pattern"),
-            ))
+            findings.append(
+                Finding(
+                    category=insight.get("category", "unknown"),
+                    severity=insight.get("severity", "medium"),
+                    title=insight.get("title", insight.get("explanation", "")[:100]),
+                    description=insight.get("explanation", ""),
+                    attack_pattern=insight.get("attack_pattern"),
+                )
+            )
 
         return TestResult(
             category=experiment.get("test_category", "unknown"),
@@ -340,7 +344,7 @@ class HumanboundTestClient:
         else:
             return "F"
 
-    def quick_scan(self, categories: Optional[List[str]] = None) -> TestResult:
+    def quick_scan(self, categories: list[str] | None = None) -> TestResult:
         """Run a quick security scan across multiple categories.
 
         Args:

@@ -5,20 +5,19 @@ so we patch ``get_runner`` and assert on the ``TestConfig`` passed to
 ``runner.start(...)``.
 """
 
-import json
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 from click.testing import CliRunner
-
-from humanbound_cli.main import cli
-from humanbound_cli.exceptions import NotAuthenticatedError, APIError
 from conftest import (
-    MOCK_PROVIDER,
     MOCK_PROJECT,
-    assert_exit_ok,
+    MOCK_PROVIDER,
     assert_exit_error,
+    assert_exit_ok,
     platform_runner,
 )
+
+from humanbound_cli.exceptions import APIError
+from humanbound_cli.main import cli
 
 RUNNER_PATCH = "humanbound_cli.commands.test.get_runner"
 runner = CliRunner()
@@ -48,6 +47,7 @@ def _started_config(runner_mock):
 # ─────────────────────────────────────────────────────────────────────────
 # Happy path
 # ─────────────────────────────────────────────────────────────────────────
+
 
 class TestHappyPath:
     @patch(RUNNER_PATCH)
@@ -100,6 +100,7 @@ class TestHappyPath:
 # Error cases
 # ─────────────────────────────────────────────────────────────────────────
 
+
 class TestErrorCases:
     @patch(RUNNER_PATCH)
     def test_api_error_on_creation(self, mock_get_runner):
@@ -117,6 +118,7 @@ class TestErrorCases:
 # Flag propagation
 # ─────────────────────────────────────────────────────────────────────────
 
+
 class TestFlags:
     @patch(RUNNER_PATCH)
     def test_test_category_flag(self, mock_get_runner):
@@ -124,9 +126,14 @@ class TestFlags:
         r = platform_runner(client)
         mock_get_runner.return_value = r
 
-        result = runner.invoke(cli, [
-            "test", "--test-category", "humanbound/behavioral/qa",
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "test",
+                "--test-category",
+                "humanbound/behavioral/qa",
+            ],
+        )
 
         assert_exit_ok(result)
         assert _started_config(r).test_category == "humanbound/behavioral/qa"
@@ -159,9 +166,14 @@ class TestFlags:
         r = platform_runner(client)
         mock_get_runner.return_value = r
 
-        result = runner.invoke(cli, [
-            "test", "--description", "Smoke test after deploy",
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "test",
+                "--description",
+                "Smoke test after deploy",
+            ],
+        )
 
         assert_exit_ok(result)
         assert _started_config(r).description == "Smoke test after deploy"
@@ -186,9 +198,14 @@ class TestFlags:
         r = platform_runner(client)
         mock_get_runner.return_value = r
 
-        result = runner.invoke(cli, [
-            "test", "--context", "Tenant: acme-corp",
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "test",
+                "--context",
+                "Tenant: acme-corp",
+            ],
+        )
 
         assert_exit_ok(result)
         assert _started_config(r).context == "Tenant: acme-corp"
@@ -197,6 +214,7 @@ class TestFlags:
 # ─────────────────────────────────────────────────────────────────────────
 # Output
 # ─────────────────────────────────────────────────────────────────────────
+
 
 class TestOutputFormat:
     def test_help_text(self):

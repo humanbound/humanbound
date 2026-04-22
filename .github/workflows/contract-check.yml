@@ -29,5 +29,3 @@ jobs:
       - run: pip install -e '.[dev]'
       - name: Validate fixtures against contract mirrors
         run: pytest tests/unit/test_contract_fidelity.py -v
-      - name: Validate mirrors declare __be_source__
-        run: pytest tests/unit/test_contract_fidelity.py::test_every_public_schema_declares_be_source -v

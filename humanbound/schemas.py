@@ -6,6 +6,7 @@
 consolidates Insights into persistent `Finding` records via its reconciler;
 that concept lives on the Platform side and is NOT exposed here.
 """
+
 from humanbound_cli.engine.schemas import (  # noqa: F401
     Insight,
     LogEntry,

@@ -5,12 +5,11 @@ No HumanboundClient needed — docs doesn't require auth.
 We patch webbrowser.open to prevent actual browser launches.
 """
 
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
+
 from click.testing import CliRunner
 
 from humanbound_cli.main import cli
-
 
 runner = CliRunner()
 

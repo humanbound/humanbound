@@ -2,17 +2,17 @@
 # Copyright (c) 2024-2026 Humanbound
 """Connect command — unified entry point for agent and platform onboarding."""
 
-import click
 import json
 import time
 from pathlib import Path
 from urllib.parse import urlparse
 
+import click
 from rich.console import Console
 from rich.panel import Panel
 
 from ..client import HumanboundClient
-from ..exceptions import NotAuthenticatedError, APIError
+from ..exceptions import APIError, NotAuthenticatedError
 
 console = Console()
 
@@ -27,17 +27,49 @@ def _print_next(suggestions: list):
 
 
 _NAME_WORDS = [
-    "amber", "atlas", "blaze", "cedar", "coral", "delta", "dune", "ember",
-    "flint", "frost", "glyph", "grove", "haven", "ivory", "jade", "lunar",
-    "maple", "nexus", "onyx", "pearl", "pulse", "quartz", "ridge", "sage",
-    "slate", "spark", "steel", "storm", "surge", "terra", "tide", "vault",
-    "venom", "vigor", "wave", "zinc",
+    "amber",
+    "atlas",
+    "blaze",
+    "cedar",
+    "coral",
+    "delta",
+    "dune",
+    "ember",
+    "flint",
+    "frost",
+    "glyph",
+    "grove",
+    "haven",
+    "ivory",
+    "jade",
+    "lunar",
+    "maple",
+    "nexus",
+    "onyx",
+    "pearl",
+    "pulse",
+    "quartz",
+    "ridge",
+    "sage",
+    "slate",
+    "spark",
+    "steel",
+    "storm",
+    "surge",
+    "terra",
+    "tide",
+    "vault",
+    "venom",
+    "vigor",
+    "wave",
+    "zinc",
 ]
 
 
 def _derive_agent_name(endpoint: str) -> str:
     """Derive a short project name: {agent}-{word}-{hex4}."""
     import random
+
     suffix = f"{random.choice(_NAME_WORDS)}-{random.randbytes(2).hex()}"
     if not endpoint:
         return f"agent.{suffix}"
@@ -60,23 +92,51 @@ def _derive_agent_name(endpoint: str) -> str:
 @click.command("connect")
 @click.option("--endpoint", "-e", help="Agent config JSON or file path (agent path)")
 @click.option(
-    "--vendor", "-v",
+    "--vendor",
+    "-v",
     type=click.Choice(["microsoft"]),
     help="Cloud vendor to scan (platform path)",
 )
 @click.option("--name", "-n", help="Project name (optional, auto-generated)")
-@click.option("--prompt", "-p", type=click.Path(exists=True), help="System prompt file (agent path)")
+@click.option(
+    "--prompt", "-p", type=click.Path(exists=True), help="System prompt file (agent path)"
+)
 @click.option("--repo", "-r", type=click.Path(exists=True), help="Repository path (agent path)")
-@click.option("--openapi", "-o", type=click.Path(exists=True), help="OpenAPI spec file (agent path)")
+@click.option(
+    "--openapi", "-o", type=click.Path(exists=True), help="OpenAPI spec file (agent path)"
+)
 @click.option("--tenant", help="Azure tenant ID (platform path, bypasses browser)")
 @click.option("--client-id", "client_id", help="Service principal client ID (platform path)")
 @click.option("--client-secret", "client_secret", help="Service principal secret (platform path)")
-@click.option("--context", "-c", help="Extra context for the judge (e.g. 'Authenticated as Alice, her PII is expected'). String or path to .txt file.")
-@click.option("--level", "-l", type=click.Choice(["unit", "system", "acceptance"]), default="unit", help="Testing depth: unit (quick), system (deep), acceptance (full)")
+@click.option(
+    "--context",
+    "-c",
+    help="Extra context for the judge (e.g. 'Authenticated as Alice, her PII is expected'). String or path to .txt file.",
+)
+@click.option(
+    "--level",
+    "-l",
+    type=click.Choice(["unit", "system", "acceptance"]),
+    default="unit",
+    help="Testing depth: unit (quick), system (deep), acceptance (full)",
+)
 @click.option("--yes", "-y", is_flag=True, help="Skip confirmations")
 @click.option("--timeout", "-t", type=int, default=SCAN_TIMEOUT, help="Request timeout in seconds")
-def connect_command(endpoint, vendor, name, prompt, repo, openapi,
-                    tenant, client_id, client_secret, context, level, yes, timeout):
+def connect_command(
+    endpoint,
+    vendor,
+    name,
+    prompt,
+    repo,
+    openapi,
+    tenant,
+    client_id,
+    client_secret,
+    context,
+    level,
+    yes,
+    timeout,
+):
     """Connect your AI agent or scan your cloud platform.
 
     Two paths, one command:
@@ -102,7 +162,9 @@ def connect_command(endpoint, vendor, name, prompt, repo, openapi,
     has_platform_flags = any([vendor, tenant, client_id, client_secret])
 
     if has_agent_flags and has_platform_flags:
-        console.print("[red]Cannot combine agent flags (--endpoint/--prompt/--repo/--openapi) with platform flags (--vendor/--tenant).[/red]")
+        console.print(
+            "[red]Cannot combine agent flags (--endpoint/--prompt/--repo/--openapi) with platform flags (--vendor/--tenant).[/red]"
+        )
         raise SystemExit(1)
 
     if has_platform_flags:
@@ -115,7 +177,9 @@ def connect_command(endpoint, vendor, name, prompt, repo, openapi,
         console.print("  [bold]Agent:[/bold]      hb connect --endpoint ./bot-config.json")
         console.print("  [bold]Platform:[/bold]  hb connect --vendor microsoft")
         console.print()
-        console.print("[dim]Use --endpoint to connect your AI agent, or --vendor to scan your cloud.[/dim]")
+        console.print(
+            "[dim]Use --endpoint to connect your AI agent, or --vendor to scan your cloud.[/dim]"
+        )
         raise SystemExit(1)
 
 
@@ -171,14 +235,18 @@ def _connect_agent(endpoint, name, prompt, repo, openapi, context, level, yes, t
             if scan_result:
                 files = scan_result.get("files", [])
                 if scan_result.get("tools"):
-                    console.print(f"  [green]\u2713[/green] Repository: {len(files)} files, {len(scan_result['tools'])} tools (source: agentic)")
-                    sources.append({
-                        "source": "agentic",
-                        "data": {
-                            "system_prompt": scan_result.get("system_prompt", ""),
-                            "tools": scan_result.get("tools", []),
+                    console.print(
+                        f"  [green]\u2713[/green] Repository: {len(files)} files, {len(scan_result['tools'])} tools (source: agentic)"
+                    )
+                    sources.append(
+                        {
+                            "source": "agentic",
+                            "data": {
+                                "system_prompt": scan_result.get("system_prompt", ""),
+                                "tools": scan_result.get("tools", []),
+                            },
                         }
-                    })
+                    )
                 else:
                     console.print(f"  [green]\u2713[/green] Repository: {len(files)} files")
                     combined = scan_result.get("system_prompt", "")
@@ -187,7 +255,7 @@ def _connect_agent(endpoint, name, prompt, repo, openapi, context, level, yes, t
                     if combined.strip():
                         text_parts.append(combined)
             else:
-                console.print(f"  [yellow]![/yellow] Repository: no relevant files found")
+                console.print("  [yellow]![/yellow] Repository: no relevant files found")
 
         # --openapi -> text source
         if openapi:
@@ -207,13 +275,15 @@ def _connect_agent(endpoint, name, prompt, repo, openapi, context, level, yes, t
                     )
                 text_parts.append("\n".join(summary_parts))
             else:
-                console.print(f"  [yellow]![/yellow] OpenAPI spec: could not parse")
+                console.print("  [yellow]![/yellow] OpenAPI spec: could not parse")
 
         # --endpoint -> endpoint source (API probing)
         if endpoint:
             bot_config = _load_integration(endpoint)
             chat_ep = bot_config.get("chat_completion", {}).get("endpoint", "")
-            console.print(f"  [green]\u2713[/green] Endpoint source: [dim]{chat_ep or '(from config)'}[/dim]")
+            console.print(
+                f"  [green]\u2713[/green] Endpoint source: [dim]{chat_ep or '(from config)'}[/dim]"
+            )
             sources.append({"source": "endpoint", "data": bot_config})
 
         # Merge accumulated text parts into a single text source
@@ -258,6 +328,7 @@ def _connect_agent(endpoint, name, prompt, repo, openapi, context, level, yes, t
         # -- Create project (auto-confirm) -------------------------------------
         if not yes:
             from rich.prompt import Confirm
+
             if not Confirm.ask("\nCreate project with this scope?"):
                 console.print("[yellow]Cancelled.[/yellow]")
                 return
@@ -285,9 +356,7 @@ def _connect_agent(endpoint, name, prompt, repo, openapi, context, level, yes, t
         console.print()
 
         # -- Risk Dashboard ----------------------------------------------------
-        has_telemetry = bool(
-            default_integration and default_integration.get("telemetry")
-        )
+        has_telemetry = bool(default_integration and default_integration.get("telemetry"))
         _display_dashboard(
             name=name,
             risk_profile=risk_profile,
@@ -302,12 +371,14 @@ def _connect_agent(endpoint, name, prompt, repo, openapi, context, level, yes, t
         _recommend_monitoring(risk_profile)
 
         # -- Next suggestions --------------------------------------------------
-        _print_next([
-            ("hb findings", "Detailed breakdown"),
-            ("hb test --deep", "Deeper analysis"),
-            ("hb posture", "View posture score"),
-            ("hb report", "Share with team"),
-        ])
+        _print_next(
+            [
+                ("hb findings", "Detailed breakdown"),
+                ("hb test --deep", "Deeper analysis"),
+                ("hb posture", "View posture score"),
+                ("hb report", "Share with team"),
+            ]
+        )
 
     except NotAuthenticatedError:
         console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
@@ -323,8 +394,12 @@ def _connect_agent(endpoint, name, prompt, repo, openapi, context, level, yes, t
 def _connect_platform(vendor, name, tenant, client_id, client_secret, yes, timeout):
     """Platform path: scan -> assess -> auto-save -> show posture."""
     from .discover import (
-        _get_connector, _display_device_code, _display_auth_error,
-        _display_results, _display_evaluations, _display_persist_summary,
+        _display_auth_error,
+        _display_device_code,
+        _display_evaluations,
+        _display_persist_summary,
+        _display_results,
+        _get_connector,
     )
 
     client = HumanboundClient()
@@ -350,21 +425,25 @@ def _connect_platform(vendor, name, tenant, client_id, client_secret, yes, timeo
     # Validate service principal flags (all-or-none)
     sp_flags = [tenant, client_id, client_secret]
     if any(sp_flags) and not all(sp_flags):
-        console.print("[red]Service principal auth requires all three: --tenant, --client-id, --client-secret[/red]")
+        console.print(
+            "[red]Service principal auth requires all three: --tenant, --client-id, --client-secret[/red]"
+        )
         raise SystemExit(1)
 
     console.print()
-    console.print(Panel(
-        "[bold]AI Service Discovery[/bold]\n\n"
-        f"Vendor:  [bold]{vendor}[/bold]\n"
-        "Mode:    [bold]connect[/bold] (scan + assess + save)\n\n"
-        "This will:\n"
-        "  1. Sign in to your cloud tenant\n"
-        "  2. Scan for AI services [dim](read-only)[/dim]\n"
-        "  3. Assess against 38 security signals\n"
-        "  4. Save results to your AI inventory",
-        border_style="blue",
-    ))
+    console.print(
+        Panel(
+            "[bold]AI Service Discovery[/bold]\n\n"
+            f"Vendor:  [bold]{vendor}[/bold]\n"
+            "Mode:    [bold]connect[/bold] (scan + assess + save)\n\n"
+            "This will:\n"
+            "  1. Sign in to your cloud tenant\n"
+            "  2. Scan for AI services [dim](read-only)[/dim]\n"
+            "  3. Assess against 38 security signals\n"
+            "  4. Save results to your AI inventory",
+            border_style="blue",
+        )
+    )
     console.print()
 
     if not yes:
@@ -388,7 +467,9 @@ def _connect_platform(vendor, name, tenant, client_id, client_secret, yes, timeo
                     client_secret=client_secret,
                 )
             except AttributeError:
-                console.print("[yellow]Service principal auth not yet supported for this vendor.[/yellow]")
+                console.print(
+                    "[yellow]Service principal auth not yet supported for this vendor.[/yellow]"
+                )
                 console.print("[dim]Use browser auth instead: hb connect --vendor microsoft[/dim]")
                 raise SystemExit(1)
             except PermissionError as e:
@@ -445,7 +526,8 @@ def _connect_platform(vendor, name, tenant, client_id, client_secret, yes, timeo
         if evals:
             eval_risk_map = {
                 ev["service_name"]: ev["risk_level"]
-                for ev in evals if "service_name" in ev and "risk_level" in ev
+                for ev in evals
+                if "service_name" in ev and "risk_level" in ev
             }
             for svc in analysis.get("services", []):
                 eval_rl = eval_risk_map.get(svc.get("name"))
@@ -474,15 +556,19 @@ def _connect_platform(vendor, name, tenant, client_id, client_secret, yes, timeo
                 persist_result = client.persist_discovery(nonce)
             _display_persist_summary(persist_result)
         else:
-            console.print("\n[yellow]Cannot persist:[/yellow] server did not return a session token.")
+            console.print(
+                "\n[yellow]Cannot persist:[/yellow] server did not return a session token."
+            )
 
         # -- Next suggestions --------------------------------------------------
-        _print_next([
-            ("hb inventory", "Browse all assets"),
-            ("hb posture --org", "Full org posture (3 dimensions)"),
-            ("hb report --org", "Org-wide report"),
-            ("hb discover --report", "Export HTML report"),
-        ])
+        _print_next(
+            [
+                ("hb inventory", "Browse all assets"),
+                ("hb posture --org", "Full org posture (3 dimensions)"),
+                ("hb report --org", "Org-wide report"),
+                ("hb discover --report", "Export HTML report"),
+            ]
+        )
 
     except NotAuthenticatedError:
         console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
@@ -519,12 +605,14 @@ def _recommend_monitoring(risk_profile: dict):
 
     if risk_level in ("HIGH", "MEDIUM") or matching:
         console.print()
-        console.print(Panel(
-            _build_monitoring_message(risk_level, matching),
-            title="[bold]Continuous Monitoring[/bold]",
-            border_style="yellow" if risk_level == "HIGH" else "blue",
-            padding=(1, 2),
-        ))
+        console.print(
+            Panel(
+                _build_monitoring_message(risk_level, matching),
+                title="[bold]Continuous Monitoring[/bold]",
+                border_style="yellow" if risk_level == "HIGH" else "blue",
+                padding=(1, 2),
+            )
+        )
 
 
 def _build_monitoring_message(risk_level: str, matching_regs: list) -> str:
@@ -544,7 +632,9 @@ def _build_monitoring_message(risk_level: str, matching_regs: list) -> str:
     lines.append("Enable daily automated security testing:")
     lines.append("  [bold green]hb monitor --resume[/bold green]")
     lines.append("")
-    lines.append("[dim]Track assessments at:[/dim]  [underline]https://app.humanbound.ai[/underline]")
+    lines.append(
+        "[dim]Track assessments at:[/dim]  [underline]https://app.humanbound.ai[/underline]"
+    )
 
     return "\n".join(lines)
 
@@ -574,7 +664,7 @@ def _auto_test(client, project_id, default_integration, context=None, level="uni
         provider = next((p for p in providers if p.get("is_default")), providers[0])
         provider_id = provider.get("id")
 
-        console.print(f"\n[dim]Running first security test...[/dim]")
+        console.print("\n[dim]Running first security test...[/dim]")
 
         # Build configuration with integration + optional context
         configuration = {"integration": default_integration}
@@ -582,7 +672,9 @@ def _auto_test(client, project_id, default_integration, context=None, level="uni
             ctx_path = Path(context)
             ctx_value = ctx_path.read_text().strip() if ctx_path.is_file() else context
             if len(ctx_value) > 1500:
-                console.print(f"[red]Context too long ({len(ctx_value)} chars). Maximum is 1,500.[/red]")
+                console.print(
+                    f"[red]Context too long ({len(ctx_value)} chars). Maximum is 1,500.[/red]"
+                )
                 raise SystemExit(1)
             configuration["context"] = ctx_value
 
@@ -606,6 +698,7 @@ def _auto_test(client, project_id, default_integration, context=None, level="uni
             return
 
         import random
+
         _chill_messages = [
             "☕ Go grab a coffee — we've got it from here. Email incoming when done.",
             "🍺 Red team deployed — treat yourself to a beer, email coming soon.",
@@ -620,12 +713,13 @@ def _auto_test(client, project_id, default_integration, context=None, level="uni
         console.print()
         console.print(f"  {random.choice(_chill_messages)}")
         console.print()
-        console.print(f"  [dim]Watch progress:[/dim]  hb projects status -w")
+        console.print("  [dim]Watch progress:[/dim]  hb projects status -w")
         console.print(f"  [dim]Experiment:[/dim]      hb status {exp_id} -w")
         console.print(f"  [dim]View logs:[/dim]       hb logs {exp_id}")
 
     except Exception as e:
         import traceback
+
         console.print(f"\n[yellow]Auto-test failed:[/yellow] {e}")
         console.print(f"[dim]{traceback.format_exc()}[/dim]")
         console.print("[dim]Run 'hb test' to try again.[/dim]")

@@ -2,7 +2,7 @@
 # Copyright (c) 2024-2026 Humanbound
 """Extractors for scope extraction from various sources."""
 
-from .repo import RepoScanner
 from .openapi import OpenAPIParser
+from .repo import RepoScanner
 
 __all__ = ["RepoScanner", "OpenAPIParser"]

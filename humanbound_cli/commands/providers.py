@@ -4,11 +4,11 @@
 
 import click
 from rich.console import Console
+from rich.prompt import Confirm, Prompt
 from rich.table import Table
-from rich.prompt import Prompt, Confirm
 
 from ..client import HumanboundClient
-from ..exceptions import NotAuthenticatedError, APIError
+from ..exceptions import APIError, NotAuthenticatedError
 
 console = Console()
 console_err = Console(stderr=True)
@@ -85,35 +85,27 @@ def _list_providers():
 
 @providers_group.command("create")
 @click.option(
-    "--name", "-n",
+    "--name",
+    "-n",
     type=click.Choice(SUPPORTED_PROVIDERS, case_sensitive=False),
-    help="Provider name (openai, claude, azureopenai, gemini, grok, custom)"
+    help="Provider name (openai, claude, azureopenai, gemini, grok, custom)",
+)
+@click.option("--api-key", "-k", help="API key for the provider")
+@click.option("--endpoint", "-e", help="API endpoint (required for azureopenai and custom)")
+@click.option("--model", "-m", help="Model name (optional, auto-detected for most providers)")
+@click.option(
+    "--default", "is_default", is_flag=True, default=False, help="Set as default provider"
 )
 @click.option(
-    "--api-key", "-k",
-    help="API key for the provider"
-)
-@click.option(
-    "--endpoint", "-e",
-    help="API endpoint (required for azureopenai and custom)"
-)
-@click.option(
-    "--model", "-m",
-    help="Model name (optional, auto-detected for most providers)"
-)
-@click.option(
-    "--default", "is_default",
+    "--interactive",
+    "-i",
     is_flag=True,
     default=False,
-    help="Set as default provider"
+    help="Use interactive mode to configure provider",
 )
-@click.option(
-    "--interactive", "-i",
-    is_flag=True,
-    default=False,
-    help="Use interactive mode to configure provider"
-)
-def add_provider(name: str, api_key: str, endpoint: str, model: str, is_default: bool, interactive: bool):
+def add_provider(
+    name: str, api_key: str, endpoint: str, model: str, is_default: bool, interactive: bool
+):
     """Add a new model provider.
 
     Configure an LLM provider for running security tests. Supported providers:
@@ -151,11 +143,7 @@ def add_provider(name: str, api_key: str, endpoint: str, model: str, is_default:
             console.print("Available providers:")
             for i, p in enumerate(SUPPORTED_PROVIDERS, 1):
                 console.print(f"  {i}. {p.upper()}")
-            name = Prompt.ask(
-                "\nSelect provider",
-                choices=SUPPORTED_PROVIDERS,
-                default="openai"
-            )
+            name = Prompt.ask("\nSelect provider", choices=SUPPORTED_PROVIDERS, default="openai")
 
         if not api_key:
             api_key = Prompt.ask("API Key", password=True)
@@ -193,16 +181,14 @@ def add_provider(name: str, api_key: str, endpoint: str, model: str, is_default:
     try:
         with console.status("Adding provider...", spinner="dots"):
             result = client.add_provider(
-                name=name.lower(),
-                integration=integration,
-                is_default=is_default
+                name=name.lower(), integration=integration, is_default=is_default
             )
 
-        console.print(f"[green]Provider added successfully![/green]")
+        console.print("[green]Provider added successfully![/green]")
         console.print(f"[dim]ID: {result.get('id')}[/dim]")
 
         if is_default:
-            console.print(f"[dim]Set as default provider[/dim]")
+            console.print("[dim]Set as default provider[/dim]")
 
     except NotAuthenticatedError:
         console_err.print("[red]Not authenticated.[/red] Run 'hb login' first.")
@@ -332,7 +318,7 @@ def update_provider(provider_id: str, api_key: str, endpoint: str, model: str, d
         with console.status("Updating provider...", spinner="dots"):
             client.update_provider(full_id, update_data)
 
-        console.print(f"[green]Provider updated![/green]")
+        console.print("[green]Provider updated![/green]")
 
     except NotAuthenticatedError:
         console_err.print("[red]Not authenticated.[/red] Run 'hb login' first.")

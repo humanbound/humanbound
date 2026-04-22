@@ -4,18 +4,17 @@ Unit tests for the `hb experiments` command group.
 Mocked HumanboundClient — no live API needed.
 """
 
-import json
-import pytest
-from unittest.mock import patch, MagicMock
-from click.testing import CliRunner
+from unittest.mock import MagicMock, patch
 
-from humanbound_cli.main import cli
-from humanbound_cli.exceptions import NotAuthenticatedError, APIError
+from click.testing import CliRunner
 from conftest import (
-    MOCK_EXPERIMENT, MOCK_EXPERIMENT_RUNNING, MOCK_FINDING, MOCK_FINDING_2,
-    MOCK_LOG, MOCK_LOG_PASS, MOCK_PROVIDER, MOCK_POSTURE, MOCK_POSTURE_TRENDS,
-    MOCK_PROJECT, assert_exit_ok, assert_exit_error,
+    MOCK_EXPERIMENT,
+    MOCK_EXPERIMENT_RUNNING,
+    assert_exit_ok,
 )
+
+from humanbound_cli.exceptions import APIError
+from humanbound_cli.main import cli
 
 PATCH = "humanbound_cli.commands.experiments.HumanboundClient"
 runner = CliRunner()
@@ -38,12 +37,15 @@ def _make_client(**overrides):
 # Happy path
 # ---------------------------------------------------------------------------
 
+
 class TestHappyPath:
     @patch(PATCH)
     def test_list_with_data(self, MockCls):
         mock = _make_client()
         mock.list_experiments.return_value = {
-            "data": [MOCK_EXPERIMENT], "total": 1, "has_next_page": False,
+            "data": [MOCK_EXPERIMENT],
+            "total": 1,
+            "has_next_page": False,
         }
         MockCls.return_value = mock
         result = runner.invoke(cli, ["experiments", "list"])
@@ -54,7 +56,9 @@ class TestHappyPath:
     def test_list_invoked_without_subcommand(self, MockCls):
         mock = _make_client()
         mock.list_experiments.return_value = {
-            "data": [MOCK_EXPERIMENT], "total": 1, "has_next_page": False,
+            "data": [MOCK_EXPERIMENT],
+            "total": 1,
+            "has_next_page": False,
         }
         MockCls.return_value = mock
         result = runner.invoke(cli, ["experiments"])
@@ -65,7 +69,9 @@ class TestHappyPath:
     def test_list_empty(self, MockCls):
         mock = _make_client()
         mock.list_experiments.return_value = {
-            "data": [], "total": 0, "has_next_page": False,
+            "data": [],
+            "total": 0,
+            "has_next_page": False,
         }
         MockCls.return_value = mock
         result = runner.invoke(cli, ["experiments", "list"])
@@ -95,7 +101,9 @@ class TestHappyPath:
         mock = _make_client()
         mock.get_experiment.return_value = MOCK_EXPERIMENT_RUNNING
         mock.list_experiments.return_value = {
-            "data": [MOCK_EXPERIMENT_RUNNING], "total": 1, "has_next_page": False,
+            "data": [MOCK_EXPERIMENT_RUNNING],
+            "total": 1,
+            "has_next_page": False,
         }
         MockCls.return_value = mock
         result = runner.invoke(cli, ["experiments", "terminate", "exp-run"])
@@ -107,7 +115,9 @@ class TestHappyPath:
         mock = _make_client()
         mock.get_experiment.return_value = MOCK_EXPERIMENT
         mock.list_experiments.return_value = {
-            "data": [MOCK_EXPERIMENT], "total": 1, "has_next_page": False,
+            "data": [MOCK_EXPERIMENT],
+            "total": 1,
+            "has_next_page": False,
         }
         MockCls.return_value = mock
         result = runner.invoke(cli, ["experiments", "delete", "exp-789", "--force"])
@@ -118,6 +128,7 @@ class TestHappyPath:
 # ---------------------------------------------------------------------------
 # Error cases
 # ---------------------------------------------------------------------------
+
 
 class TestErrorCases:
     @patch(PATCH)
@@ -143,7 +154,9 @@ class TestErrorCases:
         mock = _make_client()
         mock.get_experiment.return_value = MOCK_EXPERIMENT  # status: completed
         mock.list_experiments.return_value = {
-            "data": [MOCK_EXPERIMENT], "total": 1, "has_next_page": False,
+            "data": [MOCK_EXPERIMENT],
+            "total": 1,
+            "has_next_page": False,
         }
         MockCls.return_value = mock
         result = runner.invoke(cli, ["experiments", "terminate", "exp-789"])
@@ -173,12 +186,15 @@ class TestErrorCases:
 # Flags
 # ---------------------------------------------------------------------------
 
+
 class TestFlags:
     @patch(PATCH)
     def test_list_page_size(self, MockCls):
         mock = _make_client()
         mock.list_experiments.return_value = {
-            "data": [MOCK_EXPERIMENT], "total": 1, "has_next_page": False,
+            "data": [MOCK_EXPERIMENT],
+            "total": 1,
+            "has_next_page": False,
         }
         MockCls.return_value = mock
         result = runner.invoke(cli, ["experiments", "list", "--page", "2", "--size", "10"])
@@ -190,7 +206,9 @@ class TestFlags:
         mock = _make_client()
         mock.get_experiment.return_value = MOCK_EXPERIMENT
         mock.list_experiments.return_value = {
-            "data": [MOCK_EXPERIMENT], "total": 1, "has_next_page": False,
+            "data": [MOCK_EXPERIMENT],
+            "total": 1,
+            "has_next_page": False,
         }
         MockCls.return_value = mock
         result = runner.invoke(cli, ["experiments", "delete", "exp-789", "--force"])
@@ -201,6 +219,7 @@ class TestFlags:
 # ---------------------------------------------------------------------------
 # Output
 # ---------------------------------------------------------------------------
+
 
 class TestOutputFormat:
     @patch(PATCH)

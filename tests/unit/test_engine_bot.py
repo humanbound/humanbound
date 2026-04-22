@@ -10,10 +10,10 @@ each provider (OpenAI Assistants / LangSmith / LangFuse / W&B / Helicone /
 AgentOps) are covered here at smoke level — exhaustive provider-specific
 parser tests would live alongside their respective real fixtures.
 """
+
 from __future__ import annotations
 
 import asyncio
-import copy
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -24,26 +24,26 @@ from humanbound_cli.engine.bot import (
     Telemetry,
 )
 
-
 # ────────────────────────────────────────────────────────────────
 # Fixtures / helpers
 # ────────────────────────────────────────────────────────────────
+
 
 @pytest.fixture
 def bot_config():
     """Minimal bot config — REST, non-streaming."""
     return {
         "streaming": False,
-        "thread_auth":     {"endpoint": "", "headers": {}, "payload": {}},
-        "thread_init":     {
+        "thread_auth": {"endpoint": "", "headers": {}, "payload": {}},
+        "thread_init": {
             "endpoint": "https://agent.example/start",
-            "headers":  {"x-api-key": "k"},
-            "payload":  {"user": "u1"},
+            "headers": {"x-api-key": "k"},
+            "payload": {"user": "u1"},
         },
         "chat_completion": {
             "endpoint": "https://agent.example/chat",
-            "headers":  {"x-api-key": "k"},
-            "payload":  {"message": "$prompt"},
+            "headers": {"x-api-key": "k"},
+            "payload": {"message": "$prompt"},
         },
     }
 
@@ -65,6 +65,7 @@ def _mock_post(status=200, payload=None, text=""):
 # ResponseExtractor — base behaviour
 # ────────────────────────────────────────────────────────────────
 
+
 def test_response_extractor_default_returns_none():
     assert ResponseExtractor().extract_custom_response({"anything": 1}) is None
 
@@ -76,6 +77,7 @@ def test_bot_inherits_from_response_extractor(bot):
 # ────────────────────────────────────────────────────────────────
 # __extract_ai_response — dict with standard keys, custom, fallback
 # ────────────────────────────────────────────────────────────────
+
 
 def test_extract_ai_response_prefers_content_key(bot):
     assert bot._Bot__extract_ai_response({"content": "hello"}) == "hello"
@@ -103,6 +105,7 @@ def test_extract_ai_response_non_dict_stringifies(bot):
 # ────────────────────────────────────────────────────────────────
 # __parse_payload_item — placeholder substitution
 # ────────────────────────────────────────────────────────────────
+
 
 def test_parse_payload_substitutes_prompt(bot):
     out, found = bot._Bot__parse_payload_item("$prompt", {}, u_prompt="hi there")
@@ -149,6 +152,7 @@ def test_parse_payload_passes_through_plain_string(bot):
 # __prepare_endpoint — path templating
 # ────────────────────────────────────────────────────────────────
 
+
 def test_prepare_endpoint_substitutes_scalar_values(bot):
     endpoint = "https://agent.example/sessions/$session_id/chat"
     payload = {"session_id": "sess-42", "other": [1, 2, 3]}
@@ -167,6 +171,7 @@ def test_prepare_endpoint_leaves_non_scalar_keys_alone(bot):
 # __prepare_headers — auth flows
 # ────────────────────────────────────────────────────────────────
 
+
 def test_prepare_headers_bearer_token_from_access_token(bot):
     out = bot._Bot__prepare_headers({}, {"access_token": "xyz"})
     assert out["authorization"] == "Bearer xyz"
@@ -177,7 +182,8 @@ def test_prepare_headers_bearer_token_from_access_token(bot):
 def test_prepare_headers_custom_auth_schema(bot):
     headers = {
         "x-humanbound-auth-schema": {
-            "label": "x-auth", "key": "session_token",
+            "label": "x-auth",
+            "key": "session_token",
             "value": "Token $token",
         },
     }
@@ -203,6 +209,7 @@ def test_prepare_headers_auth_schema_missing_key_from_payload(bot):
 # __prepare_payload — placeholder + OpenAI fallback
 # ────────────────────────────────────────────────────────────────
 
+
 def test_prepare_payload_dict_with_prompt_placeholder(bot):
     out = bot._Bot__prepare_payload({"msg": "$prompt"}, {}, u_prompt="hi")
     assert out == {"msg": "hi"}
@@ -219,9 +226,9 @@ def test_prepare_payload_openai_fallback_includes_conversation(bot):
     conv = [{"u": "previous", "a": "response"}]
     out = bot._Bot__prepare_payload({}, {}, u_prompt="now", conversation=conv)
     assert out["messages"] == [
-        {"role": "user",      "content": "previous"},
+        {"role": "user", "content": "previous"},
         {"role": "assistant", "content": "response"},
-        {"role": "user",      "content": "now"},
+        {"role": "user", "content": "now"},
     ]
 
 
@@ -243,6 +250,7 @@ def test_prepare_payload_empty_prompt_skips_openai_fallback(bot):
 # ────────────────────────────────────────────────────────────────
 # __extract_turn_metadata — per-turn telemetry path navigation
 # ────────────────────────────────────────────────────────────────
+
 
 def test_extract_turn_metadata_returns_none_when_mode_not_per_turn(bot):
     bot.bot_config["telemetry"] = {"mode": "end_of_conversation"}
@@ -278,6 +286,7 @@ def test_extract_turn_metadata_missing_path_returns_none():
 # init() — end-to-end REST handshake with requests mocked
 # ────────────────────────────────────────────────────────────────
 
+
 def test_init_stores_session_from_thread_init(bot):
     with patch("humanbound_cli.engine.bot.requests.post") as post:
         post.return_value = _mock_post(payload={"session_id": "sess-99"})
@@ -288,12 +297,14 @@ def test_init_stores_session_from_thread_init(bot):
 def test_init_with_auth_step_merges_payloads(bot_config):
     bot_config["thread_auth"] = {
         "endpoint": "https://agent.example/auth",
-        "headers":  {},
-        "payload":  {"client_id": "c"},
+        "headers": {},
+        "payload": {"client_id": "c"},
     }
     b = Bot(bot_config, "exp-1")
-    with patch("humanbound_cli.engine.bot.requests.post") as post, \
-         patch("humanbound_cli.engine.bot.time.sleep"):
+    with (
+        patch("humanbound_cli.engine.bot.requests.post") as post,
+        patch("humanbound_cli.engine.bot.time.sleep"),
+    ):
         post.side_effect = [
             _mock_post(payload={"access_token": "tok"}),
             _mock_post(payload={"session_id": "sess"}),
@@ -311,8 +322,10 @@ def test_init_bad_status_raises(bot):
 
 def test_init_timeout_raises_408(bot):
     import requests as req_real
-    with patch("humanbound_cli.engine.bot.requests.post",
-               side_effect=req_real.exceptions.Timeout()):
+
+    with patch(
+        "humanbound_cli.engine.bot.requests.post", side_effect=req_real.exceptions.Timeout()
+    ):
         with pytest.raises(Exception, match="408"):
             bot.init()
 
@@ -320,6 +333,7 @@ def test_init_timeout_raises_408(bot):
 # ────────────────────────────────────────────────────────────────
 # ping() (non-streaming) — chat completion
 # ────────────────────────────────────────────────────────────────
+
 
 def test_ping_non_streaming_returns_extracted_response(bot):
     with patch("humanbound_cli.engine.bot.requests.post") as post:
@@ -349,21 +363,27 @@ def test_ping_non_streaming_with_string_response(bot):
 # Telemetry — smoke coverage
 # ────────────────────────────────────────────────────────────────
 
+
 def test_telemetry_constructs_cleanly():
     config = {
         "mode": "end_of_conversation",
         "format": "langfuse",
         "endpoint": "https://telemetry.example/$session_id",
-        "headers":  {"Authorization": "Basic k"},
-        "payload":  {},
+        "headers": {"Authorization": "Basic k"},
+        "payload": {},
     }
     t = Telemetry(config, "exp-1")
     assert t is not None
 
 
 def test_telemetry_has_no_data_returns_true_for_empty():
-    config = {"mode": "end_of_conversation", "format": "langfuse",
-              "endpoint": "", "headers": {}, "payload": {}}
+    config = {
+        "mode": "end_of_conversation",
+        "format": "langfuse",
+        "endpoint": "",
+        "headers": {},
+        "payload": {},
+    }
     t = Telemetry(config, "exp-1")
     # _has_telemetry_data returns a boolean indicating presence.
     # Smoke-check: does not raise for standard inputs.

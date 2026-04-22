@@ -2,12 +2,11 @@
 # Copyright (c) 2024-2026 Humanbound
 """Repository scanner for extracting AI agent configuration."""
 
-import os
+import fnmatch
 import json
 import re
 from pathlib import Path
-from typing import Optional, List, Dict, Any
-import fnmatch
+from typing import Any
 
 
 class RepoScanner:
@@ -53,10 +52,20 @@ class RepoScanner:
 
     # Directories to skip
     SKIP_DIRS = {
-        ".git", ".svn", ".hg",
-        "node_modules", "__pycache__", ".venv", "venv",
-        "dist", "build", ".next", ".nuxt",
-        "coverage", ".pytest_cache", ".mypy_cache",
+        ".git",
+        ".svn",
+        ".hg",
+        "node_modules",
+        "__pycache__",
+        ".venv",
+        "venv",
+        "dist",
+        "build",
+        ".next",
+        ".nuxt",
+        "coverage",
+        ".pytest_cache",
+        ".mypy_cache",
     }
 
     def __init__(self, repo_path: str):
@@ -67,7 +76,7 @@ class RepoScanner:
         """
         self.repo_path = Path(repo_path).resolve()
 
-    def scan(self) -> Optional[Dict[str, Any]]:
+    def scan(self) -> dict[str, Any] | None:
         """Scan the repository for AI agent configuration.
 
         Returns:
@@ -122,7 +131,7 @@ class RepoScanner:
 
         return result
 
-    def _find_files(self, patterns: List[str]) -> List[Path]:
+    def _find_files(self, patterns: list[str]) -> list[Path]:
         """Find files matching the given glob patterns.
 
         Args:
@@ -145,7 +154,7 @@ class RepoScanner:
 
         return found
 
-    def _extract_tools(self, tool_file: Path) -> List[Dict[str, Any]]:
+    def _extract_tools(self, tool_file: Path) -> list[dict[str, Any]]:
         """Extract tool definitions from a file.
 
         Args:
@@ -172,7 +181,7 @@ class RepoScanner:
 
         return tools
 
-    def _extract_tools_from_python(self, content: str) -> List[Dict[str, Any]]:
+    def _extract_tools_from_python(self, content: str) -> list[dict[str, Any]]:
         """Extract tool definitions from Python code.
 
         Supports:
@@ -193,23 +202,29 @@ class RepoScanner:
         for match in re.finditer(tool_pattern, content, re.DOTALL):
             name = match.group(1)
             docstring = match.group(2).strip()
-            tools.append({
-                "name": name,
-                "description": docstring[:500],
-            })
+            tools.append(
+                {
+                    "name": name,
+                    "description": docstring[:500],
+                }
+            )
 
         # Look for function definitions with docstrings that might be tools
-        func_pattern = r'def\s+(\w+)\s*\([^)]*\)\s*(?:->.*?)?\s*:\s*(?:"""|\'\'\')(.*?)(?:"""|\'\'\')'
+        func_pattern = (
+            r'def\s+(\w+)\s*\([^)]*\)\s*(?:->.*?)?\s*:\s*(?:"""|\'\'\')(.*?)(?:"""|\'\'\')'
+        )
         for match in re.finditer(func_pattern, content, re.DOTALL):
             name = match.group(1)
             docstring = match.group(2).strip()
             # Skip if already found or if it's a private function
             if not name.startswith("_") and not any(t["name"] == name for t in tools):
                 if "tool" in docstring.lower() or "action" in docstring.lower():
-                    tools.append({
-                        "name": name,
-                        "description": docstring[:500],
-                    })
+                    tools.append(
+                        {
+                            "name": name,
+                            "description": docstring[:500],
+                        }
+                    )
 
         # Look for OpenAI function calling format
         if "functions" in content or "tools" in content:
@@ -219,14 +234,16 @@ class RepoScanner:
                 name = match.group(1)
                 description = match.group(2)
                 if not any(t["name"] == name for t in tools):
-                    tools.append({
-                        "name": name,
-                        "description": description[:500],
-                    })
+                    tools.append(
+                        {
+                            "name": name,
+                            "description": description[:500],
+                        }
+                    )
 
         return tools
 
-    def _extract_tools_from_json(self, content: str) -> List[Dict[str, Any]]:
+    def _extract_tools_from_json(self, content: str) -> list[dict[str, Any]]:
         """Extract tool definitions from JSON file.
 
         Args:
@@ -244,11 +261,13 @@ class RepoScanner:
             if isinstance(data, list):
                 for item in data:
                     if isinstance(item, dict) and "name" in item:
-                        tools.append({
-                            "name": item.get("name"),
-                            "description": item.get("description", "")[:500],
-                            "parameters": item.get("parameters", {}),
-                        })
+                        tools.append(
+                            {
+                                "name": item.get("name"),
+                                "description": item.get("description", "")[:500],
+                                "parameters": item.get("parameters", {}),
+                            }
+                        )
 
             # Handle object with tools/functions key
             elif isinstance(data, dict):
@@ -256,18 +275,20 @@ class RepoScanner:
                 for item in tool_list:
                     if isinstance(item, dict):
                         func = item.get("function", item)
-                        tools.append({
-                            "name": func.get("name"),
-                            "description": func.get("description", "")[:500],
-                            "parameters": func.get("parameters", {}),
-                        })
+                        tools.append(
+                            {
+                                "name": func.get("name"),
+                                "description": func.get("description", "")[:500],
+                                "parameters": func.get("parameters", {}),
+                            }
+                        )
 
         except json.JSONDecodeError:
             pass
 
         return tools
 
-    def _extract_tools_from_yaml(self, content: str) -> List[Dict[str, Any]]:
+    def _extract_tools_from_yaml(self, content: str) -> list[dict[str, Any]]:
         """Extract tool definitions from YAML file.
 
         Args:
@@ -280,23 +301,21 @@ class RepoScanner:
 
         try:
             import yaml
+
             data = yaml.safe_load(content)
 
             if isinstance(data, dict):
                 # Look for tools under various keys
-                tool_list = (
-                    data.get("tools") or
-                    data.get("functions") or
-                    data.get("actions") or
-                    []
-                )
+                tool_list = data.get("tools") or data.get("functions") or data.get("actions") or []
 
                 for item in tool_list:
                     if isinstance(item, dict) and "name" in item:
-                        tools.append({
-                            "name": item.get("name"),
-                            "description": item.get("description", "")[:500],
-                        })
+                        tools.append(
+                            {
+                                "name": item.get("name"),
+                                "description": item.get("description", "")[:500],
+                            }
+                        )
 
         except ImportError:
             # PyYAML not installed, skip YAML parsing

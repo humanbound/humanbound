@@ -82,7 +82,7 @@ hb guardrails --format yaml -o rules.yaml
 hb guardrails --vendor openai -o openai_rules.json
 ```
 
-Use with [hb-firewall](https://github.com/humanbound/hb-firewall):
+Use with [humanbound-firewall](https://github.com/humanbound/humanbound-firewall):
 
 ```python
 from hb_firewall import Firewall

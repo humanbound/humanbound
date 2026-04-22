@@ -3,13 +3,13 @@
 ## Install
 
 ```bash
-pip install humanbound-cli
+pip install humanbound
 ```
 
 For local engine support (run tests without login):
 
 ```bash
-pip install "humanbound-cli[engine]"
+pip install "humanbound[engine]"
 ```
 
 ## Verify
@@ -29,9 +29,9 @@ hb --help
 
 | Extra | Install | What it adds |
 |---|---|---|
-| `engine` | `pip install "humanbound-cli[engine]"` | Local testing engine (OpenAI, Anthropic, Google SDKs) |
-| `firewall` | `pip install "humanbound-cli[firewall]"` | Firewall training (hb-firewall, scikit-learn, torch) |
-| `mcp` | `pip install "humanbound-cli[mcp]"` | MCP server for AI coding assistants |
+| `engine` | `pip install "humanbound[engine]"` | Local testing engine (OpenAI, Anthropic, Google SDKs) |
+| `firewall` | `pip install "humanbound[firewall]"` | Firewall training (humanbound-firewall, scikit-learn, torch) |
+| `mcp` | `pip install "humanbound[mcp]"` | MCP server for AI coding assistants |
 
 ## Configure Provider
 

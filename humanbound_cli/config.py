@@ -22,7 +22,6 @@ DEFAULT_TIMEOUT = 30
 LONG_TIMEOUT = 120  # For operations like report generation
 
 
-
 def get_base_url() -> str:
     """Get the API base URL from environment or default."""
     return os.environ.get("HUMANBOUND_BASE_URL", DEFAULT_BASE_URL)

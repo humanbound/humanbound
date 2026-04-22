@@ -13,11 +13,11 @@ import uuid
 from concurrent.futures import ThreadPoolExecutor
 
 from ...bot import Bot, Telemetry
-from ...schemas import Status, LogsAnonymous, Turn
 from ...callbacks import EngineCallbacks
+from ...schemas import LogsAnonymous, Status, Turn
 from .config import TestingConfiguration
-from .judge import Judge
 from .generator import Conversationer, Synthesizer
+from .judge import Judge
 
 logger = logging.getLogger("humanbound.engine.orchestrator.single_turn")
 
@@ -36,7 +36,9 @@ def __do_register_logs(organisation_id, experiment, logs, callbacks=None):
         callbacks.on_logs(list(logs))
 
 
-def __do_partial_generate(model_provider, agent, test_sub_category, lang, testing_level, prompts, lock):
+def __do_partial_generate(
+    model_provider, agent, test_sub_category, lang, testing_level, prompts, lock
+):
     synthesizer = Synthesizer(model_provider, agent, lang, test_sub_category, testing_level)
     result = synthesizer.run()
     with lock:
@@ -44,8 +46,15 @@ def __do_partial_generate(model_provider, agent, test_sub_category, lang, testin
 
 
 def __do_thread_run(
-    organisation_id, experiment, model_provider, test_sub_category,
-    clientbot, prompts, few_shots_model, telemetry_config=None, callbacks=None,
+    organisation_id,
+    experiment,
+    model_provider,
+    test_sub_category,
+    clientbot,
+    prompts,
+    few_shots_model,
+    telemetry_config=None,
+    callbacks=None,
 ):
     e_id = experiment["id"]
     total = len(prompts)
@@ -87,7 +96,9 @@ def __do_thread_run(
 
             meta = {}
             if telemetry_data:
-                tool_names = [t.get("tool_name", "") for t in telemetry_data.get("tool_executions", [])]
+                tool_names = [
+                    t.get("tool_name", "") for t in telemetry_data.get("tool_executions", [])
+                ]
                 usage = telemetry_data.get("resource_usage", {})
                 meta["telemetry"] = {
                     "trace_id": thread_id,
@@ -166,10 +177,14 @@ def orchestrator_generate(model_provider, experiment):
         futures = {}
         for test_sub_category in categories:
             future = executor.submit(
-                __do_partial_generate, model_provider,
+                __do_partial_generate,
+                model_provider,
                 experiment["configuration"]["scope"],
-                test_sub_category, experiment["lang"],
-                experiment["testing_level"], prompts, lock,
+                test_sub_category,
+                experiment["lang"],
+                experiment["testing_level"],
+                prompts,
+                lock,
             )
             futures[future] = test_sub_category
         for future in futures:
@@ -183,7 +198,11 @@ def compute_quota(testing_level, dataset_len):
 
 
 def orchestrator_run(
-    organisation_id, model_provider, experiment, prompts, few_shots_model,
+    organisation_id,
+    model_provider,
+    experiment,
+    prompts,
+    few_shots_model,
     callbacks=None,
 ):
     if callbacks is None:
@@ -193,16 +212,24 @@ def orchestrator_run(
     max_workers = max(1, min(len(categories), 10))
 
     clientbot = Bot(experiment["configuration"]["integration"], experiment["id"])
-    telemetry_config = experiment.get("configuration", {}).get("integration", {}).get("telemetry") or None
+    telemetry_config = (
+        experiment.get("configuration", {}).get("integration", {}).get("telemetry") or None
+    )
 
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         futures = {}
         for test_sub_category in categories:
             future = executor.submit(
-                __do_thread_run, organisation_id, experiment,
-                model_provider, test_sub_category, clientbot,
-                prompts[test_sub_category], few_shots_model,
-                telemetry_config=telemetry_config, callbacks=callbacks,
+                __do_thread_run,
+                organisation_id,
+                experiment,
+                model_provider,
+                test_sub_category,
+                clientbot,
+                prompts[test_sub_category],
+                few_shots_model,
+                telemetry_config=telemetry_config,
+                callbacks=callbacks,
             )
             futures[future] = test_sub_category
         for future in futures:

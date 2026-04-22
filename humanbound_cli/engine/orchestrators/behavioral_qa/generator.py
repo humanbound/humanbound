@@ -1,17 +1,16 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (c) 2024-2026 Humanbound
-import uuid, time
+import time
+import uuid
 
-
-from .config import TestingConfiguration
 from ...llm import get_llm_pinger
+from .config import TestingConfiguration
 
 DATA_GENERATION_TOKENS = 4096  # max tokens to deliver per each data deneration call
 DATA_GENERATION_TEMPERATURE = 1.0  # LLM temeperature - give some creativity
 
 
 class Conversationer:
-
     def __init__(
         self,
         model_provider,
@@ -80,9 +79,7 @@ Language: **Always** respond in <LANG> regardless of assistant's language.
 <CONVERSATION_HISTORY>
 
 Generate the next user message:
-""".replace(
-                "<OVERALL_BUSINESS_SCOPE>", agent["overall_business_scope"]
-            )
+""".replace("<OVERALL_BUSINESS_SCOPE>", agent["overall_business_scope"])
             .replace(
                 "<RISK_ASSESSMENT_SECTION>",
                 (
@@ -95,16 +92,10 @@ Generate the next user message:
                 "<RISK_BEHAVIOR_GUIDANCE>",
                 (
                     "Note: In high-stakes domains, users are typically very cautious - they ask for explicit confirmations, request detailed explanations, and may express concern about errors or misunderstandings."
-                    if (
-                        "more_info" in agent
-                        and "HIGH-STAKE" in agent["more_info"].upper()
-                    )
+                    if ("more_info" in agent and "HIGH-STAKE" in agent["more_info"].upper())
                     else (
                         "Note: In medium-stakes domains, users tend to ask clarifying questions and request confirmation on important details, while still maintaining a conversational flow."
-                        if (
-                            "more_info" in agent
-                            and "MEDIUM-STAKE" in agent["more_info"].upper()
-                        )
+                        if ("more_info" in agent and "MEDIUM-STAKE" in agent["more_info"].upper())
                         else "Behave as a typical user would in this context."
                     )
                 ),
@@ -181,7 +172,6 @@ Generate the next user message:
 
 
 class Synthesizer:
-
     def __init__(
         self,
         model_provider,
@@ -193,6 +183,4 @@ class Synthesizer:
         pass
 
     def run(self):
-        return [
-            "Placeholder. Data will be generated on the fly with conversation simulation."
-        ]
+        return ["Placeholder. Data will be generated on the fly with conversation simulation."]

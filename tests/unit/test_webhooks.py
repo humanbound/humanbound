@@ -1,18 +1,17 @@
 """Unit tests for the webhooks command group."""
 
 import json
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from click.testing import CliRunner
 
+from humanbound_cli.exceptions import APIError
 from humanbound_cli.main import cli
-from humanbound_cli.exceptions import NotAuthenticatedError, APIError
 
 from .conftest import (
     MOCK_WEBHOOK,
-    assert_exit_ok,
     assert_exit_error,
-    assert_valid_json,
+    assert_exit_ok,
 )
 
 runner = CliRunner()
@@ -41,9 +40,7 @@ class TestHappyPath:
         MockClient.return_value = mock
         result = runner.invoke(cli, ["webhooks"])
         assert_exit_ok(result)
-        mock.get.assert_called_once_with(
-            "organisations/org-123/webhooks", include_org=False
-        )
+        mock.get.assert_called_once_with("organisations/org-123/webhooks", include_org=False)
         assert "wh-001" in result.output or "Slack Alerts" in result.output
 
     @patch(PATCH_TARGET)
@@ -72,9 +69,7 @@ class TestHappyPath:
         mock = _make_client()
         mock.create_webhook.return_value = {"id": "wh-new"}
         MockClient.return_value = mock
-        result = runner.invoke(cli, [
-            "webhooks", "add", "--url", "https://example.com/hook"
-        ])
+        result = runner.invoke(cli, ["webhooks", "add", "--url", "https://example.com/hook"])
         assert_exit_ok(result)
         mock.create_webhook.assert_called_once()
         call_kwargs = mock.create_webhook.call_args
@@ -86,12 +81,19 @@ class TestHappyPath:
         mock = _make_client()
         mock.create_webhook.return_value = {"id": "wh-new"}
         MockClient.return_value = mock
-        result = runner.invoke(cli, [
-            "webhooks", "add",
-            "--url", "https://example.com/hook",
-            "--name", "My SIEM",
-            "--events", "finding.created,finding.regressed",
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "webhooks",
+                "add",
+                "--url",
+                "https://example.com/hook",
+                "--name",
+                "My SIEM",
+                "--events",
+                "finding.created,finding.regressed",
+            ],
+        )
         assert_exit_ok(result)
         call_kwargs = mock.create_webhook.call_args.kwargs
         assert call_kwargs["name"] == "My SIEM"
@@ -139,18 +141,14 @@ class TestErrorCases:
         mock = _make_client()
         mock.is_authenticated.return_value = False
         MockClient.return_value = mock
-        result = runner.invoke(cli, [
-            "webhooks", "add", "--url", "https://example.com/hook"
-        ])
+        result = runner.invoke(cli, ["webhooks", "add", "--url", "https://example.com/hook"])
         assert_exit_error(result)
 
     @patch(PATCH_TARGET)
     def test_add_no_org(self, MockClient):
         mock = _make_client(organisation_id=None, _organisation_id=None)
         MockClient.return_value = mock
-        result = runner.invoke(cli, [
-            "webhooks", "add", "--url", "https://example.com/hook"
-        ])
+        result = runner.invoke(cli, ["webhooks", "add", "--url", "https://example.com/hook"])
         assert_exit_error(result)
 
     @patch(PATCH_TARGET)

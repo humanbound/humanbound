@@ -22,7 +22,6 @@ import webbrowser
 from datetime import datetime, timezone
 from html import escape
 
-
 LOGO_URL = "https://cdneunorth.blob.core.windows.net/data/humanbound_logo.png"
 TAGLINE = "Build safer, more trusted AI."
 
@@ -410,6 +409,7 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 # Builder
 # ---------------------------------------------------------------------------
 
+
 class ReportBuilder:
     """Build a self-contained, Humanbound-branded HTML report from sections."""
 
@@ -428,17 +428,22 @@ class ReportBuilder:
                 f'<div class="card">'
                 f'<div class="card-label">{_esc(label)}</div>'
                 f'<div class="card-value">{_esc(value)}</div>'
-                f'</div>'
+                f"</div>"
             )
         self._sections.append(
             f'<div class="section">'
             f'<div class="section-title">{_esc(heading)}</div>'
             f'<div class="cards-grid">{"".join(cards)}</div>'
-            f'</div>'
+            f"</div>"
         )
 
-    def add_table(self, heading: str, columns: list[str], rows: list[list[str]],
-                  col_styles: dict | None = None):
+    def add_table(
+        self,
+        heading: str,
+        columns: list[str],
+        rows: list[list[str]],
+        col_styles: dict | None = None,
+    ):
         """Add a data table.
 
         col_styles maps column index → inline CSS string applied to each <td>.
@@ -457,13 +462,14 @@ class ReportBuilder:
         self._sections.append(
             f'<div class="section">'
             f'<div class="section-title">{_esc(heading)}</div>'
-            f'<table><thead><tr>{ths}</tr></thead>'
-            f'<tbody>{"".join(row_htmls)}</tbody></table>'
-            f'</div>'
+            f"<table><thead><tr>{ths}</tr></thead>"
+            f"<tbody>{''.join(row_htmls)}</tbody></table>"
+            f"</div>"
         )
 
-    def add_posture(self, score: float, grade: str, label: str = "Posture Score",
-                    metrics: dict | None = None):
+    def add_posture(
+        self, score: float, grade: str, label: str = "Posture Score", metrics: dict | None = None
+    ):
         """Add a donut chart with score, grade, and optional side metrics."""
         score = float(score)
         circumference = 2 * 3.14159 * 66
@@ -485,7 +491,7 @@ class ReportBuilder:
                     f'<div class="health-metric">'
                     f'<span class="name">{_esc(name)}</span>'
                     f'<span class="val">{_esc(val)}</span>'
-                    f'</div>'
+                    f"</div>"
                 )
             metrics_html = f'<div class="health-metrics">{"".join(items)}</div>'
 
@@ -500,13 +506,13 @@ class ReportBuilder:
             f'stroke="{stroke_color}" '
             f'stroke-dasharray="{_fmt(circumference, 2)}" '
             f'stroke-dashoffset="{_fmt(offset, 2)}"/>'
-            f'</svg>'
+            f"</svg>"
             f'<div class="donut-label">'
             f'<div class="value">{_fmt(score, 0)}</div>'
             f'<div class="label">Grade {_esc(grade)}</div>'
-            f'</div></div>'
-            f'{metrics_html}'
-            f'</div></div>'
+            f"</div></div>"
+            f"{metrics_html}"
+            f"</div></div>"
         )
 
     def add_panel(self, heading: str, content: str):
@@ -515,20 +521,17 @@ class ReportBuilder:
             f'<div class="section">'
             f'<div class="section-title">{_esc(heading)}</div>'
             f'<div class="panel">{content}</div>'
-            f'</div>'
+            f"</div>"
         )
 
     def add_status(self, message: str, level: str = "success"):
         """Add a status banner (success / warning / error)."""
         css_class = f"banner-{level}" if level in ("success", "warning", "error") else ""
         self._sections.append(
-            f'<div class="status-banner {css_class}">'
-            f'<h2>{_esc(message)}</h2>'
-            f'</div>'
+            f'<div class="status-banner {css_class}"><h2>{_esc(message)}</h2></div>'
         )
 
-    def add_hero(self, score: float, grade: str, verdict: str,
-                 metrics: dict | None = None):
+    def add_hero(self, score: float, grade: str, verdict: str, metrics: dict | None = None):
         """Large centred posture hero — donut + verdict + key metrics."""
         score = float(score)
         circumference = 2 * 3.14159 * 66
@@ -549,7 +552,7 @@ class ReportBuilder:
                     f'<div class="hero-metric">'
                     f'<div class="hm-val">{_esc(str(val))}</div>'
                     f'<div class="hm-label">{_esc(name)}</div>'
-                    f'</div>'
+                    f"</div>"
                 )
             metrics_html = f'<div class="hero-metrics">{"".join(items)}</div>'
 
@@ -562,30 +565,28 @@ class ReportBuilder:
             f'stroke="{stroke}" '
             f'stroke-dasharray="{_fmt(circumference, 2)}" '
             f'stroke-dashoffset="{_fmt(offset, 2)}"/>'
-            f'</svg>'
+            f"</svg>"
             f'<div class="donut-label">'
             f'<div class="value" style="color:{stroke}">{_fmt(score, 0)}</div>'
             f'<div class="label">Grade {_esc(grade)}</div>'
-            f'</div></div>'
+            f"</div></div>"
             f'<div class="verdict">{verdict}</div>'
-            f'{metrics_html}'
-            f'</div>'
+            f"{metrics_html}"
+            f"</div>"
         )
 
     def add_executive_summary(self, text: str):
         """Accent-bordered executive summary block."""
-        self._sections.append(
-            f'<div class="exec-summary">'
-            f'<h3>Executive Summary</h3>'
-            f'{text}'
-            f'</div>'
-        )
+        self._sections.append(f'<div class="exec-summary"><h3>Executive Summary</h3>{text}</div>')
 
     def add_heatmap(self, heading: str, levels: dict):
         """Risk distribution bar with coloured proportional blocks."""
         colors = {
-            "critical": "#F85149", "high": "#da6840",
-            "medium": "#F0C000", "low": "#58a6ff", "unknown": "#6e7681",
+            "critical": "#F85149",
+            "high": "#da6840",
+            "medium": "#F0C000",
+            "low": "#58a6ff",
+            "unknown": "#6e7681",
         }
         total = sum(levels.values())
         if total == 0:
@@ -605,8 +606,8 @@ class ReportBuilder:
             legend.append(
                 f'<div class="heatmap-legend-item">'
                 f'<div class="heatmap-dot" style="background:{color}"></div>'
-                f'{level.title()} ({count})'
-                f'</div>'
+                f"{level.title()} ({count})"
+                f"</div>"
             )
 
         self._sections.append(
@@ -615,11 +616,10 @@ class ReportBuilder:
             f'<div class="heatmap-wrap">'
             f'<div class="heatmap">{"".join(blocks)}</div>'
             f'<div class="heatmap-legend">{"".join(legend)}</div>'
-            f'</div></div>'
+            f"</div></div>"
         )
 
-    def add_trend(self, current: float, previous: float,
-                  previous_date: str = ""):
+    def add_trend(self, current: float, previous: float, previous_date: str = ""):
         """Score delta indicator with arrow and context."""
         delta = current - previous
         if delta > 0:
@@ -638,7 +638,7 @@ class ReportBuilder:
             f'<span class="trend-arrow" style="color:{color}">{arrow}</span>'
             f'<span class="trend-delta" style="color:{color}">{delta:+.0f}</span>'
             f'<span class="trend-ctx">{ctx}</span>'
-            f'</div>'
+            f"</div>"
         )
 
     def add_actions(self, heading: str, actions: list[dict]):
@@ -654,17 +654,17 @@ class ReportBuilder:
                 f'<li class="action-item">'
                 f'<div class="action-num">{i}</div>'
                 f'<div class="action-body">'
-                f'<h4>{action.get("title", "")}</h4>'
-                f'<p>{action.get("description", "")}</p>'
-                f'</div>'
+                f"<h4>{action.get('title', '')}</h4>"
+                f"<p>{action.get('description', '')}</p>"
+                f"</div>"
                 f'<span class="action-effort effort-{effort}">{effort.title()}</span>'
-                f'</li>'
+                f"</li>"
             )
         self._sections.append(
             f'<div class="section">'
             f'<div class="section-title">{_esc(heading)}</div>'
             f'<ul class="actions-list">{"".join(items)}</ul>'
-            f'</div>'
+            f"</div>"
         )
 
     def add_mermaid(self, heading: str, mermaid_def: str):
@@ -673,7 +673,7 @@ class ReportBuilder:
             f'<div class="section">'
             f'<div class="section-title">{_esc(heading)}</div>'
             f'<pre class="mermaid">{_esc(mermaid_def)}</pre>'
-            f'</div>'
+            f"</div>"
         )
 
     def add_appendix(self, heading: str, content: str):
@@ -682,7 +682,7 @@ class ReportBuilder:
             f'<div class="section appendix">'
             f'<div class="section-title">{_esc(heading)}</div>'
             f'<div class="panel">{content}</div>'
-            f'</div>'
+            f"</div>"
         )
 
     # -- Rendering ----------------------------------------------------------
@@ -699,15 +699,15 @@ class ReportBuilder:
             f'<!DOCTYPE html>\n<html lang="en">\n<head>\n'
             f'<meta charset="UTF-8">\n'
             f'<meta name="viewport" content="width=device-width, initial-scale=1.0">\n'
-            f'<title>{_esc(self.title)} — Humanbound Report</title>\n'
+            f"<title>{_esc(self.title)} — Humanbound Report</title>\n"
             f'<link rel="preconnect" href="https://fonts.googleapis.com">\n'
             f'<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'
             f'<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700'
             f'&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">\n'
-            f'<style>\n{_CSS}\n</style>\n'
+            f"<style>\n{_CSS}\n</style>\n"
             f'<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>\n'
             f'<script>mermaid.initialize({{startOnLoad:true,theme:"dark"}});</script>\n'
-            f'</head>'
+            f"</head>"
         )
 
         header = (
@@ -715,21 +715,21 @@ class ReportBuilder:
             f'<div class="report-header">\n'
             f'  <img src="{LOGO_URL}" alt="Humanbound">\n'
             f'  <div style="flex:1">\n'
-            f'    <h1>{_esc(self.title)}</h1>\n'
-            f'    {subtitle_html}\n'
+            f"    <h1>{_esc(self.title)}</h1>\n"
+            f"    {subtitle_html}\n"
             f'    <div class="meta-row">'
-            f'<span>{generated_at}</span>'
-            f'<span>{_esc(TAGLINE)}</span>'
-            f'</div>\n'
-            f'  </div>\n'
-            f'</div>'
+            f"<span>{generated_at}</span>"
+            f"<span>{_esc(TAGLINE)}</span>"
+            f"</div>\n"
+            f"  </div>\n"
+            f"</div>"
         )
 
         footer = (
             f'<div class="report-footer">'
-            f'Generated by <strong>Humanbound CLI</strong> on {generated_at}<br>'
+            f"Generated by <strong>Humanbound CLI</strong> on {generated_at}<br>"
             f'<a href="https://humanbound.ai">humanbound.ai</a>'
-            f'</div>\n</div>'
+            f"</div>\n</div>"
         )
 
         parts = [head, "<body>", header]

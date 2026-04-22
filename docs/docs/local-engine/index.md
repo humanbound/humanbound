@@ -35,7 +35,7 @@ hb test --endpoint ./config.json --scope ./scope.json --wait
 
 ```bash
 # Install
-pip install humanbound-cli
+pip install humanbound
 
 # Configure LLM provider
 export HB_PROVIDER=openai

@@ -2,16 +2,17 @@
 # Copyright (c) 2024-2026 Humanbound
 """Experiment commands."""
 
+import time
+
 import click
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.prompt import Confirm
-import time
+from rich.table import Table
 
 from ..client import HumanboundClient
-from ..exceptions import NotAuthenticatedError, APIError, ValidationError
+from ..exceptions import APIError, NotAuthenticatedError
 
 console = Console()
 
@@ -113,15 +114,17 @@ def show_experiment(experiment_id: str):
             "Failed": "red",
         }.get(status, "white")
 
-        console.print(Panel(
-            f"[bold]{exp.get('name')}[/bold]\n"
-            f"[dim]ID: {exp.get('id')}[/dim]\n\n"
-            f"Status: [{status_color}]{status}[/{status_color}]\n"
-            f"Test Category: {exp.get('test_category')}\n"
-            f"Language: {exp.get('lang', 'en')}\n"
-            f"Testing Level: {exp.get('testing_level', 'unit')}",
-            title="Experiment Details",
-        ))
+        console.print(
+            Panel(
+                f"[bold]{exp.get('name')}[/bold]\n"
+                f"[dim]ID: {exp.get('id')}[/dim]\n\n"
+                f"Status: [{status_color}]{status}[/{status_color}]\n"
+                f"Test Category: {exp.get('test_category')}\n"
+                f"Language: {exp.get('lang', 'en')}\n"
+                f"Testing Level: {exp.get('testing_level', 'unit')}",
+                title="Experiment Details",
+            )
+        )
 
         results = exp.get("results", {})
         if results and results.get("insights"):
@@ -157,7 +160,12 @@ def show_experiment(experiment_id: str):
 @click.argument("experiment_id", required=False)
 @click.option("--watch", "-w", is_flag=True, help="Watch status until completion")
 @click.option("--interval", default=10, help="Polling interval in seconds (with --watch)")
-@click.option("--all", "show_all", is_flag=True, help="Show status of all project experiments (polls every 60s)")
+@click.option(
+    "--all",
+    "show_all",
+    is_flag=True,
+    help="Show status of all project experiments (polls every 60s)",
+)
 def experiment_status(experiment_id: str, watch: bool, interval: int, show_all: bool):
     """Check experiment status.
 
@@ -299,7 +307,7 @@ def _poll_all_experiments(client: HumanboundClient):
             console.print(table)
 
             if not active:
-                console.print(f"\n[green]All experiments completed.[/green]")
+                console.print("\n[green]All experiments completed.[/green]")
                 return
 
             console.print(f"\n[dim]{len(active)} active — polling every 60s (Ctrl+C to stop)[/dim]")
@@ -427,7 +435,6 @@ def experiment_wait(experiment_id: str, timeout: int):
         raise SystemExit(0)
 
 
-
 @experiments_group.command("terminate")
 @click.argument("experiment_id")
 def terminate_experiment(experiment_id: str):
@@ -456,7 +463,7 @@ def terminate_experiment(experiment_id: str):
         with console.status("Terminating experiment..."):
             client.terminate_experiment(experiment_id)
 
-        console.print(f"[green]Experiment terminated.[/green]")
+        console.print("[green]Experiment terminated.[/green]")
         console.print(f"[dim]ID: {experiment_id}[/dim]")
 
     except NotAuthenticatedError:
@@ -497,7 +504,7 @@ def delete_experiment(experiment_id: str, force: bool):
         with console.status("Deleting experiment..."):
             client.delete_experiment(experiment_id)
 
-        console.print(f"[green]Experiment deleted.[/green]")
+        console.print("[green]Experiment deleted.[/green]")
         console.print(f"[dim]{exp_name} ({experiment_id})[/dim]")
 
     except NotAuthenticatedError:

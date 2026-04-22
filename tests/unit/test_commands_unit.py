@@ -6,13 +6,13 @@ so the command runs against fake data and we verify output/exit codes.
 """
 
 import json
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 from click.testing import CliRunner
 
+from humanbound_cli.exceptions import NotAuthenticatedError
 from humanbound_cli.main import cli
-from humanbound_cli.exceptions import NotAuthenticatedError, APIError
-
 
 runner = CliRunner()
 
@@ -37,6 +37,7 @@ def _make_mock_client(**overrides):
 # Auth commands
 # ---------------------------------------------------------------------------
 
+
 class TestAuthCommands:
     @patch("humanbound_cli.commands.auth.HumanboundClient")
     def test_whoami_authenticated(self, MockClient):
@@ -58,6 +59,7 @@ class TestAuthCommands:
 # ---------------------------------------------------------------------------
 # Organisation commands
 # ---------------------------------------------------------------------------
+
 
 class TestOrgCommands:
     @patch("humanbound_cli.commands.orgs.HumanboundClient")
@@ -85,6 +87,7 @@ class TestOrgCommands:
 # ---------------------------------------------------------------------------
 # Project commands
 # ---------------------------------------------------------------------------
+
 
 class TestProjectCommands:
     @patch("humanbound_cli.commands.projects.HumanboundClient")
@@ -126,6 +129,7 @@ class TestProjectCommands:
 # ---------------------------------------------------------------------------
 # Findings commands
 # ---------------------------------------------------------------------------
+
 
 class TestFindingsCommands:
     @patch("humanbound_cli.commands.findings.HumanboundClient")
@@ -171,6 +175,7 @@ class TestFindingsCommands:
 # Members commands
 # ---------------------------------------------------------------------------
 
+
 class TestMembersCommands:
     @patch("humanbound_cli.commands.members.HumanboundClient")
     def test_members_list(self, MockClient):
@@ -199,14 +204,21 @@ class TestMembersCommands:
 # API Keys commands
 # ---------------------------------------------------------------------------
 
+
 class TestAPIKeysCommands:
     @patch("humanbound_cli.commands.api_keys.HumanboundClient")
     def test_api_keys_list(self, MockClient):
         mock = _make_mock_client()
         mock.list_api_keys.return_value = {
             "data": [
-                {"id": "k1", "name": "test-key", "prefix": "hb_abc", "scopes": "admin",
-                 "last_used_at": None, "created_at": "2025-01-01T00:00:00Z"}
+                {
+                    "id": "k1",
+                    "name": "test-key",
+                    "prefix": "hb_abc",
+                    "scopes": "admin",
+                    "last_used_at": None,
+                    "created_at": "2025-01-01T00:00:00Z",
+                }
             ]
         }
         MockClient.return_value = mock
@@ -227,6 +239,7 @@ class TestAPIKeysCommands:
 # ---------------------------------------------------------------------------
 # Assessments commands
 # ---------------------------------------------------------------------------
+
 
 class TestAssessmentsCommands:
     @patch("humanbound_cli.commands.assessments.HumanboundClient")
@@ -265,6 +278,7 @@ class TestAssessmentsCommands:
 # Campaigns commands
 # ---------------------------------------------------------------------------
 
+
 class TestCampaignsCommands:
     @patch("humanbound_cli.commands.campaigns.HumanboundClient")
     def test_campaigns_status(self, MockClient):
@@ -292,14 +306,20 @@ class TestCampaignsCommands:
 # Webhooks commands
 # ---------------------------------------------------------------------------
 
+
 class TestWebhooksCommands:
     @patch("humanbound_cli.commands.webhooks.HumanboundClient")
     def test_webhooks_list(self, MockClient):
         mock = _make_mock_client()
         mock.get.return_value = {
             "data": [
-                {"id": "wh1", "name": "My Hook", "url": "https://example.com/hook",
-                 "is_active": True, "event_types": ["experiment.completed"]}
+                {
+                    "id": "wh1",
+                    "name": "My Hook",
+                    "url": "https://example.com/hook",
+                    "is_active": True,
+                    "event_types": ["experiment.completed"],
+                }
             ]
         }
         MockClient.return_value = mock
@@ -321,9 +341,12 @@ class TestWebhooksCommands:
 # Posture commands
 # ---------------------------------------------------------------------------
 
+
 class TestPostureCommands:
-    @patch("humanbound_cli.commands.posture.HumanboundClient")
-    def test_posture(self, MockClient):
+    @patch("humanbound_cli.commands.posture.get_runner")
+    def test_posture(self, mock_get_runner):
+        from conftest import platform_runner
+
         mock = _make_mock_client()
         mock.get.return_value = {
             "score": 75.0,
@@ -331,15 +354,17 @@ class TestPostureCommands:
             "dimensions": {},
             "experiments_count": 3,
         }
-        MockClient.return_value = mock
+        mock_get_runner.return_value = platform_runner(mock)
         result = runner.invoke(cli, ["posture"])
         assert result.exit_code == 0
 
-    @patch("humanbound_cli.commands.posture.HumanboundClient")
-    def test_posture_json(self, MockClient):
+    @patch("humanbound_cli.commands.posture.get_runner")
+    def test_posture_json(self, mock_get_runner):
+        from conftest import platform_runner
+
         mock = _make_mock_client()
         mock.get.return_value = {"score": 75.0, "grade": "C"}
-        MockClient.return_value = mock
+        mock_get_runner.return_value = platform_runner(mock)
         result = runner.invoke(cli, ["posture", "--json"])
         assert result.exit_code == 0
         data = json.loads(result.output)
@@ -348,7 +373,7 @@ class TestPostureCommands:
     @patch("humanbound_cli.commands.posture.get_runner")
     def test_posture_not_authenticated(self, mock_get_runner):
         from conftest import platform_runner
-        from humanbound_cli.exceptions import NotAuthenticatedError
+
         mock = _make_mock_client()
         mock.is_authenticated.return_value = False
         mock.get.side_effect = NotAuthenticatedError()
@@ -360,6 +385,7 @@ class TestPostureCommands:
 # ---------------------------------------------------------------------------
 # Monitor commands
 # ---------------------------------------------------------------------------
+
 
 class TestMonitorCommands:
     @patch("humanbound_cli.commands.monitor.HumanboundClient")
@@ -375,14 +401,19 @@ class TestMonitorCommands:
 # Experiments commands
 # ---------------------------------------------------------------------------
 
+
 class TestExperimentCommands:
     @patch("humanbound_cli.commands.experiments.HumanboundClient")
     def test_experiments_list(self, MockClient):
         mock = _make_mock_client()
         mock.list_experiments.return_value = {
             "data": [
-                {"id": "exp-1", "status": "completed", "testing_level": "unit",
-                 "created_at": "2025-01-01T00:00:00Z"}
+                {
+                    "id": "exp-1",
+                    "status": "completed",
+                    "testing_level": "unit",
+                    "created_at": "2025-01-01T00:00:00Z",
+                }
             ],
             "total": 1,
         }
@@ -404,13 +435,18 @@ class TestExperimentCommands:
 # Providers commands
 # ---------------------------------------------------------------------------
 
+
 class TestProvidersCommands:
     @patch("humanbound_cli.commands.providers.HumanboundClient")
     def test_providers_list(self, MockClient):
         mock = _make_mock_client()
         mock.list_providers.return_value = [
-            {"id": "prov-1", "name": "openai", "is_default": True,
-             "integration": {"model": "gpt-4"}}
+            {
+                "id": "prov-1",
+                "name": "openai",
+                "is_default": True,
+                "integration": {"model": "gpt-4"},
+            }
         ]
         MockClient.return_value = mock
         result = runner.invoke(cli, ["providers", "list"])
@@ -429,9 +465,9 @@ class TestProvidersCommands:
 # Firewall commands
 # ---------------------------------------------------------------------------
 
+
 class TestFirewallCommands:
-    @patch("humanbound_cli.commands.firewall.HumanboundClient")
-    def test_firewall_help(self, MockClient):
+    def test_firewall_help(self):
         """Firewall --help should work without auth."""
         result = runner.invoke(cli, ["firewall", "--help"])
         assert result.exit_code == 0
@@ -441,6 +477,7 @@ class TestFirewallCommands:
 # ---------------------------------------------------------------------------
 # Redteam commands
 # ---------------------------------------------------------------------------
+
 
 class TestRedteamCommands:
     @patch("humanbound_cli.commands.redteam.HumanboundClient")
@@ -453,11 +490,12 @@ class TestRedteamCommands:
 # Logs commands
 # ---------------------------------------------------------------------------
 
+
 class TestLogsCommands:
     @patch("humanbound_cli.commands.logs.get_runner")
     def test_logs_not_authenticated(self, mock_get_runner):
         from conftest import platform_runner
-        from humanbound_cli.exceptions import NotAuthenticatedError
+
         mock = _make_mock_client()
         mock.is_authenticated.return_value = False
         mock.get.side_effect = NotAuthenticatedError()
@@ -494,7 +532,6 @@ COMMANDS_REQUIRING_AUTH = COMMANDS_WITH_DIRECT_CLIENT + COMMANDS_WITH_RUNNER
 @pytest.mark.parametrize("cmd", COMMANDS_REQUIRING_AUTH)
 def test_unauthenticated_exits_nonzero(cmd):
     """Commands requiring auth must fail gracefully when not authenticated."""
-    from humanbound_cli.exceptions import NotAuthenticatedError
     from conftest import platform_runner
 
     module_name = cmd[0].replace("-", "_")
@@ -502,11 +539,23 @@ def test_unauthenticated_exits_nonzero(cmd):
     mock.is_authenticated.return_value = False
     # Make every client call raise the auth error — covers whichever method
     # a given command reaches first.
-    for method in ("get", "post", "put", "delete",
-                   "list_experiments", "list_providers", "list_findings",
-                   "list_projects", "list_members", "list_api_keys",
-                   "list_campaigns", "list_assessments", "list_webhooks",
-                   "get_project_logs", "get_experiment_logs"):
+    for method in (
+        "get",
+        "post",
+        "put",
+        "delete",
+        "list_experiments",
+        "list_providers",
+        "list_findings",
+        "list_projects",
+        "list_members",
+        "list_api_keys",
+        "list_campaigns",
+        "list_assessments",
+        "list_webhooks",
+        "get_project_logs",
+        "get_experiment_logs",
+    ):
         getattr(mock, method).side_effect = NotAuthenticatedError()
 
     if cmd in COMMANDS_WITH_RUNNER:
@@ -520,6 +569,4 @@ def test_unauthenticated_exits_nonzero(cmd):
             MockClient.return_value = mock
             result = runner.invoke(cli, cmd)
 
-    assert result.exit_code != 0, (
-        f"`hb {' '.join(cmd)}` should fail when unauthenticated"
-    )
+    assert result.exit_code != 0, f"`hb {' '.join(cmd)}` should fail when unauthenticated"

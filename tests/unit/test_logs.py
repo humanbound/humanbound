@@ -7,12 +7,9 @@ so we patch `get_runner` and wire in a mock client through the shared
 """
 
 import json
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 from click.testing import CliRunner
-
-from humanbound_cli.main import cli
-from humanbound_cli.exceptions import APIError
 from conftest import (
     MOCK_EXPERIMENT,
     MOCK_LOG,
@@ -21,6 +18,8 @@ from conftest import (
     platform_runner,
 )
 
+from humanbound_cli.exceptions import APIError
+from humanbound_cli.main import cli
 
 RUNNER_PATCH = "humanbound_cli.commands.logs.get_runner"
 runner = CliRunner()
@@ -49,7 +48,9 @@ def _make_client(**overrides):
     m.get_project_logs.return_value = LOGS_RESPONSE
     m.get_experiment_logs.return_value = LOGS_RESPONSE
     m.list_experiments.return_value = {
-        "data": [MOCK_EXPERIMENT], "total": 1, "has_next_page": False,
+        "data": [MOCK_EXPERIMENT],
+        "total": 1,
+        "has_next_page": False,
     }
     m.get_experiment.return_value = MOCK_EXPERIMENT
     for k, v in overrides.items():
@@ -60,6 +61,7 @@ def _make_client(**overrides):
 # ---------------------------------------------------------------------------
 # Happy path
 # ---------------------------------------------------------------------------
+
 
 class TestHappyPath:
     @patch(RUNNER_PATCH)
@@ -83,7 +85,10 @@ class TestHappyPath:
 
         assert_exit_ok(result)
         client.get_experiment_logs.assert_called_once_with(
-            "exp-789", page=1, size=50, result=None,
+            "exp-789",
+            page=1,
+            size=50,
+            result=None,
         )
 
     @patch(RUNNER_PATCH)
@@ -113,6 +118,7 @@ class TestHappyPath:
 # ---------------------------------------------------------------------------
 # Error cases
 # ---------------------------------------------------------------------------
+
 
 class TestErrorCases:
     @patch(RUNNER_PATCH)
@@ -154,7 +160,9 @@ class TestErrorCases:
     def test_no_experiments_found(self, mock_get_runner):
         client = _make_client()
         client.list_experiments.return_value = {
-            "data": [], "total": 0, "has_next_page": False,
+            "data": [],
+            "total": 0,
+            "has_next_page": False,
         }
         mock_get_runner.return_value = platform_runner(client)
 
@@ -168,6 +176,7 @@ class TestErrorCases:
 # Flags
 # ---------------------------------------------------------------------------
 
+
 class TestFlags:
     @patch(RUNNER_PATCH)
     def test_verdict_pass(self, mock_get_runner):
@@ -178,7 +187,10 @@ class TestFlags:
 
         assert_exit_ok(result)
         client.get_experiment_logs.assert_called_once_with(
-            "exp-789", page=1, size=50, result="pass",
+            "exp-789",
+            page=1,
+            size=50,
+            result="pass",
         )
 
     @patch(RUNNER_PATCH)
@@ -190,7 +202,10 @@ class TestFlags:
 
         assert_exit_ok(result)
         client.get_experiment_logs.assert_called_once_with(
-            "exp-789", page=1, size=50, result="fail",
+            "exp-789",
+            page=1,
+            size=50,
+            result="fail",
         )
 
     @patch(RUNNER_PATCH)
@@ -202,7 +217,10 @@ class TestFlags:
 
         assert_exit_ok(result)
         client.get_experiment_logs.assert_called_once_with(
-            "exp-789", page=2, size=10, result=None,
+            "exp-789",
+            page=2,
+            size=10,
+            result=None,
         )
 
     @patch(RUNNER_PATCH)
@@ -222,9 +240,16 @@ class TestFlags:
         client = _make_client()
         mock_get_runner.return_value = platform_runner(client)
 
-        result = runner.invoke(cli, [
-            "logs", "--from", "2025-01-01", "--until", "2025-06-01",
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "logs",
+                "--from",
+                "2025-01-01",
+                "--until",
+                "2025-06-01",
+            ],
+        )
 
         assert_exit_ok(result)
         client.get_project_logs.assert_called_once()
@@ -248,6 +273,7 @@ class TestFlags:
 # ---------------------------------------------------------------------------
 # Output
 # ---------------------------------------------------------------------------
+
 
 class TestOutputFormat:
     def test_help_text(self):
@@ -273,9 +299,17 @@ class TestOutputFormat:
         mock_get_runner.return_value = platform_runner(client)
 
         outfile = str(tmp_path / "logs.json")
-        result = runner.invoke(cli, [
-            "logs", "--format", "json", "--output", outfile, "exp-789",
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "logs",
+                "--format",
+                "json",
+                "--output",
+                outfile,
+                "exp-789",
+            ],
+        )
 
         assert_exit_ok(result)
         data = json.loads((tmp_path / "logs.json").read_text())

@@ -8,7 +8,7 @@ from rich.panel import Panel
 
 from ..client import HumanboundClient
 from ..config import DEFAULT_BASE_URL
-from ..exceptions import AuthenticationError, APIError
+from ..exceptions import AuthenticationError
 
 console = Console()
 
@@ -22,7 +22,9 @@ def auth_group():
 @auth_group.command("login")
 @click.option("--base-url", help="API base URL for on-prem deployments")
 @click.option("--port", default=8085, help="Local callback port (default: 8085)")
-@click.option("--force", "-f", is_flag=True, help="Force re-authentication even if already logged in")
+@click.option(
+    "--force", "-f", is_flag=True, help="Force re-authentication even if already logged in"
+)
 def login(base_url: str, port: int, force: bool):
     """Authenticate with Humanbound via browser.
 
@@ -48,8 +50,19 @@ def login(base_url: str, port: int, force: bool):
             client.set_organisation(client.default_organisation_id)
             try:
                 orgs = client.list_organisations()
-                org = next((o for o in orgs if o.get("id", "").lower() == client.default_organisation_id.lower()), None)
-                org_display = f"{org.get('name')} ({client.default_organisation_id})" if org else client.default_organisation_id
+                org = next(
+                    (
+                        o
+                        for o in orgs
+                        if o.get("id", "").lower() == client.default_organisation_id.lower()
+                    ),
+                    None,
+                )
+                org_display = (
+                    f"{org.get('name')} ({client.default_organisation_id})"
+                    if org
+                    else client.default_organisation_id
+                )
             except Exception as e:
                 org_display = f"{client.default_organisation_id} (could not resolve name: {e})"
 
@@ -57,13 +70,15 @@ def login(base_url: str, port: int, force: bool):
         if client.base_url.rstrip("/") != DEFAULT_BASE_URL.rstrip("/"):
             base_url_line = f"Base URL: {client.base_url}\n"
 
-        console.print(Panel(
-            f"[green]Login successful![/green]\n\n"
-            f"User: {client.username or 'unknown'}\n"
-            f"{base_url_line}"
-            f"Organisation: {org_display}",
-            title="Humanbound",
-        ))
+        console.print(
+            Panel(
+                f"[green]Login successful![/green]\n\n"
+                f"User: {client.username or 'unknown'}\n"
+                f"{base_url_line}"
+                f"Organisation: {org_display}",
+                title="Humanbound",
+            )
+        )
     except AuthenticationError as e:
         # Clear any partial credentials on failure (silent to avoid confusion)
         client.logout(silent=True)
@@ -80,20 +95,20 @@ def logout(revoke: bool, port: int):
     client.logout()  # This already prints the success message
 
     if revoke:
-        import webbrowser
-        import urllib.parse
         import http.server
         import socketserver
-        from ..config import get_auth0_domain, get_auth0_client_id
+        import urllib.parse
+        import webbrowser
+
         from ..client import LOGOUT_HTML
+        from ..config import get_auth0_client_id, get_auth0_domain
 
         auth0_domain = get_auth0_domain()
         client_id = get_auth0_client_id()
         return_to = f"http://localhost:{port}"
 
-        logout_url = (
-            f"https://{auth0_domain}/v2/logout?"
-            + urllib.parse.urlencode({"client_id": client_id, "returnTo": return_to})
+        logout_url = f"https://{auth0_domain}/v2/logout?" + urllib.parse.urlencode(
+            {"client_id": client_id, "returnTo": return_to}
         )
 
         class LogoutHandler(http.server.BaseHTTPRequestHandler):
@@ -137,7 +152,10 @@ def whoami():
             org_display = client.organisation_id
             try:
                 orgs = client.list_organisations()
-                org = next((o for o in orgs if o.get("id", "").lower() == client.organisation_id.lower()), None)
+                org = next(
+                    (o for o in orgs if o.get("id", "").lower() == client.organisation_id.lower()),
+                    None,
+                )
                 if org:
                     org_display = f"{org.get('name')} ({client.organisation_id})"
             except Exception as e:
@@ -158,18 +176,21 @@ def whoami():
         if client.base_url.rstrip("/") != DEFAULT_BASE_URL.rstrip("/"):
             base_url_line = f"Base URL: {client.base_url}\n"
 
-        console.print(Panel(
-            f"[green]Authenticated[/green]\n\n"
-            f"User: {client.username or '[dim]unknown[/dim]'}\n"
-            f"Email: {client.email or '[dim]unknown[/dim]'}\n"
-            f"{base_url_line}"
-            f"Organisation: {org_display}\n"
-            f"Project: {project_display}",
-            title="Humanbound Status",
-        ))
+        console.print(
+            Panel(
+                f"[green]Authenticated[/green]\n\n"
+                f"User: {client.username or '[dim]unknown[/dim]'}\n"
+                f"Email: {client.email or '[dim]unknown[/dim]'}\n"
+                f"{base_url_line}"
+                f"Organisation: {org_display}\n"
+                f"Project: {project_display}",
+                title="Humanbound Status",
+            )
+        )
     else:
-        console.print(Panel(
-            "[yellow]Not authenticated[/yellow]\n\n"
-            "Run 'hb login' to authenticate.",
-            title="Humanbound Status",
-        ))
+        console.print(
+            Panel(
+                "[yellow]Not authenticated[/yellow]\n\nRun 'hb login' to authenticate.",
+                title="Humanbound Status",
+            )
+        )

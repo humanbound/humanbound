@@ -17,19 +17,21 @@ Paired with ``tests/unit/test_contract_fidelity.py``, these mirrors provide
 the contract-validation layer for every API-response fixture in the test
 suite.
 """
+
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict
-
 
 # ──────────────────────────────────────────────────────────────────────────
 # Base / common envelopes
 # ──────────────────────────────────────────────────────────────────────────
 
+
 class OKMessage(BaseModel):
     """Generic success envelope returned from mutating endpoints."""
+
     __upstream_source__ = "Base.OKMessage"
     model_config = ConfigDict(extra="allow")
 
@@ -40,12 +42,14 @@ class OKMessage(BaseModel):
 # Paginated list envelopes
 # ──────────────────────────────────────────────────────────────────────────
 
+
 class PaginationResponseLogs(BaseModel):
     """Paginated response for log listings."""
+
     __upstream_source__ = "Paginator.PaginationResponse_Logs"
     model_config = ConfigDict(extra="allow")
 
-    data: List[Dict[str, Any]] = []
+    data: list[dict[str, Any]] = []
     total: int = 0
     page: int = 1
     size: int = 50
@@ -54,10 +58,11 @@ class PaginationResponseLogs(BaseModel):
 
 class PaginationResponseExperiments(BaseModel):
     """Paginated response for experiment listings."""
+
     __upstream_source__ = "Paginator.PaginationResponse_ExperimentsResponse"
     model_config = ConfigDict(extra="allow")
 
-    data: List[Dict[str, Any]] = []
+    data: list[dict[str, Any]] = []
     total: int = 0
     page: int = 1
     size: int = 50
@@ -66,10 +71,11 @@ class PaginationResponseExperiments(BaseModel):
 
 class PaginationResponseProjects(BaseModel):
     """Paginated response for project listings."""
+
     __upstream_source__ = "Paginator.PaginationResponse_ProjectsResponse"
     model_config = ConfigDict(extra="allow")
 
-    data: List[Dict[str, Any]] = []
+    data: list[dict[str, Any]] = []
     total: int = 0
     page: int = 1
     size: int = 50
@@ -78,10 +84,11 @@ class PaginationResponseProjects(BaseModel):
 
 class PaginationResponseApiKeys(BaseModel):
     """Paginated response for API key listings."""
+
     __upstream_source__ = "Paginator.PaginationResponse_ApiKeysResponse"
     model_config = ConfigDict(extra="allow")
 
-    data: List[Dict[str, Any]] = []
+    data: list[dict[str, Any]] = []
     total: int = 0
     page: int = 1
     size: int = 50
@@ -92,8 +99,10 @@ class PaginationResponseApiKeys(BaseModel):
 # Posture
 # ──────────────────────────────────────────────────────────────────────────
 
+
 class FindingsSummary(BaseModel):
     """Findings-stats block used at dimension, project, and org levels."""
+
     __upstream_source__ = "Posture.FindingsSummary"
     model_config = ConfigDict(extra="allow")
 
@@ -105,48 +114,53 @@ class FindingsSummary(BaseModel):
 
 class PostureDimension(BaseModel):
     """Score for a single dimension (security / quality)."""
+
     __upstream_source__ = "Posture.PostureDimension"
     model_config = ConfigDict(extra="allow")
 
     posture: float = 0.0
     grade: str = "F"
-    findings: Optional[FindingsSummary] = None
+    findings: FindingsSummary | None = None
 
 
 class PostureDimensions(BaseModel):
     """Container for dimension-level posture scores."""
+
     __upstream_source__ = "Posture.PostureDimensions"
     model_config = ConfigDict(extra="allow")
 
-    security: Optional[PostureDimension] = None
-    quality: Optional[PostureDimension] = None
+    security: PostureDimension | None = None
+    quality: PostureDimension | None = None
 
 
 class ProjectPostureResponse(BaseModel):
     """GET /projects/{id}/posture."""
+
     __upstream_source__ = "Posture.ProjectPosture"
     model_config = ConfigDict(extra="allow")
 
     posture: float = 0.0
     grade: str = "F"
-    dimensions: Optional[PostureDimensions] = None
+    dimensions: PostureDimensions | None = None
     stale: bool = False
-    evaluated_at: Optional[float] = None
-    findings: Optional[FindingsSummary] = None
+    evaluated_at: float | None = None
+    findings: FindingsSummary | None = None
 
 
 class OrgPostureResponse(BaseModel):
     """GET /organisations/{id}/posture."""
+
     __upstream_source__ = "Posture.OrgPosture"
     model_config = ConfigDict(extra="allow")
 
     posture: float = 0.0
     grade: str = "F"
-    dimensions: Optional[PostureDimensions] = None
+    dimensions: PostureDimensions | None = None
 
 
 class PostureTrendSnapshot(BaseModel):
     """Single point on a posture trend line."""
+
     __upstream_source__ = "PostureSnapshot.PostureTrendSnapshot"
     model_config = ConfigDict(extra="allow")
 
@@ -157,10 +171,11 @@ class PostureTrendSnapshot(BaseModel):
 
 class PostureTrendsResponse(BaseModel):
     """GET /projects/{id}/posture/trends."""
+
     __upstream_source__ = "PostureSnapshot.PostureTrendsResponse"
     model_config = ConfigDict(extra="allow")
 
-    snapshots: List[PostureTrendSnapshot] = []
+    snapshots: list[PostureTrendSnapshot] = []
     granularity: str = "daily"
 
 
@@ -168,8 +183,10 @@ class PostureTrendsResponse(BaseModel):
 # Findings
 # ──────────────────────────────────────────────────────────────────────────
 
+
 class FindingResponse(BaseModel):
     """A single finding record."""
+
     __upstream_source__ = "Finding.FindingResponse"
     model_config = ConfigDict(extra="allow")
 
@@ -183,20 +200,21 @@ class FindingResponse(BaseModel):
     severity_label: str = "info"
     confidence: float = 0.0
     status: str = "open"
-    first_seen_at: Optional[str] = None
-    last_seen_at: Optional[str] = None
-    fixed_at: Optional[str] = None
+    first_seen_at: str | None = None
+    last_seen_at: str | None = None
+    fixed_at: str | None = None
     occurrence_count: int = 0
-    assignee_id: Optional[str] = None
+    assignee_id: str | None = None
     delegation_status: str = "unassigned"
 
 
 class FindingsResponse(BaseModel):
     """Paginated response for GET /projects/{id}/findings."""
+
     __upstream_source__ = "Finding.FindingsResponse"
     model_config = ConfigDict(extra="allow")
 
-    data: List[FindingResponse] = []
+    data: list[FindingResponse] = []
     total: int = 0
     page: int = 1
     size: int = 50
@@ -207,18 +225,20 @@ class FindingsResponse(BaseModel):
 # Projects
 # ──────────────────────────────────────────────────────────────────────────
 
+
 class ProjectsResponse(BaseModel):
     """Single project record."""
+
     __upstream_source__ = "Project.ProjectsResponse"
     model_config = ConfigDict(extra="allow")
 
     id: str = ""
     name: str = ""
     description: str = ""
-    scope: Optional[Dict[str, Any]] = None
-    created_at: Optional[str] = None
-    updated_at: Optional[str] = None
-    api_key_prefix: Optional[str] = None
+    scope: dict[str, Any] | None = None
+    created_at: str | None = None
+    updated_at: str | None = None
+    api_key_prefix: str | None = None
     archived: bool = False
 
 
@@ -226,8 +246,10 @@ class ProjectsResponse(BaseModel):
 # Experiments
 # ──────────────────────────────────────────────────────────────────────────
 
+
 class ExperimentsResponse(BaseModel):
     """Single experiment record."""
+
     __upstream_source__ = "Experiment.ExperimentsResponse"
     model_config = ConfigDict(extra="allow")
 
@@ -236,12 +258,13 @@ class ExperimentsResponse(BaseModel):
     status: str = "Created"
     test_category: str = ""
     testing_level: str = "unit"
-    created_at: Optional[str] = None
-    updated_at: Optional[str] = None
+    created_at: str | None = None
+    updated_at: str | None = None
 
 
 class ExperimentsResponseStatus(BaseModel):
     """Experiment status polling response."""
+
     __upstream_source__ = "Experiment.ExperimentsResponseStatus"
     model_config = ConfigDict(extra="allow")
 
@@ -254,51 +277,58 @@ class ExperimentsResponseStatus(BaseModel):
 # Providers
 # ──────────────────────────────────────────────────────────────────────────
 
+
 class ProvidersResponse(BaseModel):
     """Single model provider record."""
+
     __upstream_source__ = "Provider.ProvidersResponse"
     model_config = ConfigDict(extra="allow")
 
     id: str = ""
     name: str = ""
-    integration: Dict[str, Any] = {}
+    integration: dict[str, Any] = {}
 
 
 # ──────────────────────────────────────────────────────────────────────────
 # API keys
 # ──────────────────────────────────────────────────────────────────────────
 
+
 class ApiKeyResponse(BaseModel):
     """Single API key record (full key returned only on create)."""
+
     __upstream_source__ = "ApiKey.ApiKeyResponse"
     model_config = ConfigDict(extra="allow")
 
     id: str = ""
     name: str = ""
     key_prefix: str = ""
-    api_key: Optional[str] = None
+    api_key: str | None = None
     status: str = "active"
-    created_at: Optional[str] = None
-    expires_at: Optional[str] = None
+    created_at: str | None = None
+    expires_at: str | None = None
 
 
 # ──────────────────────────────────────────────────────────────────────────
 # Organisations
 # ──────────────────────────────────────────────────────────────────────────
 
+
 class OrganisationResponse(BaseModel):
     """Single organisation record."""
+
     __upstream_source__ = "Organisation.OrganisationResponse"
     model_config = ConfigDict(extra="allow")
 
     id: str = ""
     name: str = ""
-    created_at: Optional[str] = None
+    created_at: str | None = None
 
 
 # ──────────────────────────────────────────────────────────────────────────
 # Guardrails export
 # ──────────────────────────────────────────────────────────────────────────
+
 
 class GuardrailsExportHumanbound(BaseModel):
     """GET /projects/{id}/guardrails/export/humanbound — native export shape.
@@ -306,6 +336,7 @@ class GuardrailsExportHumanbound(BaseModel):
     The upstream endpoint declares a generic ``dict`` response type; this
     mirror captures the actual payload shape the CLI relies on.
     """
+
     __upstream_source__ = "guardrails_export.humanbound"
     model_config = ConfigDict(extra="allow")
 
@@ -316,7 +347,7 @@ class GuardrailsExportHumanbound(BaseModel):
     source: str = "project_scope"
     source_id: str = ""
     generated_at: str = ""
-    scope: Dict[str, Any] = {}
+    scope: dict[str, Any] = {}
 
 
 # ──────────────────────────────────────────────────────────────────────────
@@ -324,22 +355,22 @@ class GuardrailsExportHumanbound(BaseModel):
 # ──────────────────────────────────────────────────────────────────────────
 
 ENDPOINT_CONTRACTS = {
-    "GET /projects/{id}/posture":                         ProjectPostureResponse,
-    "GET /organisations/{id}/posture":                    OrgPostureResponse,
-    "GET /projects/{id}/posture/trends":                  PostureTrendsResponse,
-    "GET /projects/{id}/findings":                        FindingsResponse,
-    "GET /projects/{id}/logs/...":                        PaginationResponseLogs,
-    "GET /experiments":                                   PaginationResponseExperiments,
-    "GET /projects":                                      PaginationResponseProjects,
-    "GET /experiments/{id}":                              ExperimentsResponse,
-    "GET /experiments/{id}/status":                       ExperimentsResponseStatus,
-    "GET /projects/{id}/guardrails/export/humanbound":    GuardrailsExportHumanbound,
-    "GET /api-keys":                                      PaginationResponseApiKeys,
-    "GET /api-keys/{id}":                                 ApiKeyResponse,
-    "GET /providers":                                     ProvidersResponse,
-    "GET /organisations/{id}":                            OrganisationResponse,
-    "GET /projects/{id}":                                 ProjectsResponse,
-    "generic OK":                                         OKMessage,
+    "GET /projects/{id}/posture": ProjectPostureResponse,
+    "GET /organisations/{id}/posture": OrgPostureResponse,
+    "GET /projects/{id}/posture/trends": PostureTrendsResponse,
+    "GET /projects/{id}/findings": FindingsResponse,
+    "GET /projects/{id}/logs/...": PaginationResponseLogs,
+    "GET /experiments": PaginationResponseExperiments,
+    "GET /projects": PaginationResponseProjects,
+    "GET /experiments/{id}": ExperimentsResponse,
+    "GET /experiments/{id}/status": ExperimentsResponseStatus,
+    "GET /projects/{id}/guardrails/export/humanbound": GuardrailsExportHumanbound,
+    "GET /api-keys": PaginationResponseApiKeys,
+    "GET /api-keys/{id}": ApiKeyResponse,
+    "GET /providers": ProvidersResponse,
+    "GET /organisations/{id}": OrganisationResponse,
+    "GET /projects/{id}": ProjectsResponse,
+    "generic OK": OKMessage,
 }
 
 
@@ -351,15 +382,24 @@ __all__ = [
     "PaginationResponseProjects",
     "PaginationResponseApiKeys",
     # Posture
-    "FindingsSummary", "PostureDimension", "PostureDimensions",
-    "ProjectPostureResponse", "OrgPostureResponse",
-    "PostureTrendSnapshot", "PostureTrendsResponse",
+    "FindingsSummary",
+    "PostureDimension",
+    "PostureDimensions",
+    "ProjectPostureResponse",
+    "OrgPostureResponse",
+    "PostureTrendSnapshot",
+    "PostureTrendsResponse",
     # Findings
-    "FindingResponse", "FindingsResponse",
+    "FindingResponse",
+    "FindingsResponse",
     # Projects / experiments
-    "ProjectsResponse", "ExperimentsResponse", "ExperimentsResponseStatus",
+    "ProjectsResponse",
+    "ExperimentsResponse",
+    "ExperimentsResponseStatus",
     # Providers / keys / orgs
-    "ProvidersResponse", "ApiKeyResponse", "OrganisationResponse",
+    "ProvidersResponse",
+    "ApiKeyResponse",
+    "OrganisationResponse",
     # Guardrails
     "GuardrailsExportHumanbound",
     # Registry

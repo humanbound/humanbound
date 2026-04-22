@@ -18,21 +18,17 @@ Keep the pattern consistent; do not add ad-hoc workarounds.
 """
 
 import json
-import time
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 from click.testing import CliRunner
 
 from humanbound_cli.main import cli
-from humanbound_cli.exceptions import (
-    NotAuthenticatedError, APIError, NotFoundError,
-    ForbiddenError, RateLimitError,
-)
-
 
 # ---------------------------------------------------------------------------
 # Runner mocks for get_runner() command tests
 # ---------------------------------------------------------------------------
+
 
 def platform_runner(
     client,
@@ -48,13 +44,15 @@ def platform_runner(
     reassigning, e.g. ``runner.start.return_value = "exp-123"``.
     """
     from humanbound_cli.engine.platform_runner import PlatformTestRunner
-    from humanbound_cli.engine.runner import TestStatus, TestResult
+    from humanbound_cli.engine.runner import TestResult, TestStatus
 
     r = MagicMock(spec=PlatformTestRunner)
     r.client = client
     r.start.return_value = experiment_id
     r.get_status.return_value = TestStatus(
-        experiment_id=experiment_id, status=status, log_count=log_count,
+        experiment_id=experiment_id,
+        status=status,
+        log_count=log_count,
     )
     r.get_result.return_value = result or TestResult(
         experiment_id=experiment_id,
@@ -70,6 +68,7 @@ def platform_runner(
 def local_runner(client=None):
     """Build a LocalTestRunner-shaped mock. Optional `client` for parity."""
     from humanbound_cli.engine.local_runner import LocalTestRunner
+
     r = MagicMock(spec=LocalTestRunner)
     if client is not None:
         r.client = client
@@ -79,6 +78,7 @@ def local_runner(client=None):
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def runner():
@@ -135,6 +135,7 @@ def no_org_client(mock_client):
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def invoke(cmd_args, mock_client=None, patch_target=None):
     """Invoke a CLI command with an optional mocked client.
 
@@ -147,6 +148,7 @@ def invoke(cmd_args, mock_client=None, patch_target=None):
         Click Result object
     """
     from unittest.mock import patch
+
     r = CliRunner()
     if mock_client and patch_target:
         with patch(patch_target) as MockCls:
@@ -157,15 +159,13 @@ def invoke(cmd_args, mock_client=None, patch_target=None):
 
 def assert_exit_ok(result):
     assert result.exit_code == 0, (
-        f"Expected exit 0, got {result.exit_code}.\n"
-        f"Output:\n{result.output[:500]}"
+        f"Expected exit 0, got {result.exit_code}.\nOutput:\n{result.output[:500]}"
     )
 
 
 def assert_exit_error(result, code=1):
     assert result.exit_code == code, (
-        f"Expected exit {code}, got {result.exit_code}.\n"
-        f"Output:\n{result.output[:500]}"
+        f"Expected exit {code}, got {result.exit_code}.\nOutput:\n{result.output[:500]}"
     )
 
 
@@ -357,8 +357,13 @@ MOCK_POSTURE_TRENDS = [
 MOCK_GUARDRAILS = {
     "version": "1.0",
     "rules": [
-        {"id": "gr-1", "type": "block", "severity": "high",
-         "category": "prompt_injection", "action": "deny"},
+        {
+            "id": "gr-1",
+            "type": "block",
+            "severity": "high",
+            "category": "prompt_injection",
+            "action": "deny",
+        },
     ],
 }
 

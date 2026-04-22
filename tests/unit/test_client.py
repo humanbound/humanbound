@@ -7,24 +7,25 @@ token refresh, convenience methods, and error mapping.
 
 import json
 import time
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock, PropertyMock
 
 from humanbound_cli.client import HumanboundClient
 from humanbound_cli.exceptions import (
-    NotAuthenticatedError,
     APIError,
-    NotFoundError,
-    ForbiddenError,
-    SessionExpiredError,
-    RateLimitError,
     AuthenticationError,
+    ForbiddenError,
+    NotAuthenticatedError,
+    NotFoundError,
+    RateLimitError,
+    SessionExpiredError,
 )
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def client(tmp_path, monkeypatch):
@@ -72,6 +73,7 @@ def _mock_response(status_code=200, json_data=None, text=""):
 # Authentication
 # ---------------------------------------------------------------------------
 
+
 class TestAuthentication:
     def test_is_authenticated_with_valid_token(self, client):
         assert client.is_authenticated() is True
@@ -106,6 +108,7 @@ class TestAuthentication:
 # Headers
 # ---------------------------------------------------------------------------
 
+
 class TestHeaders:
     def test_headers_include_auth(self, client):
         headers = client._get_headers()
@@ -132,6 +135,7 @@ class TestHeaders:
 # ---------------------------------------------------------------------------
 # Response Handling
 # ---------------------------------------------------------------------------
+
 
 class TestHandleResponse:
     def test_200_returns_json(self, client):
@@ -191,12 +195,16 @@ class TestHandleResponse:
         resp = _mock_response(422, {"message": "Validation failed", "errors": ["field required"]})
         with pytest.raises(APIError) as exc_info:
             client._handle_response(resp)
-        assert exc_info.value.response == {"message": "Validation failed", "errors": ["field required"]}
+        assert exc_info.value.response == {
+            "message": "Validation failed",
+            "errors": ["field required"],
+        }
 
 
 # ---------------------------------------------------------------------------
 # HTTP Methods
 # ---------------------------------------------------------------------------
+
 
 class TestHTTPMethods:
     @patch("humanbound_cli.client.requests.get")
@@ -205,8 +213,11 @@ class TestHTTPMethods:
         result = client.get("projects", params={"page": 1})
         mock_get.assert_called_once()
         call_kwargs = mock_get.call_args
-        assert "http://test.local/api/projects" in call_kwargs.args or \
-               call_kwargs.kwargs.get("url", call_kwargs.args[0]) == "http://test.local/api/projects"
+        assert (
+            "http://test.local/api/projects" in call_kwargs.args
+            or call_kwargs.kwargs.get("url", call_kwargs.args[0])
+            == "http://test.local/api/projects"
+        )
 
     @patch("humanbound_cli.client.requests.post")
     def test_post_sends_json(self, mock_post, client):
@@ -214,8 +225,9 @@ class TestHTTPMethods:
         result = client.post("projects", data={"name": "Test"})
         assert result == {"id": "new-123"}
         call_kwargs = mock_post.call_args
-        assert call_kwargs.kwargs.get("json") == {"name": "Test"} or \
-               call_kwargs[1].get("json") == {"name": "Test"}
+        assert call_kwargs.kwargs.get("json") == {"name": "Test"} or call_kwargs[1].get("json") == {
+            "name": "Test"
+        }
 
     @patch("humanbound_cli.client.requests.put")
     def test_put_sends_json(self, mock_put, client):
@@ -248,6 +260,7 @@ class TestHTTPMethods:
 # Credential Persistence
 # ---------------------------------------------------------------------------
 
+
 class TestCredentials:
     def test_save_and_load(self, client, tmp_path, monkeypatch):
         token_file = tmp_path / ".humanbound" / "credentials.json"
@@ -261,7 +274,6 @@ class TestCredentials:
         assert data["refresh_token"] == "refresh-abc"
 
         # Verify file permissions (0o600)
-        import stat
         mode = token_file.stat().st_mode & 0o777
         assert mode == 0o600
 
@@ -279,6 +291,7 @@ class TestCredentials:
 # ---------------------------------------------------------------------------
 # Context Management
 # ---------------------------------------------------------------------------
+
 
 class TestContext:
     def test_set_organisation_clears_project(self, client):
@@ -299,6 +312,7 @@ class TestContext:
 # ---------------------------------------------------------------------------
 # Convenience Methods
 # ---------------------------------------------------------------------------
+
 
 class TestConvenienceMethods:
     @patch("humanbound_cli.client.requests.get")
@@ -333,7 +347,11 @@ class TestConvenienceMethods:
     def test_list_findings(self, mock_get, client):
         mock_get.return_value = _mock_response(200, {"data": [], "total": 0})
         result = client.list_findings("proj-456", status="open", severity="high")
-        call_url = mock_get.call_args.args[0] if mock_get.call_args.args else mock_get.call_args.kwargs.get("url", "")
+        call_url = (
+            mock_get.call_args.args[0]
+            if mock_get.call_args.args
+            else mock_get.call_args.kwargs.get("url", "")
+        )
         assert "findings" in call_url
 
     @patch("humanbound_cli.client.requests.get")
@@ -357,7 +375,9 @@ class TestConvenienceMethods:
     @patch("humanbound_cli.client.requests.get")
     def test_get_project_logs_with_filters(self, mock_get, client):
         mock_get.return_value = _mock_response(200, {"data": [], "total": 0})
-        client.get_project_logs(from_date="2025-01-01", until_date="2025-12-31", test_category="prompt", last=5)
+        client.get_project_logs(
+            from_date="2025-01-01", until_date="2025-12-31", test_category="prompt", last=5
+        )
         params = mock_get.call_args.kwargs.get("params") or mock_get.call_args[1].get("params")
         assert params["from"] == "2025-01-01"
         assert params["to"] == "2025-12-31"
@@ -369,6 +389,7 @@ class TestConvenienceMethods:
 # Token Refresh
 # ---------------------------------------------------------------------------
 
+
 class TestTokenRefresh:
     @patch("humanbound_cli.client.requests.get")
     @patch("humanbound_cli.client.requests.post")
@@ -377,16 +398,22 @@ class TestTokenRefresh:
         token_file.write_text(json.dumps({"refresh_token": "rt-abc"}))
 
         # Mock Auth0 token refresh
-        mock_post.return_value = _mock_response(200, {
-            "access_token": "new-auth0-token",
-            "expires_in": 3600,
-            "refresh_token": "rt-new",
-        })
+        mock_post.return_value = _mock_response(
+            200,
+            {
+                "access_token": "new-auth0-token",
+                "expires_in": 3600,
+                "refresh_token": "rt-new",
+            },
+        )
         # Mock API token exchange
-        mock_get.return_value = _mock_response(200, {
-            "access_token": "new-api-token",
-            "user": {"username": "tester"},
-        })
+        mock_get.return_value = _mock_response(
+            200,
+            {
+                "access_token": "new-api-token",
+                "user": {"username": "tester"},
+            },
+        )
 
         client._refresh_token()
         assert client._api_token == "new-api-token"

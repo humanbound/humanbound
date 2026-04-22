@@ -1,17 +1,16 @@
 """Unit tests for the campaigns command group."""
 
-import json
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from click.testing import CliRunner
 
+from humanbound_cli.exceptions import APIError
 from humanbound_cli.main import cli
-from humanbound_cli.exceptions import NotAuthenticatedError, APIError
 
 from .conftest import (
     MOCK_CAMPAIGN,
-    assert_exit_ok,
     assert_exit_error,
+    assert_exit_ok,
     assert_valid_json,
 )
 
@@ -65,9 +64,7 @@ class TestHappyPath:
     @patch(PATCH_TARGET)
     def test_terminate_campaign(self, MockClient):
         mock = _make_client()
-        mock.get_campaign.return_value = {
-            "campaign": {"id": "camp-001", "status": "running"}
-        }
+        mock.get_campaign.return_value = {"campaign": {"id": "camp-001", "status": "running"}}
         MockClient.return_value = mock
         result = runner.invoke(cli, ["campaigns", "terminate", "--force"])
         assert_exit_ok(result)
@@ -76,9 +73,7 @@ class TestHappyPath:
     @patch(PATCH_TARGET)
     def test_terminate_already_completed(self, MockClient):
         mock = _make_client()
-        mock.get_campaign.return_value = {
-            "campaign": {"id": "camp-001", "status": "completed"}
-        }
+        mock.get_campaign.return_value = {"campaign": {"id": "camp-001", "status": "completed"}}
         MockClient.return_value = mock
         result = runner.invoke(cli, ["campaigns", "terminate", "--force"])
         assert_exit_ok(result)
@@ -122,9 +117,7 @@ class TestErrorCases:
     @patch(PATCH_TARGET)
     def test_terminate_api_error(self, MockClient):
         mock = _make_client()
-        mock.get_campaign.return_value = {
-            "campaign": {"id": "camp-001", "status": "running"}
-        }
+        mock.get_campaign.return_value = {"campaign": {"id": "camp-001", "status": "running"}}
         mock.terminate_campaign.side_effect = APIError("Terminate failed", 500)
         MockClient.return_value = mock
         result = runner.invoke(cli, ["campaigns", "terminate", "--force"])

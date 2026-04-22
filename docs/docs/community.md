@@ -26,7 +26,7 @@ Join the Humanbound community to get help, share feedback, and stay up to date w
 
     Found a bug or have a feature request? Open an issue on GitHub.
 
-    [:octicons-link-external-16: Issues](https://github.com/Humanbound/humanbound-cli/issues)
+    [:octicons-link-external-16: Issues](https://github.com/humanbound/humanbound/issues)
 
 - :email: **Support**
 

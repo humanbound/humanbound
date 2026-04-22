@@ -4,19 +4,18 @@ Unit tests for the `hb posture` command.
 Mocked HumanboundClient — no live API needed.
 """
 
-import json
-import pytest
-from unittest.mock import patch, MagicMock
-from click.testing import CliRunner
+from unittest.mock import MagicMock, patch
 
-from humanbound_cli.main import cli
-from humanbound_cli.exceptions import NotAuthenticatedError, APIError
+from click.testing import CliRunner
 from conftest import (
-    MOCK_EXPERIMENT, MOCK_EXPERIMENT_RUNNING, MOCK_FINDING, MOCK_FINDING_2,
-    MOCK_LOG, MOCK_LOG_PASS, MOCK_PROVIDER, MOCK_POSTURE, MOCK_POSTURE_TRENDS,
-    MOCK_PROJECT, assert_exit_ok, assert_exit_error, assert_valid_json,
+    MOCK_POSTURE_TRENDS,
+    assert_exit_ok,
+    assert_valid_json,
     platform_runner,
 )
+
+from humanbound_cli.exceptions import APIError, NotAuthenticatedError
+from humanbound_cli.main import cli
 
 RUNNER_PATCH = "humanbound_cli.commands.posture.get_runner"
 runner = CliRunner()
@@ -72,6 +71,7 @@ def _make_client(**overrides):
 # ---------------------------------------------------------------------------
 # Happy path
 # ---------------------------------------------------------------------------
+
 
 class TestHappyPath:
     @patch(RUNNER_PATCH)
@@ -143,6 +143,7 @@ class TestHappyPath:
 # Error cases
 # ---------------------------------------------------------------------------
 
+
 class TestErrorCases:
     @patch(RUNNER_PATCH)
     def test_not_authenticated(self, mock_get_runner):
@@ -185,6 +186,7 @@ class TestErrorCases:
 # Flags
 # ---------------------------------------------------------------------------
 
+
 class TestFlags:
     @patch(RUNNER_PATCH)
     def test_project_flag(self, mock_get_runner):
@@ -194,7 +196,8 @@ class TestFlags:
         result = runner.invoke(cli, ["posture", "--project", "proj-other"])
         assert_exit_ok(result)
         mock.get.assert_called_once_with(
-            "projects/proj-other/posture", include_project=True,
+            "projects/proj-other/posture",
+            include_project=True,
         )
 
     @patch(RUNNER_PATCH)
@@ -205,13 +208,15 @@ class TestFlags:
         result = runner.invoke(cli, ["posture", "--org"])
         assert_exit_ok(result)
         mock.get.assert_called_once_with(
-            "organisations/org-123/posture", include_project=False,
+            "organisations/org-123/posture",
+            include_project=False,
         )
 
 
 # ---------------------------------------------------------------------------
 # Output
 # ---------------------------------------------------------------------------
+
 
 class TestOutputFormat:
     @patch(RUNNER_PATCH)

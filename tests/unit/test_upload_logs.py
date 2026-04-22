@@ -8,14 +8,13 @@ for functional tests.
 """
 
 import json
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from click.testing import CliRunner
 
-from humanbound_cli.main import cli
 from humanbound_cli.commands.logs import upload_command
-from humanbound_cli.exceptions import NotAuthenticatedError, APIError
-
+from humanbound_cli.exceptions import APIError
+from humanbound_cli.main import cli
 
 runner = CliRunner()
 

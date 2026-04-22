@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (c) 2024-2026 Humanbound
-import google.generativeai as genai
 import time
 from os import getenv
+
+import google.generativeai as genai
 
 ALLOWED_MAX_OUT_TOKENS = 4096
 DEFAULT_MAX_OUT_TOKENS = 1024
@@ -66,9 +67,7 @@ class LLMPinger:
 
         while retry_counter <= MAX_RETRY_COUNTER:
             try:
-                response = self.__do_completion_api_call(
-                    prompt, max_tokens, temperature
-                )
+                response = self.__do_completion_api_call(prompt, max_tokens, temperature)
                 return response.text
             except genai.types.RateLimitError:
                 retry_counter += 1

@@ -11,7 +11,7 @@ hb test → findings (what attacks succeeded)
     ↓
 hb guardrails → rules (what to block)
     ↓
-hb-firewall → runtime protection (blocking attacks)
+humanbound-firewall → runtime protection (blocking attacks)
 ```
 
 Each guardrail rule includes:
@@ -56,7 +56,7 @@ hb guardrails --format yaml -o guardrails.yaml
 hb guardrails --vendor openai -o openai_rules.json
 ```
 
-## Using with hb-firewall
+## Using with humanbound-firewall
 
 Guardrails configure the firewall's Tier 3 LLM judge — they define what the agent is allowed and restricted from doing:
 

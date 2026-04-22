@@ -1,17 +1,16 @@
 """Unit tests for the monitor command."""
 
-import json
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from click.testing import CliRunner
 
+from humanbound_cli.exceptions import APIError
 from humanbound_cli.main import cli
-from humanbound_cli.exceptions import NotAuthenticatedError, APIError
 
 from .conftest import (
     MOCK_PROJECT,
-    assert_exit_ok,
     assert_exit_error,
+    assert_exit_ok,
     assert_valid_json,
 )
 
@@ -41,9 +40,7 @@ class TestHappyPath:
         MockClient.return_value = mock
         result = runner.invoke(cli, ["monitor"])
         assert_exit_ok(result)
-        mock.get.assert_called_once_with(
-            "projects/proj-456", include_project=False
-        )
+        mock.get.assert_called_once_with("projects/proj-456", include_project=False)
 
     @patch(PATCH_TARGET)
     def test_monitor_status_json(self, MockClient):
@@ -86,9 +83,7 @@ class TestHappyPath:
         MockClient.return_value = mock
         result = runner.invoke(cli, ["monitor", "--project", "proj-other"])
         assert_exit_ok(result)
-        mock.get.assert_called_once_with(
-            "projects/proj-other", include_project=False
-        )
+        mock.get.assert_called_once_with("projects/proj-other", include_project=False)
 
 
 class TestErrorCases:
@@ -152,9 +147,7 @@ class TestFlags:
         MockClient.return_value = mock
         result = runner.invoke(cli, ["monitor", "-p", "proj-override"])
         assert_exit_ok(result)
-        mock.get.assert_called_once_with(
-            "projects/proj-override", include_project=False
-        )
+        mock.get.assert_called_once_with("projects/proj-override", include_project=False)
 
     @patch(PATCH_TARGET)
     def test_json_flag(self, MockClient):

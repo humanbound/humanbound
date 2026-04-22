@@ -13,7 +13,6 @@ Usage:
 import json
 import logging
 import sys
-from typing import Optional
 
 from mcp.server.fastmcp import FastMCP
 
@@ -41,14 +40,12 @@ mcp = FastMCP(
         "and track their security posture over time; "
         "(2) Shadow AI Discovery — discover unsanctioned AI services in an organisation's "
         "cloud environment.\n\n"
-
         "DISCOVERY — Two flows exist:\n"
         "  • MCP (connector-based): hb_trigger_discovery — requires a pre-registered "
         "cloud connector (hb_create_connector). Best for automated/recurring scans.\n"
         "  • CLI (browser-based): The user can run 'hb discover' in their terminal — "
         "uses a browser device-code flow with no connector needed. Suggest this when "
         "the user wants a quick one-off scan or has no connector set up.\n\n"
-
         "CORE WORKFLOWS:\n"
         "  One-shot agent onboarding (fastest):\n"
         "    hb_connect — scan + create project + auto-test in a single call\n"
@@ -57,13 +54,11 @@ mcp = FastMCP(
         "  Security Testing:\n"
         "    hb_set_project → hb_run_test → poll hb_get_experiment_status → "
         "hb_get_experiment_logs → hb_get_posture\n\n"
-
         "PREREQUISITES:\n"
         "  • The user must run 'hb login' in a terminal before using any tools.\n"
         "  • Most tools require an active organisation (hb_set_organisation).\n"
         "  • Test, posture, findings, and coverage tools require an active project "
         "(hb_set_project).\n\n"
-
         "CLI-ONLY COMMANDS (suggest when relevant):\n"
         "  • 'hb discover' — browser-based shadow AI discovery (no connector needed)\n"
         "  • 'hb connect --vendor microsoft' — browser-based platform discovery\n"
@@ -74,7 +69,7 @@ mcp = FastMCP(
 # ---------------------------------------------------------------------------
 # Singleton client
 # ---------------------------------------------------------------------------
-_client: Optional[HumanboundClient] = None
+_client: HumanboundClient | None = None
 
 
 def _get_client() -> HumanboundClient:
@@ -100,19 +95,22 @@ def _err(e: Exception) -> str:
 # CONTEXT TOOLS
 # =========================================================================
 
+
 @mcp.tool()
 def hb_whoami() -> str:
     """Show current authentication status, active organisation, and active project."""
     try:
         client = _get_client()
-        return _ok({
-            "authenticated": client.is_authenticated(),
-            "username": client.username,
-            "email": client.email,
-            "organisation_id": client.organisation_id,
-            "project_id": client.project_id,
-            "base_url": client.base_url,
-        })
+        return _ok(
+            {
+                "authenticated": client.is_authenticated(),
+                "username": client.username,
+                "email": client.email,
+                "organisation_id": client.organisation_id,
+                "project_id": client.project_id,
+                "base_url": client.base_url,
+            }
+        )
     except HumanboundError as e:
         return _err(e)
 
@@ -141,7 +139,9 @@ def hb_set_organisation(organisation_id: str) -> str:
     try:
         client = _get_client()
         client.set_organisation(organisation_id)
-        return _ok({"organisation_id": organisation_id, "message": "Organisation set successfully."})
+        return _ok(
+            {"organisation_id": organisation_id, "message": "Organisation set successfully."}
+        )
     except HumanboundError as e:
         return _err(e)
 
@@ -168,6 +168,7 @@ def hb_set_project(project_id: str) -> str:
 # =========================================================================
 # PROJECT TOOLS
 # =========================================================================
+
 
 @mcp.tool()
 def hb_list_projects(page: int = 1, size: int = 50) -> str:
@@ -199,7 +200,9 @@ def hb_get_project(project_id: str) -> str:
 
 
 @mcp.tool()
-def hb_update_project(project_id: str, name: Optional[str] = None, description: Optional[str] = None) -> str:
+def hb_update_project(
+    project_id: str, name: str | None = None, description: str | None = None
+) -> str:
     """Update a project's name or description.
 
     Args:
@@ -235,7 +238,7 @@ def hb_delete_project(project_id: str) -> str:
 
 
 @mcp.tool()
-def hb_create_project(name: str, description: Optional[str] = None) -> str:
+def hb_create_project(name: str, description: str | None = None) -> str:
     """Create a new security testing project in the current organisation.
 
     Creates a basic project. For richer setup with automatic scope
@@ -259,6 +262,7 @@ def hb_create_project(name: str, description: Optional[str] = None) -> str:
 # =========================================================================
 # EXPERIMENT TOOLS
 # =========================================================================
+
 
 @mcp.tool()
 def hb_list_experiments(page: int = 1, size: int = 50) -> str:
@@ -314,7 +318,7 @@ def hb_get_experiment_logs(
     experiment_id: str,
     page: int = 1,
     size: int = 50,
-    result: Optional[str] = None,
+    result: str | None = None,
 ) -> str:
     """Get test logs for an experiment.
 
@@ -364,14 +368,15 @@ def hb_delete_experiment(experiment_id: str) -> str:
 # TEST EXECUTION
 # =========================================================================
 
+
 @mcp.tool()
 def hb_run_test(
     test_category: str = "humanbound/adversarial/owasp_multi_turn",
-    name: Optional[str] = None,
+    name: str | None = None,
     description: str = "",
     testing_level: str = "system",
     lang: str = "english",
-    provider_id: Optional[str] = None,
+    provider_id: str | None = None,
     auto_start: bool = True,
 ) -> str:
     """Run a security test (create and start an experiment).
@@ -403,9 +408,18 @@ def hb_run_test(
 
         # Language code mapping
         lang_map = {
-            "en": "english", "fr": "french", "de": "german", "es": "spanish",
-            "it": "italian", "pt": "portuguese", "nl": "dutch", "el": "greek",
-            "ar": "arabic", "zh": "chinese", "ja": "japanese", "ko": "korean",
+            "en": "english",
+            "fr": "french",
+            "de": "german",
+            "es": "spanish",
+            "it": "italian",
+            "pt": "portuguese",
+            "nl": "dutch",
+            "el": "greek",
+            "ar": "arabic",
+            "zh": "chinese",
+            "ja": "japanese",
+            "ko": "korean",
         }
         lang = lang_map.get(lang.lower(), lang.lower())
 
@@ -413,11 +427,14 @@ def hb_run_test(
         if not provider_id:
             providers = client.list_providers()
             if not providers:
-                return _err(ValueError("No model providers configured. Add one with hb_add_provider."))
+                return _err(
+                    ValueError("No model providers configured. Add one with hb_add_provider.")
+                )
             provider_id = providers[0].get("id")
 
         # Build experiment data
         from datetime import datetime, timezone
+
         ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
         exp_name = name or f"{test_category.split('/')[-1]}-{ts}"
 
@@ -442,15 +459,16 @@ def hb_run_test(
 # PROJECT LOGS
 # =========================================================================
 
+
 @mcp.tool()
 def hb_get_project_logs(
     page: int = 1,
     size: int = 50,
-    result: Optional[str] = None,
-    from_date: Optional[str] = None,
-    until_date: Optional[str] = None,
-    test_category: Optional[str] = None,
-    last: Optional[int] = None,
+    result: str | None = None,
+    from_date: str | None = None,
+    until_date: str | None = None,
+    test_category: str | None = None,
+    last: int | None = None,
 ) -> str:
     """Get aggregated test logs for the current project with optional filters.
 
@@ -465,11 +483,17 @@ def hb_get_project_logs(
     """
     try:
         client = _get_client()
-        return _ok(client.get_project_logs(
-            page=page, size=size, result=result,
-            from_date=from_date, until_date=until_date,
-            test_category=test_category, last=last,
-        ))
+        return _ok(
+            client.get_project_logs(
+                page=page,
+                size=size,
+                result=result,
+                from_date=from_date,
+                until_date=until_date,
+                test_category=test_category,
+                last=last,
+            )
+        )
     except HumanboundError as e:
         return _err(e)
 
@@ -477,6 +501,7 @@ def hb_get_project_logs(
 # =========================================================================
 # PROVIDER TOOLS
 # =========================================================================
+
 
 @mcp.tool()
 def hb_list_providers() -> str:
@@ -492,8 +517,8 @@ def hb_list_providers() -> str:
 def hb_add_provider(
     name: str,
     api_key: str,
-    model: Optional[str] = None,
-    endpoint: Optional[str] = None,
+    model: str | None = None,
+    endpoint: str | None = None,
     is_default: bool = False,
 ) -> str:
     """Add a new model provider to the organisation.
@@ -520,10 +545,10 @@ def hb_add_provider(
 @mcp.tool()
 def hb_update_provider(
     provider_id: str,
-    api_key: Optional[str] = None,
-    model: Optional[str] = None,
-    endpoint: Optional[str] = None,
-    is_default: Optional[bool] = None,
+    api_key: str | None = None,
+    model: str | None = None,
+    endpoint: str | None = None,
+    is_default: bool | None = None,
 ) -> str:
     """Update an existing model provider.
 
@@ -572,11 +597,12 @@ def hb_remove_provider(provider_id: str) -> str:
 # FINDINGS TOOLS
 # =========================================================================
 
+
 @mcp.tool()
 def hb_list_findings(
-    project_id: Optional[str] = None,
-    status: Optional[str] = None,
-    severity: Optional[str] = None,
+    project_id: str | None = None,
+    status: str | None = None,
+    severity: str | None = None,
     page: int = 1,
     size: int = 50,
 ) -> str:
@@ -594,7 +620,9 @@ def hb_list_findings(
         pid = project_id or client.project_id
         if not pid:
             return _err(ValueError("No project selected. Use hb_set_project first."))
-        return _ok(client.list_findings(pid, status=status, severity=severity, page=page, size=size))
+        return _ok(
+            client.list_findings(pid, status=status, severity=severity, page=page, size=size)
+        )
     except HumanboundError as e:
         return _err(e)
 
@@ -602,10 +630,10 @@ def hb_list_findings(
 @mcp.tool()
 def hb_update_finding(
     finding_id: str,
-    project_id: Optional[str] = None,
-    status: Optional[str] = None,
-    severity: Optional[str] = None,
-    notes: Optional[str] = None,
+    project_id: str | None = None,
+    status: str | None = None,
+    severity: str | None = None,
+    notes: str | None = None,
 ) -> str:
     """Update a security finding (e.g. change status or severity).
 
@@ -637,8 +665,9 @@ def hb_update_finding(
 # COVERAGE & POSTURE TOOLS
 # =========================================================================
 
+
 @mcp.tool()
-def hb_get_coverage(project_id: Optional[str] = None, include_gaps: bool = False) -> str:
+def hb_get_coverage(project_id: str | None = None, include_gaps: bool = False) -> str:
     """Get test coverage data for a project.
 
     Coverage measures the percentage of OWASP LLM Top 10 and other attack
@@ -660,7 +689,7 @@ def hb_get_coverage(project_id: Optional[str] = None, include_gaps: bool = False
 
 
 @mcp.tool()
-def hb_get_posture(project_id: Optional[str] = None) -> str:
+def hb_get_posture(project_id: str | None = None) -> str:
     """Get the security posture score for a project.
 
     Returns a score (0-100), grade (A-F), breakdown by four dimensions,
@@ -688,7 +717,7 @@ def hb_get_posture(project_id: Optional[str] = None) -> str:
 
 
 @mcp.tool()
-def hb_get_posture_trends(project_id: Optional[str] = None) -> str:
+def hb_get_posture_trends(project_id: str | None = None) -> str:
     """Get posture score trend history for a project.
 
     Args:
@@ -726,10 +755,11 @@ def hb_get_shadow_posture() -> str:
 # GUARDRAILS
 # =========================================================================
 
+
 @mcp.tool()
 def hb_export_guardrails(
     vendor: str = "humanbound",
-    model: Optional[str] = None,
+    model: str | None = None,
     include_reasoning: bool = False,
 ) -> str:
     """Export guardrail rules derived from security test findings.
@@ -766,13 +796,14 @@ def hb_export_guardrails(
 # CONNECTOR TOOLS
 # =========================================================================
 
+
 @mcp.tool()
 def hb_create_connector(
     tenant_id: str,
     client_id: str,
     client_secret: str,
     vendor: str = "microsoft",
-    display_name: Optional[str] = None,
+    display_name: str | None = None,
 ) -> str:
     """Register a new cloud connector for shadow AI discovery.
 
@@ -793,13 +824,15 @@ def hb_create_connector(
     """
     try:
         client = _get_client()
-        return _ok(client.create_connector(
-            vendor=vendor,
-            tenant_id=tenant_id,
-            client_id=client_id,
-            client_secret=client_secret,
-            display_name=display_name,
-        ))
+        return _ok(
+            client.create_connector(
+                vendor=vendor,
+                tenant_id=tenant_id,
+                client_id=client_id,
+                client_secret=client_secret,
+                display_name=display_name,
+            )
+        )
     except HumanboundError as e:
         return _err(e)
 
@@ -831,9 +864,9 @@ def hb_get_connector(connector_id: str) -> str:
 @mcp.tool()
 def hb_update_connector(
     connector_id: str,
-    display_name: Optional[str] = None,
-    status: Optional[str] = None,
-    client_secret: Optional[str] = None,
+    display_name: str | None = None,
+    status: str | None = None,
+    client_secret: str | None = None,
 ) -> str:
     """Update a cloud connector.
 
@@ -911,12 +944,13 @@ def hb_trigger_discovery(connector_id: str) -> str:
 # INVENTORY TOOLS
 # =========================================================================
 
+
 @mcp.tool()
 def hb_list_inventory(
-    category: Optional[str] = None,
-    vendor: Optional[str] = None,
-    risk_level: Optional[str] = None,
-    is_sanctioned: Optional[bool] = None,
+    category: str | None = None,
+    vendor: str | None = None,
+    risk_level: str | None = None,
+    is_sanctioned: bool | None = None,
     page: int = 1,
     size: int = 50,
 ) -> str:
@@ -936,11 +970,16 @@ def hb_list_inventory(
     """
     try:
         client = _get_client()
-        return _ok(client.list_inventory(
-            category=category, vendor=vendor,
-            risk_level=risk_level, is_sanctioned=is_sanctioned,
-            page=page, size=size,
-        ))
+        return _ok(
+            client.list_inventory(
+                category=category,
+                vendor=vendor,
+                risk_level=risk_level,
+                is_sanctioned=is_sanctioned,
+                page=page,
+                size=size,
+            )
+        )
     except HumanboundError as e:
         return _err(e)
 
@@ -962,12 +1001,12 @@ def hb_get_inventory_asset(asset_id: str) -> str:
 @mcp.tool()
 def hb_update_inventory_asset(
     asset_id: str,
-    is_sanctioned: Optional[bool] = None,
-    business_owner: Optional[str] = None,
-    organisation_unit: Optional[str] = None,
-    intended_use: Optional[str] = None,
-    has_policy: Optional[bool] = None,
-    has_risk_assessment: Optional[bool] = None,
+    is_sanctioned: bool | None = None,
+    business_owner: str | None = None,
+    organisation_unit: str | None = None,
+    intended_use: str | None = None,
+    has_policy: bool | None = None,
+    has_risk_assessment: bool | None = None,
 ) -> str:
     """Update governance fields on an inventory asset.
 
@@ -1015,7 +1054,7 @@ def hb_archive_inventory_asset(asset_id: str) -> str:
 
 
 @mcp.tool()
-def hb_onboard_inventory_asset(asset_id: str, project_name: Optional[str] = None) -> str:
+def hb_onboard_inventory_asset(asset_id: str, project_name: str | None = None) -> str:
     """Create a security testing project from a discovered inventory asset.
 
     This converts a discovered AI asset into a security testing project so
@@ -1037,6 +1076,7 @@ def hb_onboard_inventory_asset(asset_id: str, project_name: Optional[str] = None
 # =========================================================================
 # API KEY TOOLS
 # =========================================================================
+
 
 @mcp.tool()
 def hb_list_api_keys(page: int = 1, limit: int = 50) -> str:
@@ -1069,7 +1109,7 @@ def hb_create_api_key(name: str, scopes: str = "admin") -> str:
 
 
 @mcp.tool()
-def hb_update_api_key(key_id: str, name: Optional[str] = None, scopes: Optional[str] = None) -> str:
+def hb_update_api_key(key_id: str, name: str | None = None, scopes: str | None = None) -> str:
     """Update an API key.
 
     Args:
@@ -1107,6 +1147,7 @@ def hb_delete_api_key(key_id: str) -> str:
 # =========================================================================
 # MEMBER TOOLS
 # =========================================================================
+
 
 @mcp.tool()
 def hb_list_members() -> str:
@@ -1152,12 +1193,13 @@ def hb_remove_member(member_id: str) -> str:
 # WEBHOOK TOOLS
 # =========================================================================
 
+
 @mcp.tool()
 def hb_create_webhook(
     url: str,
     secret: str,
     name: str = "Untitled Webhook",
-    event_types: Optional[str] = None,
+    event_types: str | None = None,
 ) -> str:
     """Create a webhook for the current organisation.
 
@@ -1237,10 +1279,10 @@ def hb_test_webhook(webhook_id: str) -> str:
 @mcp.tool()
 def hb_replay_webhook(
     webhook_id: str,
-    since: Optional[str] = None,
-    until: Optional[str] = None,
-    project_id: Optional[str] = None,
-    event_type: Optional[str] = None,
+    since: str | None = None,
+    until: str | None = None,
+    project_id: str | None = None,
+    event_type: str | None = None,
 ) -> str:
     """Replay historical events through a webhook.
 
@@ -1253,10 +1295,15 @@ def hb_replay_webhook(
     """
     try:
         client = _get_client()
-        return _ok(client.replay_webhook(
-            webhook_id, since=since, until=until,
-            project_id=project_id, event_type=event_type,
-        ))
+        return _ok(
+            client.replay_webhook(
+                webhook_id,
+                since=since,
+                until=until,
+                project_id=project_id,
+                event_type=event_type,
+            )
+        )
     except HumanboundError as e:
         return _err(e)
 
@@ -1265,8 +1312,9 @@ def hb_replay_webhook(
 # CAMPAIGN TOOLS
 # =========================================================================
 
+
 @mcp.tool()
-def hb_get_campaign(project_id: Optional[str] = None) -> str:
+def hb_get_campaign(project_id: str | None = None) -> str:
     """Get the current campaign for a project.
 
     Campaigns are automated multi-phase security testing sequences
@@ -1288,7 +1336,7 @@ def hb_get_campaign(project_id: Optional[str] = None) -> str:
 
 
 @mcp.tool()
-def hb_terminate_campaign(campaign_id: str, project_id: Optional[str] = None) -> str:
+def hb_terminate_campaign(campaign_id: str, project_id: str | None = None) -> str:
     """Terminate a running campaign (ASCAM automated testing sequence).
 
     This terminates all pending and running experiments in the campaign.
@@ -1311,12 +1359,13 @@ def hb_terminate_campaign(campaign_id: str, project_id: Optional[str] = None) ->
 # CONNECT — one-shot agent onboarding (scan → project → test)
 # =========================================================================
 
+
 @mcp.tool()
 def hb_connect(
     endpoint_config: str,
-    name: Optional[str] = None,
-    prompt_text: Optional[str] = None,
-    context: Optional[str] = None,
+    name: str | None = None,
+    prompt_text: str | None = None,
+    context: str | None = None,
     timeout: int = 180,
 ) -> str:
     """Connect an AI agent: probe it, create a project, and run the first security test — all in one call.
@@ -1371,6 +1420,7 @@ def hb_connect(
                 ep_url = bot_config.get("chat_completion", {}).get("endpoint", "")
                 if ep_url:
                     from urllib.parse import urlparse
+
                     hostname = urlparse(ep_url).hostname
                     if hostname:
                         name = hostname
@@ -1394,7 +1444,7 @@ def hb_connect(
         # -- Create project -----------------------------------------------
         project_data = {
             "name": name,
-            "description": f"Project created via MCP hb_connect",
+            "description": "Project created via MCP hb_connect",
             "scope": scope,
         }
         if default_integration:
@@ -1418,10 +1468,15 @@ def hb_connect(
                 configuration = {}
                 if context:
                     if len(context) > 1500:
-                        return _err(ValueError(f"Context too long ({len(context)} chars). Maximum is 1,500."))
+                        return _err(
+                            ValueError(
+                                f"Context too long ({len(context)} chars). Maximum is 1,500."
+                            )
+                        )
                     configuration["context"] = context
 
                 import time as _time
+
                 experiment_data = {
                     "name": f"connect-{_time.strftime('%Y%m%d-%H%M%S')}",
                     "description": "Initial assessment from hb_connect (MCP)",
@@ -1433,12 +1488,16 @@ def hb_connect(
                 }
 
                 try:
-                    exp_result = client.post("experiments", data=experiment_data, include_project=True)
+                    exp_result = client.post(
+                        "experiments", data=experiment_data, include_project=True
+                    )
                     experiment_id = exp_result.get("id")
                 except Exception as e:
                     auto_test_error = str(e)
             else:
-                auto_test_error = "No providers configured. Add one with hb_add_provider, then run hb_run_test."
+                auto_test_error = (
+                    "No providers configured. Add one with hb_add_provider, then run hb_run_test."
+                )
         else:
             auto_test_error = "No agent integration detected from scan — skipped auto-test. Run hb_run_test manually."
 
@@ -1471,12 +1530,13 @@ def hb_connect(
 # UPLOAD
 # =========================================================================
 
+
 @mcp.tool()
 def hb_upload_conversations(
     conversations: str,
-    project_id: Optional[str] = None,
-    tag: Optional[str] = None,
-    lang: Optional[str] = None,
+    project_id: str | None = None,
+    tag: str | None = None,
+    lang: str | None = None,
 ) -> str:
     """Upload conversation logs for security evaluation.
 
@@ -1508,19 +1568,23 @@ def hb_upload_conversations(
 # RESOURCES
 # =========================================================================
 
+
 @mcp.resource("humanbound://context")
 def get_context() -> str:
     """Current authentication status, active organisation, and active project."""
     try:
         client = _get_client()
-        return json.dumps({
-            "authenticated": client.is_authenticated(),
-            "username": client.username,
-            "email": client.email,
-            "organisation_id": client.organisation_id,
-            "project_id": client.project_id,
-            "base_url": client.base_url,
-        }, indent=2)
+        return json.dumps(
+            {
+                "authenticated": client.is_authenticated(),
+                "username": client.username,
+                "email": client.email,
+                "organisation_id": client.organisation_id,
+                "project_id": client.project_id,
+                "base_url": client.base_url,
+            },
+            indent=2,
+        )
     except Exception as e:
         return json.dumps({"error": str(e)})
 
@@ -1550,6 +1614,7 @@ def get_coverage_resource(project_id: str) -> str:
 # =========================================================================
 # PROMPTS
 # =========================================================================
+
 
 @mcp.prompt()
 def run_security_test(
@@ -1630,18 +1695,22 @@ def hb_redteam_analyze(experiment_id: str) -> str:
     """
     try:
         client = _get_client()
-        return _ok(client.post(
-            f"experiments/{experiment_id}/actions/analyze",
-            data={},
-            include_project=True,
-            timeout=120,
-        ))
+        return _ok(
+            client.post(
+                f"experiments/{experiment_id}/actions/analyze",
+                data={},
+                include_project=True,
+                timeout=120,
+            )
+        )
     except HumanboundError as e:
         return _err(e)
 
 
 @mcp.tool()
-def hb_redteam_start(experiment_id: str, goal: str = "", method: str = "", examples: list = None) -> str:
+def hb_redteam_start(
+    experiment_id: str, goal: str = "", method: str = "", examples: list = None
+) -> str:
     """Start a new attack session within a collaborative red team experiment.
 
     If goal/method are provided, uses the engineer's strategy. Otherwise
@@ -1662,11 +1731,13 @@ def hb_redteam_start(experiment_id: str, goal: str = "", method: str = "", examp
                 "method": method or "",
                 "examples": examples or [],
             }
-        return _ok(client.post(
-            f"experiments/{experiment_id}/actions/start",
-            data=data,
-            include_project=True,
-        ))
+        return _ok(
+            client.post(
+                f"experiments/{experiment_id}/actions/start",
+                data=data,
+                include_project=True,
+            )
+        )
     except HumanboundError as e:
         return _err(e)
 
@@ -1686,12 +1757,14 @@ def hb_redteam_execute(experiment_id: str, session_id: str, burst_turns: int = 5
     """
     try:
         client = _get_client()
-        return _ok(client.post(
-            f"experiments/{experiment_id}/actions/execute",
-            data={"session_id": session_id, "burst_turns": burst_turns},
-            include_project=True,
-            timeout=120,
-        ))
+        return _ok(
+            client.post(
+                f"experiments/{experiment_id}/actions/execute",
+                data={"session_id": session_id, "burst_turns": burst_turns},
+                include_project=True,
+                timeout=120,
+            )
+        )
     except HumanboundError as e:
         return _err(e)
 
@@ -1711,11 +1784,13 @@ def hb_redteam_direct(experiment_id: str, session_id: str, input: str) -> str:
     """
     try:
         client = _get_client()
-        return _ok(client.post(
-            f"experiments/{experiment_id}/actions/direct",
-            data={"session_id": session_id, "input": input},
-            include_project=True,
-        ))
+        return _ok(
+            client.post(
+                f"experiments/{experiment_id}/actions/direct",
+                data={"session_id": session_id, "input": input},
+                include_project=True,
+            )
+        )
     except HumanboundError as e:
         return _err(e)
 
@@ -1734,12 +1809,14 @@ def hb_redteam_judge(experiment_id: str, session_id: str) -> str:
     """
     try:
         client = _get_client()
-        return _ok(client.post(
-            f"experiments/{experiment_id}/actions/judge",
-            data={"session_id": session_id},
-            include_project=True,
-            timeout=60,
-        ))
+        return _ok(
+            client.post(
+                f"experiments/{experiment_id}/actions/judge",
+                data={"session_id": session_id},
+                include_project=True,
+                timeout=60,
+            )
+        )
     except HumanboundError as e:
         return _err(e)
 
@@ -1756,11 +1833,13 @@ def hb_redteam_complete(experiment_id: str) -> str:
     """
     try:
         client = _get_client()
-        return _ok(client.post(
-            f"experiments/{experiment_id}/actions/complete",
-            data={},
-            include_project=True,
-        ))
+        return _ok(
+            client.post(
+                f"experiments/{experiment_id}/actions/complete",
+                data={},
+                include_project=True,
+            )
+        )
     except HumanboundError as e:
         return _err(e)
 
@@ -1768,6 +1847,7 @@ def hb_redteam_complete(experiment_id: str) -> str:
 # =========================================================================
 # Entry point
 # =========================================================================
+
 
 def main():
     """Run the MCP server on stdio."""

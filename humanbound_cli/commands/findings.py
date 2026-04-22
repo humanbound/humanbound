@@ -3,12 +3,13 @@
 """Findings commands."""
 
 import json
+
 import click
 from rich.console import Console
 from rich.table import Table
 
 from ..client import HumanboundClient
-from ..exceptions import NotAuthenticatedError, APIError
+from ..exceptions import APIError, NotAuthenticatedError
 
 console = Console()
 
@@ -29,8 +30,14 @@ STATUS_STYLES = {
 
 
 @click.group("findings", invoke_without_command=True)
-@click.option("--status", type=click.Choice(["open", "stale", "fixed", "regressed"]), help="Filter by status")
-@click.option("--severity", type=click.Choice(["critical", "high", "medium", "low", "info"]), help="Filter by severity")
+@click.option(
+    "--status", type=click.Choice(["open", "stale", "fixed", "regressed"]), help="Filter by status"
+)
+@click.option(
+    "--severity",
+    type=click.Choice(["critical", "high", "medium", "low", "info"]),
+    help="Filter by severity",
+)
 @click.option("--page", default=1, help="Page number")
 @click.option("--size", default=20, help="Items per page")
 @click.option("--json", "as_json", is_flag=True, help="Output as JSON")
@@ -66,10 +73,13 @@ def findings_group(ctx, status, severity, page, size, as_json, output):
 
     try:
         with console.status("Fetching findings..."):
-            response = client.list_findings(project_id, status=status, severity=severity, page=page, size=size)
+            response = client.list_findings(
+                project_id, status=status, severity=severity, page=page, size=size
+            )
 
         if output:
             from pathlib import Path
+
             Path(output).write_text(json.dumps(response, indent=2, default=str))
             console.print(f"[green]Findings saved to:[/green] {output}")
             return
@@ -125,7 +135,11 @@ def findings_group(ctx, status, severity, page, size, as_json, output):
 @findings_group.command("update")
 @click.argument("finding_id")
 @click.option("--status", type=click.Choice(["open", "fixed"]), help="New status")
-@click.option("--severity", type=click.Choice(["critical", "high", "medium", "low", "info"]), help="New severity")
+@click.option(
+    "--severity",
+    type=click.Choice(["critical", "high", "medium", "low", "info"]),
+    help="New severity",
+)
 def update_finding(finding_id: str, status: str, severity: str):
     """Update a finding's status or severity.
 
@@ -159,7 +173,7 @@ def update_finding(finding_id: str, status: str, severity: str):
         with console.status("Updating finding..."):
             client.update_finding(project_id, finding_id, payload)
 
-        console.print(f"[green]Finding updated.[/green]")
+        console.print("[green]Finding updated.[/green]")
         console.print(f"[dim]ID: {finding_id}[/dim]")
         if status:
             console.print(f"  Status: {STATUS_STYLES.get(status, status)}")
@@ -177,10 +191,13 @@ def update_finding(finding_id: str, status: str, severity: str):
 @findings_group.command("assign")
 @click.argument("finding_id")
 @click.option("--assignee", required=True, help="Member ID to assign the finding to")
-@click.option("--delegation-status", "delegation_status",
-              type=click.Choice(["assigned", "in_progress", "verified"]),
-              default="assigned",
-              help="Delegation status (default: assigned)")
+@click.option(
+    "--delegation-status",
+    "delegation_status",
+    type=click.Choice(["assigned", "in_progress", "verified"]),
+    default="assigned",
+    help="Delegation status (default: assigned)",
+)
 def assign_finding(finding_id: str, assignee: str, delegation_status: str):
     """Assign a finding to a team member.
 
@@ -214,7 +231,7 @@ def assign_finding(finding_id: str, assignee: str, delegation_status: str):
         with console.status("Assigning finding..."):
             client.update_finding(project_id, finding_id, payload)
 
-        console.print(f"[green]Finding assigned.[/green]")
+        console.print("[green]Finding assigned.[/green]")
         console.print(f"[dim]ID: {finding_id}[/dim]")
         console.print(f"  Assignee: {assignee}")
         console.print(f"  Status: {delegation_status}")

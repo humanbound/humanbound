@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (c) 2024-2026 Humanbound
-import anthropic
 import time
 from os import getenv
+
+import anthropic
 
 #
 # Handle communications with LLM
@@ -23,9 +24,7 @@ class LLMStreamer:
                 "model": getenv("LLM_MODEL"),
             }
         }
-        self.client = anthropic.Anthropic(
-            api_key=model_provider["integration"]["api_key"]
-        )
+        self.client = anthropic.Anthropic(api_key=model_provider["integration"]["api_key"])
         self.model = model_provider["integration"]["model"]
 
     def ping(
@@ -55,9 +54,7 @@ class LLMPinger:
                 "model": getenv("LLM_MODEL"),
             }
         }
-        self.client = anthropic.Anthropic(
-            api_key=self.model_provider["integration"]["api_key"]
-        )
+        self.client = anthropic.Anthropic(api_key=self.model_provider["integration"]["api_key"])
 
     def __do_completion_api_call(self, system_p, user_p, max_tokens, temperature):
         return self.client.messages.create(
@@ -80,9 +77,7 @@ class LLMPinger:
 
         while retry_counter <= MAX_RETRY_COUNTER:
             try:
-                response = self.__do_completion_api_call(
-                    system_p, user_p, max_tokens, temperature
-                )
+                response = self.__do_completion_api_call(system_p, user_p, max_tokens, temperature)
                 return response.content[0].text
             except anthropic.RateLimitError:
                 retry_counter += 1

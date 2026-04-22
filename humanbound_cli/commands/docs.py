@@ -2,11 +2,12 @@
 # Copyright (c) 2024-2026 Humanbound
 """Docs command for opening Humanbound documentation."""
 
+import webbrowser
+
 import click
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
-import webbrowser
 
 console = Console()
 
@@ -32,9 +33,7 @@ DOCS_URLS = {
     is_flag=True,
     help="List available documentation topics",
 )
-@click.option(
-    "--no-browser", "-n", is_flag=True, help="Don't open browser, just show URL"
-)
+@click.option("--no-browser", "-n", is_flag=True, help="Don't open browser, just show URL")
 def docs_command(topic: str, list_topics: bool, no_browser: bool):
     """Open Humanbound documentation in your browser.
 

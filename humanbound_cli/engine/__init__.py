@@ -8,7 +8,7 @@ Usage:
     eid = runner.start(config)
 """
 
-from .runner import TestRunner, TestConfig, TestStatus, TestResult, Posture, PaginatedLogs
+from .runner import PaginatedLogs, Posture, TestConfig, TestResult, TestRunner, TestStatus
 
 
 def get_runner(force_local: bool = False) -> TestRunner:
@@ -20,14 +20,18 @@ def get_runner(force_local: bool = False) -> TestRunner:
     """
     if force_local:
         from .local_runner import LocalTestRunner
+
         return LocalTestRunner()
 
     from ..client import HumanboundClient
+
     client = HumanboundClient()
     if client.is_authenticated() and client.project_id:
         from .platform_runner import PlatformTestRunner
+
         return PlatformTestRunner(client)
 
     # Not authenticated or no project → local mode
     from .local_runner import LocalTestRunner
+
     return LocalTestRunner()

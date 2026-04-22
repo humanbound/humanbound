@@ -1,17 +1,16 @@
 """Unit tests for the assessments command group."""
 
-import json
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from click.testing import CliRunner
 
+from humanbound_cli.exceptions import APIError
 from humanbound_cli.main import cli
-from humanbound_cli.exceptions import NotAuthenticatedError, APIError
 
 from .conftest import (
     MOCK_ASSESSMENT,
-    assert_exit_ok,
     assert_exit_error,
+    assert_exit_ok,
     assert_valid_json,
 )
 

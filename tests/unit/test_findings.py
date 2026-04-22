@@ -5,17 +5,18 @@ Mocked HumanboundClient — no live API needed.
 """
 
 import json
-import pytest
-from unittest.mock import patch, MagicMock
-from click.testing import CliRunner
+from unittest.mock import MagicMock, patch
 
-from humanbound_cli.main import cli
-from humanbound_cli.exceptions import NotAuthenticatedError, APIError
+from click.testing import CliRunner
 from conftest import (
-    MOCK_EXPERIMENT, MOCK_EXPERIMENT_RUNNING, MOCK_FINDING, MOCK_FINDING_2,
-    MOCK_LOG, MOCK_LOG_PASS, MOCK_PROVIDER, MOCK_POSTURE, MOCK_POSTURE_TRENDS,
-    MOCK_PROJECT, assert_exit_ok, assert_exit_error, assert_valid_json,
+    MOCK_FINDING,
+    MOCK_FINDING_2,
+    assert_exit_ok,
+    assert_valid_json,
 )
+
+from humanbound_cli.exceptions import APIError
+from humanbound_cli.main import cli
 
 PATCH = "humanbound_cli.commands.findings.HumanboundClient"
 runner = CliRunner()
@@ -50,6 +51,7 @@ def _make_client(**overrides):
 # ---------------------------------------------------------------------------
 # Happy path
 # ---------------------------------------------------------------------------
+
 
 class TestHappyPath:
     @patch(PATCH)
@@ -88,6 +90,7 @@ class TestHappyPath:
         result = runner.invoke(cli, ["findings", "--output", outfile])
         assert_exit_ok(result)
         import pathlib
+
         content = pathlib.Path(outfile).read_text()
         data = json.loads(content)
         assert "data" in data
@@ -116,6 +119,7 @@ class TestHappyPath:
 # ---------------------------------------------------------------------------
 # Error cases
 # ---------------------------------------------------------------------------
+
 
 class TestErrorCases:
     @patch(PATCH)
@@ -165,6 +169,7 @@ class TestErrorCases:
 # Flags
 # ---------------------------------------------------------------------------
 
+
 class TestFlags:
     @patch(PATCH)
     def test_filter_status_open(self, MockCls):
@@ -173,7 +178,11 @@ class TestFlags:
         result = runner.invoke(cli, ["findings", "--status", "open"])
         assert_exit_ok(result)
         mock.list_findings.assert_called_once_with(
-            "proj-456", status="open", severity=None, page=1, size=20,
+            "proj-456",
+            status="open",
+            severity=None,
+            page=1,
+            size=20,
         )
 
     @patch(PATCH)
@@ -183,7 +192,11 @@ class TestFlags:
         result = runner.invoke(cli, ["findings", "--severity", "high"])
         assert_exit_ok(result)
         mock.list_findings.assert_called_once_with(
-            "proj-456", status=None, severity="high", page=1, size=20,
+            "proj-456",
+            status=None,
+            severity="high",
+            page=1,
+            size=20,
         )
 
     @patch(PATCH)
@@ -193,17 +206,29 @@ class TestFlags:
         result = runner.invoke(cli, ["findings", "--page", "3", "--size", "5"])
         assert_exit_ok(result)
         mock.list_findings.assert_called_once_with(
-            "proj-456", status=None, severity=None, page=3, size=5,
+            "proj-456",
+            status=None,
+            severity=None,
+            page=3,
+            size=5,
         )
 
     @patch(PATCH)
     def test_assign_delegation_status(self, MockCls):
         mock = _make_client()
         MockCls.return_value = mock
-        result = runner.invoke(cli, [
-            "findings", "assign", "find-001",
-            "--assignee", "mem-001", "--delegation-status", "in_progress",
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "findings",
+                "assign",
+                "find-001",
+                "--assignee",
+                "mem-001",
+                "--delegation-status",
+                "in_progress",
+            ],
+        )
         assert_exit_ok(result)
         call_args = mock.update_finding.call_args
         assert call_args[0][2].get("delegation_status") == "in_progress"
@@ -212,6 +237,7 @@ class TestFlags:
 # ---------------------------------------------------------------------------
 # Output
 # ---------------------------------------------------------------------------
+
 
 class TestOutputFormat:
     @patch(PATCH)

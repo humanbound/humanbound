@@ -9,11 +9,20 @@ The CLI (`hb test`, `hb report`, etc.) lives in the sibling `humanbound_cli`
 module and is considered internal — it may change between releases. Import
 from `humanbound` for stability.
 """
+
 from __future__ import annotations
 
 __version__ = "2.0.0"
 
 from humanbound.bot import Bot, ResponseExtractor
+from humanbound.callbacks import EngineCallbacks
+from humanbound.orchestrators import (
+    BehavioralQA,
+    OrchestratorModule,
+    OwaspAgentic,
+    OwaspSingleTurn,
+)
+from humanbound.runner import LocalRunner
 from humanbound.schemas import (
     Insight,
     LogEntry,
@@ -21,14 +30,6 @@ from humanbound.schemas import (
     TestingLevel,
     Turn,
 )
-from humanbound.callbacks import EngineCallbacks
-from humanbound.orchestrators import (
-    OrchestratorModule,
-    OwaspAgentic,
-    OwaspSingleTurn,
-    BehavioralQA,
-)
-from humanbound.runner import LocalRunner
 
 __all__ = [
     "__version__",

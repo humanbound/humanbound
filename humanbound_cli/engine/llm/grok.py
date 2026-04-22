@@ -2,6 +2,7 @@
 # Copyright (c) 2024-2026 Humanbound
 import time
 from os import getenv
+
 import xai_sdk
 
 ALLOWED_MAX_OUT_TOKENS = 4096
@@ -49,9 +50,7 @@ class LLMPinger:
                 "model": getenv("LLM_MODEL"),
             }
         }
-        self.client = xai_sdk.Client(
-            api_key=self.model_provider["integration"]["api_key"]
-        )
+        self.client = xai_sdk.Client(api_key=self.model_provider["integration"]["api_key"])
 
     def __do_completion_api_call(self, prompt, max_tokens, temperature):
         return self.client.sampler.sample(
@@ -72,9 +71,7 @@ class LLMPinger:
         prompt = f"{system_p}\n{user_p}"
         while retry_counter <= MAX_RETRY_COUNTER:
             try:
-                response = self.__do_completion_api_call(
-                    prompt, max_tokens, temperature
-                )
+                response = self.__do_completion_api_call(prompt, max_tokens, temperature)
                 return response.generated_text
             except xai_sdk.exceptions.RateLimitError:
                 retry_counter += 1

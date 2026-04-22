@@ -5,12 +5,12 @@ No live API or credentials required — all client calls are mocked.
 """
 
 import json
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 from click.testing import CliRunner
 
 from humanbound_cli.main import cli
-
 
 runner = CliRunner()
 
@@ -31,26 +31,34 @@ def _make_mock_client():
 # (command_args, patch_target, mock_setup)
 # mock_setup is a callable that receives the mock and configures return values.
 
+
 def _setup_findings(mock):
     mock.list_findings.return_value = {"data": [{"id": "f1", "title": "Test"}], "total": 1}
+
 
 def _setup_members(mock):
     mock.list_members.return_value = {"data": [{"id": "m1", "email": "a@b.c"}]}
 
+
 def _setup_api_keys(mock):
     mock.list_api_keys.return_value = {"data": [{"id": "k1", "name": "key"}]}
+
 
 def _setup_assessments(mock):
     mock.get.return_value = {"data": [{"id": "a1", "status": "completed"}]}
 
+
 def _setup_posture(mock):
     mock.get.return_value = {"score": 80.0, "grade": "B"}
+
 
 def _setup_webhooks(mock):
     mock.get.return_value = {"data": [{"id": "w1", "name": "hook"}]}
 
+
 def _setup_campaigns(mock):
     mock.get_campaign.return_value = {"id": "c1", "status": "idle"}
+
 
 def _setup_monitor(mock):
     mock.get.return_value = {"score": 80, "grade": "B", "dimensions": {}}
@@ -60,10 +68,18 @@ JSON_COMMANDS = [
     (["findings", "--json"], "humanbound_cli.commands.findings.HumanboundClient", _setup_findings),
     (["members", "--json"], "humanbound_cli.commands.members.HumanboundClient", _setup_members),
     (["api-keys", "--json"], "humanbound_cli.commands.api_keys.HumanboundClient", _setup_api_keys),
-    (["assessments", "--json"], "humanbound_cli.commands.assessments.HumanboundClient", _setup_assessments),
-    (["posture", "--json"], "humanbound_cli.commands.posture.HumanboundClient", _setup_posture),
+    (
+        ["assessments", "--json"],
+        "humanbound_cli.commands.assessments.HumanboundClient",
+        _setup_assessments,
+    ),
+    (["posture", "--json"], "humanbound_cli.commands.posture.get_runner", _setup_posture),
     (["webhooks", "--json"], "humanbound_cli.commands.webhooks.HumanboundClient", _setup_webhooks),
-    (["campaigns", "--json"], "humanbound_cli.commands.campaigns.HumanboundClient", _setup_campaigns),
+    (
+        ["campaigns", "--json"],
+        "humanbound_cli.commands.campaigns.HumanboundClient",
+        _setup_campaigns,
+    ),
 ]
 
 
@@ -74,10 +90,15 @@ JSON_COMMANDS = [
 )
 def test_json_output_is_valid(cmd_args, patch_target, setup_fn):
     """--json flag must produce parseable JSON on stdout."""
-    with patch(patch_target) as MockClient:
+    from conftest import platform_runner
+
+    with patch(patch_target) as Mocked:
         mock = _make_mock_client()
         setup_fn(mock)
-        MockClient.return_value = mock
+        if patch_target.endswith(".get_runner"):
+            Mocked.return_value = platform_runner(mock)
+        else:
+            Mocked.return_value = mock
         result = runner.invoke(cli, cmd_args)
 
         assert result.exit_code == 0, (
@@ -107,14 +128,19 @@ def test_json_output_is_valid(cmd_args, patch_target, setup_fn):
 )
 def test_json_output_differs_from_default(cmd_args, patch_target, setup_fn):
     """--json output should differ from default Rich table output (no ANSI codes)."""
-    with patch(patch_target) as MockClient:
+    from conftest import platform_runner
+
+    with patch(patch_target) as Mocked:
         mock = _make_mock_client()
         setup_fn(mock)
-        MockClient.return_value = mock
+        if patch_target.endswith(".get_runner"):
+            Mocked.return_value = platform_runner(mock)
+        else:
+            Mocked.return_value = mock
         result = runner.invoke(cli, cmd_args)
 
         if result.exit_code != 0:
-            pytest.skip(f"Command failed, skipping format check")
+            pytest.skip("Command failed, skipping format check")
 
         output = result.output.strip()
         # JSON output should not contain Rich/ANSI escape sequences

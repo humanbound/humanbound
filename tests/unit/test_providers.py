@@ -4,19 +4,18 @@ Unit tests for `hb providers` commands.
 Mocked HumanboundClient — no live API needed.
 """
 
-import json
-import sys
 import os
-import pytest
-from unittest.mock import patch, MagicMock
+import sys
+from unittest.mock import MagicMock, patch
+
 from click.testing import CliRunner
 
 sys.path.insert(0, os.path.dirname(__file__))
 
-from humanbound_cli.main import cli
-from humanbound_cli.exceptions import NotAuthenticatedError, APIError, NotFoundError
-
 from conftest import MOCK_PROVIDER, MOCK_PROVIDER_2
+
+from humanbound_cli.exceptions import APIError
+from humanbound_cli.main import cli
 
 runner = CliRunner()
 
@@ -42,8 +41,8 @@ def _make_client(**overrides):
 # Happy-path tests
 # ---------------------------------------------------------------------------
 
-class TestHappyPath:
 
+class TestHappyPath:
     @patch(PATCH_TARGET)
     def test_list_providers(self, MockClient):
         mock = _make_client()
@@ -81,9 +80,16 @@ class TestHappyPath:
         mock.list_providers.return_value = [MOCK_PROVIDER, MOCK_PROVIDER_2]
         mock.update_provider.return_value = {}
         MockClient.return_value = mock
-        result = runner.invoke(cli, [
-            "providers", "update", "prov-001", "--model", "gpt-4-turbo",
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "providers",
+                "update",
+                "prov-001",
+                "--model",
+                "gpt-4-turbo",
+            ],
+        )
         assert result.exit_code == 0
         assert "updated" in result.output.lower()
         mock.update_provider.assert_called_once()
@@ -111,8 +117,8 @@ class TestHappyPath:
 # Error cases
 # ---------------------------------------------------------------------------
 
-class TestErrorCases:
 
+class TestErrorCases:
     @patch(PATCH_TARGET)
     def test_list_not_authenticated(self, MockClient):
         mock = _make_client()
@@ -162,8 +168,8 @@ class TestErrorCases:
 # Flag tests
 # ---------------------------------------------------------------------------
 
-class TestFlags:
 
+class TestFlags:
     @patch(PATCH_TARGET)
     def test_delete_without_force_aborts(self, MockClient):
         mock = _make_client()
@@ -178,9 +184,16 @@ class TestFlags:
         mock.list_providers.return_value = [MOCK_PROVIDER]
         mock.update_provider.return_value = {}
         MockClient.return_value = mock
-        result = runner.invoke(cli, [
-            "providers", "update", "prov-001", "--api-key", "sk-new",
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "providers",
+                "update",
+                "prov-001",
+                "--api-key",
+                "sk-new",
+            ],
+        )
         assert result.exit_code == 0
         call_args = mock.update_provider.call_args
         assert "api_key" in call_args[0][1].get("integration", {})
@@ -190,8 +203,8 @@ class TestFlags:
 # Output format
 # ---------------------------------------------------------------------------
 
-class TestOutputFormat:
 
+class TestOutputFormat:
     @patch(PATCH_TARGET)
     def test_list_table_shows_provider_names(self, MockClient):
         mock = _make_client()

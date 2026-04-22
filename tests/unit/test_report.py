@@ -6,16 +6,16 @@ not yet be registered at top level in main.py.
 """
 
 import json
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from click.testing import CliRunner
 
 from humanbound_cli.commands.report import report_command
-from humanbound_cli.exceptions import NotAuthenticatedError, APIError
+from humanbound_cli.exceptions import APIError, NotAuthenticatedError
 
 from .conftest import (
-    assert_exit_ok,
     assert_exit_error,
+    assert_exit_ok,
     platform_runner,
 )
 
@@ -116,6 +116,7 @@ class TestHappyPath:
         result = runner.invoke(report_command, ["-o", outfile])
         assert_exit_ok(result)
         import pathlib
+
         assert pathlib.Path(outfile).exists()
 
     @patch(RUNNER_PATCH)
@@ -127,7 +128,6 @@ class TestHappyPath:
         result = runner.invoke(report_command, ["--json"])
         assert_exit_ok(result)
         # Should write a .json file
-        import pathlib
         json_files = list(tmp_path.glob("*.json"))
         assert len(json_files) >= 1
         content = json_files[0].read_text()
@@ -206,4 +206,5 @@ class TestFlags:
         result = runner.invoke(report_command, ["-o", outfile])
         assert_exit_ok(result)
         import pathlib
+
         assert pathlib.Path(outfile).exists()

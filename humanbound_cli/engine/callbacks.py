@@ -5,8 +5,8 @@
 These callbacks abstract the I/O layer so the engine can run in any environment.
 """
 
-from dataclasses import dataclass, field
-from typing import Callable
+from collections.abc import Callable
+from dataclasses import dataclass
 
 
 @dataclass

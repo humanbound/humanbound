@@ -2,15 +2,16 @@
 # Copyright (c) 2024-2026 Humanbound
 """Project commands."""
 
-import click
 import time
+
+import click
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
 from rich.prompt import Confirm
+from rich.table import Table
 
 from ..client import HumanboundClient
-from ..exceptions import NotAuthenticatedError, APIError, ValidationError
+from ..exceptions import APIError, NotAuthenticatedError, ValidationError
 
 console = Console()
 
@@ -235,7 +236,7 @@ def update_project(project_id: str, name: str, description: str):
         with console.status("Updating project..."):
             client.update_project(project_id, payload)
 
-        console.print(f"[green]Project updated.[/green]")
+        console.print("[green]Project updated.[/green]")
         console.print(f"[dim]ID: {project_id}[/dim]")
         if name:
             console.print(f"  Name: {name}")
@@ -275,7 +276,9 @@ def delete_project(project_id: str, force: bool):
         project_name = project.get("name", project_id) if project else project_id
 
         if not force:
-            console.print(f"[yellow]This will delete project [bold]{project_name}[/bold] and archive all its experiments.[/yellow]")
+            console.print(
+                f"[yellow]This will delete project [bold]{project_name}[/bold] and archive all its experiments.[/yellow]"
+            )
             if not Confirm.ask("Are you sure?"):
                 console.print("[dim]Cancelled.[/dim]")
                 return
@@ -287,7 +290,7 @@ def delete_project(project_id: str, force: bool):
         if client.project_id == project_id:
             client.set_project(None)
 
-        console.print(f"[green]Project deleted.[/green]")
+        console.print("[green]Project deleted.[/green]")
         console.print(f"[dim]{project_name} ({project_id})[/dim]")
 
     except NotAuthenticatedError:
@@ -383,7 +386,9 @@ def _display_project_status(data):
 
     # Posture
     if grade and score is not None:
-        grade_color = {"A": "green", "B": "green", "C": "yellow", "D": "red", "F": "red"}.get(grade, "white")
+        grade_color = {"A": "green", "B": "green", "C": "yellow", "D": "red", "F": "red"}.get(
+            grade, "white"
+        )
         posture_line = f"Posture: [{grade_color}]{grade}[/{grade_color}] ({score}/100)"
     else:
         posture_line = "Posture: [dim]not yet evaluated[/dim]"
@@ -395,7 +400,9 @@ def _display_project_status(data):
     # Campaign
     campaign_line = ""
     if campaign:
-        campaign_line = f"\nCampaign: {campaign.get('activity', '?')} ({campaign.get('scope', '?')})"
+        campaign_line = (
+            f"\nCampaign: {campaign.get('activity', '?')} ({campaign.get('scope', '?')})"
+        )
 
     # Running experiments detail
     exp_lines = ""
@@ -421,7 +428,7 @@ def _watch_project_status(client, pid):
                 console.print("\n[green]All experiments completed.[/green]")
                 break
 
-            console.print(f"\n[dim]Next check in 3 minutes... (Ctrl+C to stop)[/dim]")
+            console.print("\n[dim]Next check in 3 minutes... (Ctrl+C to stop)[/dim]")
             time.sleep(180)
     except KeyboardInterrupt:
         console.print("\n[dim]Stopped watching.[/dim]")

@@ -5,17 +5,17 @@ so we patch `get_runner` and wire in a mock client via `platform_runner`.
 """
 
 import json
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 from click.testing import CliRunner
 
-from humanbound_cli.main import cli
 from humanbound_cli.exceptions import APIError
+from humanbound_cli.main import cli
 
 from .conftest import (
     MOCK_GUARDRAILS,
-    assert_exit_ok,
     assert_exit_error,
+    assert_exit_ok,
     platform_runner,
 )
 
@@ -134,6 +134,7 @@ class TestErrorCases:
         client = _make_client()
         client.is_authenticated.return_value = False
         from humanbound_cli.exceptions import NotAuthenticatedError
+
         client.get.side_effect = NotAuthenticatedError()
         mock_get_runner.return_value = platform_runner(client)
 
@@ -171,9 +172,16 @@ class TestFlags:
         client.get.return_value = MOCK_GUARDRAILS
         mock_get_runner.return_value = platform_runner(client)
 
-        result = runner.invoke(cli, [
-            "guardrails", "--vendor", "openai", "--model", "gpt-4o",
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "guardrails",
+                "--vendor",
+                "openai",
+                "--model",
+                "gpt-4o",
+            ],
+        )
 
         assert_exit_ok(result)
         client.get.assert_called_once_with(

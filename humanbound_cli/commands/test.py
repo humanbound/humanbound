@@ -3,18 +3,18 @@
 """Test command for running security experiments."""
 
 import json
-import click
+import time
 from pathlib import Path
+
+import click
 from rich.console import Console
 from rich.panel import Panel
-from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
-import time
+from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 
-from ..client import HumanboundClient
-from ..engine import get_runner, TestConfig, TestResult, Posture
-from ..engine.runner import TestRunner
+from ..engine import Posture, TestConfig, TestResult, get_runner
 from ..engine.platform_runner import PlatformTestRunner
-from ..exceptions import NotAuthenticatedError, APIError
+from ..engine.runner import TestRunner
+from ..exceptions import APIError, NotAuthenticatedError
 
 console = Console()
 
@@ -27,25 +27,81 @@ TESTING_LEVELS = ["unit", "system", "acceptance"]
 
 # ISO 639-1 language codes to full name mapping
 LANG_CODE_MAP = {
-    "af": "afrikaans", "am": "amharic", "ar": "arabic", "az": "azerbaijani",
-    "be": "belarusian", "bg": "bulgarian", "bn": "bengali", "bs": "bosnian",
-    "ca": "catalan", "cs": "czech", "cy": "welsh", "da": "danish",
-    "de": "german", "el": "greek", "en": "english", "es": "spanish",
-    "et": "estonian", "eu": "basque", "fa": "persian", "fi": "finnish",
-    "fr": "french", "ga": "irish", "gl": "galician", "gu": "gujarati",
-    "he": "hebrew", "hi": "hindi", "hr": "croatian", "hu": "hungarian",
-    "hy": "armenian", "id": "indonesian", "is": "icelandic", "it": "italian",
-    "ja": "japanese", "ka": "georgian", "kk": "kazakh", "km": "khmer",
-    "kn": "kannada", "ko": "korean", "lb": "luxembourgish", "lo": "lao",
-    "lt": "lithuanian", "lv": "latvian", "mk": "macedonian", "ml": "malayalam",
-    "mn": "mongolian", "mr": "marathi", "ms": "malay", "mt": "maltese",
-    "my": "burmese", "nb": "norwegian", "ne": "nepali", "nl": "dutch",
-    "no": "norwegian", "pa": "punjabi", "pl": "polish", "pt": "portuguese",
-    "ro": "romanian", "ru": "russian", "si": "sinhala", "sk": "slovak",
-    "sl": "slovenian", "sq": "albanian", "sr": "serbian", "sv": "swedish",
-    "sw": "swahili", "ta": "tamil", "te": "telugu", "th": "thai",
-    "tl": "tagalog", "tr": "turkish", "uk": "ukrainian", "ur": "urdu",
-    "uz": "uzbek", "vi": "vietnamese", "zh": "chinese",
+    "af": "afrikaans",
+    "am": "amharic",
+    "ar": "arabic",
+    "az": "azerbaijani",
+    "be": "belarusian",
+    "bg": "bulgarian",
+    "bn": "bengali",
+    "bs": "bosnian",
+    "ca": "catalan",
+    "cs": "czech",
+    "cy": "welsh",
+    "da": "danish",
+    "de": "german",
+    "el": "greek",
+    "en": "english",
+    "es": "spanish",
+    "et": "estonian",
+    "eu": "basque",
+    "fa": "persian",
+    "fi": "finnish",
+    "fr": "french",
+    "ga": "irish",
+    "gl": "galician",
+    "gu": "gujarati",
+    "he": "hebrew",
+    "hi": "hindi",
+    "hr": "croatian",
+    "hu": "hungarian",
+    "hy": "armenian",
+    "id": "indonesian",
+    "is": "icelandic",
+    "it": "italian",
+    "ja": "japanese",
+    "ka": "georgian",
+    "kk": "kazakh",
+    "km": "khmer",
+    "kn": "kannada",
+    "ko": "korean",
+    "lb": "luxembourgish",
+    "lo": "lao",
+    "lt": "lithuanian",
+    "lv": "latvian",
+    "mk": "macedonian",
+    "ml": "malayalam",
+    "mn": "mongolian",
+    "mr": "marathi",
+    "ms": "malay",
+    "mt": "maltese",
+    "my": "burmese",
+    "nb": "norwegian",
+    "ne": "nepali",
+    "nl": "dutch",
+    "no": "norwegian",
+    "pa": "punjabi",
+    "pl": "polish",
+    "pt": "portuguese",
+    "ro": "romanian",
+    "ru": "russian",
+    "si": "sinhala",
+    "sk": "slovak",
+    "sl": "slovenian",
+    "sq": "albanian",
+    "sr": "serbian",
+    "sv": "swedish",
+    "sw": "swahili",
+    "ta": "tamil",
+    "te": "telugu",
+    "th": "thai",
+    "tl": "tagalog",
+    "tr": "turkish",
+    "uk": "ukrainian",
+    "ur": "urdu",
+    "uz": "uzbek",
+    "vi": "vietnamese",
+    "zh": "chinese",
 }
 
 
@@ -64,9 +120,11 @@ def _load_integration(value: str) -> dict:
     try:
         return json.loads(value.strip())
     except json.JSONDecodeError:
-        console.print(f"[red]--endpoint must be a JSON string or path to a JSON file.[/red]")
+        console.print("[red]--endpoint must be a JSON string or path to a JSON file.[/red]")
         console.print("[dim]Example: --endpoint ./bot-config.json[/dim]")
-        console.print('[dim]Example: --endpoint \'{"streaming": false, "chat_completion": {"endpoint": "...", "headers": {}, "payload": {"content": "$PROMPT"}}}\'[/dim]')
+        console.print(
+            '[dim]Example: --endpoint \'{"streaming": false, "chat_completion": {"endpoint": "...", "headers": {}, "payload": {"content": "$PROMPT"}}}\'[/dim]'
+        )
         raise SystemExit(1)
 
 
@@ -79,123 +137,133 @@ def _print_next(suggestions: list):
 
 @click.command("test")
 @click.option(
-    "--test-category", "-t",
+    "--test-category",
+    "-t",
     default=DEFAULT_TEST_CATEGORY,
-    help="Test category to run (e.g. humanbound/adversarial/owasp_agentic, humanbound/behavioral/qa)"
+    help="Test category to run (e.g. humanbound/adversarial/owasp_agentic, humanbound/behavioral/qa)",
 )
 @click.option(
-    "--testing-level", "-l",
+    "--testing-level",
+    "-l",
     type=click.Choice(TESTING_LEVELS, case_sensitive=False),
     default="unit",
-    help="Testing depth level"
+    help="Testing depth level",
 )
-@click.option(
-    "--name", "-n",
-    help="Experiment name (auto-generated if not provided)"
-)
-@click.option(
-    "--description", "-d",
-    default="",
-    help="Experiment description"
-)
+@click.option("--name", "-n", help="Experiment name (auto-generated if not provided)")
+@click.option("--description", "-d", default="", help="Experiment description")
 @click.option(
     "--lang",
     default="english",
-    help="Language for test prompts (default: english). Accepts codes (en, de, es) or full names."
+    help="Language for test prompts (default: english). Accepts codes (en, de, es) or full names.",
 )
 @click.option(
-    "--provider-id",
-    help="Provider ID to use (default: first available or default provider)"
+    "--provider-id", help="Provider ID to use (default: first available or default provider)"
 )
 @click.option(
-    "--endpoint", "-e",
+    "--endpoint",
+    "-e",
     help="Agent integration config — JSON string or path to JSON file. "
-         "Same shape as 'hb connect --endpoint'. Overrides the project's default integration."
+    "Same shape as 'hb connect --endpoint'. Overrides the project's default integration.",
 )
 @click.option(
     "--category",
     default=None,
-    help="Shorthand alias for --test-category (e.g. humanbound/behavioral/qa)"
+    help="Shorthand alias for --test-category (e.g. humanbound/behavioral/qa)",
 )
 @click.option(
     "--deep",
     is_flag=True,
     default=False,
-    help="Shortcut for --testing-level system (deeper analysis)"
+    help="Shortcut for --testing-level system (deeper analysis)",
 )
 @click.option(
     "--full",
     is_flag=True,
     default=False,
-    help="Shortcut for --testing-level acceptance (full analysis)"
+    help="Shortcut for --testing-level acceptance (full analysis)",
 )
 @click.option(
-    "--quick", "-q",
+    "--quick",
+    "-q",
     is_flag=True,
     default=False,
-    help="Quick scan: top 4 OWASP categories, ~5 minutes"
+    help="Quick scan: top 4 OWASP categories, ~5 minutes",
 )
 @click.option(
     "--no-auto-start",
     is_flag=True,
     default=False,
-    help="Create experiment without auto-starting (manual mode)"
+    help="Create experiment without auto-starting (manual mode)",
 )
-@click.option(
-    "--wait", "-w",
-    is_flag=True,
-    help="Wait for experiment to complete"
-)
+@click.option("--wait", "-w", is_flag=True, help="Wait for experiment to complete")
 @click.option(
     "--fail-on",
     type=click.Choice(["critical", "high", "medium", "low", "any"]),
-    help="Exit with error if findings of this severity or higher are found"
+    help="Exit with error if findings of this severity or higher are found",
 )
 @click.option(
-    "--context", "-c",
-    help="Extra context for the judge (e.g. 'Authenticated as Alice, her PII is expected'). String or path to .txt file."
+    "--context",
+    "-c",
+    help="Extra context for the judge (e.g. 'Authenticated as Alice, her PII is expected'). String or path to .txt file.",
 )
 @click.option(
     "--local",
     is_flag=True,
     default=False,
-    help="Force local engine execution (even when logged in)"
+    help="Force local engine execution (even when logged in)",
 )
 @click.option(
-    "--repo", "-r",
+    "--repo",
+    "-r",
     type=click.Path(exists=True),
-    help="Repository path for scope discovery (scans for system prompt + tools)"
+    help="Repository path for scope discovery (scans for system prompt + tools)",
 )
 @click.option(
-    "--prompt", "-p",
-    type=click.Path(exists=True),
-    help="System prompt file for scope extraction"
+    "--prompt", "-p", type=click.Path(exists=True), help="System prompt file for scope extraction"
 )
 @click.option(
-    "--scope", "-s",
+    "--scope",
+    "-s",
     "scope_path",
     type=click.Path(exists=True),
-    help="Explicit scope file (YAML/JSON with permitted/restricted intents)"
+    help="Explicit scope file (YAML/JSON with permitted/restricted intents)",
 )
 @click.option(
     "--debug",
     is_flag=True,
     default=False,
-    help="Debug mode: single-threaded, full sequential output (turns, scores, verdicts)"
+    help="Debug mode: single-threaded, full sequential output (turns, scores, verdicts)",
 )
 @click.option(
-    "--verbose", "-v",
+    "--verbose",
+    "-v",
     is_flag=True,
     default=False,
-    help="Verbose mode: live dashboard with per-category progress"
+    help="Verbose mode: live dashboard with per-category progress",
 )
-def test_command(test_category: str, testing_level: str, name: str, description: str,
-                 lang: str, provider_id: str, endpoint: str,
-                 category: str, deep: bool, full: bool, quick: bool,
-                 no_auto_start: bool,
-                 wait: bool, fail_on: str, context: str, local: bool,
-                 repo: str, prompt: str, scope_path: str,
-                 debug: bool, verbose: bool):
+def test_command(
+    test_category: str,
+    testing_level: str,
+    name: str,
+    description: str,
+    lang: str,
+    provider_id: str,
+    endpoint: str,
+    category: str,
+    deep: bool,
+    full: bool,
+    quick: bool,
+    no_auto_start: bool,
+    wait: bool,
+    fail_on: str,
+    context: str,
+    local: bool,
+    repo: str,
+    prompt: str,
+    scope_path: str,
+    debug: bool,
+    verbose: bool,
+):
     """Run security tests against your agent.
 
     \b
@@ -293,9 +361,9 @@ def test_command(test_category: str, testing_level: str, name: str, description:
             has_telemetry = False
 
         if has_telemetry:
-            console.print(f"  Depth: [green]whitebox[/green] (telemetry enabled)")
+            console.print("  Depth: [green]whitebox[/green] (telemetry enabled)")
         else:
-            console.print(f"  Depth: [yellow]blackbox[/yellow]")
+            console.print("  Depth: [yellow]blackbox[/yellow]")
 
         # Context: string or path to .txt file (max 1500 chars)
         ctx_value = ""
@@ -303,7 +371,9 @@ def test_command(test_category: str, testing_level: str, name: str, description:
             ctx_path = Path(context)
             ctx_value = ctx_path.read_text().strip() if ctx_path.is_file() else context
             if len(ctx_value) > 1500:
-                console.print(f"[red]Context too long ({len(ctx_value)} chars). Maximum is 1,500.[/red]")
+                console.print(
+                    f"[red]Context too long ({len(ctx_value)} chars). Maximum is 1,500.[/red]"
+                )
                 raise SystemExit(1)
 
         # Build TestConfig (canonical shape — same for both runners)
@@ -334,7 +404,7 @@ def test_command(test_category: str, testing_level: str, name: str, description:
 
         console.print(f"[green]\u2713[/green] Experiment created: {experiment_id}")
         if not no_auto_start:
-            console.print(f"[green]\u2713[/green] Experiment started")
+            console.print("[green]\u2713[/green] Experiment started")
 
         # Estimate time
         time_estimates = {
@@ -342,7 +412,9 @@ def test_command(test_category: str, testing_level: str, name: str, description:
             "system": "~45 minutes",
             "acceptance": "~90 minutes",
         }
-        console.print(f"\n[dim]Estimated time: {time_estimates.get(testing_level, 'unknown')}[/dim]")
+        console.print(
+            f"\n[dim]Estimated time: {time_estimates.get(testing_level, 'unknown')}[/dim]"
+        )
 
         # Local mode: --wait is implicit (engine runs in-process, exits with CLI)
         if not wait and not is_platform:
@@ -351,6 +423,7 @@ def test_command(test_category: str, testing_level: str, name: str, description:
 
         if not wait:
             import random
+
             _chill_messages = [
                 "Go grab a coffee -- we've got it from here. Email incoming when done.",
                 "Red team deployed -- treat yourself to a beer, email coming soon.",
@@ -361,15 +434,17 @@ def test_command(test_category: str, testing_level: str, name: str, description:
                 "Time for a break -- we'll ping you by email once we're through.",
                 "Sit back and relax -- we'll email you when results are ready.",
             ]
-            console.print(Panel(
-                f"Experiment ID: {experiment_id}\n\n"
-                f"{random.choice(_chill_messages)}\n\n"
-                f"[dim]Check status:[/dim] hb status {experiment_id}\n"
-                f"[dim]Watch progress:[/dim] hb status {experiment_id} --watch\n"
-                f"[dim]Get logs:[/dim] hb logs {experiment_id}",
-                title="Experiment Running",
-                border_style="blue"
-            ))
+            console.print(
+                Panel(
+                    f"Experiment ID: {experiment_id}\n\n"
+                    f"{random.choice(_chill_messages)}\n\n"
+                    f"[dim]Check status:[/dim] hb status {experiment_id}\n"
+                    f"[dim]Watch progress:[/dim] hb status {experiment_id} --watch\n"
+                    f"[dim]Get logs:[/dim] hb logs {experiment_id}",
+                    title="Experiment Running",
+                    border_style="blue",
+                )
+            )
             return
 
         # Wait mode - poll for completion
@@ -392,19 +467,23 @@ def test_command(test_category: str, testing_level: str, name: str, description:
 
         # Next suggestions — vary by mode
         if is_platform:
-            _print_next([
-                ("hb findings", "Detailed breakdown"),
-                ("hb test --deep", "Deeper analysis"),
-                ("hb posture", "View posture score"),
-                ("hb monitor", "Start continuous monitoring"),
-            ])
+            _print_next(
+                [
+                    ("hb findings", "Detailed breakdown"),
+                    ("hb test --deep", "Deeper analysis"),
+                    ("hb posture", "View posture score"),
+                    ("hb monitor", "Start continuous monitoring"),
+                ]
+            )
         else:
-            _print_next([
-                ("hb logs", "View conversation details"),
-                ("hb posture", "View posture score"),
-                ("hb report -o report.html", "Generate report"),
-                ("hb guardrails -o rules.yaml", "Export firewall rules"),
-            ])
+            _print_next(
+                [
+                    ("hb logs", "View conversation details"),
+                    ("hb posture", "View posture score"),
+                    ("hb report -o report.html", "Generate report"),
+                    ("hb guardrails -o rules.yaml", "Export firewall rules"),
+                ]
+            )
 
         # Check fail-on condition
         if fail_on:
@@ -441,9 +520,7 @@ def _wait_for_completion(runner: TestRunner, experiment_id: str) -> str:
                 status = runner.get_status(experiment_id)
 
                 progress.update(
-                    task,
-                    description=f"Status: {status.status}",
-                    logs=f"{status.log_count} logs"
+                    task, description=f"Status: {status.status}", logs=f"{status.log_count} logs"
                 )
 
                 if status.status in ("Finished", "Failed", "Terminated"):
@@ -453,8 +530,11 @@ def _wait_for_completion(runner: TestRunner, experiment_id: str) -> str:
 
             except KeyboardInterrupt:
                 from ..engine.local_runner import LocalTestRunner
+
                 if isinstance(runner, LocalTestRunner):
-                    console.print("\n[yellow]Interrupted. Stopping test (waiting for current conversation to finish)...[/yellow]")
+                    console.print(
+                        "\n[yellow]Interrupted. Stopping test (waiting for current conversation to finish)...[/yellow]"
+                    )
                     runner.terminate(experiment_id)
                     run = runner._runs.get(experiment_id)
                     if run and run.thread:
@@ -465,19 +545,25 @@ def _wait_for_completion(runner: TestRunner, experiment_id: str) -> str:
                     if run and run.logs:
                         # Save partial results to disk
                         from ..engine.presenter import run as presenter_run
-                        run.results = presenter_run(None, run.logs, test_category=run.config.test_category)
+
+                        run.results = presenter_run(
+                            None, run.logs, test_category=run.config.test_category
+                        )
                         run.status = "Failed"
                         run._save_results()
-                        console.print(f"[dim]Partial results: {len(run.logs)} conversations saved[/dim]")
-                        console.print(f"[dim]  hb logs         View completed conversations[/dim]")
-                        console.print(f"[dim]  hb posture      View partial posture score[/dim]")
-                        console.print(f"[dim]  hb report -o report.html  Generate report[/dim]")
+                        console.print(
+                            f"[dim]Partial results: {len(run.logs)} conversations saved[/dim]"
+                        )
+                        console.print("[dim]  hb logs         View completed conversations[/dim]")
+                        console.print("[dim]  hb posture      View partial posture score[/dim]")
+                        console.print("[dim]  hb report -o report.html  Generate report[/dim]")
                 else:
-                    console.print(f"\n[yellow]Detached. Experiment continues on platform.[/yellow]")
+                    console.print("\n[yellow]Detached. Experiment continues on platform.[/yellow]")
                     console.print(f"  Check status:  hb status {experiment_id}")
                     console.print(f"  View logs:     hb logs {experiment_id}")
                     console.print(f"  Stop it:       hb experiments terminate {experiment_id}")
                 import os
+
                 os._exit(0)
 
     return status.status
@@ -485,10 +571,9 @@ def _wait_for_completion(runner: TestRunner, experiment_id: str) -> str:
 
 def _wait_verbose(runner, experiment_id: str) -> str:
     """Wait with Rich progress bar + final results table."""
-    from rich.table import Table
     from rich.live import Live
-    from rich.layout import Layout
-    from rich.panel import Panel as RichPanel
+    from rich.table import Table
+
     from ..engine.local_runner import LocalTestRunner
 
     if not isinstance(runner, LocalTestRunner):
@@ -553,7 +638,9 @@ def _wait_verbose(runner, experiment_id: str) -> str:
                 time.sleep(3)
 
     except KeyboardInterrupt:
-        console.print("\n[yellow]Interrupted. Stopping test (waiting for current conversation to finish)...[/yellow]")
+        console.print(
+            "\n[yellow]Interrupted. Stopping test (waiting for current conversation to finish)...[/yellow]"
+        )
         runner.terminate(experiment_id)
         run = runner._runs.get(experiment_id)
         if run and run.thread:
@@ -563,13 +650,15 @@ def _wait_verbose(runner, experiment_id: str) -> str:
                 pass
         if run and run.logs:
             from ..engine.presenter import run as presenter_run
+
             run.results = presenter_run(None, run.logs, test_category=run.config.test_category)
             run.status = "Failed"
             run._save_results()
             console.print(f"[dim]Partial results: {len(run.logs)} conversations saved[/dim]")
-            console.print(f"[dim]  hb logs         View completed conversations[/dim]")
-            console.print(f"[dim]  hb posture      View partial posture score[/dim]")
+            console.print("[dim]  hb logs         View completed conversations[/dim]")
+            console.print("[dim]  hb posture      View partial posture score[/dim]")
         import os
+
         os._exit(0)
 
     # Final: show results table with all conversations
@@ -630,7 +719,7 @@ def _display_results(result: TestResult, posture: Posture):
     # Build results panel content
     panel_lines = [
         f"[bold]Status:[/bold] [{status_color}]{status}[/{status_color}]\n",
-        f"[bold]Results:[/bold]",
+        "[bold]Results:[/bold]",
         f"  Total logs: {stats.get('total', 0)}",
         f"  [green]Pass:[/green] {stats.get('pass', 0)}",
         f"  [red]Fail:[/red] {stats.get('fail', 0)}",
@@ -639,12 +728,19 @@ def _display_results(result: TestResult, posture: Posture):
     # Posture grade (available from both runners)
     if posture.grade is not None:
         grade_color = {
-            "A": "green bold", "B": "green", "C": "yellow",
-            "D": "red", "F": "red bold",
+            "A": "green bold",
+            "B": "green",
+            "C": "yellow",
+            "D": "red",
+            "F": "red bold",
         }.get(posture.grade, "white")
-        score_str = f" ({posture.overall_score:.0f}/100)" if posture.overall_score is not None else ""
+        score_str = (
+            f" ({posture.overall_score:.0f}/100)" if posture.overall_score is not None else ""
+        )
         panel_lines.append("")
-        panel_lines.append(f"[bold]Posture Grade:[/bold] [{grade_color}]{posture.grade}{score_str}[/{grade_color}]")
+        panel_lines.append(
+            f"[bold]Posture Grade:[/bold] [{grade_color}]{posture.grade}{score_str}[/{grade_color}]"
+        )
 
     # Open findings count (platform only — None locally)
     if posture.finding_count is not None:
@@ -652,14 +748,14 @@ def _display_results(result: TestResult, posture: Posture):
 
     # Previous posture delta (platform only — None locally)
     if posture.previous_grade and posture.previous_grade != posture.grade:
-        prev_score_str = f" ({posture.previous_score:.0f})" if posture.previous_score is not None else ""
+        prev_score_str = (
+            f" ({posture.previous_score:.0f})" if posture.previous_score is not None else ""
+        )
         panel_lines.append(f"[dim]Previously: {posture.previous_grade}{prev_score_str}[/dim]")
 
-    console.print(Panel(
-        "\n".join(panel_lines),
-        title="Experiment Complete",
-        border_style=status_color
-    ))
+    console.print(
+        Panel("\n".join(panel_lines), title="Experiment Complete", border_style=status_color)
+    )
 
     # Show insights if available
     insights = result.insights
@@ -675,7 +771,9 @@ def _display_results(result: TestResult, posture: Posture):
                 "low": "blue",
             }.get(severity_str, "white")
 
-            console.print(f"  {i}. [{severity_color}]{severity_str.upper()}[/{severity_color}]: {insight.get('explanation', '')[:80]}...")
+            console.print(
+                f"  {i}. [{severity_color}]{severity_str.upper()}[/{severity_color}]: {insight.get('explanation', '')[:80]}..."
+            )
 
 
 def _check_fail_on(result: TestResult, fail_on: str) -> int:

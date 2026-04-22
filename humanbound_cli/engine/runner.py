@@ -9,33 +9,34 @@ Two implementations:
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Optional
 
 
 @dataclass
 class TestConfig:
     """Canonical test configuration — identical shape for both runners."""
+
     test_category: str
     testing_level: str  # unit | system | acceptance
     lang: str = "english"
     name: str = ""
     description: str = ""
     provider_id: str = ""
-    endpoint: Optional[dict] = None  # bot integration config (--endpoint)
+    endpoint: dict | None = None  # bot integration config (--endpoint)
     context: str = ""
     auto_start: bool = True
     # Scope sources (local mode only)
-    repo_path: Optional[str] = None
-    prompt_path: Optional[str] = None
-    scope_path: Optional[str] = None
+    repo_path: str | None = None
+    prompt_path: str | None = None
+    scope_path: str | None = None
     # Output modes
-    debug: bool = False    # single-threaded, full sequential output
+    debug: bool = False  # single-threaded, full sequential output
     verbose: bool = False  # threaded, Rich Live dashboard
 
 
 @dataclass
 class TestStatus:
     """Canonical status shape — what the CLI polls."""
+
     experiment_id: str
     status: str  # Created | Generating | Running | Finished | Failed | Terminated
     log_count: int = 0
@@ -44,6 +45,7 @@ class TestStatus:
 @dataclass
 class TestResult:
     """Canonical result shape — what the CLI renders."""
+
     experiment_id: str
     name: str
     status: str
@@ -58,20 +60,22 @@ class TestResult:
 @dataclass
 class Posture:
     """Canonical posture shape."""
-    overall_score: Optional[float] = None
-    grade: Optional[str] = None
+
+    overall_score: float | None = None
+    grade: str | None = None
     dimensions: dict = field(default_factory=dict)
     recommendations: list = field(default_factory=list)
-    last_tested: Optional[str] = None
+    last_tested: str | None = None
     # Extended fields (populated when logged in)
-    finding_count: Optional[int] = None
-    previous_grade: Optional[str] = None
-    previous_score: Optional[float] = None
+    finding_count: int | None = None
+    previous_grade: str | None = None
+    previous_score: float | None = None
 
 
 @dataclass
 class PaginatedLogs:
     """Canonical paginated log response."""
+
     data: list = field(default_factory=list)
     total: int = 0
     page: int = 1
@@ -95,12 +99,13 @@ class TestRunner(ABC):
         """Get final results (call after status is terminal)."""
 
     @abstractmethod
-    def get_logs(self, experiment_id: str, result: Optional[str] = None,
-                 page: int = 1, size: int = 50) -> PaginatedLogs:
+    def get_logs(
+        self, experiment_id: str, result: str | None = None, page: int = 1, size: int = 50
+    ) -> PaginatedLogs:
         """Get conversation logs (paginated)."""
 
     @abstractmethod
-    def get_posture(self, experiment_id: Optional[str] = None) -> Posture:
+    def get_posture(self, experiment_id: str | None = None) -> Posture:
         """Get posture score. If no experiment_id, use latest."""
 
     @abstractmethod

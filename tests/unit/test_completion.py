@@ -5,12 +5,11 @@ No HumanboundClient needed — completion doesn't require auth.
 We patch subprocess.run to avoid actually invoking the shell.
 """
 
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from click.testing import CliRunner
 
 from humanbound_cli.main import cli
-
 
 runner = CliRunner()
 
@@ -134,6 +133,7 @@ class TestErrorCases:
         """completion without arg fails when shell cannot be detected."""
         # Temporarily override SHELL to something unrecognizable
         import os
+
         old_shell = os.environ.get("SHELL")
         os.environ["SHELL"] = "/usr/bin/unknown_shell"
         try:
@@ -150,4 +150,8 @@ class TestErrorCases:
         """completion with invalid shell name exits with error."""
         result = runner.invoke(cli, ["completion", "powershell"])
         assert result.exit_code != 0
-        assert "Invalid value" in result.output or "invalid" in result.output.lower() or "Choice" in result.output
+        assert (
+            "Invalid value" in result.output
+            or "invalid" in result.output.lower()
+            or "Choice" in result.output
+        )

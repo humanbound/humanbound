@@ -5,18 +5,17 @@ subcommand routing, help text, and the non-interactive subcommands
 (analyze, sessions).
 """
 
-import json
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from click.testing import CliRunner
 
+from humanbound_cli.exceptions import APIError
 from humanbound_cli.main import cli
-from humanbound_cli.exceptions import NotAuthenticatedError, APIError
 
 from .conftest import (
     MOCK_EXPERIMENT,
-    assert_exit_ok,
     assert_exit_error,
+    assert_exit_ok,
 )
 
 runner = CliRunner()
@@ -58,9 +57,7 @@ class TestHappyPath:
             ],
         }
         MockClient.return_value = mock
-        result = runner.invoke(cli, [
-            "redteam", "analyze", "--experiment", "exp-789"
-        ])
+        result = runner.invoke(cli, ["redteam", "analyze", "--experiment", "exp-789"])
         assert_exit_ok(result)
         mock.post.assert_called_once_with(
             "experiments/exp-789/actions/analyze",
@@ -87,9 +84,7 @@ class TestHappyPath:
             },
         }
         MockClient.return_value = mock
-        result = runner.invoke(cli, [
-            "redteam", "sessions", "--experiment", "exp-789"
-        ])
+        result = runner.invoke(cli, ["redteam", "sessions", "--experiment", "exp-789"])
         assert_exit_ok(result)
         mock.get_experiment.assert_called_once_with("exp-789")
 
@@ -101,9 +96,7 @@ class TestHappyPath:
             "orchestrator_state": {"active_sessions": {}},
         }
         MockClient.return_value = mock
-        result = runner.invoke(cli, [
-            "redteam", "sessions", "--experiment", "exp-789"
-        ])
+        result = runner.invoke(cli, ["redteam", "sessions", "--experiment", "exp-789"])
         assert_exit_ok(result)
         assert "No active sessions" in result.output
 
@@ -124,9 +117,7 @@ class TestErrorCases:
         mock = _make_client()
         mock.is_authenticated.return_value = False
         MockClient.return_value = mock
-        result = runner.invoke(cli, [
-            "redteam", "analyze", "--experiment", "exp-789"
-        ])
+        result = runner.invoke(cli, ["redteam", "analyze", "--experiment", "exp-789"])
         assert_exit_error(result)
         assert "Not authenticated" in result.output
 
@@ -134,9 +125,7 @@ class TestErrorCases:
     def test_analyze_no_project(self, MockClient):
         mock = _make_client(project_id=None, _project_id=None)
         MockClient.return_value = mock
-        result = runner.invoke(cli, [
-            "redteam", "analyze", "--experiment", "exp-789"
-        ])
+        result = runner.invoke(cli, ["redteam", "analyze", "--experiment", "exp-789"])
         assert_exit_error(result)
         assert "No project selected" in result.output
 
@@ -145,18 +134,14 @@ class TestErrorCases:
         mock = _make_client()
         mock.is_authenticated.return_value = False
         MockClient.return_value = mock
-        result = runner.invoke(cli, [
-            "redteam", "sessions", "--experiment", "exp-789"
-        ])
+        result = runner.invoke(cli, ["redteam", "sessions", "--experiment", "exp-789"])
         assert_exit_error(result)
 
     @patch(PATCH_TARGET)
     def test_sessions_no_project(self, MockClient):
         mock = _make_client(project_id=None, _project_id=None)
         MockClient.return_value = mock
-        result = runner.invoke(cli, [
-            "redteam", "sessions", "--experiment", "exp-789"
-        ])
+        result = runner.invoke(cli, ["redteam", "sessions", "--experiment", "exp-789"])
         assert_exit_error(result)
 
     @patch(PATCH_TARGET)
@@ -164,9 +149,7 @@ class TestErrorCases:
         mock = _make_client()
         mock.post.side_effect = APIError("Experiment not found", 404)
         MockClient.return_value = mock
-        result = runner.invoke(cli, [
-            "redteam", "analyze", "--experiment", "nonexistent"
-        ])
+        result = runner.invoke(cli, ["redteam", "analyze", "--experiment", "nonexistent"])
         assert_exit_error(result)
 
     @patch(PATCH_TARGET)
@@ -174,9 +157,7 @@ class TestErrorCases:
         mock = _make_client()
         mock.get_experiment.side_effect = APIError("Experiment not found", 404)
         MockClient.return_value = mock
-        result = runner.invoke(cli, [
-            "redteam", "sessions", "--experiment", "nonexistent"
-        ])
+        result = runner.invoke(cli, ["redteam", "sessions", "--experiment", "nonexistent"])
         assert_exit_error(result)
 
     def test_analyze_missing_experiment_flag(self):

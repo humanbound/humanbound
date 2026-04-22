@@ -1,9 +1,16 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (c) 2024-2026 Humanbound
+import asyncio
 import copy
-import requests, re, json, ssl, certifi, time, asyncio, re, traceback
-
+import json
 import logging
+import re
+import ssl
+import time
+import traceback
+
+import certifi
+import requests
 
 logger = logging.getLogger("humanbound.engine.bot")
 
@@ -11,6 +18,7 @@ logger = logging.getLogger("humanbound.engine.bot")
 def _log_error(title="", description=None, tag="", hook=""):
     """Log non-fatal errors."""
     logger.warning(f"[{tag}] {title}: {description}")
+
 
 MIN_URL_LENGTH = 80  # truncate url after this character
 REQUESTS_TIMEOUT = 500
@@ -188,9 +196,7 @@ class Bot(ResponseExtractor):
 
             if item[0] == "$":
                 key = item[1:]
-                return (
-                    base_payload[key] if len(key) and key in base_payload else None
-                ), False
+                return (base_payload[key] if len(key) and key in base_payload else None), False
 
             if item[0] == "\\":
                 return item[1:], False
@@ -202,9 +208,7 @@ class Bot(ResponseExtractor):
     # <custom_key> refers to any key in payload argument
     def __prepare_endpoint(self, endpoint, payload):
         for key in payload:
-            if not isinstance(payload[key], list) and not isinstance(
-                payload[key], dict
-            ):
+            if not isinstance(payload[key], list) and not isinstance(payload[key], dict):
                 endpoint = endpoint.replace(f"${key}", str(payload[key]))
         return endpoint
 
@@ -226,13 +230,9 @@ class Bot(ResponseExtractor):
                 raise Exception(
                     "400/'x-humanbound-auth-schema' must contain 'key' or 'label' or 'value' property."
                 )
-            auth_label = (
-                auth_schema["label"] if "label" in auth_schema else "authorization"
-            )
+            auth_label = auth_schema["label"] if "label" in auth_schema else "authorization"
             if isinstance(auth_label, str) == False:
-                raise Exception(
-                    "400/'x-humanbound-auth-schema::label' must be a string."
-                )
+                raise Exception("400/'x-humanbound-auth-schema::label' must be a string.")
             auth_key = auth_schema["key"] if "key" in auth_schema else "access_token"
             if isinstance(auth_key, str) == False:
                 raise Exception("400/'x-humanbound-auth-schema::key' must be a string.")
@@ -240,13 +240,9 @@ class Bot(ResponseExtractor):
                 raise Exception(
                     f"400/'{auth_key}' is missing in the payload for authorization header."
                 )
-            auth_value = (
-                auth_schema["value"] if "value" in auth_schema else payload[auth_key]
-            )
+            auth_value = auth_schema["value"] if "value" in auth_schema else payload[auth_key]
             if isinstance(auth_value, str) == False:
-                raise Exception(
-                    "400/'x-humanbound-auth-schema::value' must be a string."
-                )
+                raise Exception("400/'x-humanbound-auth-schema::value' must be a string.")
 
             # all done - now we can set the complete authorization header in the customised context
             headers[auth_label] = auth_value.replace("$token", str(payload[auth_key]))
@@ -281,13 +277,11 @@ class Bot(ResponseExtractor):
         # if payload is dict
         if isinstance(payload, dict):
             for key in payload:
-                payload[key], prompt_placeholder_is_found_cur = (
-                    self.__parse_payload_item(
-                        payload[key],
-                        base_payload,
-                        u_prompt,
-                        conversation,
-                    )
+                payload[key], prompt_placeholder_is_found_cur = self.__parse_payload_item(
+                    payload[key],
+                    base_payload,
+                    u_prompt,
+                    conversation,
                 )
                 prompt_placeholder_is_found = (
                     prompt_placeholder_is_found or prompt_placeholder_is_found_cur
@@ -309,13 +303,11 @@ class Bot(ResponseExtractor):
         # if payload is list
         if isinstance(payload, list):
             for idx in range(len(payload)):
-                payload[idx], prompt_placeholder_is_found_cur = (
-                    self.__parse_payload_item(
-                        payload[idx],
-                        base_payload,
-                        u_prompt,
-                        conversation,
-                    )
+                payload[idx], prompt_placeholder_is_found_cur = self.__parse_payload_item(
+                    payload[idx],
+                    base_payload,
+                    u_prompt,
+                    conversation,
                 )
                 prompt_placeholder_is_found = (
                     prompt_placeholder_is_found or prompt_placeholder_is_found_cur
@@ -323,7 +315,7 @@ class Bot(ResponseExtractor):
             # $prompt not detected -> for list type paylod $prompt is mandatory => FAIL
             # but ONLY if u_prompt is not empty
             if not prompt_placeholder_is_found and u_prompt != "":
-                raise Exception(f"400/'$prompt' is missing from the payload array.")
+                raise Exception("400/'$prompt' is missing from the payload array.")
 
         # if payload is a string, replace directly the $prompt placeholder
         # NO OTHER PLACEHOLDERS SUPPORTED IN THIS CASE
@@ -344,14 +336,10 @@ class Bot(ResponseExtractor):
         payload = self.__prepare_payload(payload1, base_payload, u_prompt, conversation)
         t_start = time.time()
 
-        resp = requests.post(
-            endpoint, headers=headers, json=payload, timeout=REQUESTS_TIMEOUT
-        )
+        resp = requests.post(endpoint, headers=headers, json=payload, timeout=REQUESTS_TIMEOUT)
         if resp.status_code == 405:
             t_start = time.time()
-            resp = requests.get(
-                endpoint, headers=headers, params=payload, timeout=REQUESTS_TIMEOUT
-            )
+            resp = requests.get(endpoint, headers=headers, params=payload, timeout=REQUESTS_TIMEOUT)
         if resp.status_code != 200 and resp.status_code != 201:
             raise Exception(
                 f"{resp.status_code}/{resp.text} - {url_pattern.sub(truncate, endpoint)}"
@@ -381,11 +369,7 @@ class Bot(ResponseExtractor):
             # b. extract ai agent response
             # (might be in different formats, will handle accordingly in the next step)
             last_msg = (
-                (
-                    messages
-                    if isinstance(messages, dict)
-                    else messages[len(messages) - 1]
-                )
+                (messages if isinstance(messages, dict) else messages[len(messages) - 1])
                 if not isinstance(messages, str)
                 else messages
             )
@@ -414,9 +398,7 @@ class Bot(ResponseExtractor):
                 tag="Exception",
                 hook="ENGINEERING",
             )
-            raise Exception(
-                f"500/Testing AI Agent error [internal] - Cannot generate completion."
-            )
+            raise Exception("500/Testing AI Agent error [internal] - Cannot generate completion.")
         except Exception as e:
             raise Exception(
                 f"502/Testing AI Agent error - Cannot generate completion. - {url_pattern.sub(truncate, str(e))}."
@@ -496,7 +478,7 @@ class Bot(ResponseExtractor):
             # since chunks are processed incrementally and final response object isn't available
             return message, exec_t, None
 
-        except (asyncio.TimeoutError, TimeoutError) as e:
+        except (asyncio.TimeoutError, TimeoutError):
             raise Exception(
                 f"408/Testing AI Agent Error – Unable to stream completion. The request timed out after {REQUESTS_TIMEOUT} seconds."
             )
@@ -512,9 +494,7 @@ class Bot(ResponseExtractor):
                 hook="ENGINEERING",
             )
 
-            raise Exception(
-                f"500/Testing AI Agent error [internal] - Cannot generate completion."
-            )
+            raise Exception("500/Testing AI Agent error [internal] - Cannot generate completion.")
         except Exception as e:
             raise Exception(
                 f"502/Testing AI Agent error - Cannot stream completion. - {url_pattern.sub(truncate, str(e))}."
@@ -588,9 +568,7 @@ class Telemetry:
     def __prepare_endpoint(self, endpoint, payload):
         """Replace $<key> placeholders in endpoint with values from payload"""
         for key in payload:
-            if not isinstance(payload[key], list) and not isinstance(
-                payload[key], dict
-            ):
+            if not isinstance(payload[key], list) and not isinstance(payload[key], dict):
                 endpoint = endpoint.replace(f"${key}", str(payload[key]))
         return endpoint
 
@@ -609,17 +587,13 @@ class Telemetry:
                 raise Exception(
                     "400/'x-humanbound-auth-schema' must contain 'key' or 'label' or 'value' property."
                 )
-            auth_label = (
-                auth_schema["label"] if "label" in auth_schema else "authorization"
-            )
+            auth_label = auth_schema["label"] if "label" in auth_schema else "authorization"
             auth_key = auth_schema["key"] if "key" in auth_schema else "access_token"
             if auth_key not in payload:
                 raise Exception(
                     f"400/'{auth_key}' is missing in the payload for authorization header."
                 )
-            auth_value = (
-                auth_schema["value"] if "value" in auth_schema else payload[auth_key]
-            )
+            auth_value = auth_schema["value"] if "value" in auth_schema else payload[auth_key]
             headers[auth_label] = auth_value.replace("$token", str(payload[auth_key]))
             del headers["x-humanbound-auth-schema"]
         elif "access_token" in payload and isinstance(payload["access_token"], str):
@@ -660,13 +634,9 @@ class Telemetry:
         method = self.config.get("method", "GET").upper()
 
         if method == "POST":
-            resp = requests.post(
-                endpoint, headers=headers, json=payload, timeout=REQUESTS_TIMEOUT
-            )
+            resp = requests.post(endpoint, headers=headers, json=payload, timeout=REQUESTS_TIMEOUT)
         else:  # GET
-            resp = requests.get(
-                endpoint, headers=headers, params=payload, timeout=REQUESTS_TIMEOUT
-            )
+            resp = requests.get(endpoint, headers=headers, params=payload, timeout=REQUESTS_TIMEOUT)
 
         if resp.status_code != 200 and resp.status_code != 201:
             raise Exception(
@@ -747,9 +717,7 @@ class Telemetry:
                             {
                                 "turn": run.get("turn", 0),
                                 "tool_name": run.get("name", ""),
-                                "parameters": run.get("inputs", {}).get(
-                                    "tool_input", {}
-                                ),
+                                "parameters": run.get("inputs", {}).get("tool_input", {}),
                                 "result": run.get("outputs", {}).get("result", ""),
                                 "execution_time_ms": run.get("execution_time", 0),
                             }
@@ -839,18 +807,14 @@ class Telemetry:
                                     if isinstance(tool_call.get("arguments"), dict)
                                     else tool_call.get("input", {})
                                 ),
-                                "result": tool_call.get(
-                                    "output", tool_call.get("result", "")
-                                ),
+                                "result": tool_call.get("output", tool_call.get("result", "")),
                             }
                         )
 
                     # Accumulate token usage
                     usage = obs.get("usage", {})
                     if usage:
-                        total_tokens += usage.get("totalTokens", 0) or usage.get(
-                            "total", 0
-                        )
+                        total_tokens += usage.get("totalTokens", 0) or usage.get("total", 0)
                         total_cost += usage.get("totalCost", 0) or 0
 
                 # Extract tool executions from TOOL observations (LangGraph via LangFuse)
@@ -886,10 +850,7 @@ class Telemetry:
                     event_name = obs.get("name", "")
                     metadata = obs.get("metadata", {})
 
-                    if (
-                        "api_call" in event_name.lower()
-                        or "external" in event_name.lower()
-                    ):
+                    if "api_call" in event_name.lower() or "external" in event_name.lower():
                         standardized["external_calls"].append(
                             {
                                 "turn": obs_turn,
@@ -960,9 +921,7 @@ class Telemetry:
                                     "parameters": tool_call.get(
                                         "parameters", tool_call.get("arguments", {})
                                     ),
-                                    "result": tool_call.get(
-                                        "result", tool_call.get("output", "")
-                                    ),
+                                    "result": tool_call.get("result", tool_call.get("output", "")),
                                 }
                             )
 
@@ -973,9 +932,7 @@ class Telemetry:
                         standardized["tool_executions"].append(
                             {
                                 "turn": idx + 1,
-                                "tool_name": action.get(
-                                    "tool", action.get("action", "")
-                                ),
+                                "tool_name": action.get("tool", action.get("action", "")),
                                 "parameters": action.get("input", {}),
                                 "result": action.get("output", ""),
                             }
@@ -988,12 +945,8 @@ class Telemetry:
                         standardized["memory_operations"].append(
                             {
                                 "turn": idx + 1,
-                                "operation_type": mem_op.get(
-                                    "type", mem_op.get("operation", "")
-                                ),
-                                "content": str(
-                                    mem_op.get("content", mem_op.get("data", ""))
-                                ),
+                                "operation_type": mem_op.get("type", mem_op.get("operation", "")),
+                                "content": str(mem_op.get("content", mem_op.get("data", ""))),
                             }
                         )
 
@@ -1095,12 +1048,8 @@ class Telemetry:
             # Extract resource usage
             usage = response_body.get("usage", {})
             if usage:
-                standardized["resource_usage"]["tokens_used"] = usage.get(
-                    "total_tokens", 0
-                )
-                standardized["resource_usage"]["prompt_tokens"] = usage.get(
-                    "prompt_tokens", 0
-                )
+                standardized["resource_usage"]["tokens_used"] = usage.get("total_tokens", 0)
+                standardized["resource_usage"]["prompt_tokens"] = usage.get("prompt_tokens", 0)
                 standardized["resource_usage"]["completion_tokens"] = usage.get(
                     "completion_tokens", 0
                 )
@@ -1169,15 +1118,9 @@ class Telemetry:
                     standardized["tool_executions"].append(
                         {
                             "turn": turn,
-                            "tool_name": event_data.get(
-                                "tool_name", event_data.get("action", "")
-                            ),
-                            "parameters": event_data.get(
-                                "parameters", event_data.get("input", {})
-                            ),
-                            "result": event_data.get(
-                                "result", event_data.get("output", "")
-                            ),
+                            "tool_name": event_data.get("tool_name", event_data.get("action", "")),
+                            "parameters": event_data.get("parameters", event_data.get("input", {})),
+                            "result": event_data.get("result", event_data.get("output", "")),
                         }
                     )
 
@@ -1211,9 +1154,7 @@ class Telemetry:
                         {
                             "turn": turn,
                             "operation_type": event_type,
-                            "content": str(
-                                event_data.get("content", event_data.get("data", ""))
-                            ),
+                            "content": str(event_data.get("content", event_data.get("data", ""))),
                         }
                     )
 
@@ -1224,9 +1165,7 @@ class Telemetry:
                             "turn": turn,
                             "url": event_data.get("url", ""),
                             "method": event_data.get("method", ""),
-                            "status": event_data.get(
-                                "status_code", event_data.get("status", "")
-                            ),
+                            "status": event_data.get("status_code", event_data.get("status", "")),
                         }
                     )
 
@@ -1238,9 +1177,7 @@ class Telemetry:
                             "from_agent": event_data.get(
                                 "from_agent", event_data.get("source", "")
                             ),
-                            "to_agent": event_data.get(
-                                "to_agent", event_data.get("target", "")
-                            ),
+                            "to_agent": event_data.get("to_agent", event_data.get("target", "")),
                             "reason": event_data.get("reason", ""),
                         }
                     )
@@ -1252,9 +1189,7 @@ class Telemetry:
                 if "total_cost" in metrics:
                     total_cost = metrics["total_cost"]
                 if "api_calls" in metrics:
-                    standardized["resource_usage"]["api_calls_count"] = metrics[
-                        "api_calls"
-                    ]
+                    standardized["resource_usage"]["api_calls_count"] = metrics["api_calls"]
                 if "latency_ms" in metrics:
                     standardized["resource_usage"]["latency_ms"] = metrics["latency_ms"]
 
@@ -1270,9 +1205,7 @@ class Telemetry:
                     standardized["authorization_events"].append(
                         {
                             "user_id": session.get("user_id", ""),
-                            "session_id": session.get(
-                                "session_id", session.get("id", "")
-                            ),
+                            "session_id": session.get("session_id", session.get("id", "")),
                             "agent_id": session.get("agent_id", ""),
                         }
                     )
@@ -1355,9 +1288,7 @@ class Telemetry:
 
             return standardized
         except ImportError:
-            raise Exception(
-                "500/Custom telemetry parsing requires 'jsonpath-ng' package"
-            )
+            raise Exception("500/Custom telemetry parsing requires 'jsonpath-ng' package")
         except Exception as e:
             raise Exception(f"500/Telemetry parsing error (custom format): {str(e)}")
 
@@ -1380,9 +1311,7 @@ class Telemetry:
         elif format_type == "custom":
             extraction_map = self.config.get("extraction_map")
             if not extraction_map:
-                raise Exception(
-                    "400/Custom telemetry format requires 'extraction_map' in config"
-                )
+                raise Exception("400/Custom telemetry format requires 'extraction_map' in config")
             return self.__parse_custom(raw_data, extraction_map)
         else:
             raise Exception(f"400/Unsupported telemetry format: {format_type}")
@@ -1482,7 +1411,7 @@ class Telemetry:
             # All retries exhausted — return whatever we got (may be empty)
             return standardized if raw_data else None
 
-        except Exception as e:
+        except Exception:
             # Graceful degradation — continue without telemetry
             return None
 
@@ -1571,9 +1500,7 @@ class Telemetry:
                             tool_exec = {"turn": turn_num}
 
                             # Extract tool fields using configured paths
-                            name_field = extraction_map.get(
-                                "tool_executions.tool_name", "name"
-                            )
+                            name_field = extraction_map.get("tool_executions.tool_name", "name")
                             tool_exec["tool_name"] = Telemetry.__navigate_path(
                                 tool_item, name_field
                             ) or tool_item.get("name", "")
@@ -1585,9 +1512,7 @@ class Telemetry:
                                 tool_item, params_field
                             ) or tool_item.get("parameters", {})
 
-                            result_field = extraction_map.get(
-                                "tool_executions.result", "result"
-                            )
+                            result_field = extraction_map.get("tool_executions.result", "result")
                             tool_exec["result"] = Telemetry.__navigate_path(
                                 tool_item, result_field
                             ) or tool_item.get("result", "")
@@ -1636,7 +1561,7 @@ class Telemetry:
 
             return standardized
 
-        except Exception as e:
+        except Exception:
             # Return empty standardized structure on error
             return {
                 "tool_executions": [],

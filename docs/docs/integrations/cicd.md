@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install Humanbound CLI
-        run: pip install humanbound-cli
+        run: pip install humanbound
 
       - name: Run Security Tests
         env:
@@ -56,7 +56,7 @@ security-test:
   stage: test
   image: python:3.10
   script:
-    - pip install humanbound-cli
+    - pip install humanbound
     - hb test --wait --fail-on high
     - hb logs --format json -o security-results.json
   artifacts:

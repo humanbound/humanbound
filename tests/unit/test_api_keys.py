@@ -5,18 +5,18 @@ Mocked HumanboundClient — no live API needed.
 """
 
 import json
-import sys
 import os
-import pytest
-from unittest.mock import patch, MagicMock
+import sys
+from unittest.mock import MagicMock, patch
+
 from click.testing import CliRunner
 
 sys.path.insert(0, os.path.dirname(__file__))
 
-from humanbound_cli.main import cli
-from humanbound_cli.exceptions import NotAuthenticatedError, APIError, NotFoundError
-
 from conftest import MOCK_API_KEY
+
+from humanbound_cli.exceptions import APIError
+from humanbound_cli.main import cli
 
 runner = CliRunner()
 
@@ -42,8 +42,8 @@ def _make_client(**overrides):
 # Happy-path tests
 # ---------------------------------------------------------------------------
 
-class TestHappyPath:
 
+class TestHappyPath:
     @patch(PATCH_TARGET)
     def test_list_api_keys(self, MockClient):
         mock = _make_client()
@@ -87,11 +87,15 @@ class TestHappyPath:
         mock = _make_client()
         mock.delete_api_key.return_value = {}
         MockClient.return_value = mock
-        result = runner.invoke(cli, [
-            "api-keys", "delete",
-            "key-001-xxxx-xxxx-xxxx-xxxxxxxxxxxx",  # >= 32 chars
-            "--force",
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "api-keys",
+                "delete",
+                "key-001-xxxx-xxxx-xxxx-xxxxxxxxxxxx",  # >= 32 chars
+                "--force",
+            ],
+        )
         assert result.exit_code == 0
         assert "revoked" in result.output.lower()
 
@@ -101,11 +105,16 @@ class TestHappyPath:
         mock.list_api_keys.return_value = {"data": [MOCK_API_KEY]}
         mock.update_api_key.return_value = {}
         MockClient.return_value = mock
-        result = runner.invoke(cli, [
-            "api-keys", "update",
-            "key-001-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-            "--name", "renamed-key",
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "api-keys",
+                "update",
+                "key-001-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                "--name",
+                "renamed-key",
+            ],
+        )
         assert result.exit_code == 0
         assert "updated" in result.output.lower()
 
@@ -114,8 +123,8 @@ class TestHappyPath:
 # Error cases
 # ---------------------------------------------------------------------------
 
-class TestErrorCases:
 
+class TestErrorCases:
     @patch(PATCH_TARGET)
     def test_list_not_authenticated(self, MockClient):
         mock = _make_client()
@@ -139,11 +148,15 @@ class TestErrorCases:
         mock = _make_client()
         mock.delete_api_key.side_effect = APIError("Not found", status_code=404)
         MockClient.return_value = mock
-        result = runner.invoke(cli, [
-            "api-keys", "delete",
-            "key-bad-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-            "--force",
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "api-keys",
+                "delete",
+                "key-bad-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                "--force",
+            ],
+        )
         assert result.exit_code != 0
         assert "Error" in result.output
 
@@ -161,8 +174,8 @@ class TestErrorCases:
 # Flag tests
 # ---------------------------------------------------------------------------
 
-class TestFlags:
 
+class TestFlags:
     @patch(PATCH_TARGET)
     def test_list_json_output(self, MockClient):
         mock = _make_client()
@@ -189,10 +202,15 @@ class TestFlags:
         mock = _make_client()
         mock.list_api_keys.return_value = {"data": [MOCK_API_KEY]}
         MockClient.return_value = mock
-        result = runner.invoke(cli, [
-            "api-keys", "delete",
-            "key-001-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-        ], input="n\n")
+        result = runner.invoke(
+            cli,
+            [
+                "api-keys",
+                "delete",
+                "key-001-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+            ],
+            input="n\n",
+        )
         mock.delete_api_key.assert_not_called()
 
 
@@ -200,8 +218,8 @@ class TestFlags:
 # Output format
 # ---------------------------------------------------------------------------
 
-class TestOutputFormat:
 
+class TestOutputFormat:
     @patch(PATCH_TARGET)
     def test_table_shows_key_name_and_scopes(self, MockClient):
         mock = _make_client()

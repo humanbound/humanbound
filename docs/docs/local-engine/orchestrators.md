@@ -4,7 +4,7 @@ Orchestrators are the test engines that generate attacks, run conversations, and
 
 ## Built-In Orchestrators
 
-Installed with `pip install humanbound-cli`:
+Installed with `pip install humanbound`:
 
 | Orchestrator | Flag | Description |
 |---|---|---|

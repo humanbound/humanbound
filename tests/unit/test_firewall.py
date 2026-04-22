@@ -6,18 +6,16 @@ model training) that's hard to mock cleanly, so we focus on help text
 and auth guards.
 """
 
-import json
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from click.testing import CliRunner
 
+from humanbound_cli.exceptions import APIError
 from humanbound_cli.main import cli
-from humanbound_cli.exceptions import NotAuthenticatedError, APIError
-
 
 runner = CliRunner()
 
-PATCH_TARGET = "humanbound_cli.commands.firewall.HumanboundClient"
+PATCH_TARGET = "humanbound_cli.commands.firewall.get_runner"
 
 
 def _make_mock_client(**overrides):
@@ -64,7 +62,9 @@ class TestHappyPath:
     def test_train_no_model_flag_no_hb_firewall(self, MockClient):
         """train without --model and without hb_firewall installed exits non-zero."""
         mock = _make_mock_client()
-        MockClient.return_value = mock
+        from conftest import platform_runner
+
+        MockClient.return_value = platform_runner(mock)
         result = runner.invoke(cli, ["firewall", "train"])
         # Should fail because hb_firewall is not installed in test env
         assert result.exit_code != 0
@@ -73,7 +73,9 @@ class TestHappyPath:
     def test_train_requires_project(self, MockClient):
         """train fails when no project is selected."""
         mock = _make_mock_client(project_id=None, _project_id=None)
-        MockClient.return_value = mock
+        from conftest import platform_runner
+
+        MockClient.return_value = platform_runner(mock)
         # Provide --model so it doesn't fail on missing hb_firewall first
         result = runner.invoke(cli, ["firewall", "train", "--model", "fake.py"])
         assert result.exit_code != 0
@@ -89,7 +91,9 @@ class TestErrorCases:
         # In reality, the command catches NotAuthenticatedError from API calls.
         # Since train instantiates client and then calls API, we test that
         # it doesn't crash without auth by checking exit code.
-        MockClient.return_value = mock
+        from conftest import platform_runner
+
+        MockClient.return_value = platform_runner(mock)
         # Without --model, it tries to find hb_firewall first, which isn't installed
         # So the error path depends on whether hb_firewall is importable.
         # We just verify it exits non-zero.
@@ -101,7 +105,9 @@ class TestErrorCases:
         """train handles APIError gracefully."""
         mock = _make_mock_client()
         mock.list_experiments.side_effect = APIError("Server error", status_code=500)
-        MockClient.return_value = mock
+        from conftest import platform_runner
+
+        MockClient.return_value = platform_runner(mock)
         # Will fail before reaching API because hb_firewall is not installed
         result = runner.invoke(cli, ["firewall", "train", "--model", "fake.py"])
         assert result.exit_code != 0

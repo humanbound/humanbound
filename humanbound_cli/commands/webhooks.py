@@ -7,11 +7,11 @@ import secrets
 
 import click
 from rich.console import Console
-from rich.table import Table
 from rich.prompt import Confirm
+from rich.table import Table
 
 from ..client import HumanboundClient
-from ..exceptions import NotAuthenticatedError, APIError
+from ..exceptions import APIError, NotAuthenticatedError
 
 console = Console()
 
@@ -166,7 +166,9 @@ def remove(webhook_id: str, force: bool):
     client = _require_auth()
 
     if not force:
-        if not Confirm.ask(f"Delete webhook [bold]{webhook_id}[/bold]? Events will stop being delivered."):
+        if not Confirm.ask(
+            f"Delete webhook [bold]{webhook_id}[/bold]? Events will stop being delivered."
+        ):
             console.print("[dim]Cancelled.[/dim]")
             return
 
@@ -257,7 +259,13 @@ def sync(webhook_id: str, since: str, until: str, project_id: str, event_type: s
 @click.argument("webhook_id")
 @click.option("--url", default=None, help="New endpoint URL")
 @click.option("--name", default=None, help="New display name")
-@click.option("--status", "webhook_status", default=None, type=click.Choice(["active", "disabled"]), help="Set webhook status")
+@click.option(
+    "--status",
+    "webhook_status",
+    default=None,
+    type=click.Choice(["active", "disabled"]),
+    help="Set webhook status",
+)
 def update(webhook_id: str, url: str, name: str, webhook_status: str):
     """Update an existing webhook.
 
@@ -281,7 +289,9 @@ def update(webhook_id: str, url: str, name: str, webhook_status: str):
         data["is_active"] = webhook_status == "active"
 
     if not data:
-        console.print("[yellow]Nothing to update.[/yellow] Provide at least one of --url, --name, or --status.")
+        console.print(
+            "[yellow]Nothing to update.[/yellow] Provide at least one of --url, --name, or --status."
+        )
         raise SystemExit(1)
 
     try:
@@ -293,7 +303,7 @@ def update(webhook_id: str, url: str, name: str, webhook_status: str):
                 include_org=False,
             )
 
-        console.print(f"[green]Webhook updated.[/green]")
+        console.print("[green]Webhook updated.[/green]")
 
         # Show current state
         updated_name = result.get("name", name or "")

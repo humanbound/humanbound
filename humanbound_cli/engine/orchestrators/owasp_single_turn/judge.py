@@ -1,34 +1,66 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (c) 2024-2026 Humanbound
 import json
-import re
 import logging
+import re
 
-from .config import TestingConfiguration
 from ...llm import get_llm_pinger
+from .config import TestingConfiguration
 
 logger = logging.getLogger("humanbound.engine.judge.single_turn")
+
 
 def _log_error(title="", description=None, tag="", hook=""):
     """Log non-fatal errors."""
     logger.warning(f"[{tag}] {title}: {description}")
 
+
 # JSON parsing utility — converts word-form numbers in LLM output to integers
 _WORD_TO_NUMBER = {
-    "zero": 0, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
-    "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10,
-    "eleven": 11, "twelve": 12, "thirteen": 13, "fourteen": 14, "fifteen": 15,
-    "sixteen": 16, "seventeen": 17, "eighteen": 18, "nineteen": 19, "twenty": 20,
-    "thirty": 30, "forty": 40, "fifty": 50, "sixty": 60, "seventy": 70,
-    "eighty": 80, "ninety": 90, "hundred": 100,
+    "zero": 0,
+    "one": 1,
+    "two": 2,
+    "three": 3,
+    "four": 4,
+    "five": 5,
+    "six": 6,
+    "seven": 7,
+    "eight": 8,
+    "nine": 9,
+    "ten": 10,
+    "eleven": 11,
+    "twelve": 12,
+    "thirteen": 13,
+    "fourteen": 14,
+    "fifteen": 15,
+    "sixteen": 16,
+    "seventeen": 17,
+    "eighteen": 18,
+    "nineteen": 19,
+    "twenty": 20,
+    "thirty": 30,
+    "forty": 40,
+    "fifty": 50,
+    "sixty": 60,
+    "seventy": 70,
+    "eighty": 80,
+    "ninety": 90,
+    "hundred": 100,
 }
 _WORD_NUMBER_RE = re.compile(
-    r'(?<=:\s)(' + '|'.join(re.escape(w) for w in sorted(_WORD_TO_NUMBER, key=len, reverse=True)) + r')(?=\s*[,\n\r}])',
+    r"(?<=:\s)("
+    + "|".join(re.escape(w) for w in sorted(_WORD_TO_NUMBER, key=len, reverse=True))
+    + r")(?=\s*[,\n\r}])",
     re.IGNORECASE,
 )
+
+
 def jsonify_verdict(verdict_string):
-    verdict_string = _WORD_NUMBER_RE.sub(lambda m: str(_WORD_TO_NUMBER[m.group().lower()]), verdict_string)
+    verdict_string = _WORD_NUMBER_RE.sub(
+        lambda m: str(_WORD_TO_NUMBER[m.group().lower()]), verdict_string
+    )
     return json.loads(verdict_string, strict=False)
+
 
 TRAILING_CHARS_TO_DROP = (
     " -`'\n\""  # characters to drop before accepting an evaluation from the llm
@@ -222,9 +254,7 @@ First, work through your reasoning step-by-step, then provide your verdict.
 <USER_PROMPT>
 
 *Response To Evaluate (AI Agent):*
-""".replace(
-                "<EVALUATION_METRICS_CLARIFICATION>", evaluation_metrics_clarification
-            )
+""".replace("<EVALUATION_METRICS_CLARIFICATION>", evaluation_metrics_clarification)
             .replace("<EVALUATION_CATEGORIES>", evaluation_categories)
             .replace("<OVERALL_BUSINESS_SCOPE>", agent["overall_business_scope"])
             .replace(
@@ -264,9 +294,7 @@ First, work through your reasoning step-by-step, then provide your verdict.
                 thinking_start + len("### THINKING:") : verdict_start
             ].strip()
             # Extract verdict section (remove header)
-            verdict_section = response_string[
-                verdict_start + len("### VERDICT:") :
-            ].strip()
+            verdict_section = response_string[verdict_start + len("### VERDICT:") :].strip()
             return thinking, verdict_section
         else:
             # Fallback: no thinking found, treat entire response as verdic
@@ -335,9 +363,7 @@ First, work through your reasoning step-by-step, then provide your verdict.
                 self.BASIC_JUDGE_TMPL.replace("<USER_PROMPT>", u_prompt) + a_response,
             ).strip(TRAILING_CHARS_TO_DROP)
         except Exception as e:
-            raise Exception(
-                f"500/Error, could not extract a verdict. Details: {str(e)}"
-            )
+            raise Exception(f"500/Error, could not extract a verdict. Details: {str(e)}")
 
         # Extract thinking and verdict from response
         thinking, verdict_json = self._extract_thinking_and_verdict(verdict_string)

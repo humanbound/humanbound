@@ -7,7 +7,6 @@ import subprocess
 
 import click
 
-
 _SHELL_ENV_VARS = {
     "bash": "_HB_COMPLETE=bash_source",
     "zsh": "_HB_COMPLETE=zsh_source",

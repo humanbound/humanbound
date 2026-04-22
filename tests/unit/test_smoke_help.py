@@ -7,8 +7,8 @@ They catch import errors, missing modules, and broken command registration.
 
 import pytest
 from click.testing import CliRunner
-from humanbound_cli.main import cli
 
+from humanbound_cli.main import cli
 
 runner = CliRunner()
 
@@ -48,8 +48,7 @@ def test_help_has_output(cmd_path):
 def test_all_commands_registered():
     """Ensure a minimum number of commands are registered (catches silent import failures)."""
     assert len(ALL_COMMANDS) >= 15, (
-        f"Only {len(ALL_COMMANDS)} commands found — expected at least 15. "
-        f"Got: {ALL_COMMANDS}"
+        f"Only {len(ALL_COMMANDS)} commands found — expected at least 15. Got: {ALL_COMMANDS}"
     )
 
 

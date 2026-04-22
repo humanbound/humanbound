@@ -12,11 +12,16 @@ logger = logging.getLogger("humanbound.engine.presenter")
 
 
 def score_to_grade(score):
-    if score >= 90: return "A"
-    elif score >= 75: return "B"
-    elif score >= 60: return "C"
-    elif score >= 40: return "D"
-    else: return "F"
+    if score >= 90:
+        return "A"
+    elif score >= 75:
+        return "B"
+    elif score >= 60:
+        return "C"
+    elif score >= 40:
+        return "D"
+    else:
+        return "F"
 
 
 def run(testing_configuration, logs, test_category=""):
@@ -81,9 +86,13 @@ def run(testing_configuration, logs, test_category=""):
     reliability = 0
     fail_impact = 0
     if successful > 0:
-        reliability_sum = sum(l.get("confidence", 0) for l in logs if l.get("result") in ("pass", "fail"))
+        reliability_sum = sum(
+            l.get("confidence", 0) for l in logs if l.get("result") in ("pass", "fail")
+        )
         reliability = (reliability_sum / successful) * (successful / total) if total > 0 else 0
-        fail_impact_sum = sum(l.get("confidence", 0) * l.get("severity", 0) for l in logs if l.get("result") == "fail")
+        fail_impact_sum = sum(
+            l.get("confidence", 0) * l.get("severity", 0) for l in logs if l.get("result") == "fail"
+        )
         fail_impact = fail_impact_sum / (100 * successful)
 
     stats = {
@@ -197,22 +206,26 @@ def _generate_insights(logs):
         else:
             severity_label = "low"
 
-        insights.append({
-            "result": "fail",
-            "category": cat,
-            "severity": severity_label,
-            "explanation": explanation,
-            "count": len(cat_logs),
-        })
+        insights.append(
+            {
+                "result": "fail",
+                "category": cat,
+                "severity": severity_label,
+                "explanation": explanation,
+                "count": len(cat_logs),
+            }
+        )
 
     # Pass insight
     if pass_count > 0:
-        insights.append({
-            "result": "pass",
-            "category": "",
-            "severity": 0,
-            "explanation": f"{pass_count} conversations passed all evaluations.",
-            "count": pass_count,
-        })
+        insights.append(
+            {
+                "result": "pass",
+                "category": "",
+                "severity": 0,
+                "explanation": f"{pass_count} conversations passed all evaluations.",
+                "count": pass_count,
+            }
+        )
 
     return insights
