@@ -127,8 +127,9 @@ class TestPlatformFlow:
         MockCls.return_value = client
 
         endpoint_json = '{"chat_completion":{"endpoint":"https://bot.example.com"}}'
-        with patch("humanbound_cli.commands.connect._auto_test"), patch(
-            "humanbound_cli.commands.connect._recommend_monitoring"
+        with (
+            patch("humanbound_cli.commands.connect._auto_test"),
+            patch("humanbound_cli.commands.connect._recommend_monitoring"),
         ):
             result = runner.invoke(
                 cli, ["connect", "--endpoint", endpoint_json, "--yes", "--name", "bot"]
@@ -168,8 +169,7 @@ class TestLocalFlow:
 
         prompt_file = tmp_path / "system.txt"
         prompt_file.write_text(
-            "You are a customer service agent for Acme Bank. "
-            "You help customers check balances."
+            "You are a customer service agent for Acme Bank. You help customers check balances."
         )
 
         # Canned banking-flavored LLM response
@@ -185,15 +185,14 @@ class TestLocalFlow:
         cwd = os.getcwd()
         os.chdir(tmp_path)
         try:
-            with patch(
-                "humanbound_cli.engine.local_runner._resolve_provider",
-                return_value={"name": "stub", "integration": {}},
-            ), patch(
-                "humanbound_cli.engine.llm.get_llm_pinger", return_value=pinger
+            with (
+                patch(
+                    "humanbound_cli.engine.local_runner._resolve_provider",
+                    return_value={"name": "stub", "integration": {}},
+                ),
+                patch("humanbound_cli.engine.llm.get_llm_pinger", return_value=pinger),
             ):
-                result = runner.invoke(
-                    cli, ["connect", "--prompt", str(prompt_file), "--yes"]
-                )
+                result = runner.invoke(cli, ["connect", "--prompt", str(prompt_file), "--yes"])
         finally:
             os.chdir(cwd)
 
@@ -239,21 +238,18 @@ class TestLocalFlow:
         prompt_file = tmp_path / "system.txt"
         prompt_file.write_text("Test agent")
 
-        pinger = StubPinger(
-            '{"overall_business_scope":"x","permitted":[],"restricted":[]}'
-        )
+        pinger = StubPinger('{"overall_business_scope":"x","permitted":[],"restricted":[]}')
         cwd = os.getcwd()
         os.chdir(tmp_path)
         try:
-            with patch(
-                "humanbound_cli.engine.local_runner._resolve_provider",
-                return_value={"name": "stub", "integration": {}},
-            ), patch(
-                "humanbound_cli.engine.llm.get_llm_pinger", return_value=pinger
+            with (
+                patch(
+                    "humanbound_cli.engine.local_runner._resolve_provider",
+                    return_value={"name": "stub", "integration": {}},
+                ),
+                patch("humanbound_cli.engine.llm.get_llm_pinger", return_value=pinger),
             ):
-                result = runner.invoke(
-                    cli, ["connect", "--prompt", str(prompt_file), "--yes"]
-                )
+                result = runner.invoke(cli, ["connect", "--prompt", str(prompt_file), "--yes"])
         finally:
             os.chdir(cwd)
 

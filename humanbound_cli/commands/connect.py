@@ -667,13 +667,10 @@ def _connect_agent_local(endpoint, name, prompt, repo, openapi, context, level, 
 
     domain = detect_domain(scope)
     if domain:
-        console.print(
-            f"  [green]✓[/green] Detected domain: [bold]{domain_label(domain)}[/bold]"
-        )
+        console.print(f"  [green]✓[/green] Detected domain: [bold]{domain_label(domain)}[/bold]")
         scope = apply_template(scope, domain, include_eu_ai_act=True)
         console.print(
-            "  [green]✓[/green] Applied compliance overlay "
-            "([dim]domain template + EU AI Act[/dim])"
+            "  [green]✓[/green] Applied compliance overlay ([dim]domain template + EU AI Act[/dim])"
         )
     else:
         scope = apply_eu_ai_act_only(scope)

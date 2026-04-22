@@ -175,9 +175,7 @@ def _apply_eu_ai_act(scope: dict) -> dict:
 
     info = template.get("more_info", "")
     if info and info not in scope.get("more_info", ""):
-        scope["more_info"] = (
-            f"{scope['more_info']}; {info}" if scope.get("more_info") else info
-        )
+        scope["more_info"] = f"{scope['more_info']}; {info}" if scope.get("more_info") else info
 
     return scope
 
