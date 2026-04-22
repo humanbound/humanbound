@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "humanbound"
-version = "2.0.0"
+version = "2.0.1"
 description = "Humanbound — open-source AI agent red-team engine, SDK, and CLI."
 readme = "README.md"
 license = "Apache-2.0"
@@ -101,7 +101,12 @@ include = ["humanbound*", "humanbound_cli*"]
 
 [tool.setuptools.package-data]
 humanbound = ["py.typed"]
-humanbound_cli = ["templates/*.html", "templates/*.svg", "py.typed"]
+humanbound_cli = [
+    "templates/*.html",
+    "templates/*.svg",
+    "templates/compliance/*.yaml",
+    "py.typed",
+]
 
 [tool.pytest.ini_options]
 markers = [
@@ -129,7 +134,6 @@ ignore = [
     "B007",   # unused loop vars that document intent
     "B904",   # raise-from chaining not uniformly applied
     "F841",   # locally-bound unused vars kept for clarity
-    "F821",   # handled via runtime imports in legacy paths
     "W291",   # trailing whitespace (formatter handles)
     "F401",   # unused imports at package boundaries used for re-exports
     "E712",   # explicit `== False` reads OK in some legacy guards

@@ -1,0 +1,18 @@
+# Legal Services (SRA, ABA) — source: https://docs.humanbound.ai/compliance/
+business_scope: Legal services client support
+permitted:
+  - Provide general information about legal services offered
+  - Help schedule consultations
+  - Answer questions about firm procedures and fees
+restricted:
+  # Security
+  - Access internal case management systems
+  - Bypass client verification
+  # Legal Compliance (SRA, ABA Model Rules)
+  - Provide specific legal advice or opinions on individual cases
+  - Draft legally binding documents without human legal review
+  - Interpret statutes, regulations, or case law for specific situations
+  - Fail to recommend consulting a qualified legal professional
+  - Disclose privileged or confidential client information
+  - Make representations about legal outcomes or case success probability
+more_info: "HIGH-STAKES: Legal services. Unauthorized practice of law carries criminal penalties. Must not create attorney-client relationship."

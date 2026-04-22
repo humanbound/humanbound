@@ -3,6 +3,8 @@
 """Connect command — unified entry point for agent and platform onboarding."""
 
 import json
+import random
+import threading
 import time
 from pathlib import Path
 from urllib.parse import urlparse
@@ -13,10 +15,215 @@ from rich.panel import Panel
 
 from ..client import HumanboundClient
 from ..exceptions import APIError, NotAuthenticatedError
+from .test import _load_integration, _resolve_context
 
 console = Console()
 
 SCAN_TIMEOUT = 180
+
+# -- Scan progress UI ----------------------------------------------------------
+
+_SCAN_PHASES = {
+    "endpoint": [
+        "Connecting to your bot...",
+        "Chatting with your bot...",
+        "Exploring capabilities...",
+        "Wrapping up conversation...",
+    ],
+    "text": [
+        "Reading your prompt...",
+    ],
+    "agentic": [
+        "Analysing agent tools...",
+    ],
+    "reflect": [
+        "Extracting scope...",
+        "Classifying intents...",
+        "Assessing risk profile...",
+        "Finalising analysis...",
+    ],
+}
+
+_PLAYFUL_MESSAGES = [
+    "Kicking the tires...",
+    "Poking around...",
+    "Asking nicely...",
+    "Pretending to be a user...",
+    "Checking under the hood...",
+    "Shaking the tree...",
+    "Looking for breadcrumbs...",
+    "Testing the waters...",
+    "Playing twenty questions...",
+    "Seeing what sticks...",
+    "Connecting the dots...",
+    "Reading between the lines...",
+    "Following the clues...",
+    "Pulling on threads...",
+    "Mapping the terrain...",
+    "Snooping around...",
+    "Warming up the neurons...",
+    "Brewing some insights...",
+]
+
+
+def _scan_with_progress(client: HumanboundClient, sources: list, timeout: int, phases: list):
+    """Run POST /scan with rotating status messages."""
+    result: dict = {}
+    error: Exception | None = None
+
+    def do_scan():
+        nonlocal result, error
+        try:
+            result = client.post(
+                "scan",
+                data={"sources": sources},
+                include_project=False,
+                timeout=timeout,
+            )
+        except Exception as e:
+            error = e
+
+    thread = threading.Thread(target=do_scan)
+    scan_start = time.time()
+    thread.start()
+
+    playful = _PLAYFUL_MESSAGES.copy()
+    random.shuffle(playful)
+
+    phase_idx = 0
+    playful_idx = 0
+    rotate_interval = 4
+
+    with console.status("") as status:
+        while thread.is_alive():
+            elapsed = time.time() - scan_start
+            phase = phases[phase_idx % len(phases)] if phases else "Scanning..."
+            fun = playful[playful_idx % len(playful)]
+            status.update(
+                f"[bold]{phase}[/bold] [dim]({elapsed:.0f}s)[/dim]\n"
+                f"  [dim italic]{fun}[/dim italic]"
+            )
+            thread.join(timeout=rotate_interval)
+            playful_idx += 1
+            if playful_idx % 2 == 0:
+                phase_idx += 1
+
+    if error:
+        raise error
+
+    return result
+
+
+def _display_scope(scope: dict):
+    """Render scope: business context + permitted/restricted intents."""
+    business_scope = scope.get("overall_business_scope", "")
+    intents = scope.get("intents", {})
+    permitted = intents.get("permitted", [])
+    restricted = intents.get("restricted", [])
+
+    parts = []
+    if business_scope:
+        parts.append(business_scope[:500] + ("..." if len(business_scope) > 500 else ""))
+
+    if permitted and isinstance(permitted, list):
+        parts.append("")
+        parts.append("[bold green]Permitted:[/bold green]")
+        for intent in permitted[:10]:
+            parts.append(f"  [green]•[/green] {str(intent)[:80]}")
+        if len(permitted) > 10:
+            parts.append(f"  [dim]... and {len(permitted) - 10} more[/dim]")
+
+    if restricted and isinstance(restricted, list):
+        parts.append("")
+        parts.append("[bold red]Restricted:[/bold red]")
+        for intent in restricted[:10]:
+            parts.append(f"  [red]•[/red] {str(intent)[:80]}")
+        if len(restricted) > 10:
+            parts.append(f"  [dim]... and {len(restricted) - 10} more[/dim]")
+
+    if not permitted and not restricted:
+        parts.append("")
+        parts.append("[dim]No intents extracted — the LLM may need more context.[/dim]")
+        parts.append("[dim]Try adding --prompt with a system prompt file for better results.[/dim]")
+
+    console.print(
+        Panel(
+            "\n".join(parts),
+            title="Scope",
+            border_style="blue",
+        )
+    )
+
+
+def _risk_bar(level: str) -> str:
+    fill_map = {"LOW": 4, "MEDIUM": 8, "HIGH": 12}
+    color_map = {"LOW": "green", "MEDIUM": "yellow", "HIGH": "red"}
+    filled = fill_map.get(level, 8)
+    color = color_map.get(level, "white")
+    return f"[{color}]{'█' * filled}[/{color}][dim]{'░' * (12 - filled)}[/dim]"
+
+
+def _display_dashboard(name: str, risk_profile: dict, has_integration: bool, has_telemetry: bool):
+    """Compact risk dashboard rendered after a successful Platform scan."""
+    risk_level = risk_profile.get("risk_level", "?")
+    industry = risk_profile.get("industry", "unknown")
+    risk_color = {"HIGH": "red", "MEDIUM": "yellow", "LOW": "green"}.get(risk_level, "white")
+
+    lines = []
+    lines.append(
+        f"  Risk     {_risk_bar(risk_level)}  "
+        f"[{risk_color}][bold]{risk_level}[/bold][/{risk_color}] · {industry}"
+    )
+
+    pii = risk_profile.get("handles_pii", False)
+    fin = risk_profile.get("handles_financial_data", False)
+    health = risk_profile.get("handles_health_data", False)
+    pii_i = "[yellow]⚠ PII[/yellow]" if pii else "[dim]○ PII[/dim]"
+    fin_i = "[yellow]⚠ Financial[/yellow]" if fin else "[dim]○ Financial[/dim]"
+    hea_i = "[yellow]⚠ Health[/yellow]" if health else "[dim]○ Health[/dim]"
+    lines.append(f"  Data     {pii_i}   {fin_i}   {hea_i}")
+
+    integ = "[green]✓ configured[/green]" if has_integration else "[dim]✗ none[/dim]"
+    tele = "[green]✓ enabled[/green]" if has_telemetry else "[dim]✗ disabled[/dim]"
+    lines.append(f"  Integ    {integ}        Telemetry  {tele}")
+
+    regs = risk_profile.get("applicable_regulations", [])
+    if regs:
+        reg_str = "  ".join(f"[cyan]{r.upper()}[/cyan]" for r in regs)
+        lines.append(f"  Regs     {reg_str}")
+
+    rationale = risk_profile.get("risk_rationale", "")
+    if rationale:
+        if len(rationale) > 120:
+            rationale = rationale[:117] + "..."
+        lines.append("")
+        lines.append(f"  [dim italic]{rationale}[/dim italic]")
+
+    console.print(
+        Panel(
+            "\n".join(lines),
+            title=f"[bold]{name}[/bold]",
+            border_style=risk_color,
+        )
+    )
+
+
+def _get_source_description(prompt: str, endpoint: str, repo: str, openapi: str) -> str:
+    """Short human description of which --flag sources were used."""
+    sources = []
+    if prompt:
+        sources.append(f"prompt ({Path(prompt).name})")
+    if endpoint:
+        path = Path(endpoint)
+        if path.is_file():
+            sources.append(f"endpoint ({path.name})")
+        else:
+            sources.append("endpoint (inline)")
+    if repo:
+        sources.append(f"repo ({Path(repo).name})")
+    if openapi:
+        sources.append(f"openapi ({Path(openapi).name})")
+    return ", ".join(sources)
 
 
 def _print_next(suggestions: list):
@@ -187,29 +394,34 @@ def connect_command(
 
 
 def _connect_agent(endpoint, name, prompt, repo, openapi, context, level, yes, timeout):
-    """Agent path: probe -> create project -> auto-test -> show results."""
-    client = HumanboundClient()
+    """Agent path: dispatch to Platform flow (authenticated) or local flow (anonymous).
 
-    if not client.is_authenticated():
-        console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
-        raise SystemExit(1)
-
-    if not client.organisation_id:
-        console.print("[yellow]No organisation selected.[/yellow]")
-        console.print("Use 'hb switch <id>' to select an organisation first.")
-        raise SystemExit(1)
-
-    # Count extraction sources
+    Platform flow creates a project on humanbound.ai with full scope, risk profile,
+    regulatory mapping, and auto-test. Local flow derives scope + lightweight
+    compliance from the user's configured LLM provider and writes scope.yaml.
+    """
     source_flags = [prompt, endpoint, repo, openapi]
     if not any(source_flags):
         console.print("[yellow]No extraction source provided.[/yellow]")
         console.print("Use --endpoint, --prompt, --repo, or --openapi to specify a source.")
         raise SystemExit(1)
 
-    # Default name from hostname if not provided
     if not name:
-        name = _derive_agent_name(endpoint)
+        name = _derive_agent_name(endpoint) if endpoint else "local-agent"
 
+    client = HumanboundClient()
+    if client.is_authenticated() and client.organisation_id:
+        _connect_agent_platform(
+            client, endpoint, name, prompt, repo, openapi, context, level, yes, timeout
+        )
+    else:
+        _connect_agent_local(endpoint, name, prompt, repo, openapi, context, level, yes, timeout)
+
+
+def _connect_agent_platform(
+    client, endpoint, name, prompt, repo, openapi, context, level, yes, timeout
+):
+    """Platform flow: POST /scan -> create project -> auto-test -> dashboard."""
     console.print(f"\n[bold]Connecting agent:[/bold] {name}\n")
 
     try:
@@ -386,6 +598,144 @@ def _connect_agent(endpoint, name, prompt, repo, openapi, context, level, yes, t
     except APIError as e:
         console.print(f"[red]Error:[/red] {e}")
         raise SystemExit(1)
+
+
+# -- Agent path (local) --------------------------------------------------------
+
+
+def _connect_agent_local(endpoint, name, prompt, repo, openapi, context, level, yes, timeout):
+    """Local flow: use the user's LLM to derive scope + lightweight compliance.
+
+    Writes ./scope.yaml in the current directory. Does not create a project,
+    does not call the Platform. Prints a note after completion pointing at
+    `hb login` for regulatory compliance + persistence + team features.
+    """
+    from ..engine.llm import get_llm_pinger
+    from ..engine.local_runner import _resolve_provider
+    from ..engine.scope import resolve as resolve_scope
+
+    console.print("\n[dim](not authenticated — running local scope extraction)[/dim]")
+    console.print(f"[bold]Connecting agent:[/bold] {name}\n")
+
+    try:
+        provider = _resolve_provider()
+        llm = get_llm_pinger(provider)
+    except ValueError as e:
+        console.print(f"[red]{e}[/red]")
+        raise SystemExit(1)
+
+    integration = None
+    if endpoint:
+        try:
+            integration = _load_integration(endpoint)
+            chat_ep = integration.get("chat_completion", {}).get("endpoint", "")
+            console.print(
+                f"  [green]✓[/green] Endpoint source: [dim]{chat_ep or '(from config)'}[/dim]"
+            )
+        except Exception as e:
+            console.print(f"  [yellow]![/yellow] Endpoint could not be loaded: {e}")
+
+    if repo:
+        console.print(f"  [green]✓[/green] Scanning repository: [dim]{repo}[/dim]")
+    if prompt:
+        console.print(f"  [green]✓[/green] Loading prompt: [dim]{Path(prompt).name}[/dim]")
+    if openapi:
+        console.print(f"  [green]✓[/green] Parsing OpenAPI: [dim]{Path(openapi).name}[/dim]")
+
+    console.print()
+
+    with console.status("[dim]Extracting scope via local LLM...[/dim]"):
+        try:
+            scope = resolve_scope(
+                repo_path=repo,
+                prompt_path=prompt,
+                scope_path=None,
+                integration=integration,
+                llm_pinger=llm,
+            )
+        except Exception as e:
+            console.print(f"[red]Scope extraction failed:[/red] {e}")
+            raise SystemExit(1)
+
+    # Lightweight compliance overlay — detect domain, apply template + EU AI Act
+    from ..engine.compliance import (
+        apply_eu_ai_act_only,
+        apply_template,
+        detect_domain,
+        domain_label,
+    )
+
+    domain = detect_domain(scope)
+    if domain:
+        console.print(f"  [green]✓[/green] Detected domain: [bold]{domain_label(domain)}[/bold]")
+        scope = apply_template(scope, domain, include_eu_ai_act=True)
+        console.print(
+            "  [green]✓[/green] Applied compliance overlay ([dim]domain template + EU AI Act[/dim])"
+        )
+    else:
+        scope = apply_eu_ai_act_only(scope)
+        console.print(
+            "  [dim]No domain-specific template matched — EU AI Act overlay applied.[/dim]"
+        )
+
+    console.print()
+    _display_scope(scope)
+
+    output_path = Path.cwd() / "scope.yaml"
+    try:
+        _write_scope_yaml(scope, output_path)
+        console.print(f"\n  [green]✓[/green] Wrote [bold]{output_path.name}[/bold]")
+    except Exception as e:
+        console.print(f"\n  [yellow]Could not write scope.yaml:[/yellow] {e}")
+
+    _print_platform_note()
+
+    _print_next(
+        [
+            (f"hb test --scope {output_path.name}", "Run a security test with this scope"),
+            ("hb login", "Sign in for regulatory compliance + team features"),
+        ]
+    )
+
+
+def _write_scope_yaml(scope: dict, path: Path):
+    """Serialize scope dict to a .yaml file in the canonical template shape."""
+    try:
+        import yaml
+    except ImportError:
+        path.write_text(json.dumps(scope, indent=2))
+        return
+
+    intents = scope.get("intents", {})
+    document = {
+        "business_scope": scope.get("overall_business_scope", ""),
+        "permitted": intents.get("permitted", []),
+        "restricted": intents.get("restricted", []),
+        "more_info": scope.get("more_info", ""),
+    }
+    path.write_text(yaml.safe_dump(document, sort_keys=False, default_flow_style=False))
+
+
+def _print_platform_note():
+    """Note shown after local scope extraction summarising the Platform features.
+
+    Kept factual and community-neutral — this is an OSS CLI, not a sales page.
+    """
+    lines = [
+        "Scope & policies saved locally.",
+        "",
+        "Regulatory mapping (FCA, EU AI Act, HIPAA, IDD, CRA 2015), threat",
+        "prioritisation with citations, and persistent project history are",
+        "available when signed in with [bold]hb login[/bold].",
+    ]
+    console.print()
+    console.print(
+        Panel(
+            "\n".join(lines),
+            title="[bold]Local result[/bold]",
+            border_style="cyan",
+        )
+    )
 
 
 # -- Platform path -------------------------------------------------------------
@@ -669,8 +1019,7 @@ def _auto_test(client, project_id, default_integration, context=None, level="uni
         # Build configuration with integration + optional context
         configuration = {"integration": default_integration}
         if context:
-            ctx_path = Path(context)
-            ctx_value = ctx_path.read_text().strip() if ctx_path.is_file() else context
+            ctx_value = _resolve_context(context)
             if len(ctx_value) > 1500:
                 console.print(
                     f"[red]Context too long ({len(ctx_value)} chars). Maximum is 1,500.[/red]"

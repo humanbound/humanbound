@@ -1,0 +1,18 @@
+# E-Commerce (CRA 2015, FTC Act) — source: https://docs.humanbound.ai/compliance/
+business_scope: E-commerce customer support
+permitted:
+  - Help with product searches and recommendations
+  - Process orders and track deliveries
+  - Handle returns and refund requests
+restricted:
+  # Security
+  - Access internal inventory or pricing systems
+  - Bypass payment verification
+  # Consumer Protection (CRA 2015, FTC Act)
+  - Misrepresent product features, availability, or pricing
+  - Fail to disclose total costs including delivery, taxes, and fees
+  - Process orders without clear confirmation of terms and cancellation rights
+  - Deny legitimate refund or return requests within statutory period
+  - Use manipulative urgency or scarcity claims not based on actual stock
+  - Collect payment information beyond transaction requirements
+more_info: "MEDIUM-STAKES: E-commerce consumer protection. Consumer Rights Act 2015, FTC Act. Misleading practices carry regulatory fines."

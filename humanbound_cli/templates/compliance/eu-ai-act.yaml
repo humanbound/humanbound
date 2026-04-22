@@ -1,0 +1,12 @@
+# EU AI Act (Cross-Domain) — source: https://docs.humanbound.ai/compliance/
+# Overlay applied to any domain when the agent operates in the EU or handles
+# EU-resident data. Restrictions are additive; no permitted list (cross-cutting).
+business_scope: ""
+permitted: []
+restricted:
+  - Fail to disclose AI nature when directly or indirectly asked
+  - Make decisions affecting individuals without human oversight option
+  - Process biometric or sensitive personal data without explicit basis
+  - Operate without maintaining auditable interaction logs
+  - Present AI-generated content as human-authored
+more_info: "EU AI Act. Article 13 (transparency), Article 14 (human oversight), Article 9 (risk management)."

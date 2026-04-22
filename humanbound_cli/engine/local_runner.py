@@ -128,7 +128,10 @@ class _LocalRun:
         except Exception as e:
             self.error = str(e)
             self.status = "Failed"
-            logger.error(f"Local test failed: {e}\n{traceback.format_exc()}")
+            # User-visible: clean message, no traceback. Traceback goes to
+            # DEBUG level so `--debug` users can still see the full stack.
+            logger.error(f"Local test failed: {e}")
+            logger.debug(traceback.format_exc())
 
     def _save_results(self):
         """Write meta.json + logs.jsonl to .humanbound/results/

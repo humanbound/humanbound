@@ -7,6 +7,65 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.1] — 2026-04-22
+
+### Fixed
+- **`hb connect`** no longer raises `NameError` for authenticated users. The
+  v1.0.0 open-core refactor removed `commands/init.py` but left dangling
+  references inside `_connect_agent` to six helpers
+  (`_SCAN_PHASES`, `_scan_with_progress`, `_display_scope`,
+  `_display_dashboard`, `_get_source_description`, and the import of
+  `_load_integration`). They are now restored inline in `commands/connect.py`.
+- **`hb test --context` / `hb connect --context`** with a long literal
+  string no longer crashes with `OSError: File name too long` (errno 63 on
+  macOS). The code used `Path(value).is_file()` to decide whether the
+  `--context` flag held a path or a literal; `Path.is_file()` calls
+  `stat()`, which fails with `ENAMETOOLONG` rather than returning `False`
+  when given a long string. Both commands now share `_resolve_context()`
+  which wraps the stat in a try/except and falls back to literal on error.
+- **Local test failures no longer print a raw Python traceback to users.**
+  `engine/local_runner.py` previously logged the full `traceback.format_exc()`
+  at ERROR level for every exception, including expected configuration
+  errors (no LLM provider set, etc.). Tracebacks now log at DEBUG, so
+  end-users see only the clean `Local test failed: ...` message. Run with
+  `--debug` to see the full stack.
+- **`hb test` no longer falls silently into local mode when the user is
+  signed in but has no project selected.** The runner selection is still
+  "login + project → Platform, otherwise local," but previously a logged-in
+  user without a project would be routed to local, then fail with the
+  misleading "No LLM provider configured" error. Users in this state now
+  get a dedicated message pointing at `hb projects use`, `hb connect`, or
+  `hb test --local`.
+
+### Added
+- **Local flow for `hb connect`** — when the user is not authenticated,
+  `hb connect` now runs a lightweight scope extraction via the configured
+  local LLM provider (`HB_PROVIDER` / `HB_API_KEY`) and writes `./scope.yaml`
+  in the canonical template shape, consumable by `hb test --scope`.
+- **Compliance template overlay** — the local flow auto-detects the agent's
+  domain (banking, insurance, healthcare, legal, e-commerce) from its
+  extracted business scope and overlays the corresponding regulatory
+  restricted intents. The EU AI Act cross-cutting restrictions are applied
+  unconditionally. Templates are bundled under
+  `humanbound_cli/templates/compliance/` and are also published at
+  [docs.humanbound.ai/compliance/](https://docs.humanbound.ai/compliance/).
+  Deeper regulatory mapping, threat prioritisation with citations, and
+  persistent project history remain available with `hb login`.
+- New `humanbound_cli/engine/compliance.py` module exporting
+  `detect_domain`, `apply_template`, `apply_eu_ai_act_only`, and
+  `load_template`.
+
+### Changed
+- Ruff's `F821` (undefined name) rule is no longer globally suppressed in
+  `pyproject.toml`. The six dangling references in `commands/connect.py`
+  were shielded by this blanket ignore; the rule is now enforced across
+  the tree to prevent a similar regression.
+- `tests/unit/test_connect.py` rewritten to exercise `_connect_agent`'s
+  body — HTTP is mocked at the wire level (`client.post`), and the local
+  flow's LLM is stubbed via a fake `LLMPinger.ping`. The prior suite
+  mocked `_connect_agent` wholesale, which allowed the v2.0.0 NameError
+  to ship unnoticed.
+
 ## [2.0.0] — 2026-04-21
 
 ### Changed

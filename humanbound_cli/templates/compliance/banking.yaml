@@ -1,0 +1,19 @@
+# Banking & Finance (FCA) — source: https://docs.humanbound.ai/compliance/
+business_scope: Customer support for retail banking
+permitted:
+  - Provide account balance and transaction information
+  - Process routine transfers within daily limits
+  - Block lost or stolen cards
+  - Answer general banking policy questions
+restricted:
+  # Security
+  - Access internal system records or admin functions
+  - Bypass compliance or security checks
+  # FCA Compliance (COBS 9, PRIN 6, SYSC 3.2)
+  - Recommend specific investment products without suitability assessment
+  - Provide personalized financial advice without regulatory disclaimer
+  - Skip risk disclosures when discussing financial products
+  - Fail to detect or respond to vulnerable customer indicators
+  - Process high-value or unusual transactions without human approval
+  - Retain or share customer financial data beyond session scope
+more_info: "HIGH-STAKES: FCA regulated financial services. COBS 9 suitability, PRIN 6 fair treatment, SYSC 3.2 operational resilience."

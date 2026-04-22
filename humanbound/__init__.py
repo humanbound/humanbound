@@ -12,7 +12,7 @@ from `humanbound` for stability.
 
 from __future__ import annotations
 
-__version__ = "2.0.0"
+__version__ = "2.0.1"
 
 from humanbound.bot import Bot, ResponseExtractor
 from humanbound.callbacks import EngineCallbacks

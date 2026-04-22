@@ -128,6 +128,26 @@ def _load_integration(value: str) -> dict:
         raise SystemExit(1)
 
 
+def _resolve_context(value: str) -> str:
+    """Return the literal --context string, or the file contents if value is a path.
+
+    Wraps Path.is_file() in a try/except because stat() raises OSError with
+    errno ENAMETOOLONG (63) on macOS / ENAMETOOLONG on Linux when the argument
+    is a long string (e.g. a multi-line prompt passed inline). Before this
+    helper existed, `hb test --context "<long literal>"` crashed at the
+    Path(value).is_file() call.
+    """
+    if not value:
+        return ""
+    try:
+        path = Path(value)
+        if path.is_file():
+            return path.read_text().strip()
+    except OSError:
+        pass
+    return value
+
+
 def _print_next(suggestions: list):
     """Print Next: suggestions block."""
     console.print("\n[dim]Next:[/dim]")
@@ -303,7 +323,7 @@ def test_command(
         category_short = test_category.split("/")[-1]
         name = f"cli-{category_short}-{timestamp}"
 
-    # --- Runner selection (login is the only switch) ---
+    # --- Runner selection (login + project is the switch) ---
     try:
         runner = get_runner(force_local=local)
     except Exception:
@@ -323,6 +343,33 @@ def test_command(
         console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
         console.print("[dim]Local engine coming soon in the open-core release.[/dim]")
         raise SystemExit(1)
+    elif not local:
+        # Runner fell to LocalTestRunner without the user asking for it. The only
+        # way that happens after the auth check above is "signed in but no
+        # project selected." Without this guard the user gets a misleading
+        # "No LLM provider configured" error from LocalRunner, when what they
+        # actually need is to select a project.
+        from ..client import HumanboundClient
+
+        _c = HumanboundClient()
+        if _c.is_authenticated():
+            console.print(
+                "[yellow]You're signed in, but no project is selected for this test.[/yellow]"
+            )
+            console.print()
+            console.print("  Choose one:")
+            console.print("    [bold]hb projects list[/bold]             see your projects")
+            console.print("    [bold]hb projects use <id>[/bold]         use an existing project")
+            console.print(
+                "    [bold]hb connect --endpoint X[/bold]      create a new project "
+                "from an agent config"
+            )
+            console.print(
+                "    [bold]hb test --local ...[/bold]          run against a local LLM "
+                "(requires HB_PROVIDER + HB_API_KEY)"
+            )
+            console.print()
+            raise SystemExit(1)
 
     console.print(f"\n[bold]Starting security test:[/bold] {name}\n")
     console.print(f"  Category: {test_category}")
@@ -366,15 +413,12 @@ def test_command(
             console.print("  Depth: [yellow]blackbox[/yellow]")
 
         # Context: string or path to .txt file (max 1500 chars)
-        ctx_value = ""
-        if context:
-            ctx_path = Path(context)
-            ctx_value = ctx_path.read_text().strip() if ctx_path.is_file() else context
-            if len(ctx_value) > 1500:
-                console.print(
-                    f"[red]Context too long ({len(ctx_value)} chars). Maximum is 1,500.[/red]"
-                )
-                raise SystemExit(1)
+        ctx_value = _resolve_context(context) if context else ""
+        if ctx_value and len(ctx_value) > 1500:
+            console.print(
+                f"[red]Context too long ({len(ctx_value)} chars). Maximum is 1,500.[/red]"
+            )
+            raise SystemExit(1)
 
         # Build TestConfig (canonical shape — same for both runners)
         config = TestConfig(

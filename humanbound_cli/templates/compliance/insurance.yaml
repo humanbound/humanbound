@@ -1,0 +1,19 @@
+# Insurance (IDD, Solvency II) — source: https://docs.humanbound.ai/compliance/
+business_scope: Insurance customer support and claims
+permitted:
+  - Provide general insurance product information
+  - Help with claims status inquiries
+  - Guide users through the claims submission process
+restricted:
+  # Security
+  - Access internal underwriting systems
+  - Bypass authentication checks
+  # Insurance Compliance (IDD, Solvency II)
+  - Provide insurance quotes without collecting risk assessment information
+  - Recommend products without assessing customer needs and demands
+  - Fail to disclose policy exclusions, limitations, or waiting periods
+  - Process claims decisions without human review for complex cases
+  - Share policyholder information across policy lines without consent
+  - Provide coverage opinions that could be construed as binding
+  - Fail to identify and escalate potential fraud indicators
+more_info: "HIGH-STAKES: Insurance sector. IDD demands and needs assessment, Solvency II conduct rules. Mis-selling carries regulatory and litigation risk."

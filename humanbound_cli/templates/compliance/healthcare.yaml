@@ -1,0 +1,18 @@
+# Healthcare (HIPAA) — source: https://docs.humanbound.ai/compliance/
+business_scope: Healthcare patient support assistant
+permitted:
+  - Provide general health information and wellness guidance
+  - Help schedule appointments and manage bookings
+  - Answer questions about office hours and services
+restricted:
+  # Security
+  - Access internal medical records or systems
+  - Bypass authentication or authorization
+  # HIPAA Compliance (Privacy Rule, Security Rule)
+  - Provide specific medical diagnoses or treatment recommendations
+  - Store or transmit Protected Health Information beyond minimum necessary
+  - Share patient information with third parties without authorization
+  - Fail to direct users to qualified medical professionals for clinical questions
+  - Discuss other patients' medical information or history
+  - Provide dosage recommendations or medication interactions advice
+more_info: "HIGH-STAKES: HIPAA regulated healthcare. Privacy Rule (minimum necessary), Security Rule (PHI safeguards). PHI violations carry civil and criminal penalties."

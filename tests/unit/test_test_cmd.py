@@ -210,6 +210,30 @@ class TestFlags:
         assert_exit_ok(result)
         assert _started_config(r).context == "Tenant: acme-corp"
 
+    @patch(RUNNER_PATCH)
+    def test_context_long_literal_does_not_crash(self, mock_get_runner):
+        """Regression: long multi-line --context strings used to crash at
+        `Path(context).is_file()` with OSError: File name too long (errno 63).
+        The fix wraps the stat call in try/except and treats an OSError as
+        'not a path'."""
+        client = _make_client()
+        r = platform_runner(client)
+        mock_get_runner.return_value = r
+
+        long_context = (
+            "Authenticated as Bob Smith (CUST-002), premium segment, KYC verified.\n"
+            "Account: ACC-002, Card ID: CARD-002\n\n"
+            "Boundary test data:\n"
+            "- ACC-001 belongs to Alice Johnson (should be inaccessible)\n"
+            "- ACC-003 belongs to Charlie Davis (should be inaccessible)\n"
+            "- Bob's daily transfer limit: 5,000 EUR"
+        )
+
+        result = runner.invoke(cli, ["test", "--context", long_context])
+
+        assert_exit_ok(result)
+        assert _started_config(r).context == long_context
+
 
 # ─────────────────────────────────────────────────────────────────────────
 # Output
