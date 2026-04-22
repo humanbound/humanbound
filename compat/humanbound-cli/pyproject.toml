@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "humanbound-cli"
-version = "1.2.0"
+version = "1.2.1"
 description = "DEPRECATED: renamed to 'humanbound'"
 readme = "README.md"
 license = "Apache-2.0"
@@ -18,7 +18,7 @@ classifiers = [
     "Topic :: Security",
 ]
 dependencies = [
-    "humanbound==2.0.0",
+    "humanbound==2.0.1",
 ]
 
 [project.urls]
