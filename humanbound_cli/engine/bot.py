@@ -2,7 +2,6 @@
 # Copyright (c) 2024-2026 Humanbound
 import copy
 import requests, re, json, ssl, certifi, time, asyncio, re, traceback
-from websockets.asyncio.client import connect
 
 import logging
 
@@ -473,6 +472,14 @@ class Bot(ResponseExtractor):
                 u_prompt,
                 conversation,
             )
+
+            try:
+                from websockets.asyncio.client import connect
+            except ImportError as e:
+                raise ImportError(
+                    "Streaming bots require the [engine] extra. "
+                    "Install with: pip install humanbound[engine]"
+                ) from e
 
             async with connect(
                 endpoint,
