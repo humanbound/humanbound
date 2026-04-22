@@ -100,7 +100,7 @@ jobs:
           VERSION="${TAG#v}"
           awk "/^## \[${VERSION}\]/{flag=1;print;next}/^## \[/{flag=0}flag" CHANGELOG.md > release_notes.md
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ steps.changelog.outputs.tag }}
           body_path: release_notes.md
