@@ -1,5 +1,0 @@
-{
-    "contributors": ["@dgerog", "@ksiabani"],
-    "message": "Thank you for your contribution! Before we can merge, please sign the [Humanbound Contributor License Agreement](https://github.com/humanbound/humanbound/blob/main/CLA.md) by commenting on this PR with the phrase: **\"I have read the CLA Document and I hereby sign the CLA\"**. One signature covers all your future contributions to Humanbound projects.",
-    "label": "cla-signed"
-}
