@@ -134,9 +134,3 @@ trademark policy. The code is open; the name is not.
 The sibling project [`humanbound-firewall`](https://github.com/humanbound/humanbound-firewall)
 is dual-licensed (AGPL-3.0 + commercial) — different product, different
 license strategy.
-
----
-
-<p align="center">
-  <sub><em>Humanbound is the trading name of AI and Me Single-Member Private Company, incorporated in Greece.</em></sub>
-</p>

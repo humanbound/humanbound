@@ -44,8 +44,3 @@ The authoritative, continuously-updated roadmap lives at
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for how changes ship and the semver
 policy. The supported-version matrix is on the docs site.
-
----
-
-_Humanbound is the trading name of AI and Me Single-Member Private Company,
-incorporated in Greece._

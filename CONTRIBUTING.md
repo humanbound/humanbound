@@ -116,8 +116,3 @@ for the current cadence and supported-version matrix.
 Participation is governed by our [Code of Conduct](./CODE_OF_CONDUCT.md).
 Violations can be reported privately to
 [conduct@humanbound.ai](mailto:conduct@humanbound.ai).
-
----
-
-_Humanbound is the trading name of AI and Me Single-Member Private Company,
-incorporated in Greece._
