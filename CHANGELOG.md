@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+- **`compat/humanbound-cli/` and its CI publish jobs.** The transitional
+  `humanbound-cli` PyPI stub was discontinued at 1.2.2 (released alongside
+  `humanbound` 2.0.2). The compat source and the `build-stub`/`publish-stub`
+  jobs in `.github/workflows/release.yml` are removed; future tags publish
+  only `humanbound`. Existing `humanbound-cli` installs on PyPI continue to
+  resolve to 1.2.2, which depends on `humanbound>=2.0.2,<3.0`.
+
 ## [2.0.2] — 2026-04-27
 
 ### Fixed

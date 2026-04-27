@@ -104,8 +104,9 @@ integration, and API reference all live on
 ## What's shipping in 2.0
 
 - **Clean name**: `humanbound` is the new PyPI install. The old
-  `humanbound-cli` is a transitional stub that will be yanked after
-  2026-06-20.
+  `humanbound-cli` package is a discontinued transitional stub (final
+  release 1.2.2 depends on `humanbound>=2.0.2`); please install
+  `humanbound` directly.
 - **Public SDK namespace** alongside the CLI — use the CLI or drive the
   engine from Python. Both share the same implementation, so they can't
   drift.
