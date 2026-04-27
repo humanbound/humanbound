@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>$title</title>
+    <style>
+        /* ── Reset & Base ──────────────────────────────── */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+            color: #1a1a2e; background: #fff; line-height: 1.65; font-size: 14px;
+        }
+        .container { max-width: 900px; margin: 0 auto; padding: 40px 48px; }
+
+        /* ── Cover Page ────────────────────────────────── */
+        .cover {
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; min-height: 85vh; text-align: center;
+            padding: 80px 48px;
+        }
+        .cover-logo {
+            font-size: 36px; font-weight: 800; letter-spacing: -1px; margin-bottom: 8px;
+        }
+        .cover-logo-dark { color: #1e293b; }
+        .cover-logo-accent { color: #f59e0b; font-weight: 700; }
+        .cover-title {
+            font-size: 28px; font-weight: 700; color: #f59e0b;
+            margin-bottom: 12px; margin-top: 24px; letter-spacing: -0.5px;
+        }
+        .cover-subtitle { font-size: 18px; color: #475569; margin-bottom: 40px; }
+        .cover-meta { font-size: 14px; color: #64748b; line-height: 2; }
+        .cover-meta strong { color: #1e293b; }
+
+        /* ── Typography ────────────────────────────────── */
+        h1 { font-size: 24px; font-weight: 700; color: #0f172a; margin-bottom: 8px; }
+        h2 {
+            font-size: 20px; font-weight: 700; color: #1e293b; margin-bottom: 16px;
+            padding-bottom: 8px; border-bottom: 2px solid #e2e8f0;
+        }
+        h3 { font-size: 16px; font-weight: 600; color: #334155; margin-bottom: 10px; margin-top: 20px; }
+        h4 { font-size: 14px; font-weight: 600; color: #475569; margin-bottom: 8px; }
+        p { margin-bottom: 12px; color: #374151; }
+        .text-muted { color: #64748b; font-size: 13px; }
+
+        /* ── Sections ──────────────────────────────────── */
+        .section { margin-bottom: 36px; }
+        .section-intro { font-size: 14px; color: #475569; margin-bottom: 16px; line-height: 1.7; }
+
+        /* ── Cards ─────────────────────────────────────── */
+        .card-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px; margin-bottom: 20px;
+        }
+        .card {
+            background: #f8fafc; border: 1px solid #e2e8f0;
+            border-radius: 8px; padding: 20px;
+        }
+        .card .label {
+            font-size: 11px; color: #64748b; text-transform: uppercase;
+            letter-spacing: 0.5px; font-weight: 600;
+        }
+        .card .value { font-size: 32px; font-weight: 800; margin-top: 4px; line-height: 1.1; }
+        .card .sub { font-size: 13px; color: #64748b; margin-top: 4px; }
+
+        /* ── Posture Donut (SVG) ───────────────────────── */
+        .posture-row { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; margin-bottom: 24px; }
+        .posture-item { text-align: center; width: 140px; }
+        .posture-item .donut-label { font-size: 12px; color: #64748b; margin-top: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+        .posture-item .donut-grade { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+        .donut-ring { fill: none; stroke: #e2e8f0; stroke-width: 8; }
+        .donut-fill { fill: none; stroke-width: 8; stroke-linecap: round; transition: stroke-dasharray 0.3s; }
+
+        /* ── Severity Bar ──────────────────────────────── */
+        .severity-bar { display: flex; height: 24px; border-radius: 6px; overflow: hidden; margin-bottom: 12px; }
+        .severity-bar .seg { display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #fff; min-width: 24px; }
+        .seg-critical { background: #dc2626; }
+        .seg-high { background: #ea580c; }
+        .seg-medium { background: #ca8a04; }
+        .seg-low { background: #16a34a; }
+        .seg-info { background: #2563eb; }
+
+        /* ── Tables ────────────────────────────────────── */
+        table {
+            width: 100%; border-collapse: collapse; background: #fff;
+            border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;
+            margin-bottom: 16px;
+        }
+        th {
+            background: #f1f5f9; text-align: left; padding: 12px 14px;
+            font-size: 11px; font-weight: 700; color: #475569;
+            text-transform: uppercase; letter-spacing: 0.5px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        td {
+            padding: 12px 14px; font-size: 13px; border-bottom: 1px solid #f1f5f9;
+            vertical-align: top;
+        }
+        tr:last-child td { border-bottom: none; }
+        tr.stale td { background: #fef9c3; }
+
+        /* ── Badges ────────────────────────────────────── */
+        .badge {
+            display: inline-block; padding: 3px 10px; border-radius: 4px;
+            font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;
+        }
+        .badge-critical { background: #fef2f2; color: #dc2626; }
+        .badge-high { background: #fff7ed; color: #ea580c; }
+        .badge-medium { background: #fefce8; color: #ca8a04; }
+        .badge-low { background: #f0fdf4; color: #16a34a; }
+        .badge-info { background: #eff6ff; color: #2563eb; }
+        .badge-open { background: #fef2f2; color: #dc2626; }
+        .badge-regressed { background: #fff7ed; color: #ea580c; }
+        .badge-stale { background: #fefce8; color: #ca8a04; }
+        .badge-fixed { background: #f0fdf4; color: #16a34a; }
+        .badge-pass { background: #f0fdf4; color: #16a34a; }
+        .badge-fail { background: #fef2f2; color: #dc2626; }
+
+        /* ── Metric Table (PDF-style) ──────────────────── */
+        .metric-table { width: 100%; margin-bottom: 20px; }
+        .metric-table td { padding: 14px 16px; border-bottom: 1px solid #f1f5f9; }
+        .metric-table .metric-name { font-weight: 600; color: #1e293b; width: 180px; }
+        .metric-table .metric-desc { color: #64748b; font-size: 13px; }
+        .metric-table .metric-status { font-weight: 600; width: 140px; }
+        .metric-table .metric-value { font-weight: 700; color: #1e293b; width: 80px; text-align: right; }
+
+        /* ── Status Colors ─────────────────────────────── */
+        .status-good { color: #16a34a; }
+        .status-warning { color: #ca8a04; }
+        .status-danger { color: #dc2626; }
+        .status-info { color: #2563eb; }
+        .status-muted { color: #64748b; }
+
+        /* ── Callout ───────────────────────────────────── */
+        .callout {
+            background: #f8fafc; border-left: 4px solid #e2e8f0;
+            padding: 16px 20px; margin-bottom: 20px; border-radius: 0 8px 8px 0;
+        }
+        .callout-warning { border-left-color: #f59e0b; background: #fffbeb; }
+        .callout-info { border-left-color: #3b82f6; background: #eff6ff; }
+        .callout p { margin-bottom: 0; }
+
+        /* ── Methodology Flow ──────────────────────────── */
+        .flow-steps {
+            display: flex; flex-direction: column; gap: 0;
+            margin: 20px 0; max-width: 500px; margin-left: auto; margin-right: auto;
+        }
+        .flow-step {
+            padding: 10px 20px; font-size: 13px; font-weight: 600; color: #fff;
+        }
+        .flow-step:nth-child(1) { background: #334155; }
+        .flow-step:nth-child(2) { background: #475569; margin-left: 16px; }
+        .flow-step:nth-child(3) { background: #64748b; margin-left: 32px; }
+        .flow-step:nth-child(4) { background: #f59e0b; margin-left: 32px; color: #1e293b; }
+        .flow-step:nth-child(5) { background: #1e293b; margin-left: 16px; }
+
+        /* ── Delta Arrow ───────────────────────────────── */
+        .delta-up { color: #16a34a; }
+        .delta-down { color: #dc2626; }
+        .delta-neutral { color: #64748b; }
+
+        /* ── Summary Line ──────────────────────────────── */
+        .summary-line { font-size: 13px; color: #475569; margin-bottom: 4px; }
+
+        /* ── Divider ───────────────────────────────────── */
+        .divider { border: none; border-top: 1px solid #e2e8f0; margin: 32px 0; }
+
+        /* ── Footer ────────────────────────────────────── */
+        .footer {
+            border-top: 1px solid #e2e8f0; padding-top: 16px; margin-top: 40px;
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 11px; color: #94a3b8;
+        }
+        .footer-confidential {
+            font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+
+        /* ── Print ─────────────────────────────────────── */
+        @media print {
+            body { background: #fff; font-size: 12px; }
+            .container { padding: 20px; max-width: 100%; }
+            .cover { min-height: auto; padding: 120px 48px; page-break-after: always; }
+            .section { page-break-inside: avoid; }
+            h2 { page-break-after: avoid; }
+            table { page-break-inside: avoid; }
+            .card { border: 1px solid #cbd5e1; }
+            @page { margin: 20mm 15mm; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Cover Page -->
+    <div class="cover">
+        <img src="$logo_uri" alt="Humanbound" style="width:320px; margin-bottom:24px;">
+        <div class="cover-title">$cover_title</div>
+        <div class="cover-subtitle">$cover_subtitle</div>
+        <div class="cover-meta">
+            $cover_meta
+        </div>
+    </div>
+
+    <!-- Report Body -->
+    <div class="container">
+        <!-- Executive Summary (common) -->
+        <div class="section">
+            <h2>Methodology</h2>
+            <p class="section-intro"><strong>Testing Approach.</strong> Humanbound conducts automated contextual penetration testing and quality assurance of AI agents through multi-turn adversarial and behavioral conversations, aligned with industry-standard threat taxonomies including the OWASP Top 10 for LLM Applications, the OWASP Agentic Security Top 10, MITRE ATLAS, and NIST AI Risk Management Framework categories.</p>
+            <p class="section-intro"><strong>Security Posture.</strong> Posture is measured across multiple dimensions: <em>Agent Security</em> (resilience against adversarial attacks including prompt injection, data exfiltration, privilege escalation, trust boundary violations, and agentic tool misuse) and <em>Agent Quality</em> (functional accuracy, boundary management, conversational intelligence, and user experience). Each dimension produces an independent score and grade. The overall posture score is the weighted composite.</p>
+            <p class="section-intro"><strong>Scoring.</strong> Each score ranges from 0 to 100, computed from the severity of identified vulnerabilities weighted by their current status. Grade boundaries: A (90+), B (75&ndash;89), C (60&ndash;74), D (40&ndash;59), F (&lt;40).</p>
+            <p class="section-intro"><strong>Continuous Monitoring.</strong> The platform evaluates agents on a configurable schedule, automatically adjusting testing intensity based on detected signals &mdash; new vulnerabilities, regressions, behavioral drift, and coverage gaps.</p>
+            <p class="section-intro"><strong>Limitations.</strong> AI agents are non-deterministic systems. Results represent behavior observed at the time of testing under the specific conditions applied. Continuous monitoring is recommended to track behavioral changes over time.</p>
+        </div>
+
+        <hr class="divider">
+
+        $context_section
+
+        $body
+
+        <hr class="divider">
+
+        <div class="section" style="font-size:11px; color:#94a3b8; line-height:1.7;">
+            <h2 style="font-size:14px; color:#64748b;">Technology Disclaimer</h2>
+            <p>This report was generated using a methodology that incorporates Large Language Model (LLM) technology in certain components of the testing and evaluation process. LLMs are based on stochastic (probabilistic) processes and are inherently non-deterministic. As a result, there is no absolute guarantee that results are fully reproducible across identical test runs, and there may be blind spots or edge cases not captured during testing. Humanbound applies best-effort scientific standards &mdash; including multi-turn adversarial conversations, score-guided adaptation, coverage-guided test selection, and statistical drift detection &mdash; to mitigate these limitations and maximise testing coverage.</p>
+            <p>This report does not constitute legal, regulatory, or compliance advice. It is a technical assessment of AI agent security and quality based on automated testing at a specific point in time. Organisations should use this report as one input among others when making security and compliance decisions.</p>
+
+            <h2 style="font-size:14px; color:#64748b; margin-top:20px;">Attribution</h2>
+            <p>This report was generated by <a href="https://humanbound.ai" style="color:#f59e0b;">Humanbound CLI</a> &mdash; open-source AI agent security testing.</p>
+            <p>Humanbound is a trademark of AI and Me P.C. The testing methodology and report format are provided under the <a href="https://www.apache.org/licenses/LICENSE-2.0" style="color:#f59e0b;">Apache 2.0 license</a>. The content of this report belongs to the user who generated it.</p>
+        </div>
+
+        <div class="footer">
+            <span>$report_subject</span>
+            <span>Generated by <a href="https://humanbound.ai" style="color:#94a3b8;">Humanbound</a> &middot; $generated_at</span>
+        </div>
+    </div>
+</body>
+</html>

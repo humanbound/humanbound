@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.2] — 2026-04-27
+
+### Fixed
+- **`hb logs --html` no longer crashes with `FileNotFoundError`.** The 2.0.1
+  wheel published to PyPI was missing
+  `humanbound_cli/templates/report_base.html`, so HTML report export
+  (`hb logs <experiment-id> --html out.html`) failed on every install. Root
+  cause: `*.html` was matched by `.gitignore`, so the template was never
+  committed; CI checked out a tree without the file and built a wheel without
+  it. `.gitignore` now carries `!humanbound_cli/templates/*.html` to keep
+  bundled report templates tracked, and the template is committed.
+
+### Deprecated
+- **`humanbound-cli` is discontinued.** The transitional stub bumps to 1.2.2
+  with a relaxed pin (`humanbound>=2.0.2,<3.0`) so existing
+  `pip install humanbound-cli` invocations pull in this bug-fix release. This
+  is the final stub release; no further `humanbound-cli` versions will be
+  published. The `compat/humanbound-cli/` directory and its CI publish jobs
+  will be removed in a follow-up after 2.0.2 ships. Migrate to
+  `pip install humanbound`.
+
 ## [2.0.1] — 2026-04-22
 
 ### Fixed
