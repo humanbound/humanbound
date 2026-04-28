@@ -133,5 +133,4 @@ open-source — with attribution. See [TRADEMARK.md](./TRADEMARK.md) for the
 trademark policy. The code is open; the name is not.
 
 The sibling project [`humanbound-firewall`](https://github.com/humanbound/humanbound-firewall)
-is dual-licensed (AGPL-3.0 + commercial) — different product, different
-license strategy.
+is also Apache-2.0 — same license, different product.
