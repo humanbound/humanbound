@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **`hb logout` now revokes the backend session, not just local credentials.**
+  Previously `HumanboundClient.logout()` only cleared the in-memory token
+  state and the local token file, so the API session (and any concurrent
+  platform or CLI session for the same user) stayed valid. Logout now calls
+  `GET /logout` with the current API token before clearing local state.
+  The call is best-effort so offline logout still works (#13).
+
 ### Removed
 - **`compat/humanbound-cli/` and its CI publish jobs.** The transitional
   `humanbound-cli` PyPI stub was discontinued at 1.2.2 (released alongside

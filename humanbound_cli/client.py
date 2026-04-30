@@ -436,11 +436,21 @@ class HumanboundClient:
         return True
 
     def logout(self, silent: bool = False) -> None:
-        """Clear stored credentials and logout.
+        """Revoke the server session (if any) and clear stored credentials.
 
         Args:
             silent: If True, don't print success message (used for cleanup).
         """
+        if self._api_token:
+            try:
+                requests.get(
+                    f"{self.base_url}/logout",
+                    headers={"Authorization": f"Bearer {self._api_token}"},
+                    timeout=DEFAULT_TIMEOUT,
+                )
+            except (requests.ConnectionError, requests.Timeout):
+                pass
+
         self._auth0_token = None
         self._api_token = None
         self._token_expires_at = None
