@@ -35,7 +35,7 @@ Opens your browser for OAuth authentication. Credentials are stored locally at `
 ## Logout
 
 ```bash
-# Clear local credentials
+# Revoke the backend session and clear local credentials
 hb logout
 
 # Also revoke browser session
@@ -44,6 +44,8 @@ hb logout --revoke
 # Custom callback port for revoke (default: 8085)
 hb logout --revoke --port 9090
 ```
+
+`hb logout` revokes the backend session, signing out any active session on the Humanbound platform or CLI for the same user. Use `--revoke` to also clear the Auth0 SSO browser cookie.
 
 ## Check Authentication Status
 
