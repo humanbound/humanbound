@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.3] — 2026-05-05
+
+### Changed
+- Slimmed the experiment stats schema. The HTML report's defense-rate
+  KPI is now computed from pass/fail counts at render time.
+
 ### Fixed
 - **`hb logout` now revokes the backend session, not just local credentials.**
   Previously `HumanboundClient.logout()` only cleared the in-memory token

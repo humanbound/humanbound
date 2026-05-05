@@ -186,7 +186,7 @@ def generate_html_report(experiment, logs):
     posture_grade = (
         posture_data.get("grade", _score_to_grade(posture_score)) if posture_data else "F"
     )
-    defense_rate = posture_data.get("defense_rate", 0) if posture_data else 0
+    defense_rate = (passed / (passed + failed)) if (passed + failed) > 0 else 0
 
     # ── Build report body ──────────────────────────────────
 
