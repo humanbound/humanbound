@@ -27,13 +27,14 @@ Complete reference of all available commands, organized by category.
 |---|---|
 | `hb connect` | Connect your agent or scan a cloud platform |
 | `hb connect -l system` | Connect with deeper testing level (unit/system/acceptance) |
+| `hb connect --repo <path>` `[PREVIEW]` | Also infers the capability surface from source patterns |
 | `hb projects list` | List all projects in current org |
 | `hb projects use <id>` | Set active project for subsequent commands |
 | `hb projects show [id]` | Show project details (current or specific) |
 | `hb projects current` | Show active project information |
 | `hb projects status` | Show project activity (running experiments, posture, monitoring) |
 | `hb projects status -w` | Watch project activity, poll every 3 minutes until idle |
-| `hb projects update` | Update project name or description |
+| `hb projects update` | Update project name, description, or capability surface (`--capabilities`) |
 | `hb projects delete <id>` | Delete project and all associated data |
 
 ## Experiments

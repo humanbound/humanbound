@@ -528,6 +528,27 @@ def _connect_agent_platform(
 
         _display_scope(scope)
 
+        # ---- capability scan (additive; per spec §6.1) ----
+        if repo:
+            from ..extractors.capabilities import scan_capabilities
+            from ..extractors.capabilities.display import (
+                print_detected_capabilities,
+                prompt_empty_scan_choice,
+            )
+
+            scan_result = scan_capabilities(Path(repo))
+            print_detected_capabilities(scan_result, console)
+
+            if any(scan_result.capabilities.values()):
+                scope["capabilities"] = scan_result.capabilities
+            else:
+                if yes:
+                    pass
+                else:
+                    explicit = prompt_empty_scan_choice(console=console)
+                    if explicit is not None:
+                        scope["capabilities"] = explicit
+
         sources_meta = response.get("sources_metadata", {})
         if sources_meta:
             failed = [k for k, v in sources_meta.items() if v.get("status") == "failed"]
@@ -536,6 +557,25 @@ def _connect_agent_platform(
                 for k in failed:
                     err = sources_meta[k].get("error", "unknown")
                     console.print(f"  [dim]{k}: {err}[/dim]")
+
+        # -- If an active project already exists AND a repo scan was run,
+        #    route updates through write_capabilities instead of creating a new project --
+        existing_project_id = getattr(client, "project_id", None)
+        if existing_project_id and repo:
+            if "capabilities" in scope:
+                from ..engine.capabilities_writer import write_capabilities
+
+                console.print()
+                write_capabilities(
+                    client,
+                    existing_project_id,
+                    scope["capabilities"],
+                    yes=yes,
+                    console=console,
+                )
+            else:
+                console.print("[dim]No capabilities to update for existing project.[/dim]")
+            return
 
         # -- Create project (auto-confirm) -------------------------------------
         if not yes:
@@ -681,6 +721,28 @@ def _connect_agent_local(endpoint, name, prompt, repo, openapi, context, level, 
     console.print()
     _display_scope(scope)
 
+    # ---- capability scan (additive; per spec §6.1) ----
+    if repo:
+        from ..extractors.capabilities import scan_capabilities
+        from ..extractors.capabilities.display import (
+            print_detected_capabilities,
+            prompt_empty_scan_choice,
+        )
+
+        scan_result = scan_capabilities(Path(repo))
+        print_detected_capabilities(scan_result, console)
+
+        if any(scan_result.capabilities.values()):
+            scope["capabilities"] = scan_result.capabilities
+        else:
+            if yes:
+                # --yes accepts the default [1]: leave capabilities unset
+                pass
+            else:
+                explicit = prompt_empty_scan_choice(console=console)
+                if explicit is not None:
+                    scope["capabilities"] = explicit
+
     output_path = Path.cwd() / "scope.yaml"
     try:
         _write_scope_yaml(scope, output_path)
@@ -713,6 +775,8 @@ def _write_scope_yaml(scope: dict, path: Path):
         "restricted": intents.get("restricted", []),
         "more_info": scope.get("more_info", ""),
     }
+    if "capabilities" in scope:
+        document["capabilities"] = scope["capabilities"]
     path.write_text(yaml.safe_dump(document, sort_keys=False, default_flow_style=False))
 
 

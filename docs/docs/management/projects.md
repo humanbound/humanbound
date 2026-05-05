@@ -35,7 +35,26 @@ hb projects update --name "New Name"
 
 # Update specific project
 hb projects update <id> --description "Updated description"
+
+# Set the agent's capability surface
+hb projects update --capabilities tools=on,memory=off
+hb projects update --capabilities all=off,tools=on,reasoning_model=on
 ```
+
+### `--capabilities` flag
+
+Declares which agentic features the project uses, so the platform can target the
+right test categories. Accepts comma-separated `key=value` pairs.
+
+- **Keys:** `tools`, `memory`, `inter_agent`, `reasoning_model`, plus the shorthand
+  `all` which sets every key in one step.
+- **Values:** `on` / `off`, `true` / `false`, `1` / `0`, `yes` / `no` (case-insensitive).
+  Bare keys (e.g. `tools`) imply `on`.
+- **Order matters:** pairs apply left-to-right, so `all=off,tools=on` resets the set
+  and then enables `tools`.
+
+Updating capabilities archives the project's existing datasets (so the test coverage
+plan is regenerated). A confirm prompt is shown unless `--yes` / `-y` is passed.
 
 ## Delete Project
 

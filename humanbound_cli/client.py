@@ -1069,6 +1069,10 @@ class HumanboundClient:
     # Project Extensions
     # -------------------------------------------------------------------------
 
+    def get_project(self, project_id: str) -> dict:
+        """Fetch a single project by ID."""
+        return self.get(f"projects/{project_id}")
+
     def update_project(self, project_id: str, data: dict) -> dict:
         """Update a project."""
         return self.put(f"projects/{project_id}", data=data)

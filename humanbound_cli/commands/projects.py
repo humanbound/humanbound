@@ -208,7 +208,12 @@ def show_project(project_id: str):
 @click.argument("project_id", required=False)
 @click.option("--name", help="New project name")
 @click.option("--description", help="New project description")
-def update_project(project_id: str, name: str, description: str):
+@click.option(
+    "--capabilities",
+    help="Set scope.capabilities (e.g. 'tools=on,memory=off'). Supports 'all=on/off' shorthand.",
+)
+@click.option("--yes", "-y", is_flag=True, help="Skip dataset-archive confirmation")
+def update_project(project_id: str, name: str, description: str, capabilities: str, yes: bool):
     """Update a project.
 
     PROJECT_ID: Project UUID (uses current if not specified).
@@ -222,26 +227,44 @@ def update_project(project_id: str, name: str, description: str):
         console.print("Use 'hb projects update <id>' or select a project first.")
         raise SystemExit(1)
 
-    if not name and not description:
-        console.print("[yellow]Nothing to update.[/yellow] Provide --name and/or --description.")
+    if not name and not description and not capabilities:
+        console.print(
+            "[yellow]Nothing to update.[/yellow] "
+            "Provide --name, --description, and/or --capabilities."
+        )
         raise SystemExit(1)
 
     try:
-        payload = {}
-        if name:
-            payload["name"] = name
-        if description:
-            payload["description"] = description
+        # name/description: existing flow, sent without scope wrapper
+        if name or description:
+            payload: dict = {}
+            if name:
+                payload["name"] = name
+            if description:
+                payload["description"] = description
 
-        with console.status("Updating project..."):
-            client.update_project(project_id, payload)
+            with console.status("Updating project..."):
+                client.update_project(project_id, payload)
 
-        console.print("[green]Project updated.[/green]")
-        console.print(f"[dim]ID: {project_id}[/dim]")
-        if name:
-            console.print(f"  Name: {name}")
-        if description:
-            console.print(f"  Description: {description}")
+            console.print("[green]Project updated.[/green]")
+            console.print(f"[dim]ID: {project_id}[/dim]")
+            if name:
+                console.print(f"  Name: {name}")
+            if description:
+                console.print(f"  Description: {description}")
+
+        # capabilities: read-modify-write via the shared helper
+        if capabilities:
+            from humanbound_cli.commands._capabilities_flag import parse_capabilities_spec
+            from humanbound_cli.engine.capabilities_writer import write_capabilities
+
+            try:
+                override = parse_capabilities_spec(capabilities)
+            except ValueError as e:
+                console.print(f"[red]{e}[/red]")
+                raise SystemExit(1)
+
+            write_capabilities(client, project_id, override, yes=yes, console=console)
 
     except NotAuthenticatedError:
         console.print("[red]Not authenticated.[/red] Run 'hb login' first.")

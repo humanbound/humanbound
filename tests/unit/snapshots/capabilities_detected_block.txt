@@ -1,0 +1,7 @@
+
+Detected capabilities:
+  ✓ tools            ← @mcp.tool decorator at agent/server.py:42
+                       ← Tool(...) instantiation at agent/runtime.py:117
+  ✗ memory           (no signals)
+  ✓ inter_agent      ← langgraph add_node call at agent/graph.py:23
+  ✗ reasoning_model  (no signals)
