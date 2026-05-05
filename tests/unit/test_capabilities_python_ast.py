@@ -8,17 +8,17 @@ from humanbound_cli.extractors.capabilities.python_ast import (
 
 
 def test_real_code_at_decorator_line():
-    src = "from langchain.tools import tool\n" "\n" "@tool\n" "def my_tool(): pass\n"
+    src = "from langchain.tools import tool\n\n@tool\ndef my_tool(): pass\n"
     assert is_real_code_at_line(src, 3) is True  # @tool decorator line
 
 
 def test_inside_string_literal_is_not_real_code():
-    src = "doc = '''\n" "@tool\n" "def example(): pass\n" "'''\n"
+    src = "doc = '''\n@tool\ndef example(): pass\n'''\n"
     assert is_real_code_at_line(src, 2) is False
 
 
 def test_inside_comment_is_not_real_code():
-    src = "# @tool\n" "x = 1\n"
+    src = "# @tool\nx = 1\n"
     assert is_real_code_at_line(src, 1) is False
 
 
@@ -42,10 +42,10 @@ def test_import_with_attribute_access_counts():
 
 
 def test_from_import_with_call_counts():
-    src = "from langchain.tools import tool\n" "@tool\n" "def x(): pass\n"
+    src = "from langchain.tools import tool\n@tool\ndef x(): pass\n"
     assert has_use_site(src, "tool") is True
 
 
 def test_from_import_unused_does_not_count():
-    src = "from langchain.tools import tool\n" "x = 1\n"
+    src = "from langchain.tools import tool\nx = 1\n"
     assert has_use_site(src, "tool") is False
