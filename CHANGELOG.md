@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0] — 2026-05-05
+
+### Added
+- **`hb projects update --capabilities`** — declare an agent's
+  capability surface (`tools`, `memory`, `inter_agent`, `reasoning_model`)
+  via `key=value` pairs. Accepts `on/off`, `true/false`, `1/0`, `yes/no`,
+  with `all=on/off` shorthand for setting the full set in one step.
+- **`hb connect --repo` capability scan** — when scanning an agent
+  repository, the CLI now infers the same capability surface from
+  source-code patterns and offers to write it to the project scope.
+
 ### Fixed
 - **`hb logout` now revokes the backend session, not just local credentials.**
   Previously `HumanboundClient.logout()` only cleared the in-memory token

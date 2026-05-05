@@ -156,8 +156,15 @@ This probes your agent, extracts scope, creates a project, and runs a first test
 |---|---|
 | `-e, --endpoint` | Agent integration config |
 | `-p, --prompt` | System prompt file |
-| `-r, --repo` | Repository path |
+| `-r, --repo` `[PREVIEW]` | Repository path (also infers capability surface from source patterns) |
 | `-o, --openapi` | OpenAPI spec file |
+
+!!! note "Preview: `--repo` capability inference"
+    Pointing `hb connect` at a repository now also scans source files to infer the
+    project's capability surface (`tools`, `memory`, `inter_agent`, `reasoning_model`)
+    and folds it into `scope.capabilities`. Detected signals are shown for review
+    before they're written. The pattern catalog is best-effort and may miss
+    less-common frameworks; please report gaps.
 | `-c, --context` | Extra context for the judge |
 | `-n, --name` | Project name |
 | `-y, --yes` | Skip confirmations |
