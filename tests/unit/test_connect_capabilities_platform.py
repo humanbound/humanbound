@@ -57,7 +57,9 @@ def test_platform_new_project_includes_capabilities(mock_client_cls, tmp_path):
         # we care about is the POST body for project creation.
         # Check that client.post was called with a "projects" path.
         post_calls = [c for c in client.post.call_args_list if c.args and c.args[0] == "projects"]
-        assert post_calls, f"client.post('projects', ...) was not called. All calls: {client.post.call_args_list}. CLI output:\n{result.output}"
+        assert post_calls, (
+            f"client.post('projects', ...) was not called. All calls: {client.post.call_args_list}. CLI output:\n{result.output}"
+        )
 
         project_post = post_calls[0]
         payload = project_post.kwargs.get("data") or (
