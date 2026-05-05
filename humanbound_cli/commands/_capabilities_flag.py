@@ -45,7 +45,7 @@ def parse_capabilities_spec(spec: str) -> dict[str, bool]:
 
         if key not in _VALID_KEYS:
             raise ValueError(
-                f"Unknown capability: {key!r}. " f"Valid: {', '.join(sorted(_VALID_KEYS))}"
+                f"Unknown capability: {key!r}. Valid: {', '.join(sorted(_VALID_KEYS))}"
             )
 
         if val in _TRUE:
