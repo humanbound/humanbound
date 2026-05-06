@@ -23,12 +23,16 @@ class PlatformTestRunner(TestRunner):
         experiment_data = {
             "name": config.name,
             "description": config.description,
-            "test_category": config.test_category,
-            "testing_level": config.testing_level,
-            "lang": config.lang,
             "auto_start": config.auto_start,
         }
 
+        # Omit category/level/lang when not set — backend applies its own default.
+        if config.test_category:
+            experiment_data["test_category"] = config.test_category
+        if config.testing_level:
+            experiment_data["testing_level"] = config.testing_level
+        if config.lang:
+            experiment_data["lang"] = config.lang
         if config.provider_id:
             experiment_data["provider_id"] = config.provider_id
 
