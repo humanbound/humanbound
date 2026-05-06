@@ -101,12 +101,12 @@ hb test --endpoint ./config.json --wait --debug
 | `--repo` | Repository path for scope + tools discovery |
 | `--prompt` | System prompt file for scope extraction |
 | `--scope` | Explicit scope file (YAML/JSON) |
-| `-t, --test-category` | Test type: `owasp_agentic` (default), `owasp_single_turn`, `behavioral` |
-| `-l, --testing-level` | Depth: `unit` (~20 min), `system` (~45 min), `acceptance` (~90 min) |
+| `-t, --test-category` | Test type, e.g. `owasp_single_turn`, `behavioral`. Omit to use the default. |
+| `-l, --testing-level` | Depth: `unit` (~20 min), `system` (~45 min), `acceptance` (~90 min). Omit to use the default. |
 | `--deep` | Shortcut for `-l system` |
 | `--full` | Shortcut for `-l acceptance` |
 | `--qa` | Shortcut for `-t behavioral` |
-| `--lang` | Test language (default: english) |
+| `--lang` | Test language. Accepts codes (en, de, es) or full names. Omit to use the default. |
 | `--context` | Extra context for the judge (string or .txt file) |
 | `--wait` | Wait for completion (automatic in local mode) |
 | `--fail-on` | Exit non-zero on findings: `critical`, `high`, `medium`, `low`, `any` |

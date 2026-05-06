@@ -371,11 +371,11 @@ def hb_delete_experiment(experiment_id: str) -> str:
 
 @mcp.tool()
 def hb_run_test(
-    test_category: str = "humanbound/adversarial/owasp_multi_turn",
+    test_category: str | None = None,
     name: str | None = None,
     description: str = "",
-    testing_level: str = "system",
-    lang: str = "english",
+    testing_level: str | None = None,
+    lang: str | None = None,
     provider_id: str | None = None,
     auto_start: bool = True,
 ) -> str:
@@ -387,7 +387,7 @@ def hb_run_test(
 
     Testing level affects duration and depth:
       • 'unit'       — ~20 min, quick smoke test
-      • 'system'     — ~45 min, standard depth (default)
+      • 'system'     — ~45 min, standard depth
       • 'acceptance' — ~90 min, thorough coverage
 
     After starting, poll hb_get_experiment_status until 'Finished', then
@@ -395,11 +395,12 @@ def hb_run_test(
     the updated security score.
 
     Args:
-        test_category: Test category slug (default: humanbound/adversarial/owasp_multi_turn).
+        test_category: Test category slug. If omitted, the backend applies its default.
         name: Experiment name (auto-generated if omitted).
         description: Experiment description.
-        testing_level: One of 'unit', 'system', 'acceptance'.
+        testing_level: One of 'unit', 'system', 'acceptance'. Backend default if omitted.
         lang: Language for test prompts (e.g. 'english', 'french', 'en', 'fr').
+            Backend default if omitted.
         provider_id: Provider UUID. Uses the first available provider if omitted.
         auto_start: Whether to start the experiment immediately (default true).
     """
@@ -421,7 +422,8 @@ def hb_run_test(
             "ja": "japanese",
             "ko": "korean",
         }
-        lang = lang_map.get(lang.lower(), lang.lower())
+        if lang:
+            lang = lang_map.get(lang.lower(), lang.lower())
 
         # Resolve provider
         if not provider_id:
@@ -432,22 +434,27 @@ def hb_run_test(
                 )
             provider_id = providers[0].get("id")
 
-        # Build experiment data
+        # Build experiment data — omit category/level/lang when caller didn't
+        # specify them; the backend applies its own defaults.
         from datetime import datetime, timezone
 
         ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
-        exp_name = name or f"{test_category.split('/')[-1]}-{ts}"
+        name_root = test_category.split("/")[-1] if test_category else "test"
+        exp_name = name or f"{name_root}-{ts}"
 
         data = {
             "name": exp_name,
             "description": description,
-            "test_category": test_category,
-            "testing_level": testing_level,
-            "lang": lang,
             "provider_id": provider_id,
             "configuration": {},
             "auto_start": auto_start,
         }
+        if test_category:
+            data["test_category"] = test_category
+        if testing_level:
+            data["testing_level"] = testing_level
+        if lang:
+            data["lang"] = lang
 
         result = client.post("experiments", data=data, include_project=True)
         return _ok(result)
@@ -1477,11 +1484,11 @@ def hb_connect(
 
                 import time as _time
 
+                # test_category and testing_level are intentionally omitted —
+                # backend applies its defaults.
                 experiment_data = {
                     "name": f"connect-{_time.strftime('%Y%m%d-%H%M%S')}",
                     "description": "Initial assessment from hb_connect (MCP)",
-                    "test_category": "humanbound/adversarial/owasp_agentic",
-                    "testing_level": "unit",
                     "provider_id": provider.get("id"),
                     "auto_start": True,
                     "configuration": configuration,
@@ -1619,14 +1626,19 @@ def get_coverage_resource(project_id: str) -> str:
 @mcp.prompt()
 def run_security_test(
     project_id: str = "",
-    test_category: str = "humanbound/adversarial/owasp_multi_turn",
+    test_category: str = "",
 ) -> str:
     """Guided workflow: run a security test and review results.
 
     Args:
         project_id: Project UUID (leave empty to use current project).
-        test_category: Test category to run.
+        test_category: Test category to run. Leave empty to use the backend default.
     """
+    run_step = (
+        f'4. **Run test** — call hb_run_test with test_category="{test_category}".'
+        if test_category
+        else "4. **Run test** — call hb_run_test (no test_category needed; the backend applies its default)."
+    )
     return f"""You are helping the user run a security test on their AI agent using Humanbound.
 
 Follow these steps:
@@ -1634,7 +1646,7 @@ Follow these steps:
 1. **Check context** — call hb_whoami to verify authentication and see the current org/project.
 {"2. **Set project** — call hb_set_project with project_id=" + project_id + "." if project_id else "2. If no project is set, call hb_list_projects and ask the user which one to use, then hb_set_project."}
 3. **Verify provider** — call hb_list_providers. If empty, tell the user they need to add a model provider first.
-4. **Run test** — call hb_run_test with test_category="{test_category}".
+{run_step}
 5. **Monitor** — poll hb_get_experiment_status every 15-30 seconds until status is "Finished", "Failed", or "Terminated". Show progress to the user.
 6. **Results** — once finished, call hb_get_experiment to get the full results. Summarise:
    - Overall pass/fail rate

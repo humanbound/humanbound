@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **`hb test --test-category`, `--testing-level`, and `--lang` are now
+  optional with no built-in fallback.** Omit any of them and the platform
+  picks the default for that run. Specifying any flag still works exactly
+  as before. Same applies to `hb connect --level` and the equivalent
+  fields on the MCP `hb_run_test` tool.
+
 ## [2.1.0] — 2026-05-05
 
 ### Added

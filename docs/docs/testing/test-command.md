@@ -6,14 +6,15 @@ Full reference for the `hb test` command and all its options.
 hb test [OPTIONS]
 
 Test Configuration:
-  -t, --test-category     Test to run (default: humanbound/adversarial/owasp_agentic)
+  -t, --test-category     Test to run. Omit to let the platform pick the default.
   --category              Shorthand alias for --test-category
-  -l, --testing-level     Depth: unit | system | acceptance
+  -l, --testing-level     Depth: unit | system | acceptance. Omit to use the default.
   --deep                  Shortcut for --testing-level system
   --full                  Shortcut for --testing-level acceptance
   -n, --name              Experiment name (auto-generated if omitted)
   -d, --description       Experiment description
-  --lang                  Language (default: english). Accepts codes: en, de, es
+  --lang                  Language. Accepts codes (en, de, es) or full names.
+                          Omit to use the default.
   -c, --context           Extra context for the judge (string or .txt file path)
   --provider-id           Provider to use (default: first available)
 

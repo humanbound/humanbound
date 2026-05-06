@@ -15,9 +15,9 @@ from dataclasses import dataclass, field
 class TestConfig:
     """Canonical test configuration — identical shape for both runners."""
 
-    test_category: str
-    testing_level: str  # unit | system | acceptance
-    lang: str = "english"
+    test_category: str | None = None  # backend applies its default if None
+    testing_level: str | None = None  # unit | system | acceptance — backend defaults if None
+    lang: str | None = None  # backend defaults to english if None
     name: str = ""
     description: str = ""
     provider_id: str = ""

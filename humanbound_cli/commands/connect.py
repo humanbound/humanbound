@@ -324,8 +324,9 @@ def _derive_agent_name(endpoint: str) -> str:
     "--level",
     "-l",
     type=click.Choice(["unit", "system", "acceptance"]),
-    default="unit",
-    help="Testing depth: unit (quick), system (deep), acceptance (full)",
+    default=None,
+    help="Testing depth: unit (quick), system (deep), acceptance (full). "
+    "If omitted, the backend applies its default.",
 )
 @click.option("--yes", "-y", is_flag=True, help="Skip confirmations")
 @click.option("--timeout", "-t", type=int, default=SCAN_TIMEOUT, help="Request timeout in seconds")
@@ -1056,7 +1057,7 @@ def _build_monitoring_message(risk_level: str, matching_regs: list) -> str:
 # -- Auto-test helper ----------------------------------------------------------
 
 
-def _auto_test(client, project_id, default_integration, context=None, level="unit"):
+def _auto_test(client, project_id, default_integration, context=None, level=None):
     """Run first test automatically and show results inline."""
     if not default_integration:
         console.print("\n[dim]No agent integration configured -- skipping auto-test.[/dim]")
@@ -1091,16 +1092,18 @@ def _auto_test(client, project_id, default_integration, context=None, level="uni
                 raise SystemExit(1)
             configuration["context"] = ctx_value
 
-        # Create experiment with auto_start
+        # Create experiment with auto_start. test_category is intentionally
+        # omitted so the backend applies its default; testing_level is only
+        # included when the caller specified one.
         experiment_data = {
             "name": f"connect-{time.strftime('%Y%m%d-%H%M%S')}",
             "description": "Initial assessment from hb connect",
-            "test_category": "humanbound/adversarial/owasp_agentic",
-            "testing_level": level,
             "provider_id": provider_id,
             "auto_start": True,
             "configuration": configuration,
         }
+        if level:
+            experiment_data["testing_level"] = level
 
         with console.status("[dim]Creating experiment...[/dim]"):
             response = client.post("experiments", data=experiment_data, include_project=True)

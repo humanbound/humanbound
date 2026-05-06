@@ -55,7 +55,7 @@ Your `orchestrator.py` must expose three functions:
 ```python
 def orchestrator_generate(model_provider: dict, experiment: dict) -> dict:
     """Generate attack/test prompts.
-    
+
     Returns dict mapping category → list of opening prompts.
     """
 
