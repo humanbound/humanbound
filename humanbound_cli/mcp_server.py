@@ -1402,6 +1402,11 @@ def hb_connect(
         if not client.organisation_id:
             return _err(ValueError("No organisation selected. Use hb_set_organisation first."))
 
+        if context and len(context) > 1500:
+            return _err(
+                ValueError(f"Context too long ({len(context)} chars). Maximum is 1,500.")
+            )
+
         # -- Parse endpoint config ----------------------------------------
         try:
             bot_config = json.loads(endpoint_config)
@@ -1467,12 +1472,6 @@ def hb_connect(
 
                 configuration = {}
                 if context:
-                    if len(context) > 1500:
-                        return _err(
-                            ValueError(
-                                f"Context too long ({len(context)} chars). Maximum is 1,500."
-                            )
-                        )
                     configuration["context"] = context
 
                 import time as _time
