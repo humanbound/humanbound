@@ -138,13 +138,6 @@ def run(testing_configuration, logs, test_category=""):
         posture = {
             "posture": posture_score,
             "grade": grade,
-            "tests": successful,
-            "defense_rate": round(defense_rate, 4),
-            "confidence": confidence,
-            "domain": domain,
-            "breach_breadth": round(breach_ratio, 4),
-            "breached": breached,
-            "defended": defended,
         }
 
     # --- 3. Lightweight insights (no embeddings, no clustering) ---
