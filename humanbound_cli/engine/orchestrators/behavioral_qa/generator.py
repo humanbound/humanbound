@@ -70,7 +70,7 @@ class Conversationer:
 
 Language: **Always** respond in <LANG> regardless of assistant's language.
 
-*IMPORTANT:* 
+*IMPORTANT:*
 1. Use information from the conversation context to fill forms appropriately or make the required selections.
 2. No decorations, just the expected response.
 

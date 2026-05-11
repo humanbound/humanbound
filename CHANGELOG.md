@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0] — 2026-05-11
+
+### Added
+- **`hb projects update --capabilities`** — declare an agent's
+  capability surface (`tools`, `memory`, `inter_agent`, `reasoning_model`)
+  via `key=value` pairs. Accepts `on/off`, `true/false`, `1/0`, `yes/no`,
+  with `all=on/off` shorthand for setting the full set in one step.
+- **`hb connect --repo` capability scan** — when scanning an agent
+  repository, the CLI now infers the same capability surface from
+  source-code patterns and offers to write it to the project scope.
+
+### Changed
+- **`hb test --test-category`, `--testing-level`, and `--lang` are now
+  optional with no built-in fallback.** Omit any of them and the platform
+  picks the default for that run. Specifying any flag still works exactly
+  as before. Same applies to `hb connect --level` and the equivalent
+  fields on the MCP `hb_run_test` tool.
+
 ## [2.0.3] — 2026-05-11
 
 ### Changed

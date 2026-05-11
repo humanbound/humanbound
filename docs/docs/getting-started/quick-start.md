@@ -101,12 +101,12 @@ hb test --endpoint ./config.json --wait --debug
 | `--repo` | Repository path for scope + tools discovery |
 | `--prompt` | System prompt file for scope extraction |
 | `--scope` | Explicit scope file (YAML/JSON) |
-| `-t, --test-category` | Test type: `owasp_agentic` (default), `owasp_single_turn`, `behavioral` |
-| `-l, --testing-level` | Depth: `unit` (~20 min), `system` (~45 min), `acceptance` (~90 min) |
+| `-t, --test-category` | Test type, e.g. `owasp_single_turn`, `behavioral`. Omit to use the default. |
+| `-l, --testing-level` | Depth: `unit` (~20 min), `system` (~45 min), `acceptance` (~90 min). Omit to use the default. |
 | `--deep` | Shortcut for `-l system` |
 | `--full` | Shortcut for `-l acceptance` |
 | `--qa` | Shortcut for `-t behavioral` |
-| `--lang` | Test language (default: english) |
+| `--lang` | Test language. Accepts codes (en, de, es) or full names. Omit to use the default. |
 | `--context` | Extra context for the judge (string or .txt file) |
 | `--wait` | Wait for completion (automatic in local mode) |
 | `--fail-on` | Exit non-zero on findings: `critical`, `high`, `medium`, `low`, `any` |
@@ -156,8 +156,15 @@ This probes your agent, extracts scope, creates a project, and runs a first test
 |---|---|
 | `-e, --endpoint` | Agent integration config |
 | `-p, --prompt` | System prompt file |
-| `-r, --repo` | Repository path |
+| `-r, --repo` `[PREVIEW]` | Repository path (also infers capability surface from source patterns) |
 | `-o, --openapi` | OpenAPI spec file |
+
+!!! note "Preview: `--repo` capability inference"
+    Pointing `hb connect` at a repository now also scans source files to infer the
+    project's capability surface (`tools`, `memory`, `inter_agent`, `reasoning_model`)
+    and folds it into `scope.capabilities`. Detected signals are shown for review
+    before they're written. The pattern catalog is best-effort and may miss
+    less-common frameworks; please report gaps.
 | `-c, --context` | Extra context for the judge |
 | `-n, --name` | Project name |
 | `-y, --yes` | Skip confirmations |

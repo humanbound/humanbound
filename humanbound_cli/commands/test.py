@@ -18,8 +18,12 @@ from ..exceptions import APIError, NotAuthenticatedError
 
 console = Console()
 
-# Default test category
-DEFAULT_TEST_CATEGORY = "humanbound/adversarial/owasp_agentic"
+# Local-mode fallback when no --test-category is given. Platform mode sends
+# nothing and lets the backend pick its own default; local mode has no backend
+# to defer to, so we use the most general adversarial orchestrator we ship.
+LOCAL_DEFAULT_TEST_CATEGORY = "humanbound/adversarial/owasp_agentic"
+LOCAL_DEFAULT_TESTING_LEVEL = "unit"
+LOCAL_DEFAULT_LANG = "english"
 
 # Testing levels (must match backend TestingLevel enum)
 # unit (~20 min), system (~45 min), acceptance (~90 min)
@@ -159,22 +163,24 @@ def _print_next(suggestions: list):
 @click.option(
     "--test-category",
     "-t",
-    default=DEFAULT_TEST_CATEGORY,
-    help="Test category to run (e.g. humanbound/adversarial/owasp_agentic, humanbound/behavioral/qa)",
+    default=None,
+    help="Test category to run (e.g. humanbound/adversarial/autonomous_red_team, "
+    "humanbound/behavioral/qa). If omitted, the backend applies its default.",
 )
 @click.option(
     "--testing-level",
     "-l",
     type=click.Choice(TESTING_LEVELS, case_sensitive=False),
-    default="unit",
-    help="Testing depth level",
+    default=None,
+    help="Testing depth level. If omitted, the backend applies its default.",
 )
 @click.option("--name", "-n", help="Experiment name (auto-generated if not provided)")
 @click.option("--description", "-d", default="", help="Experiment description")
 @click.option(
     "--lang",
-    default="english",
-    help="Language for test prompts (default: english). Accepts codes (en, de, es) or full names.",
+    default=None,
+    help="Language for test prompts. Accepts codes (en, de, es) or full names. "
+    "If omitted, the backend applies its default.",
 )
 @click.option(
     "--provider-id", help="Provider ID to use (default: first available or default provider)"
@@ -304,23 +310,25 @@ def test_command(
       hb test --full                              # Acceptance-level test (~90 min)
       hb test --category humanbound/behavioral/qa # Behavioral/QA tests
     """
-    # Resolve shorthand flags — explicit --testing-level / --test-category win
-    if category and test_category == DEFAULT_TEST_CATEGORY:
+    # Resolve shorthand flags — explicit --test-category wins; --quick/--deep/
+    # --full only set the level when the user didn't provide one.
+    if category and test_category is None:
         test_category = category
     if quick:
         testing_level = "unit"  # quick uses unit depth but fewer categories
-    elif deep and testing_level == "unit":
+    elif deep and testing_level is None:
         testing_level = "system"
-    elif full and testing_level == "unit":
+    elif full and testing_level is None:
         testing_level = "acceptance"
 
     # Convert language code to full name if needed (e.g. "en" -> "english")
-    lang = LANG_CODE_MAP.get(lang.lower(), lang)
+    if lang:
+        lang = LANG_CODE_MAP.get(lang.lower(), lang)
 
     # Generate name if not provided
     if not name:
         timestamp = time.strftime("%Y%m%d-%H%M%S")
-        category_short = test_category.split("/")[-1]
+        category_short = test_category.split("/")[-1] if test_category else "test"
         name = f"cli-{category_short}-{timestamp}"
 
     # --- Runner selection (login + project is the switch) ---
@@ -371,10 +379,19 @@ def test_command(
             console.print()
             raise SystemExit(1)
 
+    # Local mode has no backend default to fall back on — fill in the gaps now.
+    if not is_platform:
+        if test_category is None:
+            test_category = LOCAL_DEFAULT_TEST_CATEGORY
+        if testing_level is None:
+            testing_level = LOCAL_DEFAULT_TESTING_LEVEL
+        if lang is None:
+            lang = LOCAL_DEFAULT_LANG
+
     console.print(f"\n[bold]Starting security test:[/bold] {name}\n")
-    console.print(f"  Category: {test_category}")
-    console.print(f"  Level: {testing_level}")
-    console.print(f"  Language: {lang}")
+    console.print(f"  Category: {test_category or '[dim](backend default)[/dim]'}")
+    console.print(f"  Level: {testing_level or '[dim](backend default)[/dim]'}")
+    console.print(f"  Language: {lang or '[dim](backend default)[/dim]'}")
     console.print()
 
     try:
