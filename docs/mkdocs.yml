@@ -1,6 +1,14 @@
-site_name: ""
+site_name: Humanbound
 site_url: https://docs.humanbound.ai
+site_description: Humanbound documentation — AI security testing, continuous monitoring, and defense for LLM agents.
 repo_url: https://github.com/humanbound/humanbound
+
+plugins:
+  - search
+  - social:
+      cards_layout_options:
+        background_color: "#0a0a0a"
+        color: "#ffffff"
 
 theme:
   name: material

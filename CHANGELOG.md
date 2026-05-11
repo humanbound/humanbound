@@ -7,13 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [2.0.3] — 2026-05-05
+## [2.0.3] — 2026-05-11
 
 ### Changed
 - Slimmed the experiment stats schema. The HTML report's defense-rate
   KPI is now computed from pass/fail counts at render time.
 
 ### Fixed
+- **`hb connect` no longer creates orphaned projects when `--context`
+  exceeds 1,500 chars.** The length check previously ran after
+  `POST /scan` and `POST /projects`, so an over-long context returned an
+  error to the caller but left a project registered on the backend. Each
+  retry created another orphan — particularly problematic for the
+  MCP-driven auto-retry path. The validation now runs alongside the other
+  input guards, before any API call.
 - **`hb logout` now revokes the backend session, not just local credentials.**
   Previously `HumanboundClient.logout()` only cleared the in-memory token
   state and the local token file, so the API session (and any concurrent
