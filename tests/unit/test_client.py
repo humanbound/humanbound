@@ -10,6 +10,7 @@ import time
 from unittest.mock import MagicMock, patch
 
 import pytest
+import requests
 
 from humanbound_cli.client import HumanboundClient
 from humanbound_cli.exceptions import (
@@ -92,7 +93,9 @@ class TestAuthentication:
         with pytest.raises(NotAuthenticatedError, match="Not authenticated"):
             unauthenticated_client._ensure_authenticated()
 
-    def test_logout_clears_state(self, client, tmp_path):
+    @patch("humanbound_cli.client.requests.get")
+    def test_logout_clears_state(self, mock_get, client, tmp_path):
+        mock_get.return_value = _mock_response(204)
         token_file = tmp_path / ".humanbound" / "credentials.json"
         token_file.write_text(json.dumps({"api_token": "x"}))
 
@@ -102,6 +105,54 @@ class TestAuthentication:
         assert client._organisation_id is None
         assert client._project_id is None
         assert not token_file.exists()
+
+    @patch("humanbound_cli.client.requests.get")
+    def test_logout_calls_server_revoke(self, mock_get, client):
+        """Logout must notify the server so concurrent sessions
+        (platform, other terminals) are also revoked."""
+        mock_get.return_value = _mock_response(204)
+
+        client.logout(silent=True)
+
+        mock_get.assert_called_once()
+        call = mock_get.call_args
+        url = call.args[0] if call.args else call.kwargs.get("url")
+        assert url == "http://test.local/api/logout"
+        headers = call.kwargs.get("headers", {})
+        assert headers["Authorization"] == "Bearer test-token"
+
+    @patch("humanbound_cli.client.requests.get")
+    def test_logout_swallows_network_error(self, mock_get, client, tmp_path):
+        """Offline users must still be able to log out locally."""
+        mock_get.side_effect = requests.ConnectionError("offline")
+        token_file = tmp_path / ".humanbound" / "credentials.json"
+        token_file.write_text(json.dumps({"api_token": "x"}))
+
+        client.logout(silent=True)
+
+        assert client._api_token is None
+        assert not token_file.exists()
+
+    @patch("humanbound_cli.client.requests.get")
+    def test_logout_swallows_non_2xx(self, mock_get, client, tmp_path):
+        """An already-expired token is effectively logged out — non-2xx must
+        not block local cleanup."""
+        mock_get.return_value = _mock_response(401, {"message": "Token expired"})
+        token_file = tmp_path / ".humanbound" / "credentials.json"
+        token_file.write_text(json.dumps({"api_token": "x"}))
+
+        client.logout(silent=True)
+
+        assert client._api_token is None
+        assert not token_file.exists()
+
+    @patch("humanbound_cli.client.requests.get")
+    def test_logout_skips_server_when_no_token(self, mock_get, unauthenticated_client):
+        """Without an API token there is no session to revoke — don't call
+        the server."""
+        unauthenticated_client.logout(silent=True)
+
+        mock_get.assert_not_called()
 
 
 # ---------------------------------------------------------------------------

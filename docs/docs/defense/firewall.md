@@ -44,7 +44,7 @@ The firewall is the third component of the test–monitor–protect lifecycle. I
 - **From testing + monitoring**: adversarial test logs provide training data for Tier 2 classifiers. More test cycles over time produce richer, more diverse training data — and therefore better Tier 2 accuracy.
 - **Back to monitoring**: production firewall verdicts (attacks blocked, false positives identified) can feed back into the monitoring layer as ground-truth signals, improving future test cycle targeting and Tier 2 retraining.
 
-The firewall is available as an open-source Python library ([humanbound-firewall](https://github.com/humanbound/humanbound-firewall), AGPL-3.0) and integrates with the Humanbound CLI for training agent-specific classifiers.
+The firewall is available as an open-source Python library ([humanbound-firewall](https://github.com/humanbound/humanbound-firewall), Apache-2.0) and integrates with the Humanbound CLI for training agent-specific classifiers.
 
 ### Firewall Verdicts
 
@@ -538,4 +538,4 @@ def handle_user_message(conversation):
 ```
 
 !!! info "Open Source"
-    The Humanbound Firewall is AGPL-3.0 licensed. Free to use and modify — if you run a modified version as a service, you must open-source your changes. Commercial licensing available. Source code and detector examples at [github.com/humanbound/humanbound-firewall](https://github.com/humanbound/humanbound-firewall).
+    The Humanbound Firewall is Apache-2.0 licensed. Free to use, modify, and embed in commercial products with attribution. Source code and detector examples at [github.com/humanbound/humanbound-firewall](https://github.com/humanbound/humanbound-firewall).

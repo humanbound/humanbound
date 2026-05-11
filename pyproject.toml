@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "humanbound"
-version = "2.0.2"
+version = "2.0.3"
 description = "Humanbound — open-source AI agent red-team engine, SDK, and CLI."
 readme = "README.md"
 license = "Apache-2.0"
