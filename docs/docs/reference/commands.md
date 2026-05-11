@@ -1,3 +1,7 @@
+---
+description: "Complete hb CLI reference — every command and flag, grouped by workflow — auth, projects, test, redteam, posture, logs, MCP."
+---
+
 # Command Reference
 
 Complete reference of all available commands, organized by category.

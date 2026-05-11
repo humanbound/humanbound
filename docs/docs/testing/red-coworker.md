@@ -1,3 +1,7 @@
+---
+description: "Red Coworker — AI-assisted collaborative red teaming. Drive an interactive adversarial conversation against your agent with an LLM in the loop."
+---
+
 # Red Coworker [Preview]
 
 AI-assisted collaborative red teaming — a human-AI partnership for interactive adversarial testing of AI agents.

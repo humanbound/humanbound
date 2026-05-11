@@ -1,3 +1,8 @@
+---
+title: Humanbound
+description: "Open-source AI agent security testing — automated adversarial probes, LLM-as-a-Judge evaluation, runtime firewall, and posture scoring."
+---
+
 # <span class="hero-title">Humanbound</span>
 
 **Find vulnerabilities in your AI agents before attackers do.**

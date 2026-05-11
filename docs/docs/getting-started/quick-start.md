@@ -1,3 +1,7 @@
+---
+description: "From install to your first adversarial test in minutes — local or platform mode, with a posture score at the end."
+---
+
 # Quick Start
 
 Get from installation to your first security test in minutes.

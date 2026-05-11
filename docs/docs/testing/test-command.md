@@ -1,3 +1,7 @@
+---
+description: "hb test reference — orchestrators, testing levels, languages, providers, and every flag that shapes an adversarial run."
+---
+
 # Test Command Reference
 
 Full reference for the `hb test` command and all its options.

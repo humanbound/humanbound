@@ -1,3 +1,7 @@
+---
+description: "Drive Humanbound from Claude Code, Cursor, Windsurf, or Copilot via the built-in MCP server — ask about posture, findings, and runs in your IDE."
+---
+
 # MCP Server
 
 Humanbound exposes an **MCP (Model Context Protocol) server** that lets AI coding assistants (Claude Code, Cursor, Windsurf, GitHub Copilot) query your security testing data directly. Ask natural-language questions about posture, findings, coverage, and experiments without leaving your IDE.

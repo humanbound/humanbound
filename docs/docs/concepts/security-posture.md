@@ -1,3 +1,7 @@
+---
+description: "Security posture (0–100) summarises an agent's defense rate, coverage, and finding severity into a single comparable score."
+---
+
 # Security Posture
 
 The security posture score (0-100) provides a comprehensive view of your AI agent's security health. The formula is:
