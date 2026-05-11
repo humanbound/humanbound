@@ -53,7 +53,7 @@ class TestResult:
     testing_level: str = ""
     stats: dict = field(default_factory=dict)  # {pass, fail, total, ...}
     insights: list = field(default_factory=list)  # [{result, category, severity, explanation}]
-    posture: dict = field(default_factory=dict)  # {posture, grade, defense_rate, ...}
+    posture: dict = field(default_factory=dict)  # {posture, grade, dimensions}
     exec_t: dict = field(default_factory=dict)  # {max_t, min_t, avg_t}
 
 
