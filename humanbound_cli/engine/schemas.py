@@ -183,17 +183,11 @@ class PostureDimensions(BaseModel):
 
 
 class ExperimentPosture(BaseModel):
-    """Experiment-level posture computed from ASR."""
+    """Experiment-level posture."""
 
     posture: float = 0
     grade: str = "F"
-    tests: int = 0
-    defense_rate: float = 0
-    confidence: str = "low"
-    domain: str = "security"
-    breach_breadth: float = 0
-    breached: list[str] = []
-    defended: list[str] = []
+    dimensions: PostureDimensions | None = None
 
 
 # ── Experiment Results ─────────────────────────────────────────────────────
