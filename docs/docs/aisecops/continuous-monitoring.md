@@ -1,3 +1,7 @@
+---
+description: "Continuous monitoring runs scheduled adversarial tests against production agents — surface model drift and security regressions before users do."
+---
+
 # Continuous Monitoring
 
 ## The Problem: Point-in-Time Testing Is Not Enough
@@ -78,11 +82,11 @@ Testing ──→ Monitoring ──→ Firewall ──→ Production
    │              │              │             │
    │              │              └─ classifier  │
    │              │                 retraining ←┘
-   │              └── strategy                 
-   │                  evolution ←── verdicts    
-   └── baseline                                
-       reset on ←── regression                 
-       deployment    detection                 
+   │              └── strategy
+   │                  evolution ←── verdicts
+   └── baseline
+       reset on ←── regression
+       deployment    detection
 ```
 
 The result is a system where security doesn't degrade with time — it compounds. Every day the agent is monitored, the attacker gets smarter, the firewall gets more accurate, and the feedback loop gets tighter. This is the fundamental shift from point-in-time testing to continuous security assurance.

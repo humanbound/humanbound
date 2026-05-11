@@ -9,6 +9,8 @@ plugins:
       cards_layout_options:
         background_color: "#0a0a0a"
         color: "#ffffff"
+        font_family: DM Sans
+        logo: docs/images/social_logo.png
 
 theme:
   name: material
@@ -85,6 +87,7 @@ nav:
   - 🤝 Community: community.md
 
 markdown_extensions:
+  - meta
   - admonition
   - pymdownx.details
   - pymdownx.superfences

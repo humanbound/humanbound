@@ -1,3 +1,7 @@
+---
+description: "Install Humanbound — pip install, optional local engine extras, and quick paths for both account-less local mode and the full platform."
+---
+
 # Installation
 
 ## Install

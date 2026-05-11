@@ -1,3 +1,7 @@
+---
+description: "Define the JSON endpoint config Humanbound uses to talk to your agent — HTTP/WS, headers, payload templating, streaming, response extraction."
+---
+
 # Agent Configuration File
 
 The `--endpoint / -e` flag on `hb connect` accepts a JSON config file (or inline JSON string) that describes how to communicate with your agent. This integration is saved as the project's default, so subsequent `hb test` commands work automatically.

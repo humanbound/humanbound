@@ -1,3 +1,7 @@
+---
+description: "Humanbound's adversarial engine generates multi-turn attacks in real time, adapting strategy and escalating pressure as the agent responds."
+---
+
 # Adversarial Testing Engine
 
 ## How Attacks Work
