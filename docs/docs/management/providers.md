@@ -1,3 +1,7 @@
+---
+description: "Configure the LLM providers Humanbound uses for attack generation, judging, and evaluations — credentials, default selection, and per-experiment overrides."
+---
+
 # Model Providers
 
 Configure LLM providers used for generating attacks, running security judges, and performing evaluations.

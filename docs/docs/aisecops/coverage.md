@@ -1,3 +1,7 @@
+---
+description: "Test coverage tracks which attack categories and techniques have run against your agent, surfacing blind spots in your security testing plan."
+---
+
 # Test Coverage
 
 Track which attack categories, techniques, and vectors have been tested against your AI agent. Coverage information helps identify blind spots in your security testing.

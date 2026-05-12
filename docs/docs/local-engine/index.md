@@ -1,3 +1,7 @@
+---
+description: "Run security tests locally with no login or network calls — full isolation with your own LLM provider, or offline mode with ollama."
+---
+
 # Local Engine
 
 Run security tests **locally** — no login, no account, no network calls to Humanbound. Full isolation with your own LLM provider or [ollama](https://ollama.com) for completely offline testing.

@@ -1,3 +1,7 @@
+---
+description: "Orchestrators generate attacks, run conversations, and evaluate responses — Humanbound ships three built-in engines and lets you author your own."
+---
+
 # Orchestrators
 
 Orchestrators are the test engines that generate attacks, run conversations, and evaluate responses. Humanbound ships with three built-in orchestrators. You can also build your own.
@@ -55,7 +59,7 @@ Your `orchestrator.py` must expose three functions:
 ```python
 def orchestrator_generate(model_provider: dict, experiment: dict) -> dict:
     """Generate attack/test prompts.
-    
+
     Returns dict mapping category → list of opening prompts.
     """
 

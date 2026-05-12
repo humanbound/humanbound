@@ -1,3 +1,7 @@
+---
+description: "Assessments are point-in-time snapshots of a project's security state — posture, findings, and coverage produced by every ASCAM activity."
+---
+
 # Assessments
 
 Assessments are snapshots of a project's security state at a point in time. Each ASCAM activity (assess, investigate, monitor) produces an assessment that captures posture, findings, and coverage at that moment.

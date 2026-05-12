@@ -1,3 +1,7 @@
+---
+description: "Upload real conversation logs and evaluate them against Humanbound's security judges — score safety, scope, and policy adherence retroactively."
+---
+
 # Upload Conversation Logs
 
 Evaluate real production conversations against security judges. This is useful for testing actual user interactions with your AI agent.

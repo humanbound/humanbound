@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+  {% set desc = page.meta.description if page.meta and page.meta.description else config.site_description %}
+  <meta property="og:site_name" content="{{ config.site_name }}" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:image:alt" content="{{ desc }}" />
+  <meta name="twitter:image:alt" content="{{ desc }}" />
+{% endblock %}

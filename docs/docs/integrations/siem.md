@@ -1,3 +1,7 @@
+---
+description: "Stream security events to your SIEM — findings, posture changes, and drift detections delivered in real time as HMAC-signed webhook events."
+---
+
 # SIEM Integration
 
 Humanbound delivers security events in real time to your SOC tooling. Every finding, posture change, drift detection, and ASCAM phase transition is emitted as a structured, HMAC-signed webhook event that any SIEM, ticketing system, or automation platform can consume.

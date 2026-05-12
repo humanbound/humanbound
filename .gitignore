@@ -66,6 +66,7 @@ relay/
 
 *.html
 !humanbound_cli/templates/*.html
+!docs/overrides/**/*.html
 
 .claude
 

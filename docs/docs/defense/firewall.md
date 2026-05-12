@@ -1,3 +1,7 @@
+---
+description: "Humanbound Firewall — runtime defenses for LLM agents that block prompt injection and policy violations before they reach the agent in production."
+---
+
 # Firewall
 
 ## The Challenge: Runtime Protection for AI Agents

@@ -1,3 +1,7 @@
+---
+description: "After a local test, results are saved on disk and can be viewed or exported as HTML reports, JSON, or CSV."
+---
+
 # Output & Export
 
 After a test, results are saved locally and can be viewed or exported in multiple formats.

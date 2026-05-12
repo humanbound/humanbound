@@ -1,3 +1,7 @@
+---
+description: "Export guardrails — security rules derived from your test results that capture discovered attack patterns and enforce them at runtime."
+---
+
 # Guardrails Export
 
 Guardrails are security rules extracted from your test results. They capture the attack patterns and boundary violations discovered during testing and translate them into actionable rules for runtime defense.

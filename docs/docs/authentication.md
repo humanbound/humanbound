@@ -1,3 +1,8 @@
+---
+description: "Manage Humanbound authentication, organisation context, and access scopes for the CLI, MCP server, and API."
+title: Authentication
+---
+
 # Authentication & Context
 
 Manage authentication, organisation context, and access to documentation.

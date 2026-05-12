@@ -1,3 +1,8 @@
+---
+description: "Deployment options for Humanbound — local engine, managed platform, and air-gapped variants for organisations with specific security and compliance needs."
+title: Deployment
+---
+
 # Deployment Options
 
 Humanbound supports multiple deployment models to meet your organisation's security and compliance requirements.

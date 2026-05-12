@@ -1,3 +1,7 @@
+---
+description: "Configure the LLM provider the local engine uses for attack generation and response evaluation — bring your own API key."
+---
+
 # Provider Configuration
 
 The local engine needs an LLM provider for attack generation and response evaluation. You bring your own API key.

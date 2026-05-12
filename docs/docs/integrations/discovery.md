@@ -1,3 +1,7 @@
+---
+description: "Discover and assess AI services across your cloud environment — a client-side scan that surfaces shadow AI and feeds findings into the platform."
+---
+
 # AI Discovery
 
 Discover and assess AI services across your cloud environment. The discovery pipeline scans your tenant client-side, sends results to the Humanbound platform for security evaluation (38 evidence signals, 15 SAI threat classes), and produces an assessed inventory with posture scoring and model lifecycle tracking.

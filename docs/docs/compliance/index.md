@@ -1,3 +1,7 @@
+---
+description: "Test your AI agent against regulatory requirements by adding domain-specific restrictions to its scope — the engine attacks compliance boundaries automatically."
+---
+
 # Compliance Testing
 
 Test your AI agent against regulatory requirements by adding domain-specific restrictions to your scope. No special flags or modes — the engine attacks compliance boundaries and calibrates severity for your domain automatically.
