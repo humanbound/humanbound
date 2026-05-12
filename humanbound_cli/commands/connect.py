@@ -297,24 +297,11 @@ def _derive_agent_name(endpoint: str) -> str:
 
 
 @click.command("connect")
-@click.option("--endpoint", "-e", help="Agent config JSON or file path (agent path)")
-@click.option(
-    "--vendor",
-    "-v",
-    type=click.Choice(["microsoft"]),
-    help="Cloud vendor to scan (platform path)",
-)
+@click.option("--endpoint", "-e", help="Agent config JSON or file path")
 @click.option("--name", "-n", help="Project name (optional, auto-generated)")
-@click.option(
-    "--prompt", "-p", type=click.Path(exists=True), help="System prompt file (agent path)"
-)
-@click.option("--repo", "-r", type=click.Path(exists=True), help="Repository path (agent path)")
-@click.option(
-    "--openapi", "-o", type=click.Path(exists=True), help="OpenAPI spec file (agent path)"
-)
-@click.option("--tenant", help="Azure tenant ID (platform path, bypasses browser)")
-@click.option("--client-id", "client_id", help="Service principal client ID (platform path)")
-@click.option("--client-secret", "client_secret", help="Service principal secret (platform path)")
+@click.option("--prompt", "-p", type=click.Path(exists=True), help="System prompt file")
+@click.option("--repo", "-r", type=click.Path(exists=True), help="Repository path")
+@click.option("--openapi", "-o", type=click.Path(exists=True), help="OpenAPI spec file")
 @click.option(
     "--context",
     "-c",
@@ -331,62 +318,34 @@ def _derive_agent_name(endpoint: str) -> str:
 @click.option("--timeout", "-t", type=int, default=SCAN_TIMEOUT, help="Request timeout in seconds")
 def connect_command(
     endpoint,
-    vendor,
     name,
     prompt,
     repo,
     openapi,
-    tenant,
-    client_id,
-    client_secret,
     context,
     level,
     yes,
     timeout,
 ):
-    """Connect your AI agent or scan your cloud platform.
+    """Connect your AI agent.
 
-    Two paths, one command:
-
-    \b
-    Agent path (--endpoint):
-      hb connect --endpoint ./bot-config.json
-      Probes your agent, extracts scope, creates project, runs first test.
-
-    \b
-    Platform path (--vendor):
-      hb connect --vendor microsoft
-      Scans cloud for shadow AI, evaluates 39 signals, saves to inventory.
+    Probes your agent, extracts scope, creates a project, and runs the first test.
 
     \b
     Examples:
       hb connect --endpoint ./config.json
       hb connect --endpoint ./config.json --prompt ./system.txt
-      hb connect --vendor microsoft
-      hb connect --vendor microsoft --tenant abc-123 --client-id x --client-secret y
     """
     has_agent_flags = any([endpoint, prompt, repo, openapi])
-    has_platform_flags = any([vendor, tenant, client_id, client_secret])
 
-    if has_agent_flags and has_platform_flags:
-        console.print(
-            "[red]Cannot combine agent flags (--endpoint/--prompt/--repo/--openapi) with platform flags (--vendor/--tenant).[/red]"
-        )
-        raise SystemExit(1)
-
-    if has_platform_flags:
-        _connect_platform(vendor, name, tenant, client_id, client_secret, yes, timeout)
-    elif has_agent_flags:
+    if has_agent_flags:
         _connect_agent(endpoint, name, prompt, repo, openapi, context, level, yes, timeout)
     else:
-        console.print("[yellow]Specify a path:[/yellow]")
+        console.print("[yellow]Specify a source:[/yellow]")
         console.print()
-        console.print("  [bold]Agent:[/bold]      hb connect --endpoint ./bot-config.json")
-        console.print("  [bold]Platform:[/bold]  hb connect --vendor microsoft")
+        console.print("  hb connect --endpoint ./bot-config.json")
         console.print()
-        console.print(
-            "[dim]Use --endpoint to connect your AI agent, or --vendor to scan your cloud.[/dim]"
-        )
+        console.print("[dim]Use --endpoint, --prompt, --repo, or --openapi.[/dim]")
         raise SystemExit(1)
 
 
@@ -736,196 +695,6 @@ def _print_platform_note():
             border_style="cyan",
         )
     )
-
-
-# -- Platform path -------------------------------------------------------------
-
-
-def _connect_platform(vendor, name, tenant, client_id, client_secret, yes, timeout):
-    """Platform path: scan -> assess -> auto-save -> show posture."""
-    from .discover import (
-        _display_auth_error,
-        _display_device_code,
-        _display_evaluations,
-        _display_persist_summary,
-        _display_results,
-        _get_connector,
-    )
-
-    client = HumanboundClient()
-
-    if not client.is_authenticated():
-        console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
-        raise SystemExit(1)
-
-    if not client.organisation_id:
-        console.print("[yellow]No organisation selected.[/yellow]")
-        console.print("Use 'hb switch <id>' to select an organisation first.")
-        raise SystemExit(1)
-
-    # Default vendor
-    if not vendor:
-        if any([tenant, client_id, client_secret]):
-            vendor = "microsoft"
-        else:
-            console.print("[red]--vendor is required for platform path.[/red]")
-            console.print("[dim]Example: hb connect --vendor microsoft[/dim]")
-            raise SystemExit(1)
-
-    # Validate service principal flags (all-or-none)
-    sp_flags = [tenant, client_id, client_secret]
-    if any(sp_flags) and not all(sp_flags):
-        console.print(
-            "[red]Service principal auth requires all three: --tenant, --client-id, --client-secret[/red]"
-        )
-        raise SystemExit(1)
-
-    console.print()
-    console.print(
-        Panel(
-            "[bold]AI Service Discovery[/bold]\n\n"
-            f"Vendor:  [bold]{vendor}[/bold]\n"
-            "Mode:    [bold]connect[/bold] (scan + assess + save)\n\n"
-            "This will:\n"
-            "  1. Sign in to your cloud tenant\n"
-            "  2. Scan for AI services [dim](read-only)[/dim]\n"
-            "  3. Assess against 38 security signals\n"
-            "  4. Save results to your AI inventory",
-            border_style="blue",
-        )
-    )
-    console.print()
-
-    if not yes:
-        if not click.confirm("Proceed with discovery?", default=True):
-            console.print("[dim]Cancelled.[/dim]")
-            return
-
-    console.print()
-
-    try:
-        # -- Authenticate ------------------------------------------------------
-        connector = _get_connector(vendor, verbose=False)
-
-        if all(sp_flags):
-            # Service principal auth (non-interactive)
-            console.print("[dim]Authenticating with service principal...[/dim]")
-            try:
-                connector.authenticate_sp(
-                    tenant_id=tenant,
-                    client_id=client_id,
-                    client_secret=client_secret,
-                )
-            except AttributeError:
-                console.print(
-                    "[yellow]Service principal auth not yet supported for this vendor.[/yellow]"
-                )
-                console.print("[dim]Use browser auth instead: hb connect --vendor microsoft[/dim]")
-                raise SystemExit(1)
-            except PermissionError as e:
-                console.print(f"[red]Authentication failed:[/red] {e}")
-                raise SystemExit(1)
-            console.print("[green]Authenticated via service principal.[/green]\n")
-        else:
-            # Browser device-code flow
-            try:
-                connector.authenticate(callback=_display_device_code)
-            except PermissionError as e:
-                _display_auth_error(str(e))
-                raise SystemExit(1)
-            console.print("[green]Signed in successfully.[/green]\n")
-
-        # -- Scan --------------------------------------------------------------
-        with console.status("[bold blue]Scanning for AI services..."):
-            services, metadata = connector.discover()
-
-        if not services:
-            status = metadata.get("status", "unknown")
-            if status == "failed":
-                console.print("[red]Discovery failed.[/red] Could not query any APIs.")
-            else:
-                console.print("[yellow]No AI services found.[/yellow]")
-            return
-
-        console.print(f"Found [bold]{len(services)}[/bold] AI services. Analysing...\n")
-
-        # -- Analyse -----------------------------------------------------------
-        org_id = client.organisation_id
-        payload = {
-            "vendor": vendor,
-            "services": services,
-            "sources_metadata": {
-                "status": metadata.get("status", "unknown"),
-                "apis_queried": metadata.get("apis_queried", []),
-                "apis_failed": metadata.get("apis_failed", []),
-                "permissions_missing": metadata.get("permissions_missing", []),
-            },
-            "topology": metadata.get("topology", {}),
-        }
-
-        with console.status("[bold blue]Analysing discovered services..."):
-            analysis = client.post(
-                f"organisations/{org_id}/analyse",
-                data=payload,
-                include_org=False,
-                timeout=timeout,
-            )
-
-        # -- Overlay evaluator risk onto services for consistent display -------
-        evals = analysis.get("evaluations", [])
-        if evals:
-            eval_risk_map = {
-                ev["service_name"]: ev["risk_level"]
-                for ev in evals
-                if "service_name" in ev and "risk_level" in ev
-            }
-            for svc in analysis.get("services", []):
-                eval_rl = eval_risk_map.get(svc.get("name"))
-                if eval_rl:
-                    svc["risk"] = eval_rl
-
-            new_by_risk = {}
-            for svc in analysis.get("services", []):
-                r = svc.get("risk", "unknown")
-                new_by_risk[r] = new_by_risk.get(r, 0) + 1
-            if "summary" in analysis:
-                analysis["summary"]["by_risk"] = new_by_risk
-
-        # -- Display -----------------------------------------------------------
-        _display_results(analysis, metadata)
-
-        evaluations = analysis.get("evaluations", [])
-        posture_estimate = analysis.get("posture_estimate")
-        if evaluations:
-            _display_evaluations(evaluations, posture_estimate)
-
-        # -- Auto-save (always persist in connect mode) ------------------------
-        nonce = analysis.get("nonce")
-        if nonce:
-            with console.status("[bold blue]Saving to inventory..."):
-                persist_result = client.persist_discovery(nonce)
-            _display_persist_summary(persist_result)
-        else:
-            console.print(
-                "\n[yellow]Cannot persist:[/yellow] server did not return a session token."
-            )
-
-        # -- Next suggestions --------------------------------------------------
-        _print_next(
-            [
-                ("hb inventory", "Browse all assets"),
-                ("hb posture --org", "Full org posture (3 dimensions)"),
-                ("hb report --org", "Org-wide report"),
-                ("hb discover --report", "Export HTML report"),
-            ]
-        )
-
-    except NotAuthenticatedError:
-        console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
-        raise SystemExit(1)
-    except APIError as e:
-        console.print(f"[red]Error:[/red] {e}")
-        raise SystemExit(1)
 
 
 # -- Monitoring recommendation -------------------------------------------------

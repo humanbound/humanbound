@@ -23,9 +23,7 @@ from . import (
     projects,
     providers,
     report,
-    sentinel,
     test,
-    upload_logs,
     webhooks,
 )
 
@@ -50,8 +48,6 @@ __all__ = [
     "api_keys",
     "members",
     "campaigns",
-    "upload_logs",
-    "sentinel",
     "completion",
     "connect",
     "report",

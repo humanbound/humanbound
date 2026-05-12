@@ -82,23 +82,7 @@ class TestHelpSurface:
         MockCls.return_value = _make_authenticated_client()
         result = runner.invoke(cli, ["connect"])
         assert result.exit_code != 0
-        assert "endpoint" in result.output.lower() or "vendor" in result.output.lower()
-
-    @patch(PATCH_CLIENT)
-    def test_mixed_agent_and_platform_flags(self, MockCls):
-        MockCls.return_value = _make_authenticated_client()
-        result = runner.invoke(
-            cli,
-            [
-                "connect",
-                "--endpoint",
-                '{"chat_completion":{}}',
-                "--vendor",
-                "microsoft",
-            ],
-        )
-        assert result.exit_code != 0
-        assert "Cannot combine" in result.output
+        assert "endpoint" in result.output.lower()
 
 
 # ---------------------------------------------------------------------------
