@@ -1,3 +1,7 @@
+---
+description: "Run Humanbound in CI/CD — gate releases on security posture, scope tests to PR branches, and surface regressions in your existing pipeline."
+---
+
 # CI/CD Integration
 
 Integrate Humanbound security testing into your continuous integration and deployment pipelines. When the project has a default integration configured (via `hb connect --endpoint`), CI/CD pipelines only need `hb test` with no endpoint flags.

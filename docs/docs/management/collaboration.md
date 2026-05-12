@@ -1,3 +1,7 @@
+---
+description: "Team workflows for AI agent security — coordinate security leads, developers, and compliance officers around shared projects and findings."
+---
+
 # Team & Collaboration
 
 AI agent security is not a solo activity. The security lead identifies vulnerabilities. Developers fix them. Compliance officers verify the fixes. Humanbound provides the structure to coordinate this workflow — from discovery through resolution.

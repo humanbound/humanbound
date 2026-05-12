@@ -1,3 +1,7 @@
+---
+description: "Scope discovery defines what your agent is allowed to do and what it shouldn't — the engine uses this to generate targeted attacks and judge responses."
+---
+
 # Scope Discovery
 
 The engine needs to know what your agent is allowed to do (permitted intents) and what it shouldn't do (restricted intents) to generate targeted attacks and evaluate responses.

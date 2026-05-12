@@ -1,3 +1,7 @@
+---
+description: "Telemetry enables whitebox agentic testing — Humanbound sees your agent's tool calls, memory operations, and retrieval steps for deeper judge evaluation."
+---
+
 # Telemetry (Whitebox Testing)
 
 Telemetry enables **whitebox agentic testing**. When configured, Humanbound sees inside your agent's reasoning -- tool calls, memory operations, retrieval steps, and resource usage -- giving the judge far richer context than blackbox request/response testing alone.

@@ -1,3 +1,7 @@
+---
+description: "Glossary of key terms used throughout Humanbound — orchestrator, judge, scope, posture, finding, experiment, and more."
+---
+
 # Glossary
 
 Key terms used throughout the Humanbound documentation.

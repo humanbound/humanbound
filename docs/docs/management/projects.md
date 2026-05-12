@@ -1,3 +1,7 @@
+---
+description: "Projects represent AI agents under test — each carries scope, capability declarations, configuration, and the history of every experiment that ran against it."
+---
+
 # Projects
 
 Projects represent AI agents under test. Each project contains configuration, scope definitions, and associated test experiments.

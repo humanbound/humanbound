@@ -1,3 +1,7 @@
+---
+description: "Findings are persistent vulnerability records that track security issues across test cycles — they remember when they first appeared and which regressions reintroduced them."
+---
+
 # Findings
 
 Findings are persistent vulnerability records that track security issues across test cycles. Unlike per-experiment insights (which are snapshots), findings have memory — they know when they first appeared, whether they've been fixed, and whether they've come back.

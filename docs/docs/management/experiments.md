@@ -1,3 +1,7 @@
+---
+description: "Experiments are individual test executions — they generate attack prompts, drive conversations with your agent, and produce security verdicts."
+---
+
 # Experiments
 
 Experiments are individual test executions that generate attack prompts, run conversations with your AI agent, and produce security verdicts.

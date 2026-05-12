@@ -1,3 +1,7 @@
+---
+description: "Manage organisation members and their access levels — invitation flows, role assignment, and removal."
+---
+
 # Team Members
 
 Manage organisation members and their access levels.

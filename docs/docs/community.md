@@ -1,3 +1,8 @@
+---
+description: "Join the Humanbound community for help, feedback, and updates — channels, contributing guide, and how to get in touch."
+title: Community
+---
+
 # Community
 
 Join the Humanbound community to get help, share feedback, and stay up to date with the latest features.

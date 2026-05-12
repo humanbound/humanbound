@@ -1,3 +1,7 @@
+---
+description: "Create and rotate API keys for programmatic access to Humanbound — for CI/CD pipelines, automation scripts, and SIEM forwarders."
+---
+
 # API Keys
 
 Create and manage API keys for programmatic access to Humanbound. Useful for CI/CD pipelines, automation scripts, and integrations.
