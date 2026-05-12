@@ -48,7 +48,6 @@ nav:
     - Orchestrators: local-engine/orchestrators.md
     - Output & Export: local-engine/output-formats.md
   - 💡 Concepts:
-    - AI SecOps [Preview]: concepts/ai-secops.md
     - LLM-as-a-Judge: concepts/llm-as-judge.md
     - Security Posture: concepts/security-posture.md
   - 🔬 Methodology:

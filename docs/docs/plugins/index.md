@@ -4,29 +4,16 @@ description: "Humanbound plugins for AI coding agents — adversarial security t
 
 # Plugins [Preview]
 
-Plugins are the **IDE surface of [AI SecOps](../concepts/ai-secops.md)** —
-the "last mile" where security rules get defined while you code, before
-anything ships. The concept is [**AI TDD**](../reference/glossary.md):
-test-driven definition of an AI agent's security boundaries inside the
-editor (Claude Code, Cursor).
+Humanbound publishes a marketplace of plugins that bring adversarial
+security testing into AI coding agents — currently **Claude Code** and
+**Cursor**. This is [**AI TDD**](../reference/glossary.md): defining an
+agent's security boundaries while you build it.
 
 The plugins live in their own repository:
 [**github.com/humanbound/plugins**](https://github.com/humanbound/plugins).
-This page covers the concept, what's available today, and how to install.
-Operational details (slash commands, configuration, per-host differences)
-live in the repo README and per-plugin documentation.
-
-## Where this fits
-
-| Surface | Artifact | Status |
-|---|---|---|
-| **IDE — AI TDD** (you are here) | This marketplace | Preview (0.1.x) |
-| **CI — campaigns** | [`hb` CLI](../testing/test-command.md) | GA (2.x) |
-| **Runtime — defense** | [`humanbound-firewall`](../defense/firewall.md) | Preview (0.2.x) |
-
-Findings flow between surfaces: rules set in the IDE flow into CI campaigns,
-CI findings flow into runtime firewall rules. See
-[AI SecOps](../concepts/ai-secops.md) for the full discipline.
+This page covers what's available today and how to install. Operational
+details (slash commands, configuration, per-host differences) live in the
+repo README and per-plugin documentation.
 
 ## What is a plugin?
 
