@@ -49,12 +49,13 @@ nav:
     - Output & Export: local-engine/output-formats.md
   - 💡 Concepts:
     - LLM-as-a-Judge: concepts/llm-as-judge.md
+    - Red Coworker: concepts/red-coworker.md
     - Security Posture: concepts/security-posture.md
   - 🔬 Methodology:
     - Adversarial Engine: methodology/adversarial-engine.md
   - 🧪 Testing:
     - Test Command: testing/test-command.md
-    - Red Coworker [Preview]: testing/red-coworker.md
+    - Collaborative Redteam [Preview]: testing/collaborative-redteam.md
     - Log Upload: testing/log-upload.md
     - Assessments: testing/assessments.md
     - Reports: testing/reports.md
