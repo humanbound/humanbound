@@ -1,0 +1,2466 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Glossary of key terms used throughout Humanbound — orchestrator, judge, scope, posture, finding, experiment, and more.">
+      
+      
+      
+        <link rel="canonical" href="https://docs.humanbound.ai/reference/glossary/">
+      
+      
+        <link rel="prev" href="../commands/">
+      
+      
+        <link rel="next" href="../../shell-completion/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../images/favicon.ico">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Glossary - Humanbound</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=DM+Sans:300,300i,400,400i,700,700i%7CDM+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"DM Sans";--md-code-font:"DM Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  
+  <meta property="og:site_name" content="Humanbound" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:image:alt" content="Glossary of key terms used throughout Humanbound — orchestrator, judge, scope, posture, finding, experiment, and more." />
+  <meta name="twitter:image:alt" content="Glossary of key terms used throughout Humanbound — orchestrator, judge, scope, posture, finding, experiment, and more." />
+
+  
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Glossary - Humanbound" />
+<meta property="og:description" content="Glossary of key terms used throughout Humanbound — orchestrator, judge, scope, posture, finding, experiment, and more." />
+<meta property="og:image" content="https://docs.humanbound.ai/assets/images/social/reference/glossary.png" />
+<meta property="og:image:type" content="image/png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:url" content="https://docs.humanbound.ai/reference/glossary/" />
+<meta property="twitter:card" content="summary_large_image" />
+<meta property="twitter:title" content="Glossary - Humanbound" />
+<meta property="twitter:description" content="Glossary of key terms used throughout Humanbound — orchestrator, judge, scope, posture, finding, experiment, and more." />
+<meta property="twitter:image" content="https://docs.humanbound.ai/assets/images/social/reference/glossary.png" />
+</head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#glossary" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="https://humanbound.ai" title="Humanbound" class="md-header__button md-logo" aria-label="Humanbound">
+      
+  <img src="../../images/humanbound_logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Glossary
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/humanbound/humanbound" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Humanbound" class="md-nav__button md-logo" aria-label="Humanbound" data-md-component="logo">
+      
+  <img src="../../images/humanbound_logo.png" alt="logo">
+
+    </a>
+    Humanbound
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/humanbound/humanbound" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🏠 Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🚀 Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    🚀 Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/quick-start/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quick Start
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/agent-config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🖥️ Local Engine
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    🖥️ Local Engine
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../local-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../local-engine/provider-config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Provider Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../local-engine/scope-discovery/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Scope Discovery
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../local-engine/orchestrators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Orchestrators
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../local-engine/output-formats/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Output & Export
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    💡 Concepts
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    💡 Concepts
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/llm-as-judge/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM-as-a-Judge
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/red-coworker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Red Coworker
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/security-posture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security Posture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🔬 Methodology
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    🔬 Methodology
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../methodology/adversarial-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Adversarial Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🧪 Testing
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    🧪 Testing
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../testing/test-command/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Test Command
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../testing/collaborative-redteam/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Collaborative Redteam [Preview]
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../testing/log-upload/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Log Upload
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../testing/assessments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Assessments
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../testing/reports/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reports
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    📋 Compliance
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    📋 Compliance
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compliance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compliance Testing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🛡️ Defense
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    🛡️ Defense
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../defense/firewall/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Firewall
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../defense/guardrails/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guardrails
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🔄 AISecOps
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    🔄 AISecOps
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../aisecops/continuous-monitoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Continuous Monitoring
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../aisecops/findings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Findings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../aisecops/coverage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Test Coverage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ⚙️ Management
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    ⚙️ Management
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../management/projects/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Projects
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../management/experiments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Experiments
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../management/providers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Model Providers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../management/api-keys/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Keys
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../management/collaboration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Team & Collaboration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🔌 Integrations
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    🔌 Integrations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../integrations/telemetry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Telemetry (Whitebox)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../integrations/cicd/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CI/CD
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../integrations/siem/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SIEM
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../integrations/mcp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP Server
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🧩 Plugins [Preview]
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    🧩 Plugins [Preview]
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../plugins/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../deployment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    📦 Deployment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../authentication/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🔐 Authentication
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_15" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_15" id="__nav_15_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    📖 Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_15_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_15">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    📖 Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../commands/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Commands
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#testing-assessment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Testing &amp; Assessment
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scoring-posture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scoring &amp; Posture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#defense" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Defense
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#aisecops-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AISecOps &amp; Operations
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#architecture-distribution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architecture &amp; Distribution
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../shell-completion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🐚 Shell Completion
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../community/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🤝 Community
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="glossary">Glossary</h1>
+<p>Key terms used throughout the Humanbound documentation.</p>
+<hr />
+<h2 id="testing-assessment">Testing &amp; Assessment</h2>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Definition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>AI Red Teaming</strong></td>
+<td>Multi-pivotal deep evaluation where findings from one test immediately inform the next. Not a single scan — includes adaptive attacks, cross-conversation learning, and targeted follow-up tests. Distinct from automated vulnerability scanning, which applies static probes without adaptation.</td>
+</tr>
+<tr>
+<td><strong>Adaptive Attacks</strong></td>
+<td>Testing agents that learn from each conversation and across conversations within the same experiment. If the target reveals a weakness — tool names, internal policies, relaxed boundaries — the attacker pivots its strategy on the fly. On the platform, this knowledge persists across test sessions.</td>
+</tr>
+<tr>
+<td><strong>Experiment</strong></td>
+<td>A single test execution. One orchestrator, one set of attack conversations, one set of verdicts with pass/fail results. Experiments produce logs, insights, and a posture score. Locally, results are saved to <code>.humanbound/results/</code>. On the platform, they're stored in the project and contribute to posture history.</td>
+</tr>
+<tr>
+<td><strong>Orchestrator</strong></td>
+<td>The engine that generates attacks, runs conversations, and evaluates responses. Three built-in: OWASP Agentic (multi-turn adversarial), OWASP Single-Turn (maximum-strength single prompts), and Behavioral QA (intent boundary and response quality testing). Custom orchestrators can be built following the same interface.</td>
+</tr>
+<tr>
+<td><strong>Scope</strong></td>
+<td>The definition of what an AI agent is allowed to do (permitted intents) and what it must not do (restricted intents), along with the business context and risk level. The scope is what the judge evaluates against — without it, the engine cannot distinguish a legitimate response from a boundary violation.</td>
+</tr>
+<tr>
+<td><strong>LLM-as-a-Judge</strong></td>
+<td>Using a large language model to evaluate whether an AI agent's responses violate security boundaries. The judge analyzes the full multi-turn conversation against the agent's scope, permitted intents, and restricted actions. Independent from the agent under test — uses a separate model and provider.</td>
+</tr>
+<tr>
+<td><strong>Verdict</strong></td>
+<td>The judge's output for a single conversation: pass (agent maintained boundaries), fail (agent violated a restriction), or error (test could not complete). Each verdict includes a severity score (0–100), confidence level, category, and explanation.</td>
+</tr>
+<tr>
+<td><strong>Insight</strong></td>
+<td>Per-experiment analysis — what categories failed, at what severity, with what explanation. Produced by both local and platform testing. Lightweight aggregation by fail category with top-N severity selection. Unlike findings, insights are not tracked across experiments.</td>
+</tr>
+<tr>
+<td><strong>Multi-Model Panel Testing</strong></td>
+<td>Using multiple attacker models in parallel rather than a single model per engagement. Different models have different "attack styles" and find unique vulnerabilities — a panel achieves significantly higher coverage than any single model alone. The same principle applies to judge models across compliance domains.</td>
+</tr>
+<tr>
+<td><strong>Telemetry (Whitebox)</strong></td>
+<td>When configured in the bot endpoint, the engine captures the agent's internal actions during testing — tool calls, parameters, return values, resource usage. Enables whitebox analysis: the judge evaluates not just what the agent said, but what it did internally. Critical for detecting excessive agency and tool abuse.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="scoring-posture">Scoring &amp; Posture</h2>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Definition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Posture Score</strong></td>
+<td>A 0–100 score reflecting the overall security health of an AI agent. Computed from the Attack Success Rate (ASR) using worst-case penalty and breach breadth penalty. A higher score means the agent defended against more attacks. Grades: A (90+), B (75–89), C (60–74), D (40–59), F (&lt;40).</td>
+</tr>
+<tr>
+<td><strong>Attack Success Rate (ASR)</strong></td>
+<td>The percentage of adversarial conversations where the attacker succeeded in making the agent violate its restrictions. ASR = failed conversations / total conversations. The inverse of the defense rate.</td>
+</tr>
+<tr>
+<td><strong>Defense Rate</strong></td>
+<td>The percentage of adversarial conversations where the agent successfully maintained its boundaries. Defense rate = 1 - ASR. A defense rate of 0.85 means the agent resisted 85% of attacks.</td>
+</tr>
+<tr>
+<td><strong>Breach Breadth</strong></td>
+<td>The ratio of evaluation categories (threat classes) where at least one attack succeeded, relative to the total categories tested. A breach breadth of 0.3 means 30% of tested categories were breached. Used as a penalty factor in the posture formula — broad weaknesses are penalized more than deep weaknesses in a single category.</td>
+</tr>
+<tr>
+<td><strong>Severity</strong></td>
+<td>A 0–100 score assigned by the judge to each failed conversation, reflecting the magnitude of the violation. Severity labels: critical (75+), high (50–74), medium (25–49), low (1–24), info (0). Higher severity indicates greater business risk.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="defense">Defense</h2>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Definition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Firewall</strong></td>
+<td>The <a href="../../defense/firewall/">Humanbound Firewall</a> (humanbound-firewall) — a multi-tier runtime defense layer that sits between users and the AI agent. Evaluates every incoming message through graduated tiers of protection, from zero-cost input sanitization to full LLM-based contextual analysis. Open source (Apache-2.0).</td>
+</tr>
+<tr>
+<td><strong>Firewall Tiers</strong></td>
+<td>The firewall operates in four tiers. Tier 0: input sanitization (strips invisible characters, zero-width joiners). Tier 1: pre-trained attack detection ensemble (DeBERTa, custom APIs). Tier 2: agent-specific classification trained on your test data. Tier 3: LLM judge for ambiguous cases. Each tier either makes a confident decision or escalates.</td>
+</tr>
+<tr>
+<td><strong>Guardrails</strong></td>
+<td>Security rules exported from test findings via <code>hb guardrails</code>. Capture attack patterns and boundary violations discovered during testing, translated into actionable rules for the firewall. The bridge between testing (what was found) and protection (what to block).</td>
+</tr>
+<tr>
+<td><strong>Tier 2 Classifier</strong></td>
+<td>A SetFit-based model fine-tuned on your specific adversarial test data. Trained via <code>hb firewall train</code>. Detects attacks that generic Tier 1 models miss and fast-tracks legitimate requests without LLM cost. Stored as a portable <code>.hbfw</code> file.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="aisecops-operations">AISecOps &amp; Operations</h2>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Definition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>AI SecOps</strong></td>
+<td>The AI equivalent of DevSecOps — a repeating cycle of testing, monitoring, and protecting AI systems in production. Includes vulnerability detection through automated probing, model improvement through feedback loops, and runtime protection through the firewall. The goal is continuous assurance, not one-off audits.</td>
+</tr>
+<tr>
+<td><strong>AI TDD</strong></td>
+<td>Defining an AI agent's security boundaries inside the editor (Claude Code, Cursor) via the <a href="../../plugins/">Humanbound plugins</a> — rules get set while you code, before anything ships. The IDE surface of AI SecOps.</td>
+</tr>
+<tr>
+<td><strong>Red Coworker</strong></td>
+<td>The collaborative model of the Humanbound platform — the AI adversary acts as a teammate to your security and engineering team. Tests produce findings; findings get assigned to members; webhook events stream every state transition into your SIEM, ticketing system, and chat. See <a href="../../concepts/red-coworker/">Red Coworker concept</a>.</td>
+</tr>
+<tr>
+<td><strong>Continuous Monitoring</strong></td>
+<td>Running automated, ongoing security assessments against AI systems on a configurable schedule. Unlike point-in-time testing where results are static, continuous monitoring tracks how security posture evolves over time and adapts testing based on what it finds. Platform feature — requires login.</td>
+</tr>
+<tr>
+<td><strong>Campaign</strong></td>
+<td>The operational unit of continuous monitoring. A scheduled, recurring test cycle for a specific agent with accumulated intelligence, finding history, and alerting. Each cycle produces a complete assessment with posture score, findings, and coverage metrics.</td>
+</tr>
+<tr>
+<td><strong>Finding</strong></td>
+<td>A persistent vulnerability record tracked across experiments. Findings have a lifecycle: open (detected), fixed (no longer reproduced), regressed (reappeared after being fixed), stale (not triggered in 14+ days). Platform feature — local testing produces insights, not findings.</td>
+</tr>
+<tr>
+<td><strong>Shift Left</strong></td>
+<td>Connecting red teaming findings to continuous monitoring. Instead of a report that sits on a shelf, test findings become the baseline for ongoing security operations — the open-core CLI produces findings locally, <code>hb login</code> connects them to the platform for lifecycle tracking.</td>
+</tr>
+<tr>
+<td><strong>Industry Mapping</strong></td>
+<td>Detecting what industry a target AI operates in (finance, health, defense, etc.) and mapping it to relevant compliance frameworks (DORA, HIPAA, NIS2, ETSI). Customizes both attack scenarios and compliance recommendations to the regulatory environment.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="architecture-distribution">Architecture &amp; Distribution</h2>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Definition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Open Core</strong></td>
+<td>Humanbound's distribution model. The red teaming engine (orchestrators, attack strategies, judge, posture calculation) and the firewall library are open source (Apache 2.0). Continuous monitoring, finding lifecycle, cross-session intelligence, and the managed firewall service (with private detector improvements) are platform-only. Two buyer channels: developers use the open core for fast testing; security teams use the platform for continuous assurance.</td>
+</tr>
+<tr>
+<td><strong>Local Engine</strong></td>
+<td>The in-process test execution engine that runs without login, account, or network calls to Humanbound. Same orchestrators and judge as the platform. Results saved as local files. Provider configured via environment variables or <code>~/.humanbound/config.yaml</code>.</td>
+</tr>
+<tr>
+<td><strong>TestRunner</strong></td>
+<td>The abstraction that makes the CLI agnostic to where tests execute. Two implementations: LocalTestRunner (in-process, results to files) and PlatformTestRunner (via Humanbound API). Login is the only switch — same commands, same output format.</td>
+</tr>
+<tr>
+<td><strong>EngineCallbacks</strong></td>
+<td>The I/O abstraction layer injected into orchestrators. Decouples the engine from any specific execution environment — orchestrators emit logs, completion signals, and error reports through callbacks without knowing whether they're running locally or on the platform.</td>
+</tr>
+<tr>
+<td><strong>Provider</strong></td>
+<td>The LLM service used for attack generation and response evaluation. Supported: OpenAI, Anthropic (Claude), Google (Gemini), Grok, Azure OpenAI, and Ollama (for full local isolation). Configured via <code>HB_PROVIDER</code> and <code>HB_API_KEY</code> environment variables or <code>hb config set</code>.</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+  
+  
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "toc.integrate", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
