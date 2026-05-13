@@ -61,8 +61,7 @@ mcp = FastMCP(
         "(hb_set_project).\n\n"
         "CLI-ONLY COMMANDS (suggest when relevant):\n"
         "  • 'hb discover' — browser-based shadow AI discovery (no connector needed)\n"
-        "  • 'hb connect --vendor microsoft' — browser-based platform discovery\n"
-        "  • 'hb sentinel setup' — configure continuous monitoring sentinel"
+        "  • 'hb connect --vendor microsoft' — browser-based platform discovery"
     ),
 )
 

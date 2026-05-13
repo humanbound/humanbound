@@ -91,19 +91,6 @@ Complete reference of all available commands, organized by category.
 | `hb campaigns terminate` | Stop running campaign |
 | `hb monitor` | Start, pause, or resume continuous monitoring |
 
-## SIEM / Sentinel
-
-| Command | Description |
-|---|---|
-| `hb sentinel` | Show Sentinel setup instructions and available commands |
-| `hb sentinel deploy --rg <name>` | Deploy infrastructure, create webhook, set signing secret, and verify -- fully end-to-end |
-| `hb sentinel deploy --rg <name> --no-connect` | Deploy infrastructure only, skip webhook setup |
-| `hb sentinel connect --url <url>` | Register webhook manually (only needed with --no-connect) |
-| `hb sentinel test` | Send a test event to verify connectivity |
-| `hb sentinel status` | Check connector health and recent deliveries |
-| `hb sentinel sync` | Replay historical events to Sentinel for backfill |
-| `hb sentinel disconnect` | Remove the Sentinel webhook and local configuration |
-
 ## Configuration
 
 | Command | Description |
