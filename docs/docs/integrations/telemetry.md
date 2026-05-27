@@ -1,5 +1,8 @@
 ---
 description: "Telemetry enables whitebox agentic testing — Humanbound sees your agent's tool calls, memory operations, and retrieval steps for deeper judge evaluation."
+faq:
+  - q: How do I enable telemetry?
+    a: Add a `telemetry` block to your agent config JSON alongside `chat_completion` and `thread_init`. If the block is present, telemetry is enabled — no separate flag is needed. Specify the observability platform `format`, the `endpoint` URL, and auth headers.
 ---
 
 # Telemetry (Whitebox Testing)

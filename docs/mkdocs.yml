@@ -12,6 +12,9 @@ plugins:
         font_family: DM Sans
         logo: docs/images/social_logo.png
 
+hooks:
+  - hooks/schema.py
+
 theme:
   name: material
   custom_dir: overrides

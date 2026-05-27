@@ -1,5 +1,10 @@
 ---
 description: "Scope discovery defines what your agent is allowed to do and what it shouldn't — the engine uses this to generate targeted attacks and judge responses."
+faq:
+  - q: What scope sources does Humanbound support?
+    a: Four sources are supported in order of precision — an explicit scope YAML or JSON file (`--scope`), a repository scan that extracts system prompts and tool definitions (`--repo`), a system prompt file (`--prompt`), and auto-probe which sends probing messages to infer scope from the agent's responses.
+  - q: What is the recommended way to provide scope?
+    a: An explicit scope file (`--scope ./scope.yaml`) gives the most precision. For convenience, `--repo .` scans your codebase for system prompts, tool definitions, and README context. You can combine `--repo` and `--prompt` for the richest extraction.
 ---
 
 # Scope Discovery

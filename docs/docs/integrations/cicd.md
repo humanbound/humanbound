@@ -1,5 +1,10 @@
 ---
 description: "Run Humanbound in CI/CD — gate releases on security posture, scope tests to PR branches, and surface regressions in your existing pipeline."
+faq:
+  - q: What does the --fail-on flag do in CI/CD?
+    a: The `--fail-on` flag causes the `hb test` command to exit with a non-zero status code when vulnerabilities at or above the specified severity are found. Thresholds are `critical`, `high`, `medium`, `low`, and `any`, allowing you to configure how strict your security gate is.
+  - q: What does --wait do and why should I use it in CI/CD?
+    a: "`--wait` tells Humanbound to block until the test run completes before the command exits. Always use `--wait` in CI/CD pipelines to ensure results are available before the job finishes or artifacts are exported."
 ---
 
 # CI/CD Integration

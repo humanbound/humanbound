@@ -73,3 +73,7 @@ relay/
 # Internal plans (not for distribution)
 docs/plans/
 .humanbound/
+
+# MkDocs build artifacts
+docs/site/
+docs/.cache/

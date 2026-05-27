@@ -1,5 +1,14 @@
 ---
 description: "From install to your first adversarial test in minutes — local or platform mode, with a posture score at the end."
+faq:
+  - q: How do I run tests without creating an account?
+    a: Use local mode — configure an LLM provider via environment variables or `hb config set`, prepare a `bot-config.json` describing your agent, then run `hb test --endpoint ./bot-config.json --wait`. No login required.
+  - q: How do I view my test results?
+    a: Run `hb posture` for a security score (0–100, A–F), `hb logs` for conversation logs, `hb logs --verdict fail` to filter failures, or `hb report -o report.html` for a full HTML report.
+  - q: What does the --fail-on flag do?
+    a: "`--fail-on` causes `hb test` to exit with a non-zero status code when findings of the specified severity (critical, high, medium, low, or any) are found, making it suitable for CI/CD quality gates."
+  - q: How do I run tests in CI/CD?
+    a: Install humanbound with `pip install humanbound`, then run `hb test --endpoint ./bot-config.json --repo . --wait --fail-on high`, passing your provider credentials as environment variables such as `HB_PROVIDER` and `HB_API_KEY`.
 ---
 
 # Quick Start

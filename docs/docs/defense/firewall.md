@@ -1,5 +1,8 @@
 ---
 description: "Humanbound Firewall — runtime defenses for LLM agents that block prompt injection and policy violations before they reach the agent in production."
+faq:
+  - q: How is the Tier 2 classifier trained?
+    a: Tier 2 is trained from your Humanbound adversarial and QA test logs — failed adversarial conversations supply attack examples and passed QA conversations supply benign examples. Run `hb firewall train` after accumulating test data to produce a `.hbfw` model file.
 ---
 
 # Firewall
