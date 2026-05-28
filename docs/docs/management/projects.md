@@ -1,10 +1,18 @@
 ---
 description: "Projects represent AI agents under test — each carries scope, capability declarations, configuration, and the history of every experiment that ran against it."
+keywords:
+  - projects
+  - hb projects command
+  - AI agent projects
+  - project status
+  - active project
+  - project management
+  - project report
 ---
 
 # Projects
 
-Projects represent AI agents under test. Each project contains configuration, scope definitions, and associated test experiments.
+A Humanbound project represents one AI agent under test — its scope definition, endpoint configuration, and the full history of experiments, findings, and posture scores produced against it. The `hb projects` commands list and switch between projects, show project details and current status (running experiments, posture grade, monitoring state), update name or description, generate HTML reports, and delete a project along with all its associated experiments, logs, and findings.
 
 ## List Projects
 

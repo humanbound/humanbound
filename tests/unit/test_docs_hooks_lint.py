@@ -162,21 +162,19 @@ class TestCheckKeywords:
             file=SimpleNamespace(src_path="foo.md"),
         )
 
-    def test_list_passes(self, warn_records):
-        lint._check_keywords(self._page(["a", "b"]))
-        assert not warn_records
+    def test_list_passes(self):
+        lint._check_keywords(self._page(["a", "b"]))  # no exception
 
-    def test_string_passes(self, warn_records):
-        lint._check_keywords(self._page("a, b"))
-        assert not warn_records
+    def test_string_passes(self):
+        lint._check_keywords(self._page("a, b"))  # no exception
 
-    def test_missing_warns(self, warn_records):
-        lint._check_keywords(self._page(None))
-        assert any("missing frontmatter 'keywords:'" in r.getMessage() for r in warn_records)
+    def test_missing_raises(self):
+        with pytest.raises(PluginError, match="missing required frontmatter 'keywords:'"):
+            lint._check_keywords(self._page(None))
 
-    def test_empty_list_warns(self, warn_records):
-        lint._check_keywords(self._page([]))
-        assert any("missing frontmatter 'keywords:'" in r.getMessage() for r in warn_records)
+    def test_empty_list_raises(self):
+        with pytest.raises(PluginError, match="missing required frontmatter"):
+            lint._check_keywords(self._page([]))
 
 
 class TestCheckLedeQuality:

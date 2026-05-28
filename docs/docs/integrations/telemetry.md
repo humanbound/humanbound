@@ -1,5 +1,14 @@
 ---
 description: "Telemetry enables whitebox agentic testing — Humanbound sees your agent's tool calls, memory operations, and retrieval steps for deeper judge evaluation."
+keywords:
+  - whitebox agentic testing
+  - telemetry integration
+  - LangFuse integration
+  - LangSmith integration
+  - observability platforms
+  - tool call tracing
+  - agent telemetry config
+  - session ID alignment
 faq:
   - q: How do I enable telemetry?
     a: Add a `telemetry` block to your agent config JSON alongside `chat_completion` and `thread_init`. If the block is present, telemetry is enabled — no separate flag is needed. Specify the observability platform `format`, the `endpoint` URL, and auth headers.
@@ -348,3 +357,5 @@ Ensure your agent passes the same session ID to both Humanbound (via `thread_ini
 
 **Wrong credentials:**
 For LangFuse, the Basic auth header uses `public_key:secret_key` base64-encoded. Ensure the keys belong to the same LangFuse project your agent logs to.
+
+<!-- faq -->

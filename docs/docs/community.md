@@ -1,11 +1,18 @@
 ---
 description: "Join the Humanbound community for help, feedback, and updates — channels, contributing guide, and how to get in touch."
 title: Community
+keywords:
+  - humanbound community
+  - humanbound Discord
+  - humanbound GitHub
+  - report issues
+  - humanbound support
+  - community channels
 ---
 
 # Community
 
-Join the Humanbound community to get help, share feedback, and stay up to date with the latest features.
+Four channels for help, feedback, and updates: the Humanbound Discord server for community discussion and early access announcements; GitHub for issues, feature requests, and the open-source Humanbound Firewall and CLI; the issue tracker for bug reports against the main `humanbound` repo; and enterprise support at support@humanbound.ai. Pick the channel that matches what you need.
 
 <div class="grid cards" markdown>
 

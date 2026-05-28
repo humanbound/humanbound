@@ -1,5 +1,14 @@
 ---
 description: "Findings are persistent vulnerability records that track security issues across test cycles — they remember when they first appeared and which regressions reintroduced them."
+keywords:
+  - findings management
+  - finding lifecycle
+  - vulnerability tracking
+  - finding delegation
+  - regression detection
+  - hb findings command
+  - finding webhook events
+  - severity weighted penalties
 ---
 
 # Findings

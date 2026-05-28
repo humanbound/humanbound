@@ -1,5 +1,13 @@
 ---
 description: "Create and rotate API keys for programmatic access to Humanbound — for CI/CD pipelines, automation scripts, and SIEM forwarders."
+keywords:
+  - API keys
+  - hb api-keys command
+  - API key scopes
+  - programmatic access
+  - API key rotation
+  - CI/CD authentication
+  - read scope API key
 faq:
   - q: How do I create a Humanbound API key?
     a: Run `hb api-keys create --name "CI Key"` to create a key. The key value is shown only once during creation — store it securely immediately, because it cannot be retrieved again.
@@ -13,7 +21,7 @@ faq:
 
 # API Keys
 
-Create and manage API keys for programmatic access to Humanbound. Useful for CI/CD pipelines, automation scripts, and integrations.
+The `hb api-keys` commands create and manage API keys for programmatic access to the Humanbound platform — the credential CI/CD pipelines, automation scripts, and SIEM forwarders use to authenticate. Keys are issued with one of three scopes (admin, write, read) and shown only once at creation. The commands cover create, list, update (rename, activate, deactivate), and revoke.
 
 ## List API Keys
 
@@ -62,3 +70,5 @@ hb api-keys delete <id> --force
 - **admin**: Full access including user management and sensitive operations
 - **write**: Create and modify projects, run tests, update findings
 - **read**: View-only access to projects, experiments, and results
+
+<!-- faq -->

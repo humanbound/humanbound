@@ -1,5 +1,13 @@
 ---
 description: "Red Coworker — the collaborative model of the Humanbound platform. The AI adversary acts as a teammate; findings flow to your team and your existing tools."
+keywords:
+  - red coworker
+  - AI redteam collaboration
+  - team collaboration
+  - findings workflow
+  - team adversarial testing
+  - SIEM integration
+  - webhook events
 ---
 
 # Red Coworker

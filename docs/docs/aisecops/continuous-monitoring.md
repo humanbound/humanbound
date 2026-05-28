@@ -1,5 +1,14 @@
 ---
 description: "Continuous monitoring runs scheduled adversarial tests against production agents — surface model drift and security regressions before users do."
+keywords:
+  - continuous monitoring
+  - scheduled AI testing
+  - monitoring campaigns
+  - hb monitor command
+  - posture history
+  - finding regression tracking
+  - cross-session leakage detection
+  - autonomous vulnerability discovery
 ---
 
 # Continuous Monitoring

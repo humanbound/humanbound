@@ -1,10 +1,19 @@
 ---
 description: "Configure the LLM providers Humanbound uses for attack generation, judging, and evaluations — credentials, default selection, and per-experiment overrides."
+keywords:
+  - LLM providers
+  - hb providers command
+  - model provider configuration
+  - OpenAI provider
+  - Claude provider
+  - Azure OpenAI configuration
+  - default provider
+  - custom LLM provider
 ---
 
 # Model Providers
 
-Configure LLM providers used for generating attacks, running security judges, and performing evaluations.
+The `hb providers` commands manage the LLM providers Humanbound uses to generate adversarial attacks, run security judges, and produce evaluations. Six providers are supported out of the box (OpenAI, Anthropic Claude, Google Gemini, Azure OpenAI, Grok, and a Custom OpenAI-compatible option), plus an interactive setup flow. One provider can be marked as the default; experiments can override per-run with `--provider-id`.
 
 ## List Providers
 

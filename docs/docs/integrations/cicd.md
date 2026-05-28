@@ -1,5 +1,14 @@
 ---
 description: "Run Humanbound in CI/CD — gate releases on security posture, scope tests to PR branches, and surface regressions in your existing pipeline."
+keywords:
+  - CI/CD security testing
+  - GitHub Actions integration
+  - GitLab CI integration
+  - --fail-on threshold
+  - security gate
+  - automated security tests
+  - pipeline integration
+  - --wait CI flag
 faq:
   - q: What does the --fail-on flag do in CI/CD?
     a: The `--fail-on` flag causes the `hb test` command to exit with a non-zero status code when vulnerabilities at or above the specified severity are found. Thresholds are `critical`, `high`, `medium`, `low`, and `any`, allowing you to configure how strict your security gate is.
@@ -78,3 +87,5 @@ security-test:
 
 !!! info "Tip"
     Always use `--wait` in CI/CD pipelines to ensure the test completes before the job finishes. Use `--fail-on` to enforce security quality gates.
+
+<!-- faq -->

@@ -1,5 +1,13 @@
 ---
 description: "Install Humanbound — pip install, optional local engine extras, and quick paths for both account-less local mode and the full platform."
+keywords:
+  - humanbound installation
+  - pip install humanbound
+  - humanbound CLI setup
+  - humanbound extras
+  - local engine installation
+  - humanbound ollama
+  - humanbound MCP server
 faq:
   - q: What are the system requirements for Humanbound?
     a: Humanbound requires Python 3.10 or higher, an LLM provider API key (OpenAI, Anthropic, Azure, etc.) or ollama for full local isolation, and an AI agent endpoint to test against.
@@ -77,3 +85,5 @@ hb test --endpoint ./bot-config.json --repo . --wait
 ```
 
 See [Quick Start](quick-start.md) for the full walkthrough.
+
+<!-- faq -->

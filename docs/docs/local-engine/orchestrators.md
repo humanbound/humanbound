@@ -1,10 +1,19 @@
 ---
 description: "Orchestrators generate attacks, run conversations, and evaluate responses — Humanbound ships three built-in engines and lets you author your own."
+keywords:
+  - test orchestrator
+  - OWASP agentic testing
+  - OWASP single-turn
+  - behavioral QA testing
+  - custom orchestrator
+  - orchestrator SDK
+  - test levels
+  - custom bot integration
 ---
 
 # Orchestrators
 
-Orchestrators are the test engines that generate attacks, run conversations, and evaluate responses. Humanbound ships with three built-in orchestrators. You can also build your own.
+An orchestrator is the test engine that generates attack prompts, drives the conversation against your agent, and evaluates responses. Humanbound ships three built-in orchestrators — OWASP Agentic (multi-turn adversarial, the default), OWASP Single-Turn (high-volume single-prompt attacks), and Behavioral QA (intent boundary and response quality testing) — each supporting three test levels (unit, system, acceptance). The sections below cover built-in selection, test depth, and the SDK for authoring custom orchestrators.
 
 ## Built-In Orchestrators
 

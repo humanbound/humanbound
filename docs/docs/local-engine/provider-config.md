@@ -1,5 +1,14 @@
 ---
 description: "Configure the LLM provider the local engine uses for attack generation and response evaluation — bring your own API key."
+keywords:
+  - LLM provider configuration
+  - HB_PROVIDER
+  - HB_API_KEY
+  - ollama setup
+  - Azure OpenAI configuration
+  - humanbound providers
+  - provider precedence
+  - hb config command
 faq:
   - q: Which LLM providers does Humanbound support?
     a: Humanbound supports OpenAI, Anthropic (Claude), Google (Gemini), Azure OpenAI, Grok (xAI), and Ollama. Ollama requires no API key and runs fully locally.
@@ -13,7 +22,7 @@ faq:
 
 # Provider Configuration
 
-The local engine needs an LLM provider for attack generation and response evaluation. You bring your own API key.
+The local engine needs an LLM provider for attack generation and response evaluation, and you bring your own API key. Provider settings resolve in order — CLI flags override environment variables, which override the config file at `~/.humanbound/config.yaml`. Six providers are supported (OpenAI, Anthropic Claude, Google Gemini, Azure OpenAI, Grok, and Ollama for fully-local isolation); Azure requires a full endpoint URL with `?api-version=`.
 
 ## Configuration Methods
 
@@ -98,3 +107,5 @@ hb test --wait
 ```
 
 You can still use your own provider on the platform by adding it via `hb providers add`.
+
+<!-- faq -->

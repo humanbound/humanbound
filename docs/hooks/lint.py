@@ -141,7 +141,11 @@ def _check_keywords(page) -> None:
         return
     if isinstance(raw, str) and raw.strip():
         return
-    warn_log.warning("page '%s' is missing frontmatter 'keywords:' — add for SEO/GEO.", page.file.src_path)
+    raise PluginError(
+        f"lint: page '{page.file.src_path}' is missing required frontmatter 'keywords:'. "
+        "Every page must have at least one keyword for SEO/GEO. "
+        "Add a `keywords:` list to the page's frontmatter."
+    )
 
 
 def _check_lede_quality(markdown: str, page) -> None:

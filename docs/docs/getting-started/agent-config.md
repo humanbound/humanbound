@@ -1,5 +1,14 @@
 ---
 description: "Define the JSON endpoint config Humanbound uses to talk to your agent — HTTP/WS, headers, payload templating, streaming, response extraction."
+keywords:
+  - agent configuration
+  - bot-config.json
+  - humanbound endpoint config
+  - agent integration
+  - chat completion endpoint
+  - telemetry configuration
+  - whitebox agentic testing
+  - $PROMPT placeholder
 ---
 
 # Agent Configuration File

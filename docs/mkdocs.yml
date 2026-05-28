@@ -17,6 +17,8 @@ hooks:
   - hooks/schema.py
   - hooks/llms_txt.py
   - hooks/lint.py
+  - hooks/faq_render.py
+  - hooks/glossary_autolink.py
 
 theme:
   name: material

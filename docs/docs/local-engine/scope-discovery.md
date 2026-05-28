@@ -1,5 +1,14 @@
 ---
 description: "Scope discovery defines what your agent is allowed to do and what it shouldn't — the engine uses this to generate targeted attacks and judge responses."
+keywords:
+  - scope discovery
+  - agent scope definition
+  - permitted intents
+  - restricted intents
+  - scope file
+  - repository scan
+  - auto-probe scope
+  - tool definitions extraction
 faq:
   - q: What scope sources does Humanbound support?
     a: Four sources are supported in order of precision — an explicit scope YAML or JSON file (`--scope`), a repository scan that extracts system prompts and tool definitions (`--repo`), a system prompt file (`--prompt`), and auto-probe which sends probing messages to infer scope from the agent's responses.
@@ -9,7 +18,7 @@ faq:
 
 # Scope Discovery
 
-The engine needs to know what your agent is allowed to do (permitted intents) and what it shouldn't do (restricted intents) to generate targeted attacks and evaluate responses.
+The engine needs to know what your agent is allowed to do (permitted intents) and what it shouldn't do (restricted intents) to generate targeted attacks and evaluate responses. Four scope sources are supported in order of precision — an explicit YAML or JSON file (`--scope`), a repository scan that extracts the system prompt and tool definitions (`--repo`), a system prompt file (`--prompt`), or auto-probe inferred from the agent's own responses.
 
 ## Scope Sources
 
@@ -82,3 +91,5 @@ The engine sends probing messages to your bot and infers scope from its response
     ```bash
     hb test --endpoint ./config.json --repo . --prompt ./system_prompt.txt --wait
     ```
+
+<!-- faq -->

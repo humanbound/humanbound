@@ -1,5 +1,14 @@
 ---
 description: "From install to your first adversarial test in minutes — local or platform mode, with a posture score at the end."
+keywords:
+  - humanbound quick start
+  - first adversarial test
+  - hb test command
+  - local mode testing
+  - platform mode testing
+  - posture score
+  - bot-config.json
+  - CI/CD security testing
 faq:
   - q: How do I run tests without creating an account?
     a: Use local mode — configure an LLM provider via environment variables or `hb config set`, prepare a `bot-config.json` describing your agent, then run `hb test --endpoint ./bot-config.json --wait`. No login required.
@@ -13,7 +22,7 @@ faq:
 
 # Quick Start
 
-Get from installation to your first security test in minutes.
+This guide walks through your first Humanbound security test end-to-end, in both local mode (no account, your own LLM provider) and platform mode (with login, persistent findings, and continuous monitoring). The local path covers configuring a provider, writing a `bot-config.json` for your agent, running `hb test`, and viewing the resulting posture score; the platform path covers `hb login`, `hb connect`, and `hb monitor enable`.
 
 ## Local Testing (No Account Required)
 
@@ -197,3 +206,5 @@ hb report -o report.html  # Full report
 ```bash
 hb monitor enable --schedule daily    # Requires Pro
 ```
+
+<!-- faq -->

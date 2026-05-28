@@ -1,5 +1,14 @@
 ---
 description: "Stream security events to your SIEM — findings, posture changes, and drift detections delivered in real time as HMAC-signed webhook events."
+keywords:
+  - SIEM integration
+  - webhook events
+  - HMAC signed webhooks
+  - SOC integration
+  - Splunk integration
+  - security event streaming
+  - webhook signature verification
+  - event types
 ---
 
 # SIEM Integration

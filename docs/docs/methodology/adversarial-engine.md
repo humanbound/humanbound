@@ -1,5 +1,14 @@
 ---
 description: "Humanbound's adversarial engine generates multi-turn attacks in real time, adapting strategy and escalating pressure as the agent responds."
+keywords:
+  - adversarial testing engine
+  - multi-turn attacks
+  - score-guided escalation
+  - attack techniques
+  - OWASP LLM security
+  - agentic security testing
+  - cross-conversation intelligence
+  - behavioral QA engine
 ---
 
 # Adversarial Testing Engine
