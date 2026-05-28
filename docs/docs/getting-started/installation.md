@@ -15,6 +15,8 @@ faq:
 
 # Installation
 
+Install Humanbound with `pip install humanbound`, optionally adding extras for the local testing engine, firewall training, or MCP server. The sections below walk through the install command, the available extras, system requirements, and running your first test, with pointers to provider configuration and the Quick Start guide.
+
 ## Install
 
 ```bash

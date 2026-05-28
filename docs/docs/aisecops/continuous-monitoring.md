@@ -4,6 +4,8 @@ description: "Continuous monitoring runs scheduled adversarial tests against pro
 
 # Continuous Monitoring
 
+Continuous monitoring runs your Humanbound adversarial test suite against your agent on a schedule, surfacing model drift, prompt regressions, and new vulnerabilities before users encounter them. The sections below cover why point-in-time testing is insufficient for AI agents and how Humanbound treats security as an ongoing signal rather than a one-time snapshot.
+
 ## The Problem: Point-in-Time Testing Is Not Enough
 
 AI agents are non-deterministic systems built on foundation models that evolve independently of the applications they power. A security assessment conducted today reflects the agent's behavior at that moment — under that specific model version, system prompt, tool configuration, and conversation context. Any of these variables can change without warning, and when they do, previously secure behavior may degrade.

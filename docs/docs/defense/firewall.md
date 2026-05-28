@@ -7,6 +7,8 @@ faq:
 
 # Firewall
 
+The Humanbound Firewall is a runtime defense layer for LLM agents that inspects every user message and blocks prompt injection, policy violations, and out-of-scope requests before they reach the agent. The sections below cover the multi-tier evaluation architecture, training the Tier 2 classifier from your test logs, and installing the open-source library and integrating it with your agent.
+
 ## The Challenge: Runtime Protection for AI Agents
 
 Testing identifies vulnerabilities. Monitoring tracks them over time. But neither prevents attacks from reaching the agent in production. The gap between "knowing an agent is vulnerable" and "preventing exploitation" requires a runtime defense layer — a firewall purpose-built for the semantics of natural language interaction.

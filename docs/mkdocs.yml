@@ -2,6 +2,7 @@ site_name: Humanbound
 site_url: https://docs.humanbound.ai
 site_description: Humanbound documentation — AI security testing, continuous monitoring, and defense for LLM agents.
 repo_url: https://github.com/humanbound/humanbound
+strict: true
 
 plugins:
   - search
@@ -14,6 +15,8 @@ plugins:
 
 hooks:
   - hooks/schema.py
+  - hooks/llms_txt.py
+  - hooks/lint.py
 
 theme:
   name: material

@@ -4,6 +4,8 @@ description: "Humanbound's adversarial engine generates multi-turn attacks in re
 
 # Adversarial Testing Engine
 
+Humanbound's adversarial engine generates multi-turn attacks against your agent in real time — each message is crafted in response to what the agent said in the previous turn, with the engine adapting strategy and escalating pressure as the conversation develops. The sections below explain the attack lifecycle, the strategies the engine uses, and how it scores progress toward an exploit.
+
 ## How Attacks Work
 
 Humanbound's adversarial engine doesn't use static prompt lists. It generates multi-turn conversations where each message is crafted in real-time based on the agent's responses — adapting strategy, escalating pressure, and pivoting when blocked.
