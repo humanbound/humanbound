@@ -3,9 +3,8 @@
 import logging
 from types import SimpleNamespace
 
-import pytest
-
 import faq_render
+import pytest
 
 
 @pytest.fixture
@@ -32,9 +31,7 @@ def _page(src_path="foo.md", faq=None):
 
 class TestNormalizeFaqItems:
     def test_valid_items(self):
-        items = faq_render._normalize_faq_items(
-            [{"q": "What?", "a": "Answer."}], "foo.md"
-        )
+        items = faq_render._normalize_faq_items([{"q": "What?", "a": "Answer."}], "foo.md")
         assert items == [{"q": "What?", "a": "Answer."}]
 
     def test_empty_list(self):
@@ -56,16 +53,12 @@ class TestNormalizeFaqItems:
         assert any("missing q/a" in r.getMessage() for r in warn_records)
 
     def test_non_dict_item_logs_and_skips(self, warn_records):
-        items = faq_render._normalize_faq_items(
-            [{"q": "ok", "a": "ok"}, "garbage"], "foo.md"
-        )
+        items = faq_render._normalize_faq_items([{"q": "ok", "a": "ok"}, "garbage"], "foo.md")
         assert len(items) == 1
         assert any("not a mapping" in r.getMessage() for r in warn_records)
 
     def test_strips_whitespace(self):
-        items = faq_render._normalize_faq_items(
-            [{"q": "  What?  ", "a": "  Answer.  "}], "foo.md"
-        )
+        items = faq_render._normalize_faq_items([{"q": "  What?  ", "a": "  Answer.  "}], "foo.md")
         assert items == [{"q": "What?", "a": "Answer."}]
 
 
@@ -77,10 +70,12 @@ class TestRenderFaqBlock:
         assert "    X is Y." in block
 
     def test_multiple_items(self):
-        block = faq_render._render_faq_block([
-            {"q": "Q1", "a": "A1"},
-            {"q": "Q2", "a": "A2"},
-        ])
+        block = faq_render._render_faq_block(
+            [
+                {"q": "Q1", "a": "A1"},
+                {"q": "Q2", "a": "A2"},
+            ]
+        )
         assert block.count('??? question "') == 2
 
     def test_escapes_quotes_in_question(self):

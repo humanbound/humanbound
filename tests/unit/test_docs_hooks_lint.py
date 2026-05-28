@@ -3,10 +3,9 @@
 import logging
 from types import SimpleNamespace
 
+import lint
 import pytest
 from mkdocs.exceptions import PluginError
-
-import lint
 
 
 @pytest.fixture
@@ -152,7 +151,9 @@ class TestCheckFirstBlock:
             lint._check_first_block("# Title\n\n!!! note\n    body", self._page())
 
     def test_lint_skip_bypasses(self):
-        lint._check_first_block("# Title\n\n## Heading first", self._page(lint_skip=["first_paragraph"]))
+        lint._check_first_block(
+            "# Title\n\n## Heading first", self._page(lint_skip=["first_paragraph"])
+        )
 
 
 class TestCheckKeywords:

@@ -3,9 +3,8 @@
 import re
 from types import SimpleNamespace
 
-import pytest
-
 import glossary_autolink
+import pytest
 
 
 @pytest.fixture(autouse=True)
@@ -49,21 +48,14 @@ class TestParseGlossary:
         }
 
     def test_tracks_section_changes(self):
-        content = (
-            "## Section A\n"
-            "| **TermA** | Def. |\n"
-            "## Section B\n"
-            "| **TermB** | Def. |\n"
-        )
+        content = "## Section A\n| **TermA** | Def. |\n## Section B\n| **TermB** | Def. |\n"
         terms = glossary_autolink._parse_glossary(content)
         assert terms["TermA"] == "section-a"
         assert terms["TermB"] == "section-b"
 
     def test_skips_rows_before_first_section(self):
         content = (
-            "| **Orphan** | Before any section. |\n"
-            "## Real Section\n"
-            "| **Kept** | After section. |\n"
+            "| **Orphan** | Before any section. |\n## Real Section\n| **Kept** | After section. |\n"
         )
         terms = glossary_autolink._parse_glossary(content)
         assert "Orphan" not in terms
@@ -71,10 +63,7 @@ class TestParseGlossary:
 
     def test_first_occurrence_wins_on_duplicate(self):
         content = (
-            "## Section A\n"
-            "| **Term** | First def. |\n"
-            "## Section B\n"
-            "| **Term** | Second def. |\n"
+            "## Section A\n| **Term** | First def. |\n## Section B\n| **Term** | Second def. |\n"
         )
         terms = glossary_autolink._parse_glossary(content)
         assert terms["Term"] == "section-a"

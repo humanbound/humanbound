@@ -3,7 +3,6 @@
 from types import SimpleNamespace
 
 import pytest
-
 import schema  # docs/hooks/schema.py via conftest sys.path injection
 
 
@@ -78,7 +77,9 @@ class TestBuildOrganization:
 
 class TestBuildWebsite:
     def test_uses_config_fields(self):
-        config = SimpleNamespace(site_url="https://docs.humanbound.ai/", site_description="Test description.")
+        config = SimpleNamespace(
+            site_url="https://docs.humanbound.ai/", site_description="Test description."
+        )
         site = schema.build_website(config)
         assert site["@type"] == "WebSite"
         assert site["@id"] == schema.DOCS_WEBSITE_ID
@@ -102,11 +103,17 @@ class TestBuildFaqPage:
         assert result["@type"] == "FAQPage"
         assert result["@id"] == "https://docs.humanbound.ai/foo/#faq"
         assert result["mainEntity"] == [
-            {"@type": "Question", "name": "What is X?", "acceptedAnswer": {"@type": "Answer", "text": "X is Y."}}
+            {
+                "@type": "Question",
+                "name": "What is X?",
+                "acceptedAnswer": {"@type": "Answer", "text": "X is Y."},
+            }
         ]
 
     def test_missing_faq_returns_none(self):
-        page = SimpleNamespace(meta={}, canonical_url="...", file=SimpleNamespace(src_path="foo.md"))
+        page = SimpleNamespace(
+            meta={}, canonical_url="...", file=SimpleNamespace(src_path="foo.md")
+        )
         assert schema.build_faqpage(page) is None
 
     def test_empty_faq_returns_none(self):
@@ -127,7 +134,12 @@ class TestBuildFaqPage:
 
 class TestBuildTechArticle:
     def test_canonical_url_required(self):
-        page = SimpleNamespace(canonical_url="", meta={}, title="T", file=SimpleNamespace(src_path="foo.md", abs_src_path="/tmp/foo.md"))
+        page = SimpleNamespace(
+            canonical_url="",
+            meta={},
+            title="T",
+            file=SimpleNamespace(src_path="foo.md", abs_src_path="/tmp/foo.md"),
+        )
         config = SimpleNamespace(site_description="Site desc")
         with pytest.raises(RuntimeError, match="canonical_url is empty"):
             schema.build_techarticle(page, config)
@@ -154,7 +166,12 @@ class TestBuildTechArticle:
     def test_optional_fields_included_when_present(self):
         page = SimpleNamespace(
             canonical_url="https://docs.humanbound.ai/foo/",
-            meta={"keywords": ["a", "b"], "author": "Jane", "sameAs": ["https://x.com"], "description": "Page desc"},
+            meta={
+                "keywords": ["a", "b"],
+                "author": "Jane",
+                "sameAs": ["https://x.com"],
+                "description": "Page desc",
+            },
             title="Foo",
             file=SimpleNamespace(src_path="foo.md", abs_src_path="/tmp/foo.md"),
         )

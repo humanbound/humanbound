@@ -46,7 +46,9 @@ def _description(page: Page, site_description: str) -> str:
     return desc.strip() if isinstance(desc, str) and desc.strip() else site_description
 
 
-def _format_page_line(page: Page, site_url: str, site_description: str, title_prefix: str = "") -> str:
+def _format_page_line(
+    page: Page, site_url: str, site_description: str, title_prefix: str = ""
+) -> str:
     title = _strip_emoji(page.title) if page.title else page.file.src_path
     if title_prefix:
         title = f"{_strip_emoji(title_prefix)}: {title}"
@@ -65,7 +67,11 @@ def _emit_section(section: Section, site_url: str, site_description: str, lines:
         elif isinstance(child, Section):
             for grandchild in child.children:
                 if isinstance(grandchild, Page):
-                    lines.append(_format_page_line(grandchild, site_url, site_description, title_prefix=child.title))
+                    lines.append(
+                        _format_page_line(
+                            grandchild, site_url, site_description, title_prefix=child.title
+                        )
+                    )
     lines.append("")
 
 

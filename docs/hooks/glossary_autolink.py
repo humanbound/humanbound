@@ -94,11 +94,11 @@ def _load_glossary(config) -> dict[str, str]:
 
 # Patterns within a text line that the autolink must NOT touch.
 _SKIP_PATTERN = re.compile(
-    r"`[^`\n]*`"                    # inline code
-    r"|!\[[^\]]*\]\([^)]*\)"        # image
-    r"|\[[^\]]*\]\([^)]*\)"         # inline link
-    r"|\[[^\]]*\]\[[^\]]*\]"        # reference link
-    r"|<[^>\n]+>"                   # HTML tag
+    r"`[^`\n]*`"  # inline code
+    r"|!\[[^\]]*\]\([^)]*\)"  # image
+    r"|\[[^\]]*\]\([^)]*\)"  # inline link
+    r"|\[[^\]]*\]\[[^\]]*\]"  # reference link
+    r"|<[^>\n]+>"  # HTML tag
 )
 
 
@@ -116,6 +116,7 @@ def _glossary_link(page_src_path: str, anchor: str) -> str:
 
 def _replace_in_segment(segment: str, used: set[str], page_src_path: str) -> str:
     """Replace first occurrence of each unused term in a linkable text segment."""
+
     def sub(m: re.Match) -> str:
         term = m.group(1)
         if term in used:
@@ -123,6 +124,7 @@ def _replace_in_segment(segment: str, used: set[str], page_src_path: str) -> str
         used.add(term)
         link = _glossary_link(page_src_path, _GLOSSARY[term])
         return f"[{term}]({link})"
+
     return _PATTERN.sub(sub, segment)
 
 
@@ -131,7 +133,7 @@ def _process_line(line: str, used: set[str], page_src_path: str) -> str:
     parts: list[str] = []
     pos = 0
     for m in _SKIP_PATTERN.finditer(line):
-        gap = line[pos:m.start()]
+        gap = line[pos : m.start()]
         parts.append(_replace_in_segment(gap, used, page_src_path))
         parts.append(m.group(0))  # skip-segment passes through unchanged
         pos = m.end()

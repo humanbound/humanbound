@@ -26,15 +26,24 @@ class TestAbsoluteUrl:
 
     def test_relative_url_joined(self):
         page = self._page("getting-started/installation/")
-        assert llms_txt._absolute_url(page, "https://docs.humanbound.ai") == "https://docs.humanbound.ai/getting-started/installation/"
+        assert (
+            llms_txt._absolute_url(page, "https://docs.humanbound.ai")
+            == "https://docs.humanbound.ai/getting-started/installation/"
+        )
 
     def test_trailing_slash_in_site_url_handled(self):
         page = self._page("foo/")
-        assert llms_txt._absolute_url(page, "https://docs.humanbound.ai/") == "https://docs.humanbound.ai/foo/"
+        assert (
+            llms_txt._absolute_url(page, "https://docs.humanbound.ai/")
+            == "https://docs.humanbound.ai/foo/"
+        )
 
     def test_leading_slash_in_page_url_handled(self):
         page = self._page("/foo/")
-        assert llms_txt._absolute_url(page, "https://docs.humanbound.ai") == "https://docs.humanbound.ai/foo/"
+        assert (
+            llms_txt._absolute_url(page, "https://docs.humanbound.ai")
+            == "https://docs.humanbound.ai/foo/"
+        )
 
 
 class TestDescription:
@@ -64,7 +73,10 @@ class TestFormatPageLine:
             file=SimpleNamespace(src_path="getting-started/installation.md"),
         )
         line = llms_txt._format_page_line(page, "https://docs.humanbound.ai", "Site desc.")
-        assert line == "- [Installation](https://docs.humanbound.ai/getting-started/installation/): How to install."
+        assert (
+            line
+            == "- [Installation](https://docs.humanbound.ai/getting-started/installation/): How to install."
+        )
 
     def test_strips_emoji_from_page_title(self):
         page = SimpleNamespace(
@@ -83,5 +95,7 @@ class TestFormatPageLine:
             meta={"description": "How."},
             file=SimpleNamespace(src_path="x.md"),
         )
-        line = llms_txt._format_page_line(page, "https://x.com", "Site", title_prefix="🚀 Getting Started")
+        line = llms_txt._format_page_line(
+            page, "https://x.com", "Site", title_prefix="🚀 Getting Started"
+        )
         assert line.startswith("- [Getting Started: Installation]")
