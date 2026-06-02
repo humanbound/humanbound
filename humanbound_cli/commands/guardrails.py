@@ -8,6 +8,7 @@ from pathlib import Path
 import click
 from rich.console import Console
 
+from .. import telemetry
 from ..engine import get_runner
 from ..engine.platform_runner import PlatformTestRunner
 from ..exceptions import APIError, NotAuthenticatedError
@@ -112,6 +113,7 @@ def guardrails_command(
             print(formatted)
 
     except NotAuthenticatedError:
+        telemetry.fire_gated_command_hit()
         console_err.print("[red]Not authenticated.[/red] Run 'hb login' first.")
         raise SystemExit(1)
     except APIError as e:

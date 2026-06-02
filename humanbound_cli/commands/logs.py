@@ -10,6 +10,7 @@ import click
 from rich.console import Console
 from rich.table import Table
 
+from .. import telemetry
 from ..client import HumanboundClient
 from ..engine import get_runner
 from ..engine.platform_runner import PlatformTestRunner
@@ -198,6 +199,7 @@ def logs_group(
                 _show_table(client, experiment_id, verdict, page, size)
 
     except NotAuthenticatedError:
+        telemetry.fire_gated_command_hit()
         console_err.print("[red]Not authenticated.[/red] Run 'hb login' first.")
         raise SystemExit(1)
     except APIError as e:
@@ -778,6 +780,7 @@ def upload_command(file: str, tag: str, lang: str, force: bool):
     client = HumanboundClient()
 
     if not client.is_authenticated():
+        telemetry.fire_gated_command_hit()
         console_err.print("[red]Not authenticated.[/red] Run 'hb login' first.")
         raise SystemExit(1)
 
@@ -837,6 +840,7 @@ def upload_command(file: str, tag: str, lang: str, force: bool):
             )
 
     except NotAuthenticatedError:
+        telemetry.fire_gated_command_hit()
         console_err.print("[red]Not authenticated.[/red] Run 'hb login' first.")
         raise SystemExit(1)
     except APIError as e:

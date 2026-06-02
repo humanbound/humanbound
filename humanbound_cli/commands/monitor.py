@@ -6,6 +6,7 @@ import click
 from rich.console import Console
 from rich.panel import Panel
 
+from .. import telemetry
 from ..client import HumanboundClient
 from ..exceptions import APIError, NotAuthenticatedError
 
@@ -33,6 +34,7 @@ def monitor_command(pause: bool, resume: bool, project: str, as_json: bool):
     client = HumanboundClient()
 
     if not client.is_authenticated():
+        telemetry.fire_gated_command_hit()
         console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
         raise SystemExit(1)
 

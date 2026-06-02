@@ -8,10 +8,19 @@ import click
 from rich.console import Console
 from rich.table import Table
 
+from .. import telemetry
 from ..client import HumanboundClient
 from ..exceptions import APIError, NotAuthenticatedError
 
 console = Console()
+
+
+def _fire_findings_view(filter_applied: bool) -> None:
+    telemetry.capture(
+        "findings_view",
+        {"filter_applied": filter_applied},
+    )
+
 
 SEVERITY_STYLES = {
     "critical": "[red bold]critical[/red bold]",
@@ -62,6 +71,7 @@ def findings_group(ctx, status, severity, page, size, as_json, output):
     client = HumanboundClient()
 
     if not client.is_authenticated():
+        telemetry.fire_gated_command_hit()
         console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
         raise SystemExit(1)
 
@@ -77,23 +87,27 @@ def findings_group(ctx, status, severity, page, size, as_json, output):
                 project_id, status=status, severity=severity, page=page, size=size
             )
 
+        findings = response.get("data", []) if isinstance(response, dict) else response
+        filter_applied = bool(status or severity)
+
         if output:
             from pathlib import Path
 
             Path(output).write_text(json.dumps(response, indent=2, default=str))
             console.print(f"[green]Findings saved to:[/green] {output}")
+            _fire_findings_view(filter_applied=filter_applied)
             return
 
         if as_json:
             print(json.dumps(response, indent=2, default=str))
+            _fire_findings_view(filter_applied=filter_applied)
             return
-
-        findings = response.get("data", []) if isinstance(response, dict) else response
 
         if not findings:
             console.print("[yellow]No findings found.[/yellow]")
             if not status and not severity:
                 console.print("[dim]Run experiments to discover findings.[/dim]")
+            _fire_findings_view(filter_applied=filter_applied)
             return
 
         table = Table(title="Findings")
@@ -124,6 +138,8 @@ def findings_group(ctx, status, severity, page, size, as_json, output):
         if isinstance(response, dict) and response.get("has_next_page"):
             console.print(f"\n[dim]Page {page}. Use --page to see more.[/dim]")
 
+        _fire_findings_view(filter_applied=filter_applied)
+
     except NotAuthenticatedError:
         console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
         raise SystemExit(1)
@@ -148,6 +164,7 @@ def update_finding(finding_id: str, status: str, severity: str):
     client = HumanboundClient()
 
     if not client.is_authenticated():
+        telemetry.fire_gated_command_hit()
         console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
         raise SystemExit(1)
 
@@ -211,6 +228,7 @@ def assign_finding(finding_id: str, assignee: str, delegation_status: str):
     client = HumanboundClient()
 
     if not client.is_authenticated():
+        telemetry.fire_gated_command_hit()
         console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
         raise SystemExit(1)
 

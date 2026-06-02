@@ -11,6 +11,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.prompt import Confirm
 from rich.table import Table
 
+from .. import telemetry
 from ..client import HumanboundClient
 from ..exceptions import APIError, NotAuthenticatedError
 
@@ -84,6 +85,7 @@ def _list_experiments(page: int, size: int):
             console.print(f"\n[dim]Page {page} of more. Use --page to navigate.[/dim]")
 
     except NotAuthenticatedError:
+        telemetry.fire_gated_command_hit()
         console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
         raise SystemExit(1)
     except APIError as e:
@@ -149,6 +151,7 @@ def show_experiment(experiment_id: str):
                         console.print(f"    {i}. {insight.get('explanation', '')[:80]}...")
 
     except NotAuthenticatedError:
+        telemetry.fire_gated_command_hit()
         console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
         raise SystemExit(1)
     except APIError as e:
@@ -227,6 +230,7 @@ def experiment_status(experiment_id: str, watch: bool, interval: int, show_all: 
             _show_failure_details(client, experiment_id)
 
     except NotAuthenticatedError:
+        telemetry.fire_gated_command_hit()
         console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
         raise SystemExit(1)
     except APIError as e:
@@ -315,6 +319,7 @@ def _poll_all_experiments(client: HumanboundClient):
             cycle += 1
 
     except NotAuthenticatedError:
+        telemetry.fire_gated_command_hit()
         console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
         raise SystemExit(1)
     except APIError as e:
@@ -424,6 +429,7 @@ def experiment_wait(experiment_id: str, timeout: int):
             poll_interval = min(poll_interval * 2, max_interval)
 
     except NotAuthenticatedError:
+        telemetry.fire_gated_command_hit()
         console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
         raise SystemExit(1)
     except APIError as e:
@@ -467,6 +473,7 @@ def terminate_experiment(experiment_id: str):
         console.print(f"[dim]ID: {experiment_id}[/dim]")
 
     except NotAuthenticatedError:
+        telemetry.fire_gated_command_hit()
         console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
         raise SystemExit(1)
     except APIError as e:
@@ -508,6 +515,7 @@ def delete_experiment(experiment_id: str, force: bool):
         console.print(f"[dim]{exp_name} ({experiment_id})[/dim]")
 
     except NotAuthenticatedError:
+        telemetry.fire_gated_command_hit()
         console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
         raise SystemExit(1)
     except APIError as e:

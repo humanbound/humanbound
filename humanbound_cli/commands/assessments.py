@@ -9,6 +9,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
+from .. import telemetry
 from ..client import HumanboundClient
 from ..exceptions import APIError, NotAuthenticatedError
 
@@ -53,6 +54,7 @@ def assessments_group(ctx, page, size, as_json):
     client = HumanboundClient()
 
     if not client.is_authenticated():
+        telemetry.fire_gated_command_hit()
         console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
         raise SystemExit(1)
 
@@ -132,6 +134,7 @@ def show_assessment(assessment_id: str, as_json: bool):
     client = HumanboundClient()
 
     if not client.is_authenticated():
+        telemetry.fire_gated_command_hit()
         console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
         raise SystemExit(1)
 

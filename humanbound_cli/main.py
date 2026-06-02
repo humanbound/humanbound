@@ -2,10 +2,13 @@
 # Copyright (c) 2024-2026 Humanbound
 """Humanbound CLI entry point."""
 
+import atexit
+
 import click
 from rich.console import Console
 
 from . import __version__
+from . import telemetry as telemetry_pkg
 from .client import HumanboundClient
 from .commands import (
     api_keys,
@@ -33,6 +36,7 @@ from .commands import (
     test,
     webhooks,
 )
+from .commands import telemetry as telemetry_cmd
 
 console = Console()
 
@@ -112,6 +116,7 @@ cli.add_command(posture.posture_command)
 cli.add_command(monitor.monitor_command)
 cli.add_command(redteam.redteam_group)
 cli.add_command(report.report_command)
+cli.add_command(telemetry_cmd.telemetry_group)
 
 
 # Convenience aliases at top level
@@ -191,8 +196,11 @@ def status_alias(ctx, experiment_id: str, watch: bool, show_all: bool):
 
 
 def main():
-    """Entrypoint with session expiry handling."""
-    from .exceptions import SessionExpiredError
+    """Entrypoint with session expiry handling and telemetry init."""
+    from .exceptions import NotAuthenticatedError, SessionExpiredError
+
+    telemetry_pkg.maybe_fire_install_event()
+    atexit.register(telemetry_pkg.shutdown)
 
     try:
         cli(standalone_mode=False)
@@ -207,6 +215,11 @@ def main():
         client.logout()
         client.login()
         console.print("\n[green]Logged in.[/green] Please re-run your command.")
+    except NotAuthenticatedError:
+        # Fire gated_command_hit before re-raising so user sees the original UX
+        telemetry_pkg.fire_gated_command_hit()
+        console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
+        raise SystemExit(1)
     except click.Abort:
         raise SystemExit(1)
 

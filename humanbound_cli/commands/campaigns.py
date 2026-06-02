@@ -10,6 +10,7 @@ from rich.panel import Panel
 from rich.prompt import Confirm
 from rich.table import Table
 
+from .. import telemetry
 from ..client import HumanboundClient
 from ..exceptions import APIError, NotAuthenticatedError
 
@@ -40,6 +41,7 @@ def campaigns_group(ctx, as_json):
     client = HumanboundClient()
 
     if not client.is_authenticated():
+        telemetry.fire_gated_command_hit()
         console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
         raise SystemExit(1)
 
@@ -136,6 +138,7 @@ def terminate_campaign(force: bool):
     client = HumanboundClient()
 
     if not client.is_authenticated():
+        telemetry.fire_gated_command_hit()
         console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
         raise SystemExit(1)
 

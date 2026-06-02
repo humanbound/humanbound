@@ -21,6 +21,10 @@ TOKEN_FILE = CONFIG_DIR / "credentials.json"
 DEFAULT_TIMEOUT = 30
 LONG_TIMEOUT = 120  # For operations like report generation
 
+# PostHog telemetry configuration.
+POSTHOG_PUBLIC_KEY = "phc_yKExP2tUyiPGg3kY3tongw36iGLTYaH7D2DfRCHpZg9r"
+POSTHOG_HOST = "https://eu.i.posthog.com"
+
 
 def get_base_url() -> str:
     """Get the API base URL from environment or default."""
@@ -40,3 +44,18 @@ def get_auth0_client_id() -> str:
 def get_auth0_audience() -> str:
     """Get Auth0 audience from environment or default."""
     return os.environ.get("HUMANBOUND_AUTH0_AUDIENCE", AUTH0_AUDIENCE)
+
+
+def get_posthog_key() -> str:
+    """Get the PostHog project key from environment or default."""
+    return os.environ.get("HB_POSTHOG_KEY", POSTHOG_PUBLIC_KEY)
+
+
+def get_posthog_host() -> str:
+    """Get the PostHog ingest host from environment or default."""
+    return os.environ.get("HB_POSTHOG_HOST", POSTHOG_HOST)
+
+
+def get_humanbound_dir() -> Path:
+    """Resolve ~/.humanbound at call time so tests can monkeypatch HOME."""
+    return Path.home() / ".humanbound"

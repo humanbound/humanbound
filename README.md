@@ -126,6 +126,12 @@ loop, release process, and CLA requirement (see [CLA.md](./CLA.md)).
 - 🔒 [Report a security issue](./SECURITY.md) — **not via public Issues**
 - 💬 [Join Discord](https://discord.gg/gQyXjVBF)
 
+## Telemetry
+
+The `hb` CLI sends anonymous usage data to help us improve it.
+Disable with `hb telemetry disable`, `HB_TELEMETRY_DISABLED=1`, or
+`DO_NOT_TRACK=1`. Full disclosure: [PRIVACY.md](./PRIVACY.md).
+
 ## License
 
 [Apache-2.0](./LICENSE). Free to use in any context — commercial or

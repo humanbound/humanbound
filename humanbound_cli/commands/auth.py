@@ -6,6 +6,7 @@ import click
 from rich.console import Console
 from rich.panel import Panel
 
+from .. import telemetry
 from ..client import HumanboundClient
 from ..config import DEFAULT_BASE_URL
 from ..exceptions import AuthenticationError
@@ -43,6 +44,8 @@ def login(base_url: str, port: int, force: bool):
     try:
         console.print("Starting authentication...")
         client.login(callback_port=port)
+
+        telemetry.identify_from_credentials()
 
         # Auto-select default organisation and resolve name
         org_display = "not set"

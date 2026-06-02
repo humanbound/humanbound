@@ -13,6 +13,7 @@ import click
 from rich.console import Console
 from rich.panel import Panel
 
+from .. import telemetry
 from ..client import HumanboundClient
 from ..exceptions import APIError, NotAuthenticatedError
 from .test import _load_integration, _resolve_context
@@ -226,6 +227,30 @@ def _get_source_description(prompt: str, endpoint: str, repo: str, openapi: str)
     return ", ".join(sources)
 
 
+def _resolve_init_mode(
+    endpoint: str | None,
+    prompt: str | None,
+    repo: str | None,
+    openapi: str | None,
+) -> str:
+    """Derive the `init` telemetry mode from the CLI flags."""
+    if endpoint:
+        return "endpoint"
+    if prompt:
+        return "text"
+    if repo or openapi:
+        return "agentic"
+    return "none"
+
+
+def _fire_init_event(mode: str, success: bool, duration_ms: int) -> None:
+    """Emit the `init` telemetry event. Safe to call from try/finally."""
+    telemetry.capture(
+        "init",
+        {"mode": mode, "success": success, "duration_ms": duration_ms},
+    )
+
+
 def _print_next(suggestions: list):
     """Print Next: suggestions block."""
     console.print("\n[dim]Next:[/dim]")
@@ -336,17 +361,29 @@ def connect_command(
       hb connect --endpoint ./config.json
       hb connect --endpoint ./config.json --prompt ./system.txt
     """
-    has_agent_flags = any([endpoint, prompt, repo, openapi])
+    import time
 
-    if has_agent_flags:
-        _connect_agent(endpoint, name, prompt, repo, openapi, context, level, yes, timeout)
-    else:
-        console.print("[yellow]Specify a source:[/yellow]")
-        console.print()
-        console.print("  hb connect --endpoint ./bot-config.json")
-        console.print()
-        console.print("[dim]Use --endpoint, --prompt, --repo, or --openapi.[/dim]")
-        raise SystemExit(1)
+    start = time.monotonic()
+    mode = _resolve_init_mode(endpoint, prompt, repo, openapi)
+    success = False
+
+    try:
+        has_agent_flags = any([endpoint, prompt, repo, openapi])
+
+        if has_agent_flags:
+            _connect_agent(endpoint, name, prompt, repo, openapi, context, level, yes, timeout)
+        else:
+            console.print("[yellow]Specify a source:[/yellow]")
+            console.print()
+            console.print("  hb connect --endpoint ./bot-config.json")
+            console.print()
+            console.print("[dim]Use --endpoint, --prompt, --repo, or --openapi.[/dim]")
+            raise SystemExit(1)
+
+        success = True
+    finally:
+        duration_ms = int((time.monotonic() - start) * 1000)
+        _fire_init_event(mode=mode, success=success, duration_ms=duration_ms)
 
 
 # -- Agent path ----------------------------------------------------------------
@@ -552,6 +589,7 @@ def _connect_agent_platform(
         )
 
     except NotAuthenticatedError:
+        telemetry.fire_gated_command_hit()
         console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
         raise SystemExit(1)
     except APIError as e:

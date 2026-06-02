@@ -9,6 +9,7 @@ from rich.panel import Panel
 from rich.prompt import Confirm, Prompt
 from rich.table import Table
 
+from .. import telemetry
 from ..client import HumanboundClient
 from ..exceptions import APIError, NotAuthenticatedError
 
@@ -22,6 +23,7 @@ def _require_auth_and_project():
     """Return an authenticated client with a project selected."""
     client = HumanboundClient()
     if not client.is_authenticated():
+        telemetry.fire_gated_command_hit()
         console_err.print("[red]Not authenticated.[/red] Run 'hb login' first.")
         raise SystemExit(1)
     if not client.project_id:

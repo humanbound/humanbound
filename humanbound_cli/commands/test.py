@@ -11,6 +11,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 
+from .. import telemetry
 from ..engine import Posture, TestConfig, TestResult, get_runner
 from ..engine.platform_runner import PlatformTestRunner
 from ..engine.runner import TestRunner
@@ -153,6 +154,34 @@ def _print_next(suggestions: list):
     console.print("\n[dim]Next:[/dim]")
     for cmd, desc in suggestions:
         console.print(f"  [bold]{cmd}[/bold]  {desc}")
+
+
+def _fire_test_start(test_level: str, category: str, is_local: bool) -> None:
+    telemetry.capture(
+        "test_start",
+        {"test_level": test_level, "category": category, "is_local": is_local},
+    )
+
+
+def _fire_test_complete(
+    test_level: str,
+    category: str,
+    is_local: bool,
+    outcome: str,
+    duration_ms: int,
+    finding_count: int,
+) -> None:
+    telemetry.capture(
+        "test_complete",
+        {
+            "test_level": test_level,
+            "category": category,
+            "is_local": is_local,
+            "outcome": outcome,
+            "duration_ms": duration_ms,
+            "finding_count": finding_count,
+        },
+    )
 
 
 @click.command("test")
@@ -332,52 +361,66 @@ def test_command(
 
     is_platform = isinstance(runner, PlatformTestRunner)
 
-    # Platform mode: validate auth + project
-    if is_platform:
-        client = runner.client
-        if not client.project_id:
-            console.print("[yellow]No project selected.[/yellow]")
-            console.print("Use 'hb projects use <id>' to select a project first.")
-            raise SystemExit(1)
-    elif runner is None:
-        console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
-        console.print("[dim]Local engine coming soon in the open-core release.[/dim]")
-        raise SystemExit(1)
-    elif not local:
-        # Runner fell to LocalTestRunner without the user asking for it. The only
-        # way that happens after the auth check above is "signed in but no
-        # project selected." Without this guard the user gets a misleading
-        # "No LLM provider configured" error from LocalRunner, when what they
-        # actually need is to select a project.
-        from ..client import HumanboundClient
+    # Telemetry: test_complete always fires (success, SystemExit, or unexpected exception).
+    start_time = time.monotonic()
+    outcome = "error"  # pessimistic default; flipped to "completed" on normal end
+    is_local_for_telemetry = not is_platform
+    _findings_seen = 0  # Updated once runner returns a TestResult with insights.
 
-        _c = HumanboundClient()
-        if _c.is_authenticated():
-            console.print(
-                "[yellow]You're signed in, but no project is selected for this test.[/yellow]"
-            )
-            console.print()
-            console.print("  Choose one:")
-            console.print("    [bold]hb projects list[/bold]             see your projects")
-            console.print("    [bold]hb projects use <id>[/bold]         use an existing project")
-            console.print(
-                "    [bold]hb connect --endpoint X[/bold]      create a new project "
-                "from an agent config"
-            )
-            console.print(
-                "    [bold]hb test --local ...[/bold]          run against a local LLM "
-                "(requires HB_PROVIDER + HB_API_KEY)"
-            )
-            console.print()
-            raise SystemExit(1)
-
-    console.print(f"\n[bold]Starting security test:[/bold] {name}\n")
-    console.print(f"  Category: {test_category}")
-    console.print(f"  Level: {testing_level}")
-    console.print(f"  Language: {lang}")
-    console.print()
+    _fire_test_start(
+        test_level=testing_level,
+        category=test_category,
+        is_local=is_local_for_telemetry,
+    )
 
     try:
+        # Platform mode: validate auth + project
+        if is_platform:
+            client = runner.client
+            if not client.project_id:
+                console.print("[yellow]No project selected.[/yellow]")
+                console.print("Use 'hb projects use <id>' to select a project first.")
+                raise SystemExit(1)
+        elif runner is None:
+            console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
+            console.print("[dim]Local engine coming soon in the open-core release.[/dim]")
+            raise SystemExit(1)
+        elif not local:
+            # Runner fell to LocalTestRunner without the user asking for it. The only
+            # way that happens after the auth check above is "signed in but no
+            # project selected." Without this guard the user gets a misleading
+            # "No LLM provider configured" error from LocalRunner, when what they
+            # actually need is to select a project.
+            from ..client import HumanboundClient
+
+            _c = HumanboundClient()
+            if _c.is_authenticated():
+                console.print(
+                    "[yellow]You're signed in, but no project is selected for this test.[/yellow]"
+                )
+                console.print()
+                console.print("  Choose one:")
+                console.print("    [bold]hb projects list[/bold]             see your projects")
+                console.print(
+                    "    [bold]hb projects use <id>[/bold]         use an existing project"
+                )
+                console.print(
+                    "    [bold]hb connect --endpoint X[/bold]      create a new project "
+                    "from an agent config"
+                )
+                console.print(
+                    "    [bold]hb test --local ...[/bold]          run against a local LLM "
+                    "(requires HB_PROVIDER + HB_API_KEY)"
+                )
+                console.print()
+                raise SystemExit(1)
+
+        console.print(f"\n[bold]Starting security test:[/bold] {name}\n")
+        console.print(f"  Category: {test_category}")
+        console.print(f"  Level: {testing_level}")
+        console.print(f"  Language: {lang}")
+        console.print()
+
         # Resolve provider (platform: from API, local: from env/config — handled by runner)
         if is_platform and not provider_id:
             client = runner.client
@@ -489,6 +532,7 @@ def test_command(
                     border_style="blue",
                 )
             )
+            outcome = "completed"
             return
 
         # Wait mode - poll for completion
@@ -505,6 +549,17 @@ def test_command(
         # Get final results via runner
         result = runner.get_result(experiment_id)
         posture = runner.get_posture(experiment_id)
+
+        # Record real finding count for telemetry. Platform's
+        # posture.finding_count is the canonical "open findings" count when
+        # available; otherwise fall back to len(result.insights).
+        try:
+            if posture.finding_count is not None:
+                _findings_seen = int(posture.finding_count)
+            else:
+                _findings_seen = len(result.insights or [])
+        except Exception:
+            _findings_seen = 0
 
         # Display results (same rendering, canonical shapes)
         _display_results(result, posture)
@@ -539,13 +594,26 @@ def test_command(
         if final_status == "Failed":
             raise SystemExit(1)
 
+        outcome = "completed"
+
     except NotAuthenticatedError:
+        telemetry.fire_gated_command_hit()
         console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
         console.print("[dim]Or use local mode: hb test --endpoint ./config.json --wait[/dim]")
         raise SystemExit(1)
     except APIError as e:
         console.print(f"[red]Error:[/red] {e}")
         raise SystemExit(1)
+    finally:
+        duration_ms = int((time.monotonic() - start_time) * 1000)
+        _fire_test_complete(
+            test_level=testing_level,
+            category=test_category,
+            is_local=is_local_for_telemetry,
+            outcome=outcome,
+            duration_ms=duration_ms,
+            finding_count=_findings_seen,
+        )
 
 
 def _wait_for_completion(runner: TestRunner, experiment_id: str) -> str:

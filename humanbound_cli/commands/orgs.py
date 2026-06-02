@@ -7,6 +7,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
+from .. import telemetry
 from ..client import HumanboundClient
 from ..exceptions import APIError, NotAuthenticatedError
 
@@ -60,6 +61,7 @@ def _list_orgs():
             console.print("\n[dim]Tip: Use 'hb orgs use <id>' to select an organisation.[/dim]")
 
     except NotAuthenticatedError:
+        telemetry.fire_gated_command_hit()
         console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
         raise SystemExit(1)
     except APIError as e:
@@ -89,6 +91,7 @@ def use_org(org_id: str):
         client.set_organisation(org_id)
         console.print(f"[green]Switched to organisation:[/green] {org.get('name')}")
     except NotAuthenticatedError:
+        telemetry.fire_gated_command_hit()
         console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
         raise SystemExit(1)
     except APIError as e:
@@ -119,6 +122,7 @@ def current_org():
             console.print("[dim]Unable to fetch organisation details.[/dim]")
 
     except NotAuthenticatedError:
+        telemetry.fire_gated_command_hit()
         console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
         raise SystemExit(1)
 
@@ -129,6 +133,7 @@ def subscription_details():
     client = HumanboundClient()
 
     if not client.is_authenticated():
+        telemetry.fire_gated_command_hit()
         console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
         raise SystemExit(1)
 
@@ -188,6 +193,7 @@ def subscription_details():
             console.print("\n[dim]No features enabled.[/dim]")
 
     except NotAuthenticatedError:
+        telemetry.fire_gated_command_hit()
         console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
         raise SystemExit(1)
     except APIError as e:
