@@ -1,10 +1,17 @@
 ---
 description: "Upload real conversation logs and evaluate them against Humanbound's security judges — score safety, scope, and policy adherence retroactively."
+keywords:
+  - upload conversation logs
+  - hb logs upload
+  - retroactive evaluation
+  - real conversation evaluation
+  - conversation log format
+  - log file evaluation
 ---
 
 # Upload Conversation Logs
 
-Evaluate real production conversations against security judges. This is useful for testing actual user interactions with your AI agent.
+The `hb logs upload` command sends conversation logs from your live agent through Humanbound's judges so you can score real user interactions against the same security criteria adversarial tests use. The expected format is a JSON array where each entry has a `conversation` array of `{u, a}` turn pairs and an optional `thread_id`; an optional `--tag` lets you group uploads (for example, by release), and `--lang` sets the evaluation language.
 
 !!! warning "Deprecation"
     `hb upload-logs` is deprecated. Use `hb logs upload` instead.

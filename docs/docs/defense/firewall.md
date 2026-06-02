@@ -1,8 +1,22 @@
 ---
 description: "Humanbound Firewall — runtime defenses for LLM agents that block prompt injection and policy violations before they reach the agent in production."
+keywords:
+  - humanbound firewall
+  - LLM agent firewall
+  - runtime AI defense
+  - prompt injection blocking
+  - Tier 2 classifier
+  - SetFit classifier
+  - hb firewall train
+  - agent.yaml configuration
+faq:
+  - q: How is the Tier 2 classifier trained?
+    a: Tier 2 is trained from your Humanbound adversarial and QA test logs — failed adversarial conversations supply attack examples and passed QA conversations supply benign examples. Run `hb firewall train` after accumulating test data to produce a `.hbfw` model file.
 ---
 
 # Firewall
+
+The Humanbound Firewall is a runtime defense layer for LLM agents that inspects every user message and blocks prompt injection, policy violations, and out-of-scope requests before they reach the agent. The sections below cover the multi-tier evaluation architecture, training the Tier 2 classifier from your test logs, and installing the open-source library and integrating it with your agent.
 
 ## The Challenge: Runtime Protection for AI Agents
 
@@ -543,3 +557,5 @@ def handle_user_message(conversation):
 
 !!! info "Open Source"
     The Humanbound Firewall is Apache-2.0 licensed. Free to use, modify, and embed in commercial products with attribution. Source code and detector examples at [github.com/humanbound/humanbound-firewall](https://github.com/humanbound/humanbound-firewall).
+
+<!-- faq -->

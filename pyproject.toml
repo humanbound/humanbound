@@ -79,6 +79,7 @@ dev = [
     "build>=1.2",
     "twine>=5.0",
     "pre-commit>=3.8",
+    "mkdocs>=1.6",
 ]
 
 [project.scripts]
@@ -116,7 +117,9 @@ timeout = 60
 # tests/unit/test_*.py does `from conftest import ...` directly, so its
 # directory must be on sys.path. (Adding an __init__.py there would also
 # work but would change test discovery semantics.)
-pythonpath = ["tests/unit"]
+# docs/hooks is on the path so the docs-hook tests (test_docs_hooks_*.py)
+# can import `schema`, `llms_txt`, and `lint` as top-level modules.
+pythonpath = ["tests/unit", "docs/hooks"]
 
 [tool.ruff]
 line-length = 100

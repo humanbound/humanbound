@@ -1,10 +1,17 @@
 ---
 description: "Glossary of key terms used throughout Humanbound — orchestrator, judge, scope, posture, finding, experiment, and more."
+keywords:
+  - humanbound glossary
+  - AI security terms
+  - key terms
+  - orchestrator definition
+  - posture score definition
+  - LLM security glossary
 ---
 
 # Glossary
 
-Key terms used throughout the Humanbound documentation.
+The Humanbound glossary defines the key concepts used across the documentation — orchestrators, judges, scope, posture scoring, findings, firewall tiers, and the terminology of AI red teaming. Terms are grouped into four sections (Testing & Assessment, Scoring & Posture, Defense, AISecOps & Operations) for quick scanning; other pages link here when they introduce a term for the first time.
 
 ---
 

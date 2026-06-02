@@ -1,10 +1,28 @@
 ---
 description: "Configure the LLM provider the local engine uses for attack generation and response evaluation — bring your own API key."
+keywords:
+  - LLM provider configuration
+  - HB_PROVIDER
+  - HB_API_KEY
+  - ollama setup
+  - Azure OpenAI configuration
+  - humanbound providers
+  - provider precedence
+  - hb config command
+faq:
+  - q: Which LLM providers does Humanbound support?
+    a: Humanbound supports OpenAI, Anthropic (Claude), Google (Gemini), Azure OpenAI, Grok (xAI), and Ollama. Ollama requires no API key and runs fully locally.
+  - q: How do I configure my LLM provider?
+    a: Provider configuration is resolved in order — CLI flags first, then environment variables (e.g., `HB_PROVIDER`, `HB_API_KEY`), then the config file at `~/.humanbound/config.yaml`. The config file is set via `hb config set provider` and `hb config set api-key`.
+  - q: How do I configure Azure OpenAI with Humanbound?
+    a: Set `HB_PROVIDER=azureopenai`, provide your Azure API key via `HB_API_KEY`, and set `HB_ENDPOINT` to the full deployment URL including `?api-version=`, for example `https://your-resource.openai.azure.com/openai/deployments/your-deployment/chat/completions?api-version=2025-01-01-preview`.
+  - q: Can I run Humanbound with no external API calls at all?
+    a: Yes — use Ollama. Set `HB_PROVIDER=ollama` and `HB_MODEL=llama3.1:8b`, start `ollama serve`, and tests will only call your bot and the local Ollama instance. Note that local models produce lower-quality attacks than cloud providers.
 ---
 
 # Provider Configuration
 
-The local engine needs an LLM provider for attack generation and response evaluation. You bring your own API key.
+The local engine needs an LLM provider for attack generation and response evaluation, and you bring your own API key. Provider settings resolve in order — CLI flags override environment variables, which override the config file at `~/.humanbound/config.yaml`. Six providers are supported (OpenAI, Anthropic Claude, Google Gemini, Azure OpenAI, Grok, and Ollama for fully-local isolation); Azure requires a full endpoint URL with `?api-version=`.
 
 ## Configuration Methods
 
@@ -89,3 +107,5 @@ hb test --wait
 ```
 
 You can still use your own provider on the platform by adding it via `hb providers add`.
+
+<!-- faq -->

@@ -1,5 +1,14 @@
 ---
 description: "Discover and assess AI services across your cloud environment — a client-side scan that surfaces shadow AI and feeds findings into the platform."
+keywords:
+  - AI discovery
+  - hb discover command
+  - shadow AI detection
+  - cloud AI inventory
+  - Microsoft AI scanner
+  - AI asset inventory
+  - cloud connectors
+  - model lifecycle tracking
 ---
 
 # AI Discovery

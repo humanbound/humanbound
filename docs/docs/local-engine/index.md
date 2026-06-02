@@ -1,10 +1,18 @@
 ---
 description: "Run security tests locally with no login or network calls — full isolation with your own LLM provider, or offline mode with ollama."
+keywords:
+  - local engine
+  - local security testing
+  - offline testing isolation
+  - humanbound local mode
+  - no-login testing
+  - ollama isolation
+  - local vs platform
 ---
 
 # Local Engine
 
-Run security tests **locally** — no login, no account, no network calls to Humanbound. Full isolation with your own LLM provider or [ollama](https://ollama.com) for completely offline testing.
+Run security tests **locally** — no login, no account, no network calls to Humanbound. Full isolation with your own LLM provider or [ollama](https://ollama.com) for completely offline testing. The engine runs the same orchestrators, attack strategies, judge, and posture formula as the hosted platform; the only difference is that results stay on your machine in `.humanbound/results/`.
 
 ## How It Works
 

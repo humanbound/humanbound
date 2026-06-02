@@ -1,5 +1,14 @@
 ---
 description: "Test your AI agent against regulatory requirements by adding domain-specific restrictions to its scope — the engine attacks compliance boundaries automatically."
+keywords:
+  - compliance testing
+  - regulatory testing
+  - FCA compliance testing
+  - HIPAA AI compliance
+  - EU AI Act testing
+  - compliance scope templates
+  - domain-specific restrictions
+  - regulated AI agent
 ---
 
 # Compliance Testing

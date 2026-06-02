@@ -1,10 +1,17 @@
 ---
 description: "Complete hb CLI reference — every command and flag, grouped by workflow — auth, projects, test, redteam, posture, logs, MCP."
+keywords:
+  - hb command reference
+  - humanbound CLI reference
+  - hb commands list
+  - humanbound CLI commands
+  - CLI cheatsheet
+  - command index
 ---
 
 # Command Reference
 
-Complete reference of all available commands, organized by category.
+The complete `hb` CLI reference, organised into eight categories: global flags, authentication (login / logout / whoami / orgs), projects, experiments (test execution), results (logs / posture / coverage / findings / assessments / reports), security (guardrails / campaigns / monitor), configuration (providers / api-keys / members), and help & shell (docs / completion / --help). Each table lists every command with its purpose; use `hb <command> --help` for full flag documentation.
 
 ## Global
 

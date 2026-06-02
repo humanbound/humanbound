@@ -1,5 +1,14 @@
 ---
 description: "Humanbound plugins for AI coding agents — adversarial security testing inside Claude Code and Cursor."
+keywords:
+  - humanbound plugins
+  - AI TDD
+  - Claude Code plugin
+  - Cursor plugin
+  - humanbound-test plugin
+  - AI coding agent security
+  - plugin marketplace
+  - editor security testing
 ---
 
 # Plugins [Preview]

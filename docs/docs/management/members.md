@@ -1,10 +1,17 @@
 ---
 description: "Manage organisation members and their access levels — invitation flows, role assignment, and removal."
+keywords:
+  - team members
+  - hb members command
+  - member invitations
+  - organisation roles
+  - access levels
+  - member management
 ---
 
 # Team Members
 
-Manage organisation members and their access levels.
+The `hb members` commands manage who can access an organisation and what they can do — listing existing members, inviting new ones at a chosen role (Owner, Admin, Developer, or Expert), and removing access. Roles control project visibility and operational permissions; the Expert role is designed for external auditors who review findings without modifying projects.
 
 ## List Members
 

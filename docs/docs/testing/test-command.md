@@ -1,10 +1,19 @@
 ---
 description: "hb test reference — orchestrators, testing levels, languages, providers, and every flag that shapes an adversarial run."
+keywords:
+  - hb test reference
+  - test command flags
+  - testing levels
+  - test category
+  - --fail-on flag
+  - experiment configuration
+  - test command CLI
+  - adversarial test execution
 ---
 
 # Test Command Reference
 
-Full reference for the `hb test` command and all its options.
+Full reference for `hb test` — the command that runs an adversarial test against your agent. Covers the test-category flag (which orchestrator to use), testing levels (unit / system / acceptance shortcuts), language and provider selection, the experiment name and description, behaviour flags (`--wait`, `--fail-on`), and the optional `--endpoint` override for testing against a different agent than the project's default.
 
 ```
 hb test [OPTIONS]
