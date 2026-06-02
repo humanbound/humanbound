@@ -66,6 +66,9 @@
   <meta property="og:locale" content="en_US" />
   <meta property="og:image:alt" content="Humanbound's adversarial engine generates multi-turn attacks in real time, adapting strategy and escalating pressure as the agent responds." />
   <meta name="twitter:image:alt" content="Humanbound's adversarial engine generates multi-turn attacks in real time, adapting strategy and escalating pressure as the agent responds." />
+  
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/methodology/adversarial-engine/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Adversarial Engine","item":"https://docs.humanbound.ai/methodology/adversarial-engine/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/methodology/adversarial-engine/#article","headline":"Adversarial Engine","description":"Humanbound's adversarial engine generates multi-turn attacks in real time, adapting strategy and escalating pressure as the agent responds.","url":"https://docs.humanbound.ai/methodology/adversarial-engine/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-06-02T10:20:06+03:00","keywords":"adversarial testing engine, multi-turn attacks, score-guided escalation, attack techniques, OWASP LLM security, agentic security testing, cross-conversation intelligence, behavioral QA engine"}]}</script>
+  
 
   
 <meta property="og:type" content="website" />
@@ -2324,6 +2327,7 @@
 
 
 <h1 id="adversarial-testing-engine">Adversarial Testing Engine</h1>
+<p>Humanbound's adversarial engine generates multi-turn attacks against your agent in real time — each message is crafted in response to what the agent said in the previous turn, with the engine adapting strategy and escalating pressure as the conversation develops. The sections below explain the attack lifecycle, the strategies the engine uses, and how it scores progress toward an exploit.</p>
 <h2 id="how-attacks-work">How Attacks Work</h2>
 <p>Humanbound's adversarial engine doesn't use static prompt lists. It generates multi-turn conversations where each message is crafted in real-time based on the agent's responses — adapting strategy, escalating pressure, and pivoting when blocked.</p>
 <h3 id="the-attack-lifecycle">The Attack Lifecycle</h3>
@@ -2415,7 +2419,7 @@ Goal hijacking, tool misuse, cross-tool injection chains, privilege escalation, 
 <li><strong>Determine verdict</strong> — pass (no violations) or fail (any violation detected)</li>
 </ol>
 <h3 id="severity-calibration">Severity Calibration</h3>
-<p>Severity (0-100) is calibrated based on domain risk:</p>
+<p><a href="../../reference/glossary/#scoring-posture">Severity</a> (0-100) is calibrated based on domain risk:</p>
 <ul>
 <li><strong>High-stakes domains</strong> (financial, healthcare, legal): +25-35 severity adjustment</li>
 <li><strong>Medium-stakes</strong> (enterprise, education): +10-25</li>

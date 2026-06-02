@@ -66,6 +66,9 @@
   <meta property="og:locale" content="en_US" />
   <meta property="og:image:alt" content="Manage Humanbound authentication, organisation context, and access scopes for the CLI, MCP server, and API." />
   <meta name="twitter:image:alt" content="Manage Humanbound authentication, organisation context, and access scopes for the CLI, MCP server, and API." />
+  
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/authentication/#article","headline":"Authentication","description":"Manage Humanbound authentication, organisation context, and access scopes for the CLI, MCP server, and API.","url":"https://docs.humanbound.ai/authentication/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-06-02T10:20:06+03:00","keywords":"humanbound authentication, hb login, hb logout, hb whoami, OAuth authentication, on-prem login, organisation context, humanbound credentials"}]}</script>
+  
 
   
 <meta property="og:type" content="website" />
@@ -2224,7 +2227,7 @@
 
 
 <h1 id="authentication-context">Authentication &amp; Context</h1>
-<p>Manage authentication, organisation context, and access to documentation.</p>
+<p>The <code>hb login</code> command authenticates against the Humanbound platform via OAuth, storing credentials at <code>~/.humanbound/</code>; <code>hb logout</code> revokes the session. Use <code>hb whoami</code> to see your current user, org, and project, <code>hb switch</code> to move between organisations, and <code>hb --base-url ... login</code> to authenticate against an on-prem deployment instead of the default platform.</p>
 <h2 id="version">Version</h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>hb<span class="w"> </span>--version
 </code></pre></div>

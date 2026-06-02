@@ -66,6 +66,9 @@
   <meta property="og:locale" content="en_US" />
   <meta property="og:image:alt" content="Create and rotate API keys for programmatic access to Humanbound — for CI/CD pipelines, automation scripts, and SIEM forwarders." />
   <meta name="twitter:image:alt" content="Create and rotate API keys for programmatic access to Humanbound — for CI/CD pipelines, automation scripts, and SIEM forwarders." />
+  
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/management/api-keys/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"API Keys","item":"https://docs.humanbound.ai/management/api-keys/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/management/api-keys/#article","headline":"API Keys","description":"Create and rotate API keys for programmatic access to Humanbound \u2014 for CI/CD pipelines, automation scripts, and SIEM forwarders.","url":"https://docs.humanbound.ai/management/api-keys/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-06-02T10:20:06+03:00","keywords":"API keys, hb api-keys command, API key scopes, programmatic access, API key rotation, CI/CD authentication, read scope API key"},{"@type":"FAQPage","@id":"https://docs.humanbound.ai/management/api-keys/#faq","isPartOf":{"@id":"https://docs.humanbound.ai/management/api-keys/#article"},"mainEntity":[{"@type":"Question","name":"How do I create a Humanbound API key?","acceptedAnswer":{"@type":"Answer","text":"Run `hb api-keys create --name \"CI Key\"` to create a key. The key value is shown only once during creation \u2014 store it securely immediately, because it cannot be retrieved again."}},{"@type":"Question","name":"What happens if I lose my API key?","acceptedAnswer":{"@type":"Answer","text":"API keys are shown only once during creation. If lost, you must revoke the existing key with `hb api-keys delete <id>` and create a new one."}},{"@type":"Question","name":"What scopes are available for API keys?","acceptedAnswer":{"@type":"Answer","text":"Three scopes are available \u2014 `admin` for full access including user management and sensitive operations, `write` for creating and modifying projects and running tests, and `read` for view-only access to projects, experiments, and results."}},{"@type":"Question","name":"How do I deactivate an API key without deleting it?","acceptedAnswer":{"@type":"Answer","text":"Run `hb api-keys update <id> --inactive` to deactivate a key. You can reactivate it later with `hb api-keys update <id> --active`."}}]}]}</script>
+  
 
   
 <meta property="og:type" content="website" />
@@ -1661,6 +1664,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#frequently-asked-questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Frequently asked questions
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2213,7 +2227,7 @@
 
 
 <h1 id="api-keys">API Keys</h1>
-<p>Create and manage API keys for programmatic access to Humanbound. Useful for CI/CD pipelines, automation scripts, and integrations.</p>
+<p>The <code>hb api-keys</code> commands create and manage API keys for programmatic access to the Humanbound platform — the credential CI/CD pipelines, automation scripts, and SIEM forwarders use to authenticate. Keys are issued with one of three scopes (admin, write, read) and shown only once at creation. The commands cover create, list, update (rename, activate, deactivate), and revoke.</p>
 <h2 id="list-api-keys">List API Keys</h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>hb<span class="w"> </span>api-keys<span class="w"> </span>list
 </code></pre></div>
@@ -2251,6 +2265,23 @@
 <li><strong>write</strong>: Create and modify projects, run tests, update findings</li>
 <li><strong>read</strong>: View-only access to projects, experiments, and results</li>
 </ul>
+<h2 id="frequently-asked-questions">Frequently asked questions</h2>
+<details class="question">
+<summary>How do I create a Humanbound API key?</summary>
+<p>Run <code>hb api-keys create --name "CI Key"</code> to create a key. The key value is shown only once during creation — store it securely immediately, because it cannot be retrieved again.</p>
+</details>
+<details class="question">
+<summary>What happens if I lose my API key?</summary>
+<p>API keys are shown only once during creation. If lost, you must revoke the existing key with <code>hb api-keys delete &lt;id&gt;</code> and create a new one.</p>
+</details>
+<details class="question">
+<summary>What scopes are available for API keys?</summary>
+<p>Three scopes are available — <code>admin</code> for full access including user management and sensitive operations, <code>write</code> for creating and modifying projects and running tests, and <code>read</code> for view-only access to projects, experiments, and results.</p>
+</details>
+<details class="question">
+<summary>How do I deactivate an API key without deleting it?</summary>
+<p>Run <code>hb api-keys update &lt;id&gt; --inactive</code> to deactivate a key. You can reactivate it later with <code>hb api-keys update &lt;id&gt; --active</code>.</p>
+</details>
 
 
 

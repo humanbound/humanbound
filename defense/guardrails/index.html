@@ -66,6 +66,9 @@
   <meta property="og:locale" content="en_US" />
   <meta property="og:image:alt" content="Export guardrails — security rules derived from your test results that capture discovered attack patterns and enforce them at runtime." />
   <meta name="twitter:image:alt" content="Export guardrails — security rules derived from your test results that capture discovered attack patterns and enforce them at runtime." />
+  
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/defense/guardrails/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Guardrails","item":"https://docs.humanbound.ai/defense/guardrails/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/defense/guardrails/#article","headline":"Guardrails","description":"Export guardrails \u2014 security rules derived from your test results that capture discovered attack patterns and enforce them at runtime.","url":"https://docs.humanbound.ai/defense/guardrails/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-06-02T10:20:06+03:00","keywords":"guardrails export, hb guardrails command, security rules export, firewall training data, guardrail rule format, OpenAI moderation rules, PyRIT import, promptfoo import"}]}</script>
+  
 
   
 <meta property="og:type" content="website" />
@@ -2241,7 +2244,7 @@
 
 
 <h1 id="guardrails-export">Guardrails Export</h1>
-<p>Guardrails are security rules extracted from your test results. They capture the attack patterns and boundary violations discovered during testing and translate them into actionable rules for runtime defense.</p>
+<p><a href="../../reference/glossary/#defense">Guardrails</a> are security rules extracted from your test results. They capture the attack patterns and boundary violations discovered during testing and translate them into actionable rules for runtime defense. Export with <code>hb guardrails</code> as JSON, YAML, or OpenAI moderation format, then load the rules into <code>humanbound-firewall</code> where they configure the Tier 3 LLM judge's evaluation criteria.</p>
 <p>Guardrails are the bridge between testing and protection — they carry the knowledge gained from adversarial testing into the firewall's evaluation logic.</p>
 <h2 id="how-it-works">How It Works</h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>hb test → findings (what attacks succeeded)
@@ -2254,7 +2257,7 @@
 <ul>
 <li><strong>Threat class</strong> — which OWASP category it addresses</li>
 <li><strong>Pattern</strong> — description of the attack technique</li>
-<li><strong>Severity</strong> — how critical the vulnerability was</li>
+<li><strong><a href="../../reference/glossary/#scoring-posture">Severity</a></strong> — how critical the vulnerability was</li>
 <li><strong>Action</strong> — block (default)</li>
 </ul>
 <h2 id="export-guardrails">Export Guardrails</h2>

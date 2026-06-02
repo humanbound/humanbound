@@ -66,6 +66,9 @@
   <meta property="og:locale" content="en_US" />
   <meta property="og:image:alt" content="Continuous monitoring runs scheduled adversarial tests against production agents — surface model drift and security regressions before users do." />
   <meta name="twitter:image:alt" content="Continuous monitoring runs scheduled adversarial tests against production agents — surface model drift and security regressions before users do." />
+  
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/aisecops/continuous-monitoring/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Continuous Monitoring","item":"https://docs.humanbound.ai/aisecops/continuous-monitoring/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/aisecops/continuous-monitoring/#article","headline":"Continuous Monitoring","description":"Continuous monitoring runs scheduled adversarial tests against production agents \u2014 surface model drift and security regressions before users do.","url":"https://docs.humanbound.ai/aisecops/continuous-monitoring/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-06-02T10:20:06+03:00","keywords":"continuous monitoring, scheduled AI testing, monitoring campaigns, hb monitor command, posture history, finding regression tracking, cross-session leakage detection, autonomous vulnerability discovery"}]}</script>
+  
 
   
 <meta property="og:type" content="website" />
@@ -2274,6 +2277,7 @@
 
 
 <h1 id="continuous-monitoring">Continuous Monitoring</h1>
+<p>Continuous monitoring runs your Humanbound adversarial test suite against your agent on a schedule, surfacing model drift, prompt regressions, and new vulnerabilities before users encounter them. The sections below cover why point-in-time testing is insufficient for AI agents and how Humanbound treats security as an ongoing signal rather than a one-time snapshot.</p>
 <h2 id="the-problem-point-in-time-testing-is-not-enough">The Problem: Point-in-Time Testing Is Not Enough</h2>
 <p>AI agents are non-deterministic systems built on foundation models that evolve independently of the applications they power. A security assessment conducted today reflects the agent's behavior at that moment — under that specific model version, system prompt, tool configuration, and conversation context. Any of these variables can change without warning, and when they do, previously secure behavior may degrade.</p>
 <p>The risks are well-documented. Model provider updates can alter boundary enforcement. System prompt modifications can weaken intent restrictions. New tool integrations can expand the attack surface. Even without any configuration change, stochastic model behavior means that identical inputs may produce different outputs across sessions. These factors create a continuous security gap that point-in-time testing cannot address.</p>
@@ -2332,7 +2336,7 @@ In production, the firewall makes real-time decisions on real user input — blo
 <p>A campaign is the operational unit of continuous monitoring. It encapsulates a scheduled, recurring test cycle for a specific agent, with the following properties:</p>
 <ul>
 <li><strong>Schedule.</strong> How often tests run — daily, weekly, or triggered by deployment events.</li>
-<li><strong>Scope.</strong> Which threat classes to test, at what depth, with which orchestrator.</li>
+<li><strong><a href="../../reference/glossary/#testing-assessment">Scope</a>.</strong> Which threat classes to test, at what depth, with which orchestrator.</li>
 <li><strong>Intelligence.</strong> Accumulated attack strategies from past cycles, finding history, and coverage data.</li>
 <li><strong>Alerting.</strong> Webhook notifications on posture changes, new findings, or regressions.</li>
 </ul>
@@ -2361,7 +2365,7 @@ In production, the firewall makes real-time decisions on real user input — blo
 </tr>
 <tr>
 <td><strong>Stale</strong></td>
-<td>Finding not triggered in 14+ consecutive days of testing</td>
+<td><a href="../../reference/glossary/#aisecops-operations">Finding</a> not triggered in 14+ consecutive days of testing</td>
 </tr>
 </tbody>
 </table>

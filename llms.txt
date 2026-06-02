@@ -1,0 +1,80 @@
+# Humanbound Docs
+
+> Humanbound documentation — AI security testing, continuous monitoring, and defense for LLM agents.
+
+- [Home](https://docs.humanbound.ai/): Open-source AI agent security testing — automated adversarial probes, LLM-as-a-Judge evaluation, runtime firewall, and posture scoring.
+## Getting Started
+
+- [Installation](https://docs.humanbound.ai/getting-started/installation/): Install Humanbound — pip install, optional local engine extras, and quick paths for both account-less local mode and the full platform.
+- [Quick Start](https://docs.humanbound.ai/getting-started/quick-start/): From install to your first adversarial test in minutes — local or platform mode, with a posture score at the end.
+- [Agent Configuration](https://docs.humanbound.ai/getting-started/agent-config/): Define the JSON endpoint config Humanbound uses to talk to your agent — HTTP/WS, headers, payload templating, streaming, response extraction.
+
+## Local Engine
+
+- [Overview](https://docs.humanbound.ai/local-engine/): Run security tests locally with no login or network calls — full isolation with your own LLM provider, or offline mode with ollama.
+- [Provider Configuration](https://docs.humanbound.ai/local-engine/provider-config/): Configure the LLM provider the local engine uses for attack generation and response evaluation — bring your own API key.
+- [Scope Discovery](https://docs.humanbound.ai/local-engine/scope-discovery/): Scope discovery defines what your agent is allowed to do and what it shouldn't — the engine uses this to generate targeted attacks and judge responses.
+- [Orchestrators](https://docs.humanbound.ai/local-engine/orchestrators/): Orchestrators generate attacks, run conversations, and evaluate responses — Humanbound ships three built-in engines and lets you author your own.
+- [Output & Export](https://docs.humanbound.ai/local-engine/output-formats/): After a local test, results are saved on disk and can be viewed or exported as HTML reports, JSON, or CSV.
+
+## Concepts
+
+- [LLM-as-a-Judge](https://docs.humanbound.ai/concepts/llm-as-judge/): How Humanbound's judge LLM scores your agent's responses against security criteria — independent model, structured rubric, and reasoning.
+- [Red Coworker](https://docs.humanbound.ai/concepts/red-coworker/): Red Coworker — the collaborative model of the Humanbound platform. The AI adversary acts as a teammate; findings flow to your team and your existing tools.
+- [Security Posture](https://docs.humanbound.ai/concepts/security-posture/): Security posture (0–100) summarises an agent's defense rate, coverage, and finding severity into a single comparable score.
+
+## Methodology
+
+- [Adversarial Engine](https://docs.humanbound.ai/methodology/adversarial-engine/): Humanbound's adversarial engine generates multi-turn attacks in real time, adapting strategy and escalating pressure as the agent responds.
+
+## Testing
+
+- [Test Command](https://docs.humanbound.ai/testing/test-command/): hb test reference — orchestrators, testing levels, languages, providers, and every flag that shapes an adversarial run.
+- [Collaborative Redteam [Preview]](https://docs.humanbound.ai/testing/collaborative-redteam/): Collaborative Redteam — multi-user adversarial red-teaming sessions with an AI co-pilot, integrated with the Red Coworker collaboration loop.
+- [Log Upload](https://docs.humanbound.ai/testing/log-upload/): Upload real conversation logs and evaluate them against Humanbound's security judges — score safety, scope, and policy adherence retroactively.
+- [Assessments](https://docs.humanbound.ai/testing/assessments/): Assessments are point-in-time snapshots of a project's security state — posture, findings, and coverage produced by every ASCAM activity.
+- [Reports](https://docs.humanbound.ai/testing/reports/): Generate branded HTML security reports at four detail levels — executive, summary, detailed, and forensic — for stakeholders inside and outside your team.
+
+## Compliance
+
+- [Compliance Testing](https://docs.humanbound.ai/compliance/): Test your AI agent against regulatory requirements by adding domain-specific restrictions to its scope — the engine attacks compliance boundaries automatically.
+
+## Defense
+
+- [Firewall](https://docs.humanbound.ai/defense/firewall/): Humanbound Firewall — runtime defenses for LLM agents that block prompt injection and policy violations before they reach the agent in production.
+- [Guardrails](https://docs.humanbound.ai/defense/guardrails/): Export guardrails — security rules derived from your test results that capture discovered attack patterns and enforce them at runtime.
+
+## AISecOps
+
+- [Continuous Monitoring](https://docs.humanbound.ai/aisecops/continuous-monitoring/): Continuous monitoring runs scheduled adversarial tests against production agents — surface model drift and security regressions before users do.
+- [Findings](https://docs.humanbound.ai/aisecops/findings/): Findings are persistent vulnerability records that track security issues across test cycles — they remember when they first appeared and which regressions reintroduced them.
+- [Test Coverage](https://docs.humanbound.ai/aisecops/coverage/): Test coverage tracks which attack categories and techniques have run against your agent, surfacing blind spots in your security testing plan.
+
+## Management
+
+- [Projects](https://docs.humanbound.ai/management/projects/): Projects represent AI agents under test — each carries scope, capability declarations, configuration, and the history of every experiment that ran against it.
+- [Experiments](https://docs.humanbound.ai/management/experiments/): Experiments are individual test executions — they generate attack prompts, drive conversations with your agent, and produce security verdicts.
+- [Model Providers](https://docs.humanbound.ai/management/providers/): Configure the LLM providers Humanbound uses for attack generation, judging, and evaluations — credentials, default selection, and per-experiment overrides.
+- [API Keys](https://docs.humanbound.ai/management/api-keys/): Create and rotate API keys for programmatic access to Humanbound — for CI/CD pipelines, automation scripts, and SIEM forwarders.
+- [Team & Collaboration](https://docs.humanbound.ai/management/collaboration/): Team workflows for AI agent security — coordinate security leads, developers, and compliance officers around shared projects and findings.
+
+## Integrations
+
+- [Telemetry (Whitebox)](https://docs.humanbound.ai/integrations/telemetry/): Telemetry enables whitebox agentic testing — Humanbound sees your agent's tool calls, memory operations, and retrieval steps for deeper judge evaluation.
+- [CI/CD](https://docs.humanbound.ai/integrations/cicd/): Run Humanbound in CI/CD — gate releases on security posture, scope tests to PR branches, and surface regressions in your existing pipeline.
+- [SIEM](https://docs.humanbound.ai/integrations/siem/): Stream security events to your SIEM — findings, posture changes, and drift detections delivered in real time as HMAC-signed webhook events.
+- [MCP Server](https://docs.humanbound.ai/integrations/mcp/): Drive Humanbound from Claude Code, Cursor, Windsurf, or Copilot via the built-in MCP server — ask about posture, findings, and runs in your IDE.
+
+## Plugins [Preview]
+
+- [Overview](https://docs.humanbound.ai/plugins/): Humanbound plugins for AI coding agents — adversarial security testing inside Claude Code and Cursor.
+
+- [Deployment](https://docs.humanbound.ai/deployment/): Deployment options for Humanbound — local engine, managed platform, and air-gapped variants for organisations with specific security and compliance needs.
+- [Authentication](https://docs.humanbound.ai/authentication/): Manage Humanbound authentication, organisation context, and access scopes for the CLI, MCP server, and API.
+## Reference
+
+- [Commands](https://docs.humanbound.ai/reference/commands/): Complete hb CLI reference — every command and flag, grouped by workflow — auth, projects, test, redteam, posture, logs, MCP.
+- [Glossary](https://docs.humanbound.ai/reference/glossary/): Glossary of key terms used throughout Humanbound — orchestrator, judge, scope, posture, finding, experiment, and more.
+
+- [Shell Completion](https://docs.humanbound.ai/shell-completion/): Enable tab completion for the hb CLI in bash, zsh, or fish — install once and get flag and command suggestions in every new shell.
+- [Community](https://docs.humanbound.ai/community/): Join the Humanbound community for help, feedback, and updates — channels, contributing guide, and how to get in touch.

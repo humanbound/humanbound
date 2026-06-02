@@ -66,6 +66,9 @@
   <meta property="og:locale" content="en_US" />
   <meta property="og:image:alt" content="After a local test, results are saved on disk and can be viewed or exported as HTML reports, JSON, or CSV." />
   <meta name="twitter:image:alt" content="After a local test, results are saved on disk and can be viewed or exported as HTML reports, JSON, or CSV." />
+  
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/local-engine/output-formats/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Output & Export","item":"https://docs.humanbound.ai/local-engine/output-formats/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/local-engine/output-formats/#article","headline":"Output & Export","description":"After a local test, results are saved on disk and can be viewed or exported as HTML reports, JSON, or CSV.","url":"https://docs.humanbound.ai/local-engine/output-formats/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-06-02T10:20:06+03:00","keywords":"test results export, HTML report, conversation logs, guardrails export, posture report, firewall training data, log schema, hb report command"}]}</script>
+  
 
   
 <meta property="og:type" content="website" />
@@ -2274,7 +2277,7 @@
 
 
 <h1 id="output-export">Output &amp; Export</h1>
-<p>After a test, results are saved locally and can be viewed or exported in multiple formats.</p>
+<p>After <code>hb test</code> finishes locally, results are written to <code>.humanbound/results/exp-{timestamp}/</code> as <code>meta.json</code> (experiment metadata + posture + insights) and <code>logs.jsonl</code> (one conversation per line). The <code>hb posture</code>, <code>hb logs</code>, and <code>hb report</code> commands read this data — viewing the posture score, filtering conversations by verdict, or producing branded HTML reports. Findings can also be exported as guardrail rules (<code>hb guardrails</code>) and used to train a Tier 2 firewall classifier.</p>
 <h2 id="results-location">Results Location</h2>
 <p>Results are saved to <code>.humanbound/results/exp-{timestamp}/</code> in your working directory:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>.humanbound/results/exp-20260419-135646/
@@ -2315,7 +2318,7 @@
 <li>Cover page with test metadata</li>
 <li>Posture score with donut chart</li>
 <li>Stats cards (total/pass/fail/defense rate)</li>
-<li>Severity distribution bar</li>
+<li><a href="../../reference/glossary/#scoring-posture">Severity</a> distribution bar</li>
 <li>Findings table with severity badges</li>
 <li>Category coverage (breached vs defended)</li>
 <li>Failed conversation appendix (up to 20)</li>

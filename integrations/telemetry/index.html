@@ -66,6 +66,9 @@
   <meta property="og:locale" content="en_US" />
   <meta property="og:image:alt" content="Telemetry enables whitebox agentic testing — Humanbound sees your agent's tool calls, memory operations, and retrieval steps for deeper judge evaluation." />
   <meta name="twitter:image:alt" content="Telemetry enables whitebox agentic testing — Humanbound sees your agent's tool calls, memory operations, and retrieval steps for deeper judge evaluation." />
+  
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/integrations/telemetry/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Telemetry (Whitebox)","item":"https://docs.humanbound.ai/integrations/telemetry/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/integrations/telemetry/#article","headline":"Telemetry (Whitebox)","description":"Telemetry enables whitebox agentic testing \u2014 Humanbound sees your agent's tool calls, memory operations, and retrieval steps for deeper judge evaluation.","url":"https://docs.humanbound.ai/integrations/telemetry/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-06-02T10:20:06+03:00","keywords":"whitebox agentic testing, telemetry integration, LangFuse integration, LangSmith integration, observability platforms, tool call tracing, agent telemetry config, session ID alignment"},{"@type":"FAQPage","@id":"https://docs.humanbound.ai/integrations/telemetry/#faq","isPartOf":{"@id":"https://docs.humanbound.ai/integrations/telemetry/#article"},"mainEntity":[{"@type":"Question","name":"How do I enable telemetry?","acceptedAnswer":{"@type":"Answer","text":"Add a `telemetry` block to your agent config JSON alongside `chat_completion` and `thread_init`. If the block is present, telemetry is enabled \u2014 no separate flag is needed. Specify the observability platform `format`, the `endpoint` URL, and auth headers."}}]}]}</script>
+  
 
   
 <meta property="og:type" content="website" />
@@ -1967,6 +1970,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#frequently-asked-questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Frequently asked questions
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2763,6 +2777,11 @@ Observability platforms need time to ingest traces. Humanbound waits ~10 seconds
 Ensure your agent passes the same session ID to both Humanbound (via <code>thread_init</code> response) and your observability platform. For LangFuse with LangGraph, use <code>propagate_attributes(session_id=session_id)</code>.</p>
 <p><strong>Wrong credentials:</strong>
 For LangFuse, the Basic auth header uses <code>public_key:secret_key</code> base64-encoded. Ensure the keys belong to the same LangFuse project your agent logs to.</p>
+<h2 id="frequently-asked-questions">Frequently asked questions</h2>
+<details class="question">
+<summary>How do I enable telemetry?</summary>
+<p>Add a <code>telemetry</code> block to your agent config JSON alongside <code>chat_completion</code> and <code>thread_init</code>. If the block is present, telemetry is enabled — no separate flag is needed. Specify the observability platform <code>format</code>, the <code>endpoint</code> URL, and auth headers.</p>
+</details>
 
 
 

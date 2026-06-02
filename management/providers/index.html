@@ -66,6 +66,9 @@
   <meta property="og:locale" content="en_US" />
   <meta property="og:image:alt" content="Configure the LLM providers Humanbound uses for attack generation, judging, and evaluations — credentials, default selection, and per-experiment overrides." />
   <meta name="twitter:image:alt" content="Configure the LLM providers Humanbound uses for attack generation, judging, and evaluations — credentials, default selection, and per-experiment overrides." />
+  
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/management/providers/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Model Providers","item":"https://docs.humanbound.ai/management/providers/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/management/providers/#article","headline":"Model Providers","description":"Configure the LLM providers Humanbound uses for attack generation, judging, and evaluations \u2014 credentials, default selection, and per-experiment overrides.","url":"https://docs.humanbound.ai/management/providers/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-06-02T10:20:06+03:00","keywords":"LLM providers, hb providers command, model provider configuration, OpenAI provider, Claude provider, Azure OpenAI configuration, default provider, custom LLM provider"}]}</script>
+  
 
   
 <meta property="og:type" content="website" />
@@ -2246,7 +2249,7 @@
 
 
 <h1 id="model-providers">Model Providers</h1>
-<p>Configure LLM providers used for generating attacks, running security judges, and performing evaluations.</p>
+<p>The <code>hb providers</code> commands manage the LLM providers Humanbound uses to generate adversarial attacks, run security judges, and produce evaluations. Six providers are supported out of the box (OpenAI, Anthropic Claude, Google Gemini, Azure OpenAI, Grok, and a Custom OpenAI-compatible option), plus an interactive setup flow. One provider can be marked as the default; experiments can override per-run with <code>--provider-id</code>.</p>
 <h2 id="list-providers">List Providers</h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>hb<span class="w"> </span>providers<span class="w"> </span>list
 </code></pre></div>
@@ -2278,7 +2281,7 @@
 <table>
 <thead>
 <tr>
-<th>Provider</th>
+<th><a href="../../reference/glossary/#architecture-distribution">Provider</a></th>
 <th>Label</th>
 <th>Requirements</th>
 </tr>

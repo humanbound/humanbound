@@ -66,6 +66,9 @@
   <meta property="og:locale" content="en_US" />
   <meta property="og:image:alt" content="Enable tab completion for the hb CLI in bash, zsh, or fish — install once and get flag and command suggestions in every new shell." />
   <meta name="twitter:image:alt" content="Enable tab completion for the hb CLI in bash, zsh, or fish — install once and get flag and command suggestions in every new shell." />
+  
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/shell-completion/#article","headline":"Shell Completion","description":"Enable tab completion for the hb CLI in bash, zsh, or fish \u2014 install once and get flag and command suggestions in every new shell.","url":"https://docs.humanbound.ai/shell-completion/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-06-02T10:20:06+03:00","keywords":"shell completion, hb completion command, bash completion, zsh completion, fish completion, CLI tab completion"}]}</script>
+  
 
   
 <meta property="og:type" content="website" />
@@ -2169,7 +2172,7 @@
 
 
 <h1 id="shell-completion">Shell Completion</h1>
-<p>Enable tab completion for the <code>hb</code> CLI in your shell. The <code>hb completion</code> command generates the appropriate completion script for bash, zsh, or fish.</p>
+<p>The <code>hb completion</code> command emits a shell completion script for bash, zsh, or fish — append it to your shell's rc file once and every subsequent shell gets tab completion for <code>hb</code> commands and flags. If you don't pass a shell argument, the CLI auto-detects from <code>$SHELL</code>. Setup takes one line per shell; restart your shell or source the rc file for changes to take effect.</p>
 <h2 id="setup">Setup</h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Bash</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>hb<span class="w"> </span>completion<span class="w"> </span>bash<span class="w"> </span>&gt;&gt;<span class="w"> </span>~/.bashrc

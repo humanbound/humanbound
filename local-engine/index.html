@@ -66,6 +66,9 @@
   <meta property="og:locale" content="en_US" />
   <meta property="og:image:alt" content="Run security tests locally with no login or network calls — full isolation with your own LLM provider, or offline mode with ollama." />
   <meta name="twitter:image:alt" content="Run security tests locally with no login or network calls — full isolation with your own LLM provider, or offline mode with ollama." />
+  
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/local-engine/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Overview","item":"https://docs.humanbound.ai/local-engine/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/local-engine/#article","headline":"Overview","description":"Run security tests locally with no login or network calls \u2014 full isolation with your own LLM provider, or offline mode with ollama.","url":"https://docs.humanbound.ai/local-engine/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-06-02T10:20:06+03:00","keywords":"local engine, local security testing, offline testing isolation, humanbound local mode, no-login testing, ollama isolation, local vs platform"}]}</script>
+  
 
   
 <meta property="og:type" content="website" />
@@ -2202,7 +2205,7 @@
 
 
 <h1 id="local-engine">Local Engine</h1>
-<p>Run security tests <strong>locally</strong> — no login, no account, no network calls to Humanbound. Full isolation with your own LLM provider or <a href="https://ollama.com">ollama</a> for completely offline testing.</p>
+<p>Run security tests <strong>locally</strong> — no login, no account, no network calls to Humanbound. Full isolation with your own LLM provider or <a href="https://ollama.com">ollama</a> for completely offline testing. The engine runs the same orchestrators, attack strategies, judge, and posture formula as the hosted platform; the only difference is that results stay on your machine in <code>.humanbound/results/</code>.</p>
 <h2 id="how-it-works">How It Works</h2>
 <p>The local engine runs the same orchestrator, attack strategies, judge, and posture formula as the platform. The only difference: results stay on your machine.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>hb test --endpoint ./config.json --scope ./scope.json --wait
@@ -2247,12 +2250,12 @@
 <td>Yes</td>
 </tr>
 <tr>
-<td>Guardrails export</td>
+<td><a href="../reference/glossary/#defense">Guardrails</a> export</td>
 <td>Yes</td>
 <td>Yes (richer)</td>
 </tr>
 <tr>
-<td>Firewall training</td>
+<td><a href="../reference/glossary/#defense">Firewall</a> training</td>
 <td>Yes</td>
 <td>Yes (richer)</td>
 </tr>
@@ -2262,7 +2265,7 @@
 <td>Yes</td>
 </tr>
 <tr>
-<td>Finding lifecycle</td>
+<td><a href="../reference/glossary/#aisecops-operations">Finding</a> lifecycle</td>
 <td>No</td>
 <td>Yes</td>
 </tr>

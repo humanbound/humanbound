@@ -66,6 +66,9 @@
   <meta property="og:locale" content="en_US" />
   <meta property="og:image:alt" content="Run Humanbound in CI/CD — gate releases on security posture, scope tests to PR branches, and surface regressions in your existing pipeline." />
   <meta name="twitter:image:alt" content="Run Humanbound in CI/CD — gate releases on security posture, scope tests to PR branches, and surface regressions in your existing pipeline." />
+  
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/integrations/cicd/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"CI/CD","item":"https://docs.humanbound.ai/integrations/cicd/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/integrations/cicd/#article","headline":"CI/CD","description":"Run Humanbound in CI/CD \u2014 gate releases on security posture, scope tests to PR branches, and surface regressions in your existing pipeline.","url":"https://docs.humanbound.ai/integrations/cicd/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-06-02T10:20:06+03:00","keywords":"CI/CD security testing, GitHub Actions integration, GitLab CI integration, --fail-on threshold, security gate, automated security tests, pipeline integration, --wait CI flag"},{"@type":"FAQPage","@id":"https://docs.humanbound.ai/integrations/cicd/#faq","isPartOf":{"@id":"https://docs.humanbound.ai/integrations/cicd/#article"},"mainEntity":[{"@type":"Question","name":"What does the --fail-on flag do in CI/CD?","acceptedAnswer":{"@type":"Answer","text":"The `--fail-on` flag causes the `hb test` command to exit with a non-zero status code when vulnerabilities at or above the specified severity are found. Thresholds are `critical`, `high`, `medium`, `low`, and `any`, allowing you to configure how strict your security gate is."}},{"@type":"Question","name":"What does --wait do and why should I use it in CI/CD?","acceptedAnswer":{"@type":"Answer","text":"`--wait` tells Humanbound to block until the test run completes before the command exits. Always use `--wait` in CI/CD pipelines to ensure results are available before the job finishes or artifacts are exported."}}]}]}</script>
+  
 
   
 <meta property="og:type" content="website" />
@@ -1784,6 +1787,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#frequently-asked-questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Frequently asked questions
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2275,6 +2289,15 @@
 <p class="admonition-title">Tip</p>
 <p>Always use <code>--wait</code> in CI/CD pipelines to ensure the test completes before the job finishes. Use <code>--fail-on</code> to enforce security quality gates.</p>
 </div>
+<h2 id="frequently-asked-questions">Frequently asked questions</h2>
+<details class="question">
+<summary>What does the --fail-on flag do in CI/CD?</summary>
+<p>The <code>--fail-on</code> flag causes the <code>hb test</code> command to exit with a non-zero status code when vulnerabilities at or above the specified severity are found. Thresholds are <code>critical</code>, <code>high</code>, <code>medium</code>, <code>low</code>, and <code>any</code>, allowing you to configure how strict your security gate is.</p>
+</details>
+<details class="question">
+<summary>What does --wait do and why should I use it in CI/CD?</summary>
+<p><code>--wait</code> tells Humanbound to block until the test run completes before the command exits. Always use <code>--wait</code> in CI/CD pipelines to ensure results are available before the job finishes or artifacts are exported.</p>
+</details>
 
 
 

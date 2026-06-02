@@ -66,6 +66,9 @@
   <meta property="og:locale" content="en_US" />
   <meta property="og:image:alt" content="Test coverage tracks which attack categories and techniques have run against your agent, surfacing blind spots in your security testing plan." />
   <meta name="twitter:image:alt" content="Test coverage tracks which attack categories and techniques have run against your agent, surfacing blind spots in your security testing plan." />
+  
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/aisecops/coverage/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Test Coverage","item":"https://docs.humanbound.ai/aisecops/coverage/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/aisecops/coverage/#article","headline":"Test Coverage","description":"Test coverage tracks which attack categories and techniques have run against your agent, surfacing blind spots in your security testing plan.","url":"https://docs.humanbound.ai/aisecops/coverage/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-06-02T10:20:06+03:00","keywords":"test coverage, hb coverage command, coverage gaps, attack category coverage, AFL-style coverage, security testing blind spots"}]}</script>
+  
 
   
 <meta property="og:type" content="website" />
@@ -2191,7 +2194,7 @@
 
 
 <h1 id="test-coverage">Test Coverage</h1>
-<p>Track which attack categories, techniques, and vectors have been tested against your AI agent. Coverage information helps identify blind spots in your security testing.</p>
+<p>The <code>hb coverage</code> command shows which attack categories and techniques have run against your agent, and which haven't — making it easy to spot blind spots in the security testing plan. Use <code>hb coverage --gaps</code> to list the untested categories and <code>hb coverage --json</code> for machine-readable output. Coverage tracking uses an AFL-style (American Fuzzy Lop) coverage-guided approach with 5 priority levels, so high-impact vulnerabilities are tested first.</p>
 <h2 id="view-coverage-summary">View Coverage Summary</h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>hb<span class="w"> </span>coverage
 </code></pre></div>

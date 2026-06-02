@@ -66,6 +66,9 @@
   <meta property="og:locale" content="en_US" />
   <meta property="og:image:alt" content="Stream security events to your SIEM — findings, posture changes, and drift detections delivered in real time as HMAC-signed webhook events." />
   <meta name="twitter:image:alt" content="Stream security events to your SIEM — findings, posture changes, and drift detections delivered in real time as HMAC-signed webhook events." />
+  
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/integrations/siem/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"SIEM","item":"https://docs.humanbound.ai/integrations/siem/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/integrations/siem/#article","headline":"SIEM","description":"Stream security events to your SIEM \u2014 findings, posture changes, and drift detections delivered in real time as HMAC-signed webhook events.","url":"https://docs.humanbound.ai/integrations/siem/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-06-02T10:20:06+03:00","keywords":"SIEM integration, webhook events, HMAC signed webhooks, SOC integration, Splunk integration, security event streaming, webhook signature verification, event types"}]}</script>
+  
 
   
 <meta property="og:type" content="website" />
@@ -2240,7 +2243,7 @@
 <tbody>
 <tr>
 <td><code>finding.created</code></td>
-<td>New security vulnerability discovered. Severity varies by finding.</td>
+<td>New security vulnerability discovered. <a href="../../reference/glossary/#scoring-posture">Severity</a> varies by finding.</td>
 </tr>
 <tr>
 <td><code>finding.regressed</code></td>
@@ -2248,7 +2251,7 @@
 </tr>
 <tr>
 <td><code>finding.assigned</code></td>
-<td>Finding assigned to a team member for remediation.</td>
+<td><a href="../../reference/glossary/#aisecops-operations">Finding</a> assigned to a team member for remediation.</td>
 </tr>
 <tr>
 <td><code>finding.acknowledged</code></td>

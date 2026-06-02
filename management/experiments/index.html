@@ -66,6 +66,9 @@
   <meta property="og:locale" content="en_US" />
   <meta property="og:image:alt" content="Experiments are individual test executions — they generate attack prompts, drive conversations with your agent, and produce security verdicts." />
   <meta name="twitter:image:alt" content="Experiments are individual test executions — they generate attack prompts, drive conversations with your agent, and produce security verdicts." />
+  
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/management/experiments/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Experiments","item":"https://docs.humanbound.ai/management/experiments/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/management/experiments/#article","headline":"Experiments","description":"Experiments are individual test executions \u2014 they generate attack prompts, drive conversations with your agent, and produce security verdicts.","url":"https://docs.humanbound.ai/management/experiments/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-06-02T10:20:06+03:00","keywords":"experiments, hb experiments command, test execution tracking, experiment status, experiment logs, experiment report, hb logs filtering, CI/CD experiment wait"}]}</script>
+  
 
   
 <meta property="og:type" content="website" />
@@ -2246,7 +2249,7 @@
 
 
 <h1 id="experiments">Experiments</h1>
-<p>Experiments are individual test executions that generate attack prompts, run conversations with your AI agent, and produce security verdicts.</p>
+<p>An experiment is one execution of <code>hb test</code> — it generates attack prompts, runs multi-turn conversations against your agent, and produces a set of verdicts that feed into the project's posture and findings. The <code>hb experiments</code> commands list past experiments, show details of a specific one, check status (single, watch, or all-experiments dashboard), wait for completion (useful in CI/CD), view filtered logs, generate HTML reports, terminate running tests, and delete old records.</p>
 <h2 id="list-experiments">List Experiments</h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>hb<span class="w"> </span>experiments<span class="w"> </span>list
 </code></pre></div>

@@ -66,6 +66,9 @@
   <meta property="og:locale" content="en_US" />
   <meta property="og:image:alt" content="Scope discovery defines what your agent is allowed to do and what it shouldn't — the engine uses this to generate targeted attacks and judge responses." />
   <meta name="twitter:image:alt" content="Scope discovery defines what your agent is allowed to do and what it shouldn't — the engine uses this to generate targeted attacks and judge responses." />
+  
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/local-engine/scope-discovery/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Scope Discovery","item":"https://docs.humanbound.ai/local-engine/scope-discovery/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/local-engine/scope-discovery/#article","headline":"Scope Discovery","description":"Scope discovery defines what your agent is allowed to do and what it shouldn't \u2014 the engine uses this to generate targeted attacks and judge responses.","url":"https://docs.humanbound.ai/local-engine/scope-discovery/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-06-02T10:20:06+03:00","keywords":"scope discovery, agent scope definition, permitted intents, restricted intents, scope file, repository scan, auto-probe scope, tool definitions extraction"},{"@type":"FAQPage","@id":"https://docs.humanbound.ai/local-engine/scope-discovery/#faq","isPartOf":{"@id":"https://docs.humanbound.ai/local-engine/scope-discovery/#article"},"mainEntity":[{"@type":"Question","name":"What scope sources does Humanbound support?","acceptedAnswer":{"@type":"Answer","text":"Four sources are supported in order of precision \u2014 an explicit scope YAML or JSON file (`--scope`), a repository scan that extracts system prompts and tool definitions (`--repo`), a system prompt file (`--prompt`), and auto-probe which sends probing messages to infer scope from the agent's responses."}},{"@type":"Question","name":"What is the recommended way to provide scope?","acceptedAnswer":{"@type":"Answer","text":"An explicit scope file (`--scope ./scope.yaml`) gives the most precision. For convenience, `--repo .` scans your codebase for system prompts, tool definitions, and README context. You can combine `--repo` and `--prompt` for the richest extraction."}}]}]}</script>
+  
 
   
 <meta property="og:type" content="website" />
@@ -649,6 +652,17 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#frequently-asked-questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Frequently asked questions
+      
+    </span>
+  </a>
   
 </li>
       
@@ -2219,7 +2233,7 @@
 
 
 <h1 id="scope-discovery">Scope Discovery</h1>
-<p>The engine needs to know what your agent is allowed to do (permitted intents) and what it shouldn't do (restricted intents) to generate targeted attacks and evaluate responses.</p>
+<p>The engine needs to know what your agent is allowed to do (permitted intents) and what it shouldn't do (restricted intents) to generate targeted attacks and evaluate responses. Four scope sources are supported in order of precision — an explicit YAML or JSON file (<code>--scope</code>), a repository scan that extracts the system prompt and tool definitions (<code>--repo</code>), a system prompt file (<code>--prompt</code>), or auto-probe inferred from the agent's own responses.</p>
 <h2 id="scope-sources">Scope Sources</h2>
 <p>Provide scope in order of preference:</p>
 <h3 id="1-explicit-scope-file-recommended-for-precision">1. Explicit Scope File (Recommended for precision)</h3>
@@ -2270,6 +2284,15 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>hb<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--endpoint<span class="w"> </span>./config.json<span class="w"> </span>--repo<span class="w"> </span>.<span class="w"> </span>--prompt<span class="w"> </span>./system_prompt.txt<span class="w"> </span>--wait
 </code></pre></div></p>
 </div>
+<h2 id="frequently-asked-questions">Frequently asked questions</h2>
+<details class="question">
+<summary>What scope sources does Humanbound support?</summary>
+<p>Four sources are supported in order of precision — an explicit scope YAML or JSON file (<code>--scope</code>), a repository scan that extracts system prompts and tool definitions (<code>--repo</code>), a system prompt file (<code>--prompt</code>), and auto-probe which sends probing messages to infer scope from the agent's responses.</p>
+</details>
+<details class="question">
+<summary>What is the recommended way to provide scope?</summary>
+<p>An explicit scope file (<code>--scope ./scope.yaml</code>) gives the most precision. For convenience, <code>--repo .</code> scans your codebase for system prompts, tool definitions, and README context. You can combine <code>--repo</code> and <code>--prompt</code> for the richest extraction.</p>
+</details>
 
 
 

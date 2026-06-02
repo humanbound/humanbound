@@ -66,6 +66,9 @@
   <meta property="og:locale" content="en_US" />
   <meta property="og:image:alt" content="Configure the LLM provider the local engine uses for attack generation and response evaluation — bring your own API key." />
   <meta name="twitter:image:alt" content="Configure the LLM provider the local engine uses for attack generation and response evaluation — bring your own API key." />
+  
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/local-engine/provider-config/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Provider Configuration","item":"https://docs.humanbound.ai/local-engine/provider-config/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/local-engine/provider-config/#article","headline":"Provider Configuration","description":"Configure the LLM provider the local engine uses for attack generation and response evaluation \u2014 bring your own API key.","url":"https://docs.humanbound.ai/local-engine/provider-config/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-06-02T10:20:06+03:00","keywords":"LLM provider configuration, HB_PROVIDER, HB_API_KEY, ollama setup, Azure OpenAI configuration, humanbound providers, provider precedence, hb config command"},{"@type":"FAQPage","@id":"https://docs.humanbound.ai/local-engine/provider-config/#faq","isPartOf":{"@id":"https://docs.humanbound.ai/local-engine/provider-config/#article"},"mainEntity":[{"@type":"Question","name":"Which LLM providers does Humanbound support?","acceptedAnswer":{"@type":"Answer","text":"Humanbound supports OpenAI, Anthropic (Claude), Google (Gemini), Azure OpenAI, Grok (xAI), and Ollama. Ollama requires no API key and runs fully locally."}},{"@type":"Question","name":"How do I configure my LLM provider?","acceptedAnswer":{"@type":"Answer","text":"Provider configuration is resolved in order \u2014 CLI flags first, then environment variables (e.g., `HB_PROVIDER`, `HB_API_KEY`), then the config file at `~/.humanbound/config.yaml`. The config file is set via `hb config set provider` and `hb config set api-key`."}},{"@type":"Question","name":"How do I configure Azure OpenAI with Humanbound?","acceptedAnswer":{"@type":"Answer","text":"Set `HB_PROVIDER=azureopenai`, provide your Azure API key via `HB_API_KEY`, and set `HB_ENDPOINT` to the full deployment URL including `?api-version=`, for example `https://your-resource.openai.azure.com/openai/deployments/your-deployment/chat/completions?api-version=2025-01-01-preview`."}},{"@type":"Question","name":"Can I run Humanbound with no external API calls at all?","acceptedAnswer":{"@type":"Answer","text":"Yes \u2014 use Ollama. Set `HB_PROVIDER=ollama` and `HB_MODEL=llama3.1:8b`, start `ollama serve`, and tests will only call your bot and the local Ollama instance. Note that local models produce lower-quality attacks than cloud providers."}}]}]}</script>
+  
 
   
 <meta property="og:type" content="website" />
@@ -640,6 +643,17 @@
     <span class="md-ellipsis">
       
         After Login: Humanbound Provider
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#frequently-asked-questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Frequently asked questions
       
     </span>
   </a>
@@ -2241,7 +2255,7 @@
 
 
 <h1 id="provider-configuration">Provider Configuration</h1>
-<p>The local engine needs an LLM provider for attack generation and response evaluation. You bring your own API key.</p>
+<p>The local engine needs an LLM provider for attack generation and response evaluation, and you bring your own API key. <a href="../../reference/glossary/#architecture-distribution">Provider</a> settings resolve in order — CLI flags override environment variables, which override the config file at <code>~/.humanbound/config.yaml</code>. Six providers are supported (OpenAI, Anthropic Claude, Google Gemini, Azure OpenAI, Grok, and Ollama for fully-local isolation); Azure requires a full endpoint URL with <code>?api-version=</code>.</p>
 <h2 id="configuration-methods">Configuration Methods</h2>
 <p>Provider is resolved in this order (first match wins):</p>
 <ol>
@@ -2344,6 +2358,23 @@
 <a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c1"># Uses Humanbound&#39;s LLM provider — no HB_PROVIDER or HB_API_KEY needed</span>
 </code></pre></div>
 <p>You can still use your own provider on the platform by adding it via <code>hb providers add</code>.</p>
+<h2 id="frequently-asked-questions">Frequently asked questions</h2>
+<details class="question">
+<summary>Which LLM providers does Humanbound support?</summary>
+<p>Humanbound supports OpenAI, Anthropic (Claude), Google (Gemini), Azure OpenAI, Grok (xAI), and Ollama. Ollama requires no API key and runs fully locally.</p>
+</details>
+<details class="question">
+<summary>How do I configure my LLM provider?</summary>
+<p>Provider configuration is resolved in order — CLI flags first, then environment variables (e.g., <code>HB_PROVIDER</code>, <code>HB_API_KEY</code>), then the config file at <code>~/.humanbound/config.yaml</code>. The config file is set via <code>hb config set provider</code> and <code>hb config set api-key</code>.</p>
+</details>
+<details class="question">
+<summary>How do I configure Azure OpenAI with Humanbound?</summary>
+<p>Set <code>HB_PROVIDER=azureopenai</code>, provide your Azure API key via <code>HB_API_KEY</code>, and set <code>HB_ENDPOINT</code> to the full deployment URL including <code>?api-version=</code>, for example <code>https://your-resource.openai.azure.com/openai/deployments/your-deployment/chat/completions?api-version=2025-01-01-preview</code>.</p>
+</details>
+<details class="question">
+<summary>Can I run Humanbound with no external API calls at all?</summary>
+<p>Yes — use Ollama. Set <code>HB_PROVIDER=ollama</code> and <code>HB_MODEL=llama3.1:8b</code>, start <code>ollama serve</code>, and tests will only call your bot and the local Ollama instance. Note that local models produce lower-quality attacks than cloud providers.</p>
+</details>
 
 
 

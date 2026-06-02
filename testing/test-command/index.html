@@ -66,6 +66,9 @@
   <meta property="og:locale" content="en_US" />
   <meta property="og:image:alt" content="hb test reference — orchestrators, testing levels, languages, providers, and every flag that shapes an adversarial run." />
   <meta name="twitter:image:alt" content="hb test reference — orchestrators, testing levels, languages, providers, and every flag that shapes an adversarial run." />
+  
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/testing/test-command/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Test Command","item":"https://docs.humanbound.ai/testing/test-command/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/testing/test-command/#article","headline":"Test Command","description":"hb test reference \u2014 orchestrators, testing levels, languages, providers, and every flag that shapes an adversarial run.","url":"https://docs.humanbound.ai/testing/test-command/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-06-02T10:20:06+03:00","keywords":"hb test reference, test command flags, testing levels, test category, --fail-on flag, experiment configuration, test command CLI, adversarial test execution"}]}</script>
+  
 
   
 <meta property="og:type" content="website" />
@@ -2121,7 +2124,7 @@
 
 
 <h1 id="test-command-reference">Test Command Reference</h1>
-<p>Full reference for the <code>hb test</code> command and all its options.</p>
+<p>Full reference for <code>hb test</code> — the command that runs an adversarial test against your agent. Covers the test-category flag (which orchestrator to use), testing levels (unit / system / acceptance shortcuts), language and provider selection, the experiment name and description, behaviour flags (<code>--wait</code>, <code>--fail-on</code>), and the optional <code>--endpoint</code> override for testing against a different agent than the project's default.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>hb test [OPTIONS]
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>Test Configuration:

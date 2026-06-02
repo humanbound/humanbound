@@ -66,6 +66,9 @@
   <meta property="og:locale" content="en_US" />
   <meta property="og:image:alt" content="Projects represent AI agents under test — each carries scope, capability declarations, configuration, and the history of every experiment that ran against it." />
   <meta name="twitter:image:alt" content="Projects represent AI agents under test — each carries scope, capability declarations, configuration, and the history of every experiment that ran against it." />
+  
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/management/projects/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Projects","item":"https://docs.humanbound.ai/management/projects/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/management/projects/#article","headline":"Projects","description":"Projects represent AI agents under test \u2014 each carries scope, capability declarations, configuration, and the history of every experiment that ran against it.","url":"https://docs.humanbound.ai/management/projects/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-06-02T10:20:06+03:00","keywords":"projects, hb projects command, AI agent projects, project status, active project, project management, project report"}]}</script>
+  
 
   
 <meta property="og:type" content="website" />
@@ -2235,7 +2238,7 @@
 
 
 <h1 id="projects">Projects</h1>
-<p>Projects represent AI agents under test. Each project contains configuration, scope definitions, and associated test experiments.</p>
+<p>A Humanbound project represents one AI agent under test — its scope definition, endpoint configuration, and the full history of experiments, findings, and posture scores produced against it. The <code>hb projects</code> commands list and switch between projects, show project details and current status (running experiments, posture grade, monitoring state), update name or description, generate HTML reports, and delete a project along with all its associated experiments, logs, and findings.</p>
 <h2 id="list-projects">List Projects</h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>hb<span class="w"> </span>projects<span class="w"> </span>list
 </code></pre></div>

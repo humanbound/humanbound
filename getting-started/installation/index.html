@@ -66,6 +66,9 @@
   <meta property="og:locale" content="en_US" />
   <meta property="og:image:alt" content="Install Humanbound — pip install, optional local engine extras, and quick paths for both account-less local mode and the full platform." />
   <meta name="twitter:image:alt" content="Install Humanbound — pip install, optional local engine extras, and quick paths for both account-less local mode and the full platform." />
+  
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/getting-started/installation/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Installation","item":"https://docs.humanbound.ai/getting-started/installation/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/getting-started/installation/#article","headline":"Installation","description":"Install Humanbound \u2014 pip install, optional local engine extras, and quick paths for both account-less local mode and the full platform.","url":"https://docs.humanbound.ai/getting-started/installation/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-06-02T10:20:06+03:00","keywords":"humanbound installation, pip install humanbound, humanbound CLI setup, humanbound extras, local engine installation, humanbound ollama, humanbound MCP server"},{"@type":"FAQPage","@id":"https://docs.humanbound.ai/getting-started/installation/#faq","isPartOf":{"@id":"https://docs.humanbound.ai/getting-started/installation/#article"},"mainEntity":[{"@type":"Question","name":"What are the system requirements for Humanbound?","acceptedAnswer":{"@type":"Answer","text":"Humanbound requires Python 3.10 or higher, an LLM provider API key (OpenAI, Anthropic, Azure, etc.) or ollama for full local isolation, and an AI agent endpoint to test against."}},{"@type":"Question","name":"How do I install Humanbound with local engine support?","acceptedAnswer":{"@type":"Answer","text":"Run `pip install \"humanbound[engine]\"` to include the local testing engine with OpenAI, Anthropic, and Google SDK support. The base `pip install humanbound` installs the CLI without the local engine extras."}},{"@type":"Question","name":"What optional extras can I install with Humanbound?","acceptedAnswer":{"@type":"Answer","text":"Three extras are available \u2014 `engine` adds the local testing engine, `firewall` adds firewall training with scikit-learn and torch, and `mcp` adds an MCP server for AI coding assistants."}},{"@type":"Question","name":"Do I need an API key to run tests?","acceptedAnswer":{"@type":"Answer","text":"You need an LLM provider API key (OpenAI, Anthropic, Azure, etc.) for cloud-based testing, but you can use ollama with no API key at all for full local isolation."}},{"@type":"Question","name":"How do I verify my Humanbound installation?","acceptedAnswer":{"@type":"Answer","text":"Run `hb --version` to confirm the CLI is installed and `hb --help` to see available commands."}}]}]}</script>
+  
 
   
 <meta property="og:type" content="website" />
@@ -450,6 +453,17 @@
     <span class="md-ellipsis">
       
         First Test
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#frequently-asked-questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Frequently asked questions
       
     </span>
   </a>
@@ -2224,6 +2238,7 @@
 
 
 <h1 id="installation">Installation</h1>
+<p>Install Humanbound with <code>pip install humanbound</code>, optionally adding extras for the local testing engine, firewall training, or MCP server. The sections below walk through the install command, the available extras, system requirements, and running your first test, with pointers to provider configuration and the Quick Start guide.</p>
 <h2 id="install">Install</h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>humanbound
 </code></pre></div>
@@ -2258,7 +2273,7 @@
 <tr>
 <td><code>firewall</code></td>
 <td><code>pip install "humanbound[firewall]"</code></td>
-<td>Firewall training (humanbound-firewall, scikit-learn, torch)</td>
+<td><a href="../../reference/glossary/#defense">Firewall</a> training (humanbound-firewall, scikit-learn, torch)</td>
 </tr>
 <tr>
 <td><code>mcp</code></td>
@@ -2286,6 +2301,27 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>hb<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--endpoint<span class="w"> </span>./bot-config.json<span class="w"> </span>--repo<span class="w"> </span>.<span class="w"> </span>--wait
 </code></pre></div>
 <p>See <a href="../quick-start/">Quick Start</a> for the full walkthrough.</p>
+<h2 id="frequently-asked-questions">Frequently asked questions</h2>
+<details class="question">
+<summary>What are the system requirements for Humanbound?</summary>
+<p>Humanbound requires Python 3.10 or higher, an LLM provider API key (OpenAI, Anthropic, Azure, etc.) or ollama for full local isolation, and an AI agent endpoint to test against.</p>
+</details>
+<details class="question">
+<summary>How do I install Humanbound with local engine support?</summary>
+<p>Run <code>pip install "humanbound[engine]"</code> to include the local testing engine with OpenAI, Anthropic, and Google SDK support. The base <code>pip install humanbound</code> installs the CLI without the local engine extras.</p>
+</details>
+<details class="question">
+<summary>What optional extras can I install with Humanbound?</summary>
+<p>Three extras are available — <code>engine</code> adds the local testing engine, <code>firewall</code> adds firewall training with scikit-learn and torch, and <code>mcp</code> adds an MCP server for AI coding assistants.</p>
+</details>
+<details class="question">
+<summary>Do I need an API key to run tests?</summary>
+<p>You need an LLM provider API key (OpenAI, Anthropic, Azure, etc.) for cloud-based testing, but you can use ollama with no API key at all for full local isolation.</p>
+</details>
+<details class="question">
+<summary>How do I verify my Humanbound installation?</summary>
+<p>Run <code>hb --version</code> to confirm the CLI is installed and <code>hb --help</code> to see available commands.</p>
+</details>
 
 
 

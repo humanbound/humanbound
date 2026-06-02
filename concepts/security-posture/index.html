@@ -66,6 +66,9 @@
   <meta property="og:locale" content="en_US" />
   <meta property="og:image:alt" content="Security posture (0–100) summarises an agent's defense rate, coverage, and finding severity into a single comparable score." />
   <meta name="twitter:image:alt" content="Security posture (0–100) summarises an agent's defense rate, coverage, and finding severity into a single comparable score." />
+  
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/concepts/security-posture/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Security Posture","item":"https://docs.humanbound.ai/concepts/security-posture/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/concepts/security-posture/#article","headline":"Security Posture","description":"Security posture (0\u2013100) summarises an agent's defense rate, coverage, and finding severity into a single comparable score.","url":"https://docs.humanbound.ai/concepts/security-posture/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-06-02T10:20:06+03:00","keywords":"security posture, posture score, AI agent security score, posture grade, coverage effectiveness, severity impact, hb posture command, organization posture"}]}</script>
+  
 
   
 <meta property="og:type" content="website" />
@@ -2235,11 +2238,11 @@
 
 
 <h1 id="security-posture">Security Posture</h1>
-<p>The security posture score (0-100) provides a comprehensive view of your AI agent's security health. The formula is:</p>
+<p>The Humanbound security posture is a single 0–100 score (with A–F grade) that summarises an AI agent's severity impact (weighted sum of active findings by severity and status) and coverage effectiveness (ratio of tested threat classes with acceptable pass rates) into one comparable number. It is computed as <code>100 * (1 - severity_impact) * coverage_effectiveness</code>, viewed via <code>hb posture</code> (current score), <code>hb posture --trends</code> (history), or <code>hb posture --org</code> (aggregated across projects in two dimensions: Agent Security and Quality). The formula is:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>posture = 100 * (1 - severity_impact) * coverage_effectiveness
 </code></pre></div>
 <ul>
-<li><strong>Severity Impact</strong>: Weighted sum of active findings (by severity and status)</li>
+<li><strong><a href="../../reference/glossary/#scoring-posture">Severity</a> Impact</strong>: Weighted sum of active findings (by severity and status)</li>
 <li><strong>Coverage Effectiveness</strong>: Ratio of tested threat classes with acceptable pass rates</li>
 </ul>
 <h2 id="view-current-posture">View Current Posture</h2>

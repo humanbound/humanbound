@@ -66,6 +66,9 @@
   <meta property="og:locale" content="en_US" />
   <meta property="og:image:alt" content="Humanbound Firewall — runtime defenses for LLM agents that block prompt injection and policy violations before they reach the agent in production." />
   <meta name="twitter:image:alt" content="Humanbound Firewall — runtime defenses for LLM agents that block prompt injection and policy violations before they reach the agent in production." />
+  
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/defense/firewall/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Firewall","item":"https://docs.humanbound.ai/defense/firewall/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/defense/firewall/#article","headline":"Firewall","description":"Humanbound Firewall \u2014 runtime defenses for LLM agents that block prompt injection and policy violations before they reach the agent in production.","url":"https://docs.humanbound.ai/defense/firewall/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-06-02T10:20:06+03:00","keywords":"humanbound firewall, LLM agent firewall, runtime AI defense, prompt injection blocking, Tier 2 classifier, SetFit classifier, hb firewall train, agent.yaml configuration"},{"@type":"FAQPage","@id":"https://docs.humanbound.ai/defense/firewall/#faq","isPartOf":{"@id":"https://docs.humanbound.ai/defense/firewall/#article"},"mainEntity":[{"@type":"Question","name":"How is the Tier 2 classifier trained?","acceptedAnswer":{"@type":"Answer","text":"Tier 2 is trained from your Humanbound adversarial and QA test logs \u2014 failed adversarial conversations supply attack examples and passed QA conversations supply benign examples. Run `hb firewall train` after accumulating test data to produce a `.hbfw` model file."}}]}]}</script>
+  
 
   
 <meta property="og:type" content="website" />
@@ -1565,6 +1568,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#frequently-asked-questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Frequently asked questions
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2463,6 +2477,7 @@
 
 
 <h1 id="firewall">Firewall</h1>
+<p>The Humanbound <a href="../../reference/glossary/#defense">Firewall</a> is a runtime defense layer for LLM agents that inspects every user message and blocks prompt injection, policy violations, and out-of-scope requests before they reach the agent. The sections below cover the multi-tier evaluation architecture, training the Tier 2 classifier from your test logs, and installing the open-source library and integrating it with your agent.</p>
 <h2 id="the-challenge-runtime-protection-for-ai-agents">The Challenge: Runtime Protection for AI Agents</h2>
 <p>Testing identifies vulnerabilities. Monitoring tracks them over time. But neither prevents attacks from reaching the agent in production. The gap between "knowing an agent is vulnerable" and "preventing exploitation" requires a runtime defense layer — a firewall purpose-built for the semantics of natural language interaction.</p>
 <p>Traditional web application firewalls (WAFs) operate on HTTP requests, matching patterns against known attack signatures. AI agent security requires a fundamentally different approach. Attacks arrive as natural language — syntactically valid, contextually plausible, and semantically indistinguishable from legitimate requests when examined in isolation. A prompt injection disguised as a customer support query cannot be caught by regex or keyword matching. It requires understanding of the agent's intended scope, the user's conversational trajectory, and the semantic distance between what was asked and what should be permitted.</p>
@@ -2503,7 +2518,7 @@
 <table>
 <thead>
 <tr>
-<th>Verdict</th>
+<th><a href="../../reference/glossary/#testing-assessment">Verdict</a></th>
 <th>Category</th>
 <th>Description</th>
 </tr>
@@ -2858,7 +2873,7 @@
 <a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a>export HB_FIREWALL_MODEL=gpt-4o-mini        # optional
 </code></pre></div></p>
 <p>Or programmatically:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">hb_firewall</span><span class="w"> </span><span class="kn">import</span> <span class="n">Provider</span><span class="p">,</span> <span class="n">ProviderIntegration</span><span class="p">,</span> <span class="n">ProviderName</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">hb_firewall</span><span class="w"> </span><span class="kn">import</span> <span class="p">[</span><span class="n">Provider</span><span class="p">](</span><span class="o">../</span><span class="n">reference</span><span class="o">/</span><span class="n">glossary</span><span class="o">.</span><span class="n">md</span><span class="c1">#architecture-distribution), ProviderIntegration, ProviderName</span>
 <a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>
 <a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">Provider</span><span class="p">(</span>
 <a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>    <span class="n">name</span><span class="o">=</span><span class="n">ProviderName</span><span class="o">.</span><span class="n">AZURE_OPENAI</span><span class="p">,</span>
@@ -3082,6 +3097,11 @@
 <p class="admonition-title">Open Source</p>
 <p>The Humanbound Firewall is Apache-2.0 licensed. Free to use, modify, and embed in commercial products with attribution. Source code and detector examples at <a href="https://github.com/humanbound/humanbound-firewall">github.com/humanbound/humanbound-firewall</a>.</p>
 </div>
+<h2 id="frequently-asked-questions">Frequently asked questions</h2>
+<details class="question">
+<summary>How is the Tier 2 classifier trained?</summary>
+<p>Tier 2 is trained from your Humanbound adversarial and QA test logs — failed adversarial conversations supply attack examples and passed QA conversations supply benign examples. Run <code>hb firewall train</code> after accumulating test data to produce a <code>.hbfw</code> model file.</p>
+</details>
 
 
 

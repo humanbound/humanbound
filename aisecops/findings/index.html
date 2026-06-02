@@ -66,6 +66,9 @@
   <meta property="og:locale" content="en_US" />
   <meta property="og:image:alt" content="Findings are persistent vulnerability records that track security issues across test cycles — they remember when they first appeared and which regressions reintroduced them." />
   <meta name="twitter:image:alt" content="Findings are persistent vulnerability records that track security issues across test cycles — they remember when they first appeared and which regressions reintroduced them." />
+  
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/aisecops/findings/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Findings","item":"https://docs.humanbound.ai/aisecops/findings/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/aisecops/findings/#article","headline":"Findings","description":"Findings are persistent vulnerability records that track security issues across test cycles \u2014 they remember when they first appeared and which regressions reintroduced them.","url":"https://docs.humanbound.ai/aisecops/findings/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-06-02T10:20:06+03:00","keywords":"findings management, finding lifecycle, vulnerability tracking, finding delegation, regression detection, hb findings command, finding webhook events, severity weighted penalties"}]}</script>
+  
 
   
 <meta property="og:type" content="website" />
@@ -2259,7 +2262,7 @@
 - Stale findings that reappear transition to <strong>regressed</strong>
 - Users can manually mark findings as <strong>fixed</strong></p>
 <h2 id="team-delegation">Team Delegation</h2>
-<p>When a finding is identified, someone needs to own it — investigate the root cause, implement a fix, and verify the resolution. Finding delegation assigns this responsibility to a specific team member and tracks progress through four stages: unassigned → assigned → in progress → verified.</p>
+<p>When a finding is identified, someone needs to own it — investigate the root cause, implement a fix, and verify the resolution. <a href="../../reference/glossary/#aisecops-operations">Finding</a> delegation assigns this responsibility to a specific team member and tracks progress through four stages: unassigned → assigned → in progress → verified.</p>
 <p>See <a href="../../management/collaboration/">Team &amp; Collaboration</a> for the full delegation workflow, roles, and webhook notifications.</p>
 <h3 id="cli-usage">CLI Usage</h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># List all findings</span>
@@ -2310,7 +2313,7 @@
 <table>
 <thead>
 <tr>
-<th>Severity</th>
+<th><a href="../../reference/glossary/#scoring-posture">Severity</a></th>
 <th>Weight</th>
 </tr>
 </thead>

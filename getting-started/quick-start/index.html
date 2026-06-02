@@ -66,6 +66,9 @@
   <meta property="og:locale" content="en_US" />
   <meta property="og:image:alt" content="From install to your first adversarial test in minutes — local or platform mode, with a posture score at the end." />
   <meta name="twitter:image:alt" content="From install to your first adversarial test in minutes — local or platform mode, with a posture score at the end." />
+  
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/getting-started/quick-start/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Quick Start","item":"https://docs.humanbound.ai/getting-started/quick-start/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/getting-started/quick-start/#article","headline":"Quick Start","description":"From install to your first adversarial test in minutes \u2014 local or platform mode, with a posture score at the end.","url":"https://docs.humanbound.ai/getting-started/quick-start/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-06-02T10:20:06+03:00","keywords":"humanbound quick start, first adversarial test, hb test command, local mode testing, platform mode testing, posture score, bot-config.json, CI/CD security testing"},{"@type":"FAQPage","@id":"https://docs.humanbound.ai/getting-started/quick-start/#faq","isPartOf":{"@id":"https://docs.humanbound.ai/getting-started/quick-start/#article"},"mainEntity":[{"@type":"Question","name":"How do I run tests without creating an account?","acceptedAnswer":{"@type":"Answer","text":"Use local mode \u2014 configure an LLM provider via environment variables or `hb config set`, prepare a `bot-config.json` describing your agent, then run `hb test --endpoint ./bot-config.json --wait`. No login required."}},{"@type":"Question","name":"How do I view my test results?","acceptedAnswer":{"@type":"Answer","text":"Run `hb posture` for a security score (0\u2013100, A\u2013F), `hb logs` for conversation logs, `hb logs --verdict fail` to filter failures, or `hb report -o report.html` for a full HTML report."}},{"@type":"Question","name":"What does the --fail-on flag do?","acceptedAnswer":{"@type":"Answer","text":"`--fail-on` causes `hb test` to exit with a non-zero status code when findings of the specified severity (critical, high, medium, low, or any) are found, making it suitable for CI/CD quality gates."}},{"@type":"Question","name":"How do I run tests in CI/CD?","acceptedAnswer":{"@type":"Answer","text":"Install humanbound with `pip install humanbound`, then run `hb test --endpoint ./bot-config.json --repo . --wait --fail-on high`, passing your provider credentials as environment variables such as `HB_PROVIDER` and `HB_API_KEY`."}}]}]}</script>
+  
 
   
 <meta property="og:type" content="website" />
@@ -592,6 +595,17 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#frequently-asked-questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Frequently asked questions
+      
+    </span>
+  </a>
   
 </li>
       
@@ -2335,7 +2349,7 @@
 
 
 <h1 id="quick-start">Quick Start</h1>
-<p>Get from installation to your first security test in minutes.</p>
+<p>This guide walks through your first Humanbound security test end-to-end, in both local mode (no account, your own LLM provider) and platform mode (with login, persistent findings, and continuous monitoring). The local path covers configuring a provider, writing a <code>bot-config.json</code> for your agent, running <code>hb test</code>, and viewing the resulting posture score; the platform path covers <code>hb login</code>, <code>hb connect</code>, and <code>hb monitor enable</code>.</p>
 <h2 id="local-testing-no-account-required">Local Testing (No Account Required)</h2>
 <h3 id="step-1-configure-your-llm-provider">Step 1: Configure Your LLM Provider</h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Option A: Environment variables</span>
@@ -2553,6 +2567,23 @@
 <h3 id="step-5-continuous-monitoring">Step 5: Continuous Monitoring</h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>hb<span class="w"> </span>monitor<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>--schedule<span class="w"> </span>daily<span class="w">    </span><span class="c1"># Requires Pro</span>
 </code></pre></div>
+<h2 id="frequently-asked-questions">Frequently asked questions</h2>
+<details class="question">
+<summary>How do I run tests without creating an account?</summary>
+<p>Use local mode — configure an LLM provider via environment variables or <code>hb config set</code>, prepare a <code>bot-config.json</code> describing your agent, then run <code>hb test --endpoint ./bot-config.json --wait</code>. No login required.</p>
+</details>
+<details class="question">
+<summary>How do I view my test results?</summary>
+<p>Run <code>hb posture</code> for a security score (0–100, A–F), <code>hb logs</code> for conversation logs, <code>hb logs --verdict fail</code> to filter failures, or <code>hb report -o report.html</code> for a full HTML report.</p>
+</details>
+<details class="question">
+<summary>What does the --fail-on flag do?</summary>
+<p><code>--fail-on</code> causes <code>hb test</code> to exit with a non-zero status code when findings of the specified severity (critical, high, medium, low, or any) are found, making it suitable for CI/CD quality gates.</p>
+</details>
+<details class="question">
+<summary>How do I run tests in CI/CD?</summary>
+<p>Install humanbound with <code>pip install humanbound</code>, then run <code>hb test --endpoint ./bot-config.json --repo . --wait --fail-on high</code>, passing your provider credentials as environment variables such as <code>HB_PROVIDER</code> and <code>HB_API_KEY</code>.</p>
+</details>
 
 
 
