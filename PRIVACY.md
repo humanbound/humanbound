@@ -44,9 +44,9 @@ Every event includes these baseline properties that we set explicitly:
 | Property | Example | Why |
 |---|---|---|
 | `source` | `cli` | Distinguishes CLI events from Humanbound Platform events in the shared analytics project |
-| `hb_version` | `2.0.3` | Correlate behavior to releases |
+| `hb_version` | `2.0.4` | Correlate behavior to releases |
 | `is_authenticated` | `true` / `false` | Funnel state |
-| `distinct_id` | `tlm_<uuid>` / `auth0|abc123` | Anonymous machine ID until you log in, then a stable opaque identifier so events can be attributed to your Humanbound account |
+| `distinct_id` | `tlm_<uuid>` / `auth0\|abc123` | Anonymous machine ID until you log in, then a stable opaque identifier so events can be attributed to your Humanbound account |
 
 In addition, the PostHog Python client library automatically attaches a small
 set of properties to every event it sends. These are technical metadata only —
