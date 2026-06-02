@@ -7,7 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.4] — 2026-06-02
+
 ### Added
+- **Anonymous usage telemetry in the `hb` CLI (PostHog).** Measures the
+  install → first test → login → platform usage funnel. Seven events
+  (`install`, `init`, `test_start`, `test_complete`, `posture_view`,
+  `findings_view`, `gated_command_hit`) with technical properties only —
+  version, OS, command, durations, counts. **No** prompts, findings text,
+  file paths, API URLs, hostnames, usernames, or env-var values are sent.
+  Telemetry is **on by default** with a first-run notice on stderr;
+  disable with `hb telemetry disable`, `HB_TELEMETRY_DISABLED=1`, or the
+  community-standard `DO_NOT_TRACK=1`. Auto-disabled in CI, editable dev
+  installs, and non-TTY contexts. Identity is an anonymous machine UUID
+  (`~/.humanbound/telemetry.json`, mode 0600); after `hb login` it is
+  aliased to the user's opaque Auth0 `sub` — email is never sent. Data
+  goes to PostHog EU Cloud (Frankfurt), 24-month retention. See
+  `PRIVACY.md` for the full disclosure (#27).
 - **Schema.org JSON-LD on every docs page.** New MkDocs hook
   (`docs/hooks/schema.py`) emits Organization (referencing the marketing
   site's canonical `@id` for cross-domain entity continuity), WebSite,
@@ -16,7 +32,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   override, no plugin dependencies. `dateModified` is read from per-file
   git history (CI now uses `fetch-depth: 0` to make this work). Improves
   extractability by AI agents (ChatGPT, Perplexity, Claude) for
-  Agent-Led Growth.
+  Agent-Led Growth (#28).
+
+### Removed
+- **`hb sentinel` and `hb upload-logs` commands.** Both were deprecated
+  and are superseded by `hb webhooks` and `hb logs upload` respectively.
+  The command modules and their registrations are gone (#22).
+- **The cloud-platform path in `hb connect` and its Microsoft connector.**
+  The unreachable platform branch and `humanbound_cli/connectors/microsoft.py`
+  were removed; `hb connect` now exposes only agent flags. The now-unused
+  `msal` dependency is dropped (#22).
 
 ## [2.0.3] — 2026-05-11
 
