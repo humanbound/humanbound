@@ -1,10 +1,19 @@
 ---
 description: "Security posture (0–100) summarises an agent's defense rate, coverage, and finding severity into a single comparable score."
+keywords:
+  - security posture
+  - posture score
+  - AI agent security score
+  - posture grade
+  - coverage effectiveness
+  - severity impact
+  - hb posture command
+  - organization posture
 ---
 
 # Security Posture
 
-The security posture score (0-100) provides a comprehensive view of your AI agent's security health. The formula is:
+The Humanbound security posture is a single 0–100 score (with A–F grade) that summarises an AI agent's severity impact (weighted sum of active findings by severity and status) and coverage effectiveness (ratio of tested threat classes with acceptable pass rates) into one comparable number. It is computed as `100 * (1 - severity_impact) * coverage_effectiveness`, viewed via `hb posture` (current score), `hb posture --trends` (history), or `hb posture --org` (aggregated across projects in two dimensions: Agent Security and Quality). The formula is:
 
 ```
 posture = 100 * (1 - severity_impact) * coverage_effectiveness

@@ -1,11 +1,18 @@
 ---
 description: "Enable tab completion for the hb CLI in bash, zsh, or fish — install once and get flag and command suggestions in every new shell."
 title: Shell Completion
+keywords:
+  - shell completion
+  - hb completion command
+  - bash completion
+  - zsh completion
+  - fish completion
+  - CLI tab completion
 ---
 
 # Shell Completion
 
-Enable tab completion for the `hb` CLI in your shell. The `hb completion` command generates the appropriate completion script for bash, zsh, or fish.
+The `hb completion` command emits a shell completion script for bash, zsh, or fish — append it to your shell's rc file once and every subsequent shell gets tab completion for `hb` commands and flags. If you don't pass a shell argument, the CLI auto-detects from `$SHELL`. Setup takes one line per shell; restart your shell or source the rc file for changes to take effect.
 
 ## Setup
 

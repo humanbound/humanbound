@@ -1,10 +1,19 @@
 ---
 description: "Experiments are individual test executions — they generate attack prompts, drive conversations with your agent, and produce security verdicts."
+keywords:
+  - experiments
+  - hb experiments command
+  - test execution tracking
+  - experiment status
+  - experiment logs
+  - experiment report
+  - hb logs filtering
+  - CI/CD experiment wait
 ---
 
 # Experiments
 
-Experiments are individual test executions that generate attack prompts, run conversations with your AI agent, and produce security verdicts.
+An experiment is one execution of `hb test` — it generates attack prompts, runs multi-turn conversations against your agent, and produces a set of verdicts that feed into the project's posture and findings. The `hb experiments` commands list past experiments, show details of a specific one, check status (single, watch, or all-experiments dashboard), wait for completion (useful in CI/CD), view filtered logs, generate HTML reports, terminate running tests, and delete old records.
 
 ## List Experiments
 

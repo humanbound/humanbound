@@ -1,5 +1,14 @@
 ---
 description: "Team workflows for AI agent security — coordinate security leads, developers, and compliance officers around shared projects and findings."
+keywords:
+  - team collaboration
+  - finding delegation
+  - team roles
+  - security workflow
+  - assignee tracking
+  - delegation workflow
+  - external auditor access
+  - finding ownership
 ---
 
 # Team & Collaboration

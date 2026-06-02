@@ -1,6 +1,16 @@
 ---
 title: Humanbound
 description: "Open-source AI agent security testing — automated adversarial probes, LLM-as-a-Judge evaluation, runtime firewall, and posture scoring."
+keywords:
+  - humanbound
+  - AI agent security testing
+  - LLM security platform
+  - adversarial AI testing
+  - OWASP LLM testing
+  - prompt injection testing
+  - AI security posture
+  - humanbound CLI
+lint_skip: [first_paragraph]
 ---
 
 # <span class="hero-title">Humanbound</span>

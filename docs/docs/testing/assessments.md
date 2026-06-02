@@ -1,5 +1,12 @@
 ---
 description: "Assessments are point-in-time snapshots of a project's security state — posture, findings, and coverage produced by every ASCAM activity."
+keywords:
+  - assessments
+  - ASCAM assessments
+  - assessment snapshot
+  - hb assessments command
+  - assessment history
+  - assessment report
 ---
 
 # Assessments

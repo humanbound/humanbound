@@ -1,11 +1,20 @@
 ---
 description: "Manage Humanbound authentication, organisation context, and access scopes for the CLI, MCP server, and API."
 title: Authentication
+keywords:
+  - humanbound authentication
+  - hb login
+  - hb logout
+  - hb whoami
+  - OAuth authentication
+  - on-prem login
+  - organisation context
+  - humanbound credentials
 ---
 
 # Authentication & Context
 
-Manage authentication, organisation context, and access to documentation.
+The `hb login` command authenticates against the Humanbound platform via OAuth, storing credentials at `~/.humanbound/`; `hb logout` revokes the session. Use `hb whoami` to see your current user, org, and project, `hb switch` to move between organisations, and `hb --base-url ... login` to authenticate against an on-prem deployment instead of the default platform.
 
 ## Version
 

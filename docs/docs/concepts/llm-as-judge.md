@@ -1,5 +1,13 @@
 ---
 description: "How Humanbound's judge LLM scores your agent's responses against security criteria — independent model, structured rubric, and reasoning."
+keywords:
+  - LLM-as-a-judge
+  - AI security evaluation
+  - agent response evaluation
+  - judge model
+  - categorical labeling
+  - few-shot learning framework
+  - judge provider configuration
 ---
 
 # LLM-as-a-Judge

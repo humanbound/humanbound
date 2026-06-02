@@ -1,10 +1,19 @@
 ---
 description: "Export guardrails — security rules derived from your test results that capture discovered attack patterns and enforce them at runtime."
+keywords:
+  - guardrails export
+  - hb guardrails command
+  - security rules export
+  - firewall training data
+  - guardrail rule format
+  - OpenAI moderation rules
+  - PyRIT import
+  - promptfoo import
 ---
 
 # Guardrails Export
 
-Guardrails are security rules extracted from your test results. They capture the attack patterns and boundary violations discovered during testing and translate them into actionable rules for runtime defense.
+Guardrails are security rules extracted from your test results. They capture the attack patterns and boundary violations discovered during testing and translate them into actionable rules for runtime defense. Export with `hb guardrails` as JSON, YAML, or OpenAI moderation format, then load the rules into `humanbound-firewall` where they configure the Tier 3 LLM judge's evaluation criteria.
 
 Guardrails are the bridge between testing and protection — they carry the knowledge gained from adversarial testing into the firewall's evaluation logic.
 

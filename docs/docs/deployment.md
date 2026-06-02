@@ -1,11 +1,20 @@
 ---
 description: "Deployment options for Humanbound — local engine, managed platform, and air-gapped variants for organisations with specific security and compliance needs."
 title: Deployment
+keywords:
+  - humanbound deployment
+  - SaaS deployment
+  - on-premises Humanbound
+  - private cloud
+  - data sovereignty
+  - SOC 2 deployment
+  - air-gapped deployment
+  - on-prem AI security
 ---
 
 # Deployment Options
 
-Humanbound supports multiple deployment models to meet your organisation's security and compliance requirements.
+Humanbound is available in three deployment models: SaaS (managed cloud, data stored in the EU North Europe region on SOC 2 compliant infrastructure), on-premises (Azure Functions runtime with PostgreSQL/Cosmos DB, deployed inside your network for full data sovereignty), and private cloud (dedicated Humanbound instance in your Azure or AWS tenant, managed by the Humanbound team). The sections below compare features and link to setup.
 
 ## SaaS (Cloud)
 

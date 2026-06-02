@@ -8,11 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Anonymous usage telemetry via PostHog (`hb telemetry status|enable|disable`).
-  On by default; disable with `hb telemetry disable`, `HB_TELEMETRY_DISABLED=1`,
-  or `DO_NOT_TRACK=1`. Auto-disabled in CI and non-TTY environments. See
-  [`PRIVACY.md`](./PRIVACY.md) for the full disclosure of what is and isn't
-  collected.
+- **Schema.org JSON-LD on every docs page.** New MkDocs hook
+  (`docs/hooks/schema.py`) emits Organization (referencing the marketing
+  site's canonical `@id` for cross-domain entity continuity), WebSite,
+  BreadcrumbList, TechArticle, and FAQPage (when a page declares `faq:`
+  in frontmatter). Rendered via the existing `extrahead` template
+  override, no plugin dependencies. `dateModified` is read from per-file
+  git history (CI now uses `fetch-depth: 0` to make this work). Improves
+  extractability by AI agents (ChatGPT, Perplexity, Claude) for
+  Agent-Led Growth.
 
 ## [2.0.3] — 2026-05-11
 

@@ -1,5 +1,13 @@
 ---
 description: "Collaborative Redteam — multi-user adversarial red-teaming sessions with an AI co-pilot, integrated with the Red Coworker collaboration loop."
+keywords:
+  - collaborative redteam
+  - interactive redteam
+  - multi-user adversarial testing
+  - AI co-pilot redteam
+  - manual security testing
+  - human-directed attacks
+  - redteam sessions
 ---
 
 # Collaborative Redteam [Preview]

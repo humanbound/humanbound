@@ -6,4 +6,7 @@
   <meta property="og:locale" content="en_US" />
   <meta property="og:image:alt" content="{{ desc }}" />
   <meta name="twitter:image:alt" content="{{ desc }}" />
+  {% if page.meta and page.meta.schema_jsonld %}
+  <script type="application/ld+json">{{ page.meta.schema_jsonld | safe }}</script>
+  {% endif %}
 {% endblock %}

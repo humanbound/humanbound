@@ -1,8 +1,19 @@
 ---
 description: "Continuous monitoring runs scheduled adversarial tests against production agents — surface model drift and security regressions before users do."
+keywords:
+  - continuous monitoring
+  - scheduled AI testing
+  - monitoring campaigns
+  - hb monitor command
+  - posture history
+  - finding regression tracking
+  - cross-session leakage detection
+  - autonomous vulnerability discovery
 ---
 
 # Continuous Monitoring
+
+Continuous monitoring runs your Humanbound adversarial test suite against your agent on a schedule, surfacing model drift, prompt regressions, and new vulnerabilities before users encounter them. The sections below cover why point-in-time testing is insufficient for AI agents and how Humanbound treats security as an ongoing signal rather than a one-time snapshot.
 
 ## The Problem: Point-in-Time Testing Is Not Enough
 

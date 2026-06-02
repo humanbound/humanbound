@@ -1,5 +1,14 @@
 ---
 description: "Drive Humanbound from Claude Code, Cursor, Windsurf, or Copilot via the built-in MCP server — ask about posture, findings, and runs in your IDE."
+keywords:
+  - MCP server
+  - Model Context Protocol
+  - Claude Code integration
+  - Cursor integration
+  - IDE security testing
+  - hb mcp command
+  - MCP tools
+  - AI coding assistant integration
 ---
 
 # MCP Server

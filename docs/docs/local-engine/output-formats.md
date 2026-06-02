@@ -1,10 +1,19 @@
 ---
 description: "After a local test, results are saved on disk and can be viewed or exported as HTML reports, JSON, or CSV."
+keywords:
+  - test results export
+  - HTML report
+  - conversation logs
+  - guardrails export
+  - posture report
+  - firewall training data
+  - log schema
+  - hb report command
 ---
 
 # Output & Export
 
-After a test, results are saved locally and can be viewed or exported in multiple formats.
+After `hb test` finishes locally, results are written to `.humanbound/results/exp-{timestamp}/` as `meta.json` (experiment metadata + posture + insights) and `logs.jsonl` (one conversation per line). The `hb posture`, `hb logs`, and `hb report` commands read this data — viewing the posture score, filtering conversations by verdict, or producing branded HTML reports. Findings can also be exported as guardrail rules (`hb guardrails`) and used to train a Tier 2 firewall classifier.
 
 ## Results Location
 
