@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **`humanbound_cli.engine.llm.openai` no longer requires the optional OpenAI SDK
+  just to import.** The `from openai import OpenAI` is deferred into `LLMStreamer`
+  (its only consumer); the requests-based `LLMPinger` never needed it, so routing
+  to the OpenAI pinger works without the `[engine]` extra installed.
+- **`hb test` defers `test_category` / `testing_level` / `lang` to the backend when
+  a caller leaves them unset.** `TestConfig` now defaults these to `None`, the
+  platform runner omits unset keys from the request (so the backend applies its
+  defaults), and local mode coalesces them to local defaults. Normal `hb test`
+  usage — which always resolves concrete values — is unchanged.
+
+### Added
+- Presenter posture output now includes a `domain` field (`security` / `quality`,
+  derived from the test category).
+
 ## [2.0.4] — 2026-06-02
 
 ### Added
