@@ -15,9 +15,12 @@ from dataclasses import dataclass, field
 class TestConfig:
     """Canonical test configuration — identical shape for both runners."""
 
-    test_category: str
-    testing_level: str  # unit | system | acceptance
-    lang: str = "english"
+    # Default to None so a caller that doesn't set these defers to the backend's
+    # defaults (the runner omits unset keys from the request). The `hb test`
+    # command always resolves concrete values, so normal usage is unaffected.
+    test_category: str | None = None
+    testing_level: str | None = None  # unit | system | acceptance
+    lang: str | None = None
     name: str = ""
     description: str = ""
     provider_id: str = ""
