@@ -138,6 +138,7 @@ def run(testing_configuration, logs, test_category=""):
         posture = {
             "posture": posture_score,
             "grade": grade,
+            "domain": domain,
         }
 
     # --- 3. Lightweight insights (no embeddings, no clustering) ---

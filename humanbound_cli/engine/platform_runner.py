@@ -23,11 +23,13 @@ class PlatformTestRunner(TestRunner):
         experiment_data = {
             "name": config.name,
             "description": config.description,
-            "test_category": config.test_category,
-            "testing_level": config.testing_level,
-            "lang": config.lang,
             "auto_start": config.auto_start,
         }
+        # Omit category/level/lang when unset so the backend applies its defaults.
+        for key in ("test_category", "testing_level", "lang"):
+            value = getattr(config, key)
+            if value is not None:
+                experiment_data[key] = value
 
         if config.provider_id:
             experiment_data["provider_id"] = config.provider_id
