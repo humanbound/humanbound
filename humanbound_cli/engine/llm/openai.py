@@ -4,7 +4,6 @@ import time
 from os import getenv
 
 import requests
-from openai import OpenAI
 
 #
 # Handle communications with LLM
@@ -31,6 +30,11 @@ class LLMStreamer:
             if model_provider is None
             else model_provider
         )
+        # Lazy import: the OpenAI SDK is the optional [engine] extra and is only
+        # needed for streaming. Importing it at module top made this submodule
+        # (and the requests-based LLMPinger) un-importable without the extra.
+        from openai import OpenAI
+
         self.__openai_client = OpenAI(
             api_key=model_provider["integration"]["api_key"],
         )
