@@ -38,6 +38,9 @@ The complete `hb` CLI reference, organised into eight categories: global flags, 
 |---|---|
 | `hb connect` | Connect your agent or scan a cloud platform |
 | `hb connect -l system` | Connect with deeper testing level (unit/system/acceptance) |
+| `hb connect --no-test` | Connect and create project but skip the auto-test step |
+| `hb connect --test-category <path>` | Choose which test family the auto-test runs (default: `humanbound/adversarial/owasp_agentic`) |
+| `hb connect --scope ./scope.yaml` | Use a pre-made scope file as input; the backend analyses it and proposes additive intents before project creation |
 | `hb projects list` | List all projects in current org |
 | `hb projects use <id>` | Set active project for subsequent commands |
 | `hb projects show [id]` | Show project details (current or specific) |
