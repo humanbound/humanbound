@@ -67,7 +67,7 @@
   <meta property="og:image:alt" content="Complete hb CLI reference — every command and flag, grouped by workflow — auth, projects, test, redteam, posture, logs, MCP." />
   <meta name="twitter:image:alt" content="Complete hb CLI reference — every command and flag, grouped by workflow — auth, projects, test, redteam, posture, logs, MCP." />
   
-  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/reference/commands/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Commands","item":"https://docs.humanbound.ai/reference/commands/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/reference/commands/#article","headline":"Commands","description":"Complete hb CLI reference \u2014 every command and flag, grouped by workflow \u2014 auth, projects, test, redteam, posture, logs, MCP.","url":"https://docs.humanbound.ai/reference/commands/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-06-02T10:20:06+03:00","keywords":"hb command reference, humanbound CLI reference, hb commands list, humanbound CLI commands, CLI cheatsheet, command index"}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/reference/commands/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Commands","item":"https://docs.humanbound.ai/reference/commands/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/reference/commands/#article","headline":"Commands","description":"Complete hb CLI reference \u2014 every command and flag, grouped by workflow \u2014 auth, projects, test, redteam, posture, logs, MCP.","url":"https://docs.humanbound.ai/reference/commands/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-06-05T10:16:47+03:00","keywords":"hb command reference, humanbound CLI reference, hb commands list, humanbound CLI commands, CLI cheatsheet, command index"}]}</script>
   
 
   
@@ -2324,6 +2324,18 @@
 <tr>
 <td><code>hb connect -l system</code></td>
 <td>Connect with deeper testing level (unit/system/acceptance)</td>
+</tr>
+<tr>
+<td><code>hb connect --no-test</code></td>
+<td>Connect and create project but skip the auto-test step</td>
+</tr>
+<tr>
+<td><code>hb connect --test-category &lt;path&gt;</code></td>
+<td>Choose which test family the auto-test runs (default: <code>humanbound/adversarial/owasp_agentic</code>)</td>
+</tr>
+<tr>
+<td><code>hb connect --scope ./scope.yaml</code></td>
+<td>Use a pre-made scope file as input; the backend analyses it and proposes additive intents before project creation</td>
 </tr>
 <tr>
 <td><code>hb projects list</code></td>
