@@ -21,6 +21,8 @@ from .test import _load_integration, _resolve_context
 console = Console()
 
 SCAN_TIMEOUT = 180
+DEFAULT_TEST_CATEGORY = "humanbound/adversarial/owasp_agentic"
+
 
 # -- Scan progress UI ----------------------------------------------------------
 
@@ -243,11 +245,26 @@ def _resolve_init_mode(
     return "none"
 
 
-def _fire_init_event(mode: str, success: bool, duration_ms: int) -> None:
+def _fire_init_event(
+    mode: str,
+    success: bool,
+    duration_ms: int,
+    *,
+    no_test: bool = False,
+    test_category: str = DEFAULT_TEST_CATEGORY,
+    scope_provided: bool = False,
+) -> None:
     """Emit the `init` telemetry event. Safe to call from try/finally."""
     telemetry.capture(
         "init",
-        {"mode": mode, "success": success, "duration_ms": duration_ms},
+        {
+            "mode": mode,
+            "success": success,
+            "duration_ms": duration_ms,
+            "no_test": no_test,
+            "test_category": test_category,
+            "scope_provided": scope_provided,
+        },
     )
 
 
@@ -341,6 +358,23 @@ def _derive_agent_name(endpoint: str) -> str:
 )
 @click.option("--yes", "-y", is_flag=True, help="Skip confirmations")
 @click.option("--timeout", "-t", type=int, default=SCAN_TIMEOUT, help="Request timeout in seconds")
+@click.option(
+    "--no-test",
+    is_flag=True,
+    default=False,
+    help="Skip the auto-test step after project creation.",
+)
+@click.option(
+    "--test-category",
+    default=None,
+    help="Test category to run (e.g. humanbound/adversarial/owasp_agentic, humanbound/behavioral/qa)",
+)
+@click.option(
+    "--scope",
+    "scope_path",
+    type=click.Path(exists=True),
+    help="Pre-made scope file (YAML/JSON with permitted/restricted intents)",
+)
 def connect_command(
     endpoint,
     name,
@@ -351,6 +385,9 @@ def connect_command(
     level,
     yes,
     timeout,
+    no_test,
+    test_category,
+    scope_path,
 ):
     """Connect your AI agent.
 
@@ -368,38 +405,73 @@ def connect_command(
     success = False
 
     try:
-        has_agent_flags = any([endpoint, prompt, repo, openapi])
+        has_agent_flags = any([endpoint, prompt, repo, openapi, scope_path])
 
         if has_agent_flags:
-            _connect_agent(endpoint, name, prompt, repo, openapi, context, level, yes, timeout)
+            _connect_agent(
+                endpoint,
+                name,
+                prompt,
+                repo,
+                openapi,
+                context,
+                level,
+                yes,
+                timeout,
+                no_test=no_test,
+                test_category_arg=test_category,
+                scope_path=scope_path,
+            )
         else:
             console.print("[yellow]Specify a source:[/yellow]")
             console.print()
             console.print("  hb connect --endpoint ./bot-config.json")
             console.print()
-            console.print("[dim]Use --endpoint, --prompt, --repo, or --openapi.[/dim]")
+            console.print("[dim]Use --endpoint, --prompt, --repo, --openapi, or --scope.[/dim]")
             raise SystemExit(1)
 
         success = True
     finally:
         duration_ms = int((time.monotonic() - start) * 1000)
-        _fire_init_event(mode=mode, success=success, duration_ms=duration_ms)
+        _fire_init_event(
+            mode=mode,
+            success=success,
+            duration_ms=duration_ms,
+            no_test=no_test,
+            test_category=test_category or DEFAULT_TEST_CATEGORY,
+            scope_provided=bool(scope_path),
+        )
 
 
 # -- Agent path ----------------------------------------------------------------
 
 
-def _connect_agent(endpoint, name, prompt, repo, openapi, context, level, yes, timeout):
+def _connect_agent(
+    endpoint,
+    name,
+    prompt,
+    repo,
+    openapi,
+    context,
+    level,
+    yes,
+    timeout,
+    no_test=False,
+    test_category_arg=None,
+    scope_path=None,
+):
     """Agent path: dispatch to Platform flow (authenticated) or local flow (anonymous).
 
     Platform flow creates a project on humanbound.ai with full scope, risk profile,
     regulatory mapping, and auto-test. Local flow derives scope + lightweight
     compliance from the user's configured LLM provider and writes scope.yaml.
     """
-    source_flags = [prompt, endpoint, repo, openapi]
+    source_flags = [prompt, endpoint, repo, openapi, scope_path]
     if not any(source_flags):
         console.print("[yellow]No extraction source provided.[/yellow]")
-        console.print("Use --endpoint, --prompt, --repo, or --openapi to specify a source.")
+        console.print(
+            "Use --endpoint, --prompt, --repo, --openapi, or --scope to specify a source."
+        )
         raise SystemExit(1)
 
     if not name:
@@ -408,96 +480,165 @@ def _connect_agent(endpoint, name, prompt, repo, openapi, context, level, yes, t
     client = HumanboundClient()
     if client.is_authenticated() and client.organisation_id:
         _connect_agent_platform(
-            client, endpoint, name, prompt, repo, openapi, context, level, yes, timeout
+            client,
+            endpoint,
+            name,
+            prompt,
+            repo,
+            openapi,
+            context,
+            level,
+            yes,
+            timeout,
+            no_test=no_test,
+            test_category_arg=test_category_arg,
+            scope_path=scope_path,
         )
     else:
         _connect_agent_local(endpoint, name, prompt, repo, openapi, context, level, yes, timeout)
 
 
 def _connect_agent_platform(
-    client, endpoint, name, prompt, repo, openapi, context, level, yes, timeout
+    client,
+    endpoint,
+    name,
+    prompt,
+    repo,
+    openapi,
+    context,
+    level,
+    yes,
+    timeout,
+    no_test=False,
+    test_category_arg=None,
+    scope_path=None,
 ):
     """Platform flow: POST /scan -> create project -> auto-test -> dashboard."""
+    resolved_category = test_category_arg or DEFAULT_TEST_CATEGORY
+    if no_test and test_category_arg:
+        console.print("[yellow]! --test-category is ignored when --no-test is set.[/yellow]")
+        console.print(f"[dim]  To run later: hb test --test-category {test_category_arg}[/dim]")
+
+    # Warn about redundant scope-source flags when --scope is set.
+    if scope_path and (prompt or repo or openapi):
+        ignored = [
+            f"--{flag}"
+            for flag, val in (("prompt", prompt), ("repo", repo), ("openapi", openapi))
+            if val
+        ]
+        console.print(
+            f"[yellow]! {'/'.join(ignored)} ignored when --scope is set "
+            f"(scope comes from the file).[/yellow]"
+        )
+
     console.print(f"\n[bold]Connecting agent:[/bold] {name}\n")
 
     try:
-        # -- Build sources array for POST /scan --------------------------------
         sources = []
-        text_parts = []
-        runtime_info = None
+        user_scope = None  # Set only when --scope is used
+        local_integration = None  # Set when --endpoint is used with --scope
 
-        # --prompt -> text source
-        if prompt:
-            console.print(f"  [green]\u2713[/green] Loaded prompt: [dim]{prompt}[/dim]")
-            prompt_text = Path(prompt).read_text()
-            text_parts.append(prompt_text)
+        if scope_path:
+            # --scope path: load file, serialize to a single text source.
+            try:
+                user_scope = _load_scope_file(scope_path)
+            except (FileNotFoundError, ValueError) as e:
+                console.print(f"[red]Error:[/red] {e}")
+                raise SystemExit(1)
 
-        # --repo -> agentic or text source
-        if repo:
-            from ..extractors.repo import RepoScanner
-
-            scanner = RepoScanner(repo)
-            with console.status("[dim]Scanning repository...[/dim]"):
-                scan_result = scanner.scan()
-
-            if scan_result:
-                files = scan_result.get("files", [])
-                if scan_result.get("tools"):
-                    console.print(
-                        f"  [green]\u2713[/green] Repository: {len(files)} files, {len(scan_result['tools'])} tools (source: agentic)"
-                    )
-                    sources.append(
-                        {
-                            "source": "agentic",
-                            "data": {
-                                "system_prompt": scan_result.get("system_prompt", ""),
-                                "tools": scan_result.get("tools", []),
-                            },
-                        }
-                    )
-                else:
-                    console.print(f"  [green]\u2713[/green] Repository: {len(files)} files")
-                    combined = scan_result.get("system_prompt", "")
-                    if scan_result.get("readme"):
-                        combined += f"\n\nREADME:\n{scan_result['readme']}"
-                    if combined.strip():
-                        text_parts.append(combined)
-            else:
-                console.print("  [yellow]![/yellow] Repository: no relevant files found")
-
-        # --openapi -> text source
-        if openapi:
-            from ..extractors.openapi import OpenAPIParser
-
-            parser = OpenAPIParser(openapi)
-            with console.status("[dim]Parsing specification...[/dim]"):
-                spec_result = parser.parse()
-
-            if spec_result:
-                operations = spec_result.get("operations", [])
-                console.print(f"  [green]\u2713[/green] OpenAPI spec: {len(operations)} operations")
-                summary_parts = [spec_result.get("description", "API-based agent")]
-                for op in operations:
-                    summary_parts.append(
-                        f"- {op.get('method', 'GET')} {op.get('path', '')}: {op.get('summary', '')}"
-                    )
-                text_parts.append("\n".join(summary_parts))
-            else:
-                console.print("  [yellow]![/yellow] OpenAPI spec: could not parse")
-
-        # --endpoint -> endpoint source (API probing)
-        if endpoint:
-            bot_config = _load_integration(endpoint)
-            chat_ep = bot_config.get("chat_completion", {}).get("endpoint", "")
             console.print(
-                f"  [green]\u2713[/green] Endpoint source: [dim]{chat_ep or '(from config)'}[/dim]"
+                f"  [green]\u2713[/green] Loaded scope: [dim]{Path(scope_path).name}[/dim]"
             )
-            sources.append({"source": "endpoint", "data": bot_config})
+            sources.append(
+                {"source": "text", "data": {"text": _serialize_scope_to_text(user_scope)}}
+            )
 
-        # Merge accumulated text parts into a single text source
-        if text_parts:
-            merged_text = "\n\n---\n\n".join(text_parts)
-            sources.append({"source": "text", "data": {"text": merged_text}})
+            # If --endpoint is also passed, keep its config for default_integration
+            # but DO NOT include it as a /scan source (no agent probing).
+            if endpoint:
+                local_integration = _load_integration(endpoint)
+                chat_ep = local_integration.get("chat_completion", {}).get("endpoint", "")
+                console.print(
+                    f"  [green]\u2713[/green] Endpoint integration: [dim]{chat_ep or '(from config)'}[/dim]"
+                )
+        else:
+            # -- Build sources array for POST /scan --------------------------------
+            text_parts = []
+
+            # --prompt -> text source
+            if prompt:
+                console.print(f"  [green]\u2713[/green] Loaded prompt: [dim]{prompt}[/dim]")
+                prompt_text = Path(prompt).read_text()
+                text_parts.append(prompt_text)
+
+            # --repo -> agentic or text source
+            if repo:
+                from ..extractors.repo import RepoScanner
+
+                scanner = RepoScanner(repo)
+                with console.status("[dim]Scanning repository...[/dim]"):
+                    scan_result = scanner.scan()
+
+                if scan_result:
+                    files = scan_result.get("files", [])
+                    if scan_result.get("tools"):
+                        console.print(
+                            f"  [green]\u2713[/green] Repository: {len(files)} files, {len(scan_result['tools'])} tools (source: agentic)"
+                        )
+                        sources.append(
+                            {
+                                "source": "agentic",
+                                "data": {
+                                    "system_prompt": scan_result.get("system_prompt", ""),
+                                    "tools": scan_result.get("tools", []),
+                                },
+                            }
+                        )
+                    else:
+                        console.print(f"  [green]\u2713[/green] Repository: {len(files)} files")
+                        combined = scan_result.get("system_prompt", "")
+                        if scan_result.get("readme"):
+                            combined += f"\n\nREADME:\n{scan_result['readme']}"
+                        if combined.strip():
+                            text_parts.append(combined)
+                else:
+                    console.print("  [yellow]![/yellow] Repository: no relevant files found")
+
+            # --openapi -> text source
+            if openapi:
+                from ..extractors.openapi import OpenAPIParser
+
+                parser = OpenAPIParser(openapi)
+                with console.status("[dim]Parsing specification...[/dim]"):
+                    spec_result = parser.parse()
+
+                if spec_result:
+                    operations = spec_result.get("operations", [])
+                    console.print(
+                        f"  [green]\u2713[/green] OpenAPI spec: {len(operations)} operations"
+                    )
+                    summary_parts = [spec_result.get("description", "API-based agent")]
+                    for op in operations:
+                        summary_parts.append(
+                            f"- {op.get('method', 'GET')} {op.get('path', '')}: {op.get('summary', '')}"
+                        )
+                    text_parts.append("\n".join(summary_parts))
+                else:
+                    console.print("  [yellow]![/yellow] OpenAPI spec: could not parse")
+
+            # --endpoint -> endpoint source (API probing)
+            if endpoint:
+                bot_config = _load_integration(endpoint)
+                chat_ep = bot_config.get("chat_completion", {}).get("endpoint", "")
+                console.print(
+                    f"  [green]\u2713[/green] Endpoint source: [dim]{chat_ep or '(from config)'}[/dim]"
+                )
+                sources.append({"source": "endpoint", "data": bot_config})
+
+            # Merge accumulated text parts into a single text source
+            if text_parts:
+                merged_text = "\n\n---\n\n".join(text_parts)
+                sources.append({"source": "text", "data": {"text": merged_text}})
 
         if not sources:
             console.print("[red]No valid sources could be built from provided flags.[/red]")
@@ -519,8 +660,18 @@ def _connect_agent_platform(
         console.print(f"  [green]\u2713[/green] Scan complete [dim]({scan_duration:.1f}s)[/dim]\n")
 
         # -- Display results ---------------------------------------------------
-        scope = response.get("scope", {})
+        analyzed_scope = response.get("scope", {})
         risk_profile = response.get("risk_profile", {})
+
+        if user_scope:
+            # --scope path: diff, propose, merge.
+            additions = _diff_scope(user_scope, analyzed_scope)
+            accept = _confirm_scope_additions(additions, auto_yes=yes)
+            scope = _merge_scope(
+                user_scope, additions if accept else {"permitted": [], "restricted": []}
+            )
+        else:
+            scope = analyzed_scope
 
         _display_scope(scope)
 
@@ -549,7 +700,9 @@ def _connect_agent_platform(
                 "scope": scope,
             }
 
-            default_integration = response.get("default_integration")
+            # When --scope + --endpoint, integration comes from the local load
+            # since we deliberately didn't send endpoint as a /scan source.
+            default_integration = local_integration or response.get("default_integration")
             if default_integration:
                 project_data["default_integration"] = default_integration
 
@@ -573,13 +726,32 @@ def _connect_agent_platform(
         )
 
         # -- Auto-test ---------------------------------------------------------
-        _auto_test(client, project_id, default_integration, context, level)
+        if no_test:
+            console.print()
+            console.print("[dim]Skipping auto-test (--no-test).[/dim]")
+        else:
+            _auto_test(
+                client,
+                project_id,
+                default_integration,
+                context,
+                level,
+                test_category=resolved_category,
+            )
 
         # -- Continuous monitoring recommendation ------------------------------
         _recommend_monitoring(risk_profile)
 
         # -- Next suggestions --------------------------------------------------
-        _print_next(
+        next_suggestions = []
+        if no_test:
+            if test_category_arg:
+                next_suggestions.append(
+                    (f"hb test --test-category {test_category_arg}", "Run the first security test")
+                )
+            else:
+                next_suggestions.append(("hb test", "Run the first security test"))
+        next_suggestions.extend(
             [
                 ("hb findings", "Detailed breakdown"),
                 ("hb test --deep", "Deeper analysis"),
@@ -587,6 +759,7 @@ def _connect_agent_platform(
                 ("hb report", "Share with team"),
             ]
         )
+        _print_next(next_suggestions)
 
     except NotAuthenticatedError:
         telemetry.fire_gated_command_hit()
@@ -695,6 +868,158 @@ def _connect_agent_local(endpoint, name, prompt, repo, openapi, context, level, 
     )
 
 
+def _load_scope_file(path: str) -> dict:
+    """Parse + validate a user-supplied scope YAML/JSON file.
+
+    Returns a dict with keys: business_scope, permitted, restricted, more_info.
+    Raises FileNotFoundError if missing, ValueError with a message naming the
+    offending key on shape violations.
+    """
+    import yaml
+
+    file_path = Path(path)
+    if not file_path.is_file():
+        raise FileNotFoundError(f"--scope file not found: {path}")
+
+    raw = file_path.read_text()
+    ext = file_path.suffix.lower()
+    try:
+        if ext == ".json":
+            data = json.loads(raw)
+        elif ext in (".yaml", ".yml"):
+            data = yaml.safe_load(raw)
+        else:
+            try:
+                data = yaml.safe_load(raw)
+            except yaml.YAMLError:
+                data = json.loads(raw)
+    except (yaml.YAMLError, json.JSONDecodeError) as e:
+        raise ValueError(f"--scope: could not parse {path}: {e}")
+
+    if not isinstance(data, dict):
+        raise ValueError(f"--scope: top-level must be a mapping; got {type(data).__name__}")
+
+    business_scope = data.get("business_scope")
+    if not isinstance(business_scope, str) or not business_scope.strip():
+        raise ValueError("--scope: 'business_scope' must be a non-empty string")
+
+    permitted = data.get("permitted")
+    if not isinstance(permitted, list) or not permitted:
+        raise ValueError("--scope: 'permitted' must be a non-empty list")
+    if not all(isinstance(p, str) and p.strip() for p in permitted):
+        raise ValueError("--scope: 'permitted' must contain non-empty strings")
+
+    restricted = data.get("restricted")
+    if not isinstance(restricted, list) or not restricted:
+        raise ValueError("--scope: 'restricted' must be a non-empty list")
+    if not all(isinstance(r, str) and r.strip() for r in restricted):
+        raise ValueError("--scope: 'restricted' must contain non-empty strings")
+
+    more_info = data.get("more_info", "")
+    if more_info is None:
+        more_info = ""
+    if not isinstance(more_info, str):
+        raise ValueError("--scope: 'more_info' must be a string when present")
+
+    return {
+        "business_scope": business_scope,
+        "permitted": permitted,
+        "restricted": restricted,
+        "more_info": more_info,
+    }
+
+
+def _serialize_scope_to_text(scope: dict) -> str:
+    """Render a parsed scope dict into the text blob sent as a /scan 'text' source."""
+    lines = [f"Business scope: {scope['business_scope']}", ""]
+    lines.append("Permitted intents:")
+    for p in scope["permitted"]:
+        lines.append(f"- {p}")
+    lines.append("")
+    lines.append("Restricted intents:")
+    for r in scope["restricted"]:
+        lines.append(f"- {r}")
+    more_info = scope.get("more_info", "").strip()
+    if more_info:
+        lines.append("")
+        lines.append(f"Additional context: {more_info}")
+    return "\n".join(lines)
+
+
+def _diff_scope(user_scope: dict, analyzed_scope: dict) -> dict:
+    """Return additive proposals — items in analyzed but not in user.
+
+    Comparison is case-insensitive after trimming whitespace.
+    Never proposes removals; user's intents are always preserved.
+    """
+
+    def _norm(s: str) -> str:
+        return s.strip().lower()
+
+    user_permitted_norm = {_norm(p) for p in user_scope.get("permitted", [])}
+    user_restricted_norm = {_norm(r) for r in user_scope.get("restricted", [])}
+
+    intents = analyzed_scope.get("intents", {}) if isinstance(analyzed_scope, dict) else {}
+    analyzed_permitted = intents.get("permitted", []) or []
+    analyzed_restricted = intents.get("restricted", []) or []
+
+    return {
+        "permitted": [p for p in analyzed_permitted if _norm(p) not in user_permitted_norm],
+        "restricted": [r for r in analyzed_restricted if _norm(r) not in user_restricted_norm],
+    }
+
+
+def _merge_scope(user_scope: dict, additions: dict) -> dict:
+    """Return a scope dict in /scan response shape, merging accepted additions."""
+    return {
+        "overall_business_scope": user_scope["business_scope"],
+        "intents": {
+            "permitted": list(user_scope["permitted"]) + list(additions.get("permitted", [])),
+            "restricted": list(user_scope["restricted"]) + list(additions.get("restricted", [])),
+        },
+        "more_info": user_scope.get("more_info", ""),
+    }
+
+
+def _confirm_scope_additions(additions: dict, auto_yes: bool) -> bool:
+    """Render the proposal panel and prompt for Y/N. Returns True to accept additions."""
+    permitted = additions.get("permitted", [])
+    restricted = additions.get("restricted", [])
+
+    if not permitted and not restricted:
+        console.print()
+        console.print("[dim]Your scope looks complete — no additions proposed.[/dim]")
+        return False
+
+    parts = ["We analysed your scope and noticed these additional intents:", ""]
+    if permitted:
+        parts.append("[bold green]Permitted (proposed):[/bold green]")
+        for p in permitted:
+            parts.append(f"  [green]+[/green] {p}")
+    if restricted:
+        if permitted:
+            parts.append("")
+        parts.append("[bold red]Restricted (proposed):[/bold red]")
+        for r in restricted:
+            parts.append(f"  [red]+[/red] {r}")
+
+    console.print()
+    console.print(
+        Panel(
+            "\n".join(parts),
+            title="Scope analysis",
+            border_style="blue",
+        )
+    )
+
+    if auto_yes:
+        return True
+
+    from rich.prompt import Confirm
+
+    return Confirm.ask("\nAccept these additions?", default=True)
+
+
 def _write_scope_yaml(scope: dict, path: Path):
     """Serialize scope dict to a .yaml file in the canonical template shape."""
     try:
@@ -799,7 +1124,14 @@ def _build_monitoring_message(risk_level: str, matching_regs: list) -> str:
 # -- Auto-test helper ----------------------------------------------------------
 
 
-def _auto_test(client, project_id, default_integration, context=None, level="unit"):
+def _auto_test(
+    client,
+    project_id,
+    default_integration,
+    context=None,
+    level="unit",
+    test_category=DEFAULT_TEST_CATEGORY,
+):
     """Run first test automatically and show results inline."""
     if not default_integration:
         console.print("\n[dim]No agent integration configured -- skipping auto-test.[/dim]")
@@ -838,7 +1170,7 @@ def _auto_test(client, project_id, default_integration, context=None, level="uni
         experiment_data = {
             "name": f"connect-{time.strftime('%Y%m%d-%H%M%S')}",
             "description": "Initial assessment from hb connect",
-            "test_category": "humanbound/adversarial/owasp_agentic",
+            "test_category": test_category,
             "testing_level": level,
             "provider_id": provider_id,
             "auto_start": True,

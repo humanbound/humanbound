@@ -21,6 +21,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Presenter posture output now includes a `domain` field (`security` / `quality`,
   derived from the test category).
+- **Three new flags on `hb connect`:**
+  - **`--no-test`** skips the auto-test step after project creation. The
+    project is still created and the risk dashboard still renders; the
+    "Next" hints surface the `hb test` command to run later.
+  - **`--test-category`** chooses which test family the auto-test step
+    launches (default: `humanbound/adversarial/owasp_agentic`). Mirrors the
+    same flag on `hb test` — pass the full category path (e.g.
+    `humanbound/adversarial/owasp_single_turn`). Ignored when `--no-test`
+    is set (warn-and-continue).
+  - **`--scope ./scope.yaml`** loads a pre-made scope file (YAML or JSON)
+    as input. Sent to `POST /scan` as a `text` source only — no agent
+    probing. The backend analyzer returns its own scope; the CLI diffs it
+    against your file and prompts to accept additive `permitted` /
+    `restricted` intents before project creation. `--yes` auto-accepts.
+    `--prompt`/`--repo`/`--openapi` are ignored when `--scope` is set;
+    `--endpoint` is still honoured for `default_integration` but never
+    sent as a scan source.
 
 ## [2.0.4] — 2026-06-02
 

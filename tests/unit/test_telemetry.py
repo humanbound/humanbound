@@ -539,7 +539,17 @@ def test_connect_fire_init_helper_emits_event(monkeypatch):
     connect_module._fire_init_event(mode="endpoint", success=True, duration_ms=123)
 
     assert calls == [
-        ("init", {"mode": "endpoint", "success": True, "duration_ms": 123}),
+        (
+            "init",
+            {
+                "mode": "endpoint",
+                "success": True,
+                "duration_ms": 123,
+                "no_test": False,
+                "test_category": "humanbound/adversarial/owasp_agentic",
+                "scope_provided": False,
+            },
+        ),
     ]
 
 
