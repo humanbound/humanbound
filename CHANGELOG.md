@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.5] — 2026-06-05
+
 ### Fixed
 - **`humanbound_cli.engine.llm.openai` no longer requires the optional OpenAI SDK
   just to import.** The `from openai import OpenAI` is deferred into `LLMStreamer`
