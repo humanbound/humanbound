@@ -18,9 +18,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `resp`, `answer`, `ans`, `message`, `reply`, `output`.
 
 ### Changed
-- **Breaking: `streaming` in agent config is no longer a boolean.** Use
-  `null` (REST, default), `"websocket"`, or `"sse"`. Configs with
-  `"streaming": false` should migrate to `null` or omit the field.
+- **Breaking: `streaming` in agent config is now an enum.** Use `null`
+  (REST, default), `"websocket"`, or `"sse"`. Configs with the legacy
+  boolean form (`"streaming": true` / `false`) are no longer accepted by
+  the engine — migrate `false` to `null` (or omit the field) and `true`
+  to `"websocket"`.
 
 ### Fixed
 - **WebSocket streaming filter** previously always returned `False` due to a
