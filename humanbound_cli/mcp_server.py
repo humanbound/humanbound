@@ -1384,7 +1384,7 @@ def hb_connect(
 
     Args:
         endpoint_config: JSON string with the agent's chat-completion config.
-            Example: {"streaming": false, "chat_completion": {"endpoint": "https://...",
+            Example: {"streaming": null, "chat_completion": {"endpoint": "https://...",
             "headers": {"Authorization": "Bearer ..."}, "payload": {"content": "$PROMPT"}}}
         name: Project name (auto-derived from endpoint hostname if omitted).
         prompt_text: Optional system prompt text to include as an additional

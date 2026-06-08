@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Server-Sent Events (SSE) as a third chat-completion transport.** Set
+  `"streaming": "sse"` in the agent config; the engine reads `data:`-line
+  frames until `{"type":"end"}` or connection close.
+- **Permissive content extraction.** The engine now walks the response JSON
+  recursively for any known content key — customers can send native vendor
+  shapes (OpenAI, Anthropic, RAG-style) without wrapping their bot's
+  response. Extended set of recognized keys: `content`, `text`, `response`,
+  `resp`, `answer`, `ans`, `message`, `reply`, `output`.
+
+### Changed
+- **Breaking: `streaming` in agent config is no longer a boolean.** Use
+  `null` (REST, default), `"websocket"`, or `"sse"`. Configs with
+  `"streaming": false` should migrate to `null` or omit the field.
+
+### Fixed
+- **WebSocket streaming filter** previously always returned `False` due to a
+  dict-vs-list comparison bug, causing the engine to rely on the fallback
+  extractor for every chunk.
+
 ## [2.0.5] — 2026-06-05
 
 ### Fixed

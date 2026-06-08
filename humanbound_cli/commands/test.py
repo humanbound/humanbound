@@ -124,7 +124,7 @@ def _load_integration(value: str) -> dict:
         console.print("[red]--endpoint must be a JSON string or path to a JSON file.[/red]")
         console.print("[dim]Example: --endpoint ./bot-config.json[/dim]")
         console.print(
-            '[dim]Example: --endpoint \'{"streaming": false, "chat_completion": {"endpoint": "...", "headers": {}, "payload": {"content": "$PROMPT"}}}\'[/dim]'
+            '[dim]Example: --endpoint \'{"streaming": null, "chat_completion": {"endpoint": "...", "headers": {}, "payload": {"content": "$PROMPT"}}}\'[/dim]'
         )
         raise SystemExit(1)
 

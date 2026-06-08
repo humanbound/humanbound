@@ -59,6 +59,7 @@ engine = [
     "anthropic>=0.20.0",
     "google-generativeai>=0.3.0",
     "websockets>=12.0",
+    "httpx>=0.27",
 ]
 firewall = [
     "humanbound-firewall>=0.2",
