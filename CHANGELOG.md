@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0] — 2026-06-09
+
 ### Added
 - **Server-Sent Events (SSE) as a third chat-completion transport.** Set
   `"streaming": "sse"` in the agent config; the engine reads `data:`-line
