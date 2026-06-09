@@ -65,7 +65,7 @@
   <meta property="og:image:alt" content="Open-source AI agent security testing — automated adversarial probes, LLM-as-a-Judge evaluation, runtime firewall, and posture scoring." />
   <meta name="twitter:image:alt" content="Open-source AI agent security testing — automated adversarial probes, LLM-as-a-Judge evaluation, runtime firewall, and posture scoring." />
   
-  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/#article","headline":"Humanbound","description":"Open-source AI agent security testing \u2014 automated adversarial probes, LLM-as-a-Judge evaluation, runtime firewall, and posture scoring.","url":"https://docs.humanbound.ai/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-06-02T10:20:06+03:00","keywords":"humanbound, AI agent security testing, LLM security platform, adversarial AI testing, OWASP LLM testing, prompt injection testing, AI security posture, humanbound CLI"}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/#article","headline":"Humanbound","description":"Open-source AI agent security testing \u2014 automated adversarial probes, LLM-as-a-Judge evaluation, runtime firewall, and posture scoring.","url":"https://docs.humanbound.ai/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-06-09T12:56:14+03:00","keywords":"humanbound, AI agent security testing, LLM security platform, adversarial AI testing, OWASP LLM testing, prompt injection testing, AI security posture, humanbound CLI"}]}</script>
   
 
   
@@ -2335,7 +2335,7 @@
 <h3 id="agent-configuration-in-30-seconds">Agent Configuration in 30 Seconds</h3>
 <p>Create a JSON file that tells Humanbound how to talk to your agent. The <code>$PROMPT</code> placeholder is where Humanbound injects test prompts during testing -- just place it where your agent expects user input.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">{</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">&quot;streaming&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">&quot;streaming&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="nt">&quot;thread_auth&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span><span class="nt">&quot;endpoint&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;https://your-bot.com/oauth/token&quot;</span><span class="p">,</span>
 <a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span><span class="nt">&quot;headers&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span>
@@ -2388,7 +2388,7 @@
 <tr>
 <td><code>streaming</code></td>
 <td>No</td>
-<td>Set <code>true</code> if your agent uses WebSocket/SSE streaming.</td>
+<td>Transport: <code>null</code> (REST, default), <code>"websocket"</code>, or <code>"sse"</code>.</td>
 </tr>
 </tbody>
 </table>
