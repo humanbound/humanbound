@@ -48,7 +48,7 @@ Create a `bot-config.json` describing how to talk to your agent:
 
 ```json
 {
-  "streaming": false,
+  "streaming": null,
   "thread_auth": {"endpoint": "", "headers": {}, "payload": {}},
   "thread_init": {
     "endpoint": "https://your-bot.com/sessions",

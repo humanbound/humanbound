@@ -33,7 +33,7 @@ from humanbound_cli.engine.bot import (
 def bot_config():
     """Minimal bot config — REST, non-streaming."""
     return {
-        "streaming": False,
+        "streaming": None,
         "thread_auth": {"endpoint": "", "headers": {}, "payload": {}},
         "thread_init": {
             "endpoint": "https://agent.example/start",
@@ -92,7 +92,7 @@ def test_extract_ai_response_uses_custom_extractor(bot):
         def extract_custom_response(self, chunk):
             return chunk.get("weird_format_field")
 
-    b = CustomBot({"streaming": False}, "e1")
+    b = CustomBot({"streaming": None}, "e1")
     result = b._Bot__extract_ai_response({"weird_format_field": "custom value"})
     assert result == "custom value"
 
@@ -259,7 +259,7 @@ def test_extract_turn_metadata_returns_none_when_mode_not_per_turn(bot):
 
 def test_extract_turn_metadata_navigates_dot_path():
     config = {
-        "streaming": False,
+        "streaming": None,
         "telemetry": {
             "mode": "per_turn",
             "extraction_map": {"metadata_path": "data.autopilot.meta"},
@@ -272,7 +272,7 @@ def test_extract_turn_metadata_navigates_dot_path():
 
 def test_extract_turn_metadata_missing_path_returns_none():
     config = {
-        "streaming": False,
+        "streaming": None,
         "telemetry": {
             "mode": "per_turn",
             "extraction_map": {"metadata_path": "not.there"},

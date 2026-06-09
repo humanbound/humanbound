@@ -34,7 +34,7 @@ The `telemetry` object sits inside your agent config JSON, alongside `chat_compl
 
 ```json
 {
-  "streaming": false,
+  "streaming": null,
   "thread_init": { "..." },
   "chat_completion": { "..." },
   "telemetry": {
