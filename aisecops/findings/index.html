@@ -67,7 +67,7 @@
   <meta property="og:image:alt" content="Findings are persistent vulnerability records that track security issues across test cycles — they remember when they first appeared and which regressions reintroduced them." />
   <meta name="twitter:image:alt" content="Findings are persistent vulnerability records that track security issues across test cycles — they remember when they first appeared and which regressions reintroduced them." />
   
-  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/aisecops/findings/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Findings","item":"https://docs.humanbound.ai/aisecops/findings/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/aisecops/findings/#article","headline":"Findings","description":"Findings are persistent vulnerability records that track security issues across test cycles \u2014 they remember when they first appeared and which regressions reintroduced them.","url":"https://docs.humanbound.ai/aisecops/findings/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-06-02T10:20:06+03:00","keywords":"findings management, finding lifecycle, vulnerability tracking, finding delegation, regression detection, hb findings command, finding webhook events, severity weighted penalties"}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/aisecops/findings/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Findings","item":"https://docs.humanbound.ai/aisecops/findings/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/aisecops/findings/#article","headline":"Findings","description":"Findings are persistent vulnerability records that track security issues across test cycles \u2014 they remember when they first appeared and which regressions reintroduced them.","url":"https://docs.humanbound.ai/aisecops/findings/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-06-12T14:12:41+03:00","keywords":"findings management, finding lifecycle, vulnerability tracking, finding delegation, regression detection, hb findings command, finding webhook events, severity weighted penalties"}]}</script>
   
 
   
@@ -1409,6 +1409,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#where-findings-come-from" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where Findings Come From
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#finding-lifecycle" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2223,6 +2234,54 @@
 
 <h1 id="findings">Findings</h1>
 <p>Findings are persistent vulnerability records that track security issues across test cycles. Unlike per-experiment insights (which are snapshots), findings have memory — they know when they first appeared, whether they've been fixed, and whether they've come back.</p>
+<h2 id="where-findings-come-from">Where Findings Come From</h2>
+<p>Findings are derived from experiment insights in three steps:</p>
+<ol>
+<li><strong>Judge verdicts.</strong> Every conversation in an experiment gets a verdict — pass or fail, with a severity score (0–100), confidence, category, and explanation.</li>
+<li><strong>Insights.</strong> When the experiment finishes, failed conversations above the severity and confidence thresholds are clustered by category into <strong>insights</strong>: per-experiment analysis showing what failed, at what severity, and why. Insights are snapshots — they belong to one experiment and are not tracked across runs (this is what <code>hb test</code> prints as "Top Insights").</li>
+<li><strong>Reconciliation.</strong> Each fail insight is then mapped to a threat class from the threat taxonomy (for behavioral QA tests, the evaluation metric plays this role) and reconciled against the project's existing findings. A new threat class creates a new <strong>open</strong> finding; a known threat class updates the existing finding instead — bumping its occurrence count, refreshing last-seen, raising severity if the new evidence is worse, and re-synthesizing the description.</li>
+</ol>
+<p>Two consequences of this design are worth calling out:</p>
+<ul>
+<li><strong>Many insights, few findings.</strong> An experiment can produce dozens of insights, but they deduplicate by threat class — ten failed conversations that all demonstrate the same scope violation become one finding with stronger evidence, not ten findings.</li>
+<li><strong>Occurrence count counts test runs, not conversations.</strong> A finding's occurrence count increases once per experiment in which its threat class reappears — it answers "how many test cycles has this survived?", not "how many conversations failed?".</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Insights</th>
+<th>Findings</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="../../reference/glossary/#testing-assessment">Scope</a></td>
+<td>One experiment</td>
+<td>Project, across all experiments</td>
+</tr>
+<tr>
+<td>Produced by</td>
+<td>Local and platform testing</td>
+<td>Platform reconciliation</td>
+</tr>
+<tr>
+<td>Deduplication</td>
+<td>Clustered by fail category</td>
+<td>Deduplicated by threat class</td>
+</tr>
+<tr>
+<td>Tracked over time</td>
+<td>No — snapshot</td>
+<td>Yes — lifecycle, occurrence count, regression detection</td>
+</tr>
+<tr>
+<td>Where to see them</td>
+<td><code>hb test</code> output, <code>hb report &lt;experiment-id&gt;</code></td>
+<td><code>hb findings</code>, platform dashboard</td>
+</tr>
+</tbody>
+</table>
 <h2 id="finding-lifecycle">Finding Lifecycle</h2>
 <p>Every finding moves through a lifecycle that reflects its real-world status:</p>
 <table>
