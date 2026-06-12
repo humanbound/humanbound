@@ -15,6 +15,7 @@ from .. import telemetry
 from ..engine import Posture, TestConfig, TestResult, get_runner
 from ..engine.platform_runner import PlatformTestRunner
 from ..engine.runner import TestRunner
+from ..engine.schemas import severity_to_label
 from ..exceptions import APIError, NotAuthenticatedError
 
 console = Console()
@@ -106,6 +107,19 @@ LANG_CODE_MAP = {
 }
 
 
+def _unwrap_integration(config: dict) -> dict:
+    """Accept either a bare integration block or a full experiment
+    configuration (as printed by `hb experiments show --config`) \u2014 in the
+    latter case, use its integration block."""
+    if isinstance(config, dict) and isinstance(config.get("integration"), dict):
+        console.print(
+            "  [dim]Full configuration detected \u2014 using its 'integration' block "
+            "(scope and context come from the project).[/dim]"
+        )
+        return config["integration"]
+    return config
+
+
 def _load_integration(value: str) -> dict:
     """Load integration config from JSON string or file path."""
     path = Path(value)
@@ -113,13 +127,13 @@ def _load_integration(value: str) -> dict:
         try:
             config = json.loads(path.read_text())
             console.print(f"  [green]\u2713[/green] Loaded config: [dim]{path}[/dim]")
-            return config
+            return _unwrap_integration(config)
         except json.JSONDecodeError as e:
             console.print(f"[red]Invalid JSON in {path}:[/red] {e}")
             raise SystemExit(1)
 
     try:
-        return json.loads(value.strip())
+        return _unwrap_integration(json.loads(value.strip()))
     except json.JSONDecodeError:
         console.print("[red]--endpoint must be a JSON string or path to a JSON file.[/red]")
         console.print("[dim]Example: --endpoint ./bot-config.json[/dim]")
@@ -248,7 +262,7 @@ def _fire_test_complete(
 @click.option(
     "--fail-on",
     type=click.Choice(["critical", "high", "medium", "low", "any"]),
-    help="Exit with error if findings of this severity or higher are found",
+    help="Exit with error if this experiment produces insights of this severity or higher",
 )
 @click.option(
     "--context",
@@ -793,11 +807,11 @@ def _wait_verbose(runner, experiment_id: str) -> str:
                 result_style = "[yellow]err[/yellow]"
 
             severity = log.get("severity", 0)
-            if isinstance(severity, (int, float)) and severity >= 76:
+            if isinstance(severity, int | float) and severity >= 76:
                 sev_style = f"[red bold]{severity}[/red bold]"
-            elif isinstance(severity, (int, float)) and severity >= 51:
+            elif isinstance(severity, int | float) and severity >= 51:
                 sev_style = f"[red]{severity}[/red]"
-            elif isinstance(severity, (int, float)) and severity >= 26:
+            elif isinstance(severity, int | float) and severity >= 26:
                 sev_style = f"[yellow]{severity}[/yellow]"
             else:
                 sev_style = f"[dim]{severity}[/dim]"
@@ -856,7 +870,7 @@ def _display_results(result: TestResult, posture: Posture):
 
     # Open findings count (platform only — None locally)
     if posture.finding_count is not None:
-        panel_lines.append(f"[bold]Open Findings:[/bold] {posture.finding_count}")
+        panel_lines.append(f"[bold]Open Findings (project):[/bold] {posture.finding_count}")
 
     # Previous posture delta (platform only — None locally)
     if posture.previous_grade and posture.previous_grade != posture.grade:
@@ -872,10 +886,13 @@ def _display_results(result: TestResult, posture: Posture):
     # Show insights if available
     insights = result.insights
     if insights:
-        console.print(f"\n[bold]Top Findings ({len(insights)} total):[/bold]")
+        console.print(f"\n[bold]Top Insights ({len(insights)} total):[/bold]")
+        console.print(
+            "[dim]Per-experiment analysis — not tracked across runs. "
+            "Tracked findings: hb findings[/dim]"
+        )
         for i, insight in enumerate(insights[:5], 1):
-            severity = insight.get("severity", "unknown")
-            severity_str = str(severity).lower() if isinstance(severity, str) else "unknown"
+            severity_str = _severity_label(insight.get("severity"))
             severity_color = {
                 "critical": "red bold",
                 "high": "red",
@@ -884,8 +901,21 @@ def _display_results(result: TestResult, posture: Posture):
             }.get(severity_str, "white")
 
             console.print(
-                f"  {i}. [{severity_color}]{severity_str.upper()}[/{severity_color}]: {insight.get('explanation', '')[:80]}..."
+                f"  {i}. [{severity_color}]{severity_str.upper()}[/{severity_color}]: {insight.get('explanation', '')}"
             )
+
+
+def _severity_label(severity) -> str:
+    """Normalize an insight severity to a label.
+
+    Platform insights carry a numeric 0-100 score (backend ``Insight.severity``);
+    local-engine insights already carry a label string.
+    """
+    if isinstance(severity, str):
+        return severity.lower()
+    if isinstance(severity, int | float):
+        return severity_to_label(severity)
+    return "unknown"
 
 
 def _check_fail_on(result: TestResult, fail_on: str) -> int:
@@ -904,7 +934,7 @@ def _check_fail_on(result: TestResult, fail_on: str) -> int:
     fail_on_index = severity_levels.index(fail_on) if fail_on in severity_levels else -1
 
     for insight in insights:
-        severity = str(insight.get("severity", "")).lower()
+        severity = _severity_label(insight.get("severity"))
         if severity in severity_levels:
             severity_index = severity_levels.index(severity)
             if severity_index <= fail_on_index:

@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.0] — 2026-06-12
+
+### Added
+- **`hb experiments show <id> --config`** prints the configuration the
+  experiment ran with (bot integration, scope, context) as reusable JSON.
+- **`hb test --endpoint` accepts a full experiment configuration.** When the
+  JSON contains an `integration` block (as printed by `--config`), the loader
+  unwraps it automatically, so `hb experiments show <id> --config > bot-config.json`
+  followed by `hb test --endpoint ./bot-config.json` works directly.
+- "Where Findings Come From" docs section: how judge verdicts become insights
+  and how insights reconcile into findings, with an insights-vs-findings table.
+
+### Changed
+- **Per-experiment analysis is now consistently called "insights"** (per the
+  glossary), never "findings": `hb test` prints "Top Insights" with a
+  not-tracked-across-runs clarifier, `hb experiments show` reports
+  "Top Insights (showing 3 of N)" with an `hb report` pointer instead of
+  "N findings" silently sliced to 3, and the HTML report section is "Insights".
+- Insight explanations print in full instead of being truncated at 80 characters.
+- The open-findings line in `hb test` output is labeled "Open Findings (project)"
+  to make clear it is project-level lifecycle state, not this run's results.
+
+### Fixed
+- **Platform-mode insights no longer render severity as `UNKNOWN`.** The
+  platform sends numeric 0-100 severity scores; the CLI now normalizes them
+  to labels using the canonical boundaries (>=75 critical, >=50 high,
+  >=25 medium, >=1 low, 0 info). The local presenter shares the same helper,
+  eliminating off-by-one drift at the 75/50/25 boundaries.
+- **`hb test --fail-on critical|high|medium|low` now actually trips in
+  platform mode.** Numeric severities never matched the string comparison, so
+  the CI gate silently passed regardless of findings; only `--fail-on any`
+  worked. Severities are normalized before the comparison.
+
 ## [2.1.0] — 2026-06-09
 
 ### Added
