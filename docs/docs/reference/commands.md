@@ -56,7 +56,7 @@ The complete `hb` CLI reference, organised into eight categories: global flags, 
 |---|---|
 | `hb test` | Create and run new security test experiment |
 | `hb experiments list` | List all experiments for current project |
-| `hb experiments show <id>` | Show detailed experiment information |
+| `hb experiments show <id> [--config]` | Show detailed experiment information; `--config` prints the configuration the run used (bot integration, scope, context) as reusable JSON |
 | `hb experiments status [id] [--all]` | Check experiment status (single, watch, or all-experiments dashboard) |
 | `hb experiments wait <id>` | Block until experiment completes (CI/CD) |
 | `hb experiments terminate <id>` | Stop running experiment |
