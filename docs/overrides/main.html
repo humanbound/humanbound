@@ -10,3 +10,10 @@
   <script type="application/ld+json">{{ page.meta.schema_jsonld | safe }}</script>
   {% endif %}
 {% endblock %}
+
+{# PostHog runs in the scripts block (end of body) so Material's document$
+   observable and the __md_get consent helper are both already defined. #}
+{% block scripts %}
+  {{ super() }}
+  {% include "partials/posthog.html" %}
+{% endblock %}

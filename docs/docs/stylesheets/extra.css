@@ -329,3 +329,21 @@ body,
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+
+/* ============================================================
+   Cookie consent — simple, non-blocking banner
+   ============================================================ */
+/* Toggle list hidden — but the analytics category stays in the form so Accept still records consent. */
+.md-consent__settings {
+  display: none !important;
+}
+
+.md-consent__overlay {
+  display: none !important;
+}
+
+.md-consent__controls .md-button {
+  display: inline-block !important;
+  width: auto !important;
+  margin-top: 0 !important;
+}
