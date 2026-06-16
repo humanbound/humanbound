@@ -170,7 +170,10 @@ nothing is tied to an account and no personal data is collected.
   withdraw your choice anytime via the banner.
 - **What we collect:** page views and traffic source only, tagged `source: docs`.
   Autocapture is off, so individual clicks and form inputs are never captured.
-- **No IP storage:** server-side IP geolocation is disabled (`$geoip_disable`).
+- **No IP storage:** your IP address is never recorded as an event property
+  (`ip: false`, with `$ip`/`$ip_address` on a denylist) and server-side IP
+  geolocation is disabled (`$geoip_disable`), so it is neither stored nor used
+  to locate you.
 - **Do Not Track:** if your browser sends a `DNT` signal, no analytics are sent.
 - **Region & processor:** PostHog EU Cloud (Frankfurt) — same processor and DPA
   as [Sub-processors](#sub-processors) above.

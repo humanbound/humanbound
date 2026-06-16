@@ -116,10 +116,10 @@ markdown_extensions:
 
 extra:
   consent:
-    title: Cookie consent
+    title: Analytics consent
     description: >-
-      We use cookies to optimize your experience. They are optional but
-      appreciated. Do you accept?
+      We use optional analytics to improve these docs. Nothing is stored on
+      your device unless you accept. Do you accept?
       <a href="https://github.com/humanbound/humanbound/blob/main/PRIVACY.md" target="_blank" rel="noopener">Privacy policy</a>.
     cookies:
       analytics: Analytics
