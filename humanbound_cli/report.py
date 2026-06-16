@@ -230,7 +230,13 @@ def generate_html_report(experiment, logs):
     if insights:
         fail_insights = [i for i in insights if i.get("result") == "fail"]
         if fail_insights:
-            body += '<div class="section">\n<h2>Findings</h2>\n'
+            body += '<div class="section">\n<h2>Insights</h2>\n'
+            body += (
+                '<p style="color:#64748b;font-size:13px;margin-top:-6px;">'
+                "Per-experiment analysis &mdash; not tracked across runs. "
+                "Findings tracked across experiments live on the platform "
+                "(<code>hb findings</code>).</p>\n"
+            )
             body += "<table>\n<tr><th>Severity</th><th>Category</th><th>Count</th><th>Explanation</th></tr>\n"
             for ins in sorted(
                 fail_insights,

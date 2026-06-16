@@ -95,7 +95,13 @@ def _list_experiments(page: int, size: int):
 
 @experiments_group.command("show")
 @click.argument("experiment_id")
-def show_experiment(experiment_id: str):
+@click.option(
+    "--config",
+    "show_config",
+    is_flag=True,
+    help="Print the configuration this experiment ran with (bot integration, scope, context) as reusable JSON.",
+)
+def show_experiment(experiment_id: str, show_config: bool):
     """Show experiment details.
 
     EXPERIMENT_ID: Experiment UUID.
@@ -108,6 +114,14 @@ def show_experiment(experiment_id: str):
 
     try:
         exp = client.get_experiment(experiment_id)
+
+        if show_config:
+            configuration = exp.get("configuration") or {}
+            if not configuration:
+                console.print("[yellow]No configuration stored for this experiment.[/yellow]")
+                return
+            console.print_json(data=configuration)
+            return
 
         status = exp.get("status", "Unknown")
         status_color = {
@@ -146,9 +160,18 @@ def show_experiment(experiment_id: str):
                     console.print(f"  Fail: {stats.get('fail', 0)}")
 
                 if insights:
-                    console.print(f"\n  Insights: {len(insights)} findings")
-                    for i, insight in enumerate(insights[:3], 1):
-                        console.print(f"    {i}. {insight.get('explanation', '')[:80]}...")
+                    shown = insights[:3]
+                    if len(insights) > len(shown):
+                        header = f"Top Insights (showing {len(shown)} of {len(insights)})"
+                    else:
+                        header = f"Top Insights ({len(insights)} total)"
+                    console.print(f"\n  [bold]{header}[/bold]")
+                    console.print(
+                        "  [dim]Per-experiment analysis — not tracked across runs. "
+                        f"Full list: hb report {exp.get('id')}[/dim]"
+                    )
+                    for i, insight in enumerate(shown, 1):
+                        console.print(f"    {i}. {insight.get('explanation', '')}")
 
     except NotAuthenticatedError:
         telemetry.fire_gated_command_hit()

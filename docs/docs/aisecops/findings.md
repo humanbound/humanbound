@@ -15,6 +15,27 @@ keywords:
 
 Findings are persistent vulnerability records that track security issues across test cycles. Unlike per-experiment insights (which are snapshots), findings have memory — they know when they first appeared, whether they've been fixed, and whether they've come back.
 
+## Where Findings Come From
+
+Findings are derived from experiment insights in three steps:
+
+1. **Judge verdicts.** Every conversation in an experiment gets a verdict — pass or fail, with a severity score (0–100), confidence, category, and explanation.
+2. **Insights.** When the experiment finishes, failed conversations above the severity and confidence thresholds are clustered by category into **insights**: per-experiment analysis showing what failed, at what severity, and why. Insights are snapshots — they belong to one experiment and are not tracked across runs (this is what `hb test` prints as "Top Insights").
+3. **Reconciliation.** Each fail insight is then mapped to a threat class from the threat taxonomy (for behavioral QA tests, the evaluation metric plays this role) and reconciled against the project's existing findings. A new threat class creates a new **open** finding; a known threat class updates the existing finding instead — bumping its occurrence count, refreshing last-seen, raising severity if the new evidence is worse, and re-synthesizing the description.
+
+Two consequences of this design are worth calling out:
+
+- **Many insights, few findings.** An experiment can produce dozens of insights, but they deduplicate by threat class — ten failed conversations that all demonstrate the same scope violation become one finding with stronger evidence, not ten findings.
+- **Occurrence count counts test runs, not conversations.** A finding's occurrence count increases once per experiment in which its threat class reappears — it answers "how many test cycles has this survived?", not "how many conversations failed?".
+
+| | Insights | Findings |
+|---|---|---|
+| Scope | One experiment | Project, across all experiments |
+| Produced by | Local and platform testing | Platform reconciliation |
+| Deduplication | Clustered by fail category | Deduplicated by threat class |
+| Tracked over time | No — snapshot | Yes — lifecycle, occurrence count, regression detection |
+| Where to see them | `hb test` output, `hb report <experiment-id>` | `hb findings`, platform dashboard |
+
 ## Finding Lifecycle
 
 Every finding moves through a lifecycle that reflects its real-world status:

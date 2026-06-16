@@ -8,6 +8,8 @@
 
 import logging
 
+from .schemas import severity_to_label
+
 logger = logging.getLogger("humanbound.engine.presenter")
 
 
@@ -190,15 +192,7 @@ def _generate_insights(logs):
         best_log = max(cat_logs, key=lambda l: l.get("severity", 0))
         explanation = best_log.get("explanation", "")
 
-        # Determine severity label
-        if max_severity >= 76:
-            severity_label = "critical"
-        elif max_severity >= 51:
-            severity_label = "high"
-        elif max_severity >= 26:
-            severity_label = "medium"
-        else:
-            severity_label = "low"
+        severity_label = severity_to_label(max_severity)
 
         insights.append(
             {

@@ -33,7 +33,8 @@ Test Configuration:
 Behavior:
   --no-auto-start         Create without starting (manual mode)
   -w, --wait              Wait for completion
-  --fail-on SEVERITY      Exit non-zero if findings >= severity
+  --fail-on SEVERITY      Exit non-zero if the experiment produces
+                          insights >= severity
                           Values: critical, high, medium, low, any
 
 Endpoint Override (optional):
@@ -44,3 +45,13 @@ Endpoint Override (optional):
 
 !!! info "Note"
     The `-e / --endpoint` flag is only needed if your project was not connected with `hb connect --endpoint`, or if you want to temporarily test against a different agent. When a default integration is configured, `hb test` works with no additional flags. Your `--endpoint` JSON file can also include a `telemetry` section for white-box agentic testing -- see [Agent Configuration File](../getting-started/agent-config.md#telemetry-optional).
+
+!!! tip "Reusing a previous run's configuration"
+    Every experiment stores the configuration it ran with. Print it back and feed it straight into a new run:
+
+    ```bash
+    hb experiments show <experiment-id> --config > bot-config.json
+    hb test --endpoint ./bot-config.json --wait
+    ```
+
+    The printed JSON is the full configuration (integration, scope, context). `hb test` detects this and uses its `integration` block — scope and context always come from the project's current settings, not the file.
