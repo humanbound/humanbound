@@ -114,5 +114,21 @@ markdown_extensions:
   - attr_list
   - md_in_html
 
+extra:
+  consent:
+    title: Cookie consent
+    description: >-
+      We use cookies to optimize your experience. They are optional but
+      appreciated. Do you accept?
+      <a href="https://github.com/humanbound/humanbound/blob/main/PRIVACY.md" target="_blank" rel="noopener">Privacy policy</a>.
+    cookies:
+      analytics: Analytics
+    actions:
+      - accept
+      - reject
+  posthog:
+    api_key: "phc_yKExP2tUyiPGg3kY3tongw36iGLTYaH7D2DfRCHpZg9r"
+    host: "https://eu.i.posthog.com"
+
 extra_css:
   - stylesheets/extra.css

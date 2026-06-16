@@ -156,6 +156,25 @@ governed by their published Terms of Service and Data Processing Addendum
 (linked above). They store and process the telemetry data on our behalf
 and, per their published terms, do not use it for their own purposes.
 
+## Docs site analytics
+
+The documentation site (`docs.humanbound.ai`) sends **anonymous** web analytics
+to the same PostHog project as the CLI. There is no login on the docs site, so
+nothing is tied to an account and no personal data is collected.
+
+- **Cookieless by default:** until you accept **Analytics** in the cookie
+  banner, PostHog stores nothing on your device — no cookies, no local storage —
+  and each visit is a fresh anonymous session.
+- **With consent:** if you accept, we keep a first-party identifier in your
+  browser's local storage to recognize returning visits. You can change or
+  withdraw your choice anytime via the banner.
+- **What we collect:** page views and traffic source only, tagged `source: docs`.
+  Autocapture is off, so individual clicks and form inputs are never captured.
+- **No IP storage:** server-side IP geolocation is disabled (`$geoip_disable`).
+- **Do Not Track:** if your browser sends a `DNT` signal, no analytics are sent.
+- **Region & processor:** PostHog EU Cloud (Frankfurt) — same processor and DPA
+  as [Sub-processors](#sub-processors) above.
+
 ## Your rights under GDPR
 
 For events sent **after you log in** (`hb login`), the data is associated
