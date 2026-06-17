@@ -158,15 +158,15 @@ def invoke(cmd_args, mock_client=None, patch_target=None):
 
 
 def assert_exit_ok(result):
-    assert (
-        result.exit_code == 0
-    ), f"Expected exit 0, got {result.exit_code}.\nOutput:\n{result.output[:500]}"
+    assert result.exit_code == 0, (
+        f"Expected exit 0, got {result.exit_code}.\nOutput:\n{result.output[:500]}"
+    )
 
 
 def assert_exit_error(result, code=1):
-    assert (
-        result.exit_code == code
-    ), f"Expected exit {code}, got {result.exit_code}.\nOutput:\n{result.output[:500]}"
+    assert result.exit_code == code, (
+        f"Expected exit {code}, got {result.exit_code}.\nOutput:\n{result.output[:500]}"
+    )
 
 
 def assert_valid_json(result):
