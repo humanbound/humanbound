@@ -62,6 +62,21 @@ class TestHappyPath:
         assert "Not found" in result.output
 
     @patch(PATCH_TARGET)
+    def test_display_consumes_real_schema(self, MockClient):
+        """Regression: the backend returns `plan` as a dict and the id under
+        `id`. The old display iterated `plan` as a list of experiment dicts and
+        read `campaign_id`/`total_tests`, crashing with
+        'str object has no attribute get'. Render must succeed and show id +
+        test_count from the real CampaignPlanResponse shape."""
+        mock = _make_client()
+        mock.get_campaign.return_value = MOCK_CAMPAIGN  # real-shape fixture
+        MockClient.return_value = mock
+        result = runner.invoke(cli, ["campaigns"])
+        assert_exit_ok(result)
+        assert "camp-001" in result.output
+        assert "10" in result.output  # test_count rendered
+
+    @patch(PATCH_TARGET)
     def test_terminate_campaign(self, MockClient):
         mock = _make_client()
         mock.get_campaign.return_value = {"campaign": {"id": "camp-001", "status": "running"}}

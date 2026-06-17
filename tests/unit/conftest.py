@@ -158,15 +158,15 @@ def invoke(cmd_args, mock_client=None, patch_target=None):
 
 
 def assert_exit_ok(result):
-    assert result.exit_code == 0, (
-        f"Expected exit 0, got {result.exit_code}.\nOutput:\n{result.output[:500]}"
-    )
+    assert (
+        result.exit_code == 0
+    ), f"Expected exit 0, got {result.exit_code}.\nOutput:\n{result.output[:500]}"
 
 
 def assert_exit_error(result, code=1):
-    assert result.exit_code == code, (
-        f"Expected exit {code}, got {result.exit_code}.\nOutput:\n{result.output[:500]}"
-    )
+    assert (
+        result.exit_code == code
+    ), f"Expected exit {code}, got {result.exit_code}.\nOutput:\n{result.output[:500]}"
 
 
 def assert_valid_json(result):
@@ -324,11 +324,20 @@ MOCK_ASSESSMENT = {
     "created_at": "2025-06-01T12:00:00Z",
 }
 
+# Mirrors the backend CampaignPlanResponse schema exactly
+# (be/schemas/Campaign.py): {id, activity, status, plan (dict),
+# test_count, synthesized_strategies}. Keep in sync — a drift here is
+# what let the `campaign_id`/`plan`-shape mismatch ship unnoticed.
 MOCK_CAMPAIGN = {
     "id": "camp-001",
+    "activity": "assess",
     "status": "running",
-    "progress": {"completed": 5, "total": 10},
-    "created_at": "2025-06-01T00:00:00Z",
+    "plan": {
+        "focus": "retest prior findings",
+        "targets": ["finding-1", "finding-2", "finding-3"],
+    },
+    "test_count": 10,
+    "synthesized_strategies": [],
 }
 
 MOCK_WEBHOOK = {

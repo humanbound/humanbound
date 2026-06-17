@@ -16,10 +16,11 @@ from ..exceptions import APIError, NotAuthenticatedError
 
 console = Console()
 
-PHASE_STYLES = {
-    "reconnaissance": "[cyan]Reconnaissance[/cyan]",
-    "red_teaming": "[red]Red Teaming[/red]",
-    "monitoring": "[green]Monitoring[/green]",
+# Keys match the backend CampaignPhase enum values carried in `activity`.
+ACTIVITY_STYLES = {
+    "assess": "[cyan]Assess[/cyan]",
+    "investigate": "[yellow]Investigate[/yellow]",
+    "monitor": "[green]Monitor[/green]",
 }
 
 
@@ -70,14 +71,18 @@ def campaigns_group(ctx, as_json):
 
 
 def _display_campaign(response: dict):
-    """Display campaign plan details."""
+    """Display campaign plan details.
+
+    Mirrors the backend CampaignPlanResponse schema:
+    {id, activity, status, plan (dict), test_count, synthesized_strategies}.
+    """
     campaign = response.get("campaign", response)
 
-    phase = str(campaign.get("phase", campaign.get("current_phase", ""))).lower()
+    activity = str(campaign.get("activity", "") or "").lower()
     status = campaign.get("status", "")
     campaign_id = campaign.get("id", "")
 
-    phase_display = PHASE_STYLES.get(phase, phase)
+    activity_display = ACTIVITY_STYLES.get(activity, activity or "—")
     status_color = (
         "green"
         if status in ("completed", "active")
@@ -86,7 +91,7 @@ def _display_campaign(response: dict):
 
     console.print(
         Panel(
-            f"Phase: {phase_display}\n"
+            f"Activity: {activity_display}\n"
             f"Status: [{status_color}]{status}[/{status_color}]\n"
             f"[dim]ID: {campaign_id}[/dim]",
             title="Campaign Plan",
@@ -95,40 +100,34 @@ def _display_campaign(response: dict):
         )
     )
 
-    # Experiments in plan
-    experiments = campaign.get("experiments", campaign.get("plan", []))
-    if experiments:
-        console.print("\n[bold]Planned Experiments:[/bold]\n")
+    # Discovery plan — backend returns `plan` as a dict (discovery_plan), not a
+    # list of experiments. Render its top-level entries.
+    plan = campaign.get("plan", {})
+    if isinstance(plan, dict) and plan:
+        console.print("\n[bold]Discovery Plan:[/bold]\n")
 
         table = Table(show_header=True, header_style="bold")
-        table.add_column("Category", width=25)
-        table.add_column("Tests", justify="right", width=8)
-        table.add_column("Strategy", width=20)
-        table.add_column("Status", width=12)
+        table.add_column("Area", width=28)
+        table.add_column("Detail", overflow="fold")
 
-        for exp in experiments:
-            cat = exp.get("test_category", exp.get("category", ""))
-            if "/" in cat:
-                cat = cat.split("/")[-1]
-            tests = exp.get("test_count", exp.get("size", ""))
-            strategy = exp.get("strategy", "")
-            exp_status = exp.get("status", "pending")
-
-            status_style = {
-                "completed": "[green]completed[/green]",
-                "running": "[yellow]running[/yellow]",
-                "failed": "[red]failed[/red]",
-                "pending": "[dim]pending[/dim]",
-            }.get(str(exp_status).lower(), str(exp_status))
-
-            table.add_row(cat, str(tests), strategy, status_style)
+        for key, value in plan.items():
+            detail = (
+                json.dumps(value, default=str) if isinstance(value, list | dict) else str(value)
+            )
+            if len(detail) > 200:
+                detail = detail[:200] + "…"
+            table.add_row(str(key), detail)
 
         console.print(table)
 
     # Summary stats
-    total_tests = campaign.get("total_tests", campaign.get("total_size", 0))
-    if total_tests:
-        console.print(f"\n[dim]Total tests planned: {total_tests}[/dim]")
+    test_count = campaign.get("test_count", 0)
+    if test_count:
+        console.print(f"\n[dim]Total tests planned: {test_count}[/dim]")
+
+    synthesized = campaign.get("synthesized_strategies", []) or []
+    if synthesized:
+        console.print(f"[dim]Synthesized strategies: {len(synthesized)}[/dim]")
 
 
 @campaigns_group.command("terminate")
