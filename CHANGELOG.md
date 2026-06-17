@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **`hb campaigns` no longer errors and `hb campaigns terminate` now finds a
+  running campaign.** The command read response fields that didn't match the
+  campaign API response; it now aligns with the actual response shape so the
+  plan renders and terminate locates the campaign.
+
 ## [2.2.0] — 2026-06-12
 
 ### Added
