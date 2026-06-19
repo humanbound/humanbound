@@ -313,15 +313,27 @@ MOCK_API_KEY = {
     "created_at": "2025-01-01T00:00:00Z",
 }
 
+# Mirrors the backend AssessmentListItem schema (be/schemas/Responses.py):
+# posture snapshots are {posture: score, grade}, findings_discovered is the
+# new-findings delta. Keep in sync so the unit tests exercise the real shape.
 MOCK_ASSESSMENT = {
     "id": "asmnt-001",
-    "type": "assess",
+    "domain": ["security"],
     "status": "completed",
-    "grade": "B",
-    "score": 72.5,
-    "tests_run": 50,
-    "tests_passed": 36,
-    "created_at": "2025-06-01T12:00:00Z",
+    "activity": "investigate",
+    "test_count": 50,
+    "posture_before": {"posture": 60.0, "grade": "C"},
+    "posture_after": {"posture": 72.5, "grade": "B"},
+    "drift_score": -0.08,
+    "started_at": 1781845200,
+    "completed_at": 1781846717,
+    "findings_discovered": 3,
+    "discovery_plan": {
+        "entries": [
+            {"orchestrator": "humanbound/adversarial/autonomous_red_team", "level": "system"},
+            {"orchestrator": "humanbound/adversarial/_monitoring_test", "level": "acceptance"},
+        ]
+    },
 }
 
 # Mirrors the backend CampaignPlanResponse schema exactly

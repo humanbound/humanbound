@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **`hb assessments` list is more informative:** added Posture (grade + score)
+  and Drift columns, renamed the findings column to "New Findings" (explicitly
+  the new findings detected in the run), renamed "Scope" to "Domain" (the field
+  the API actually returns, previously shown blank), and render Started/
+  Completed as dates instead of raw epoch numbers.
+- **`hb assessments show` card is richer** instead of mirroring the list row:
+  it now shows the posture trajectory (before → after) with a trend read,
+  drift, coverage breadth (test groups + levels), the domain, and a
+  human-readable run duration.
+
 ### Fixed
 - **`hb campaigns` no longer errors and `hb campaigns terminate` now finds a
   running campaign.** The command read response fields that didn't match the
