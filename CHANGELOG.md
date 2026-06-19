@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.1] — 2026-06-19
+
 ### Changed
 - **`hb assessments` list is more informative:** added Posture (grade + score)
   and Drift columns, renamed the findings column to "New Findings" (explicitly
