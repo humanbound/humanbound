@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **`hb assessments terminate [id]`** stops a running assessment (defaults to
+  the current/latest), and **`hb assessments show`** now defaults to the latest
+  assessment when no id is given. `hb assessments` is now the single command for
+  viewing and managing assessments.
+
+### Deprecated
+- **`hb campaigns`** is deprecated in favor of `hb assessments` (they are the
+  same records). It is hidden from help and prints a deprecation notice; it
+  still works.
+
 ## [2.2.1] — 2026-06-19
 
 ### Changed

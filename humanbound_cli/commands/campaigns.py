@@ -24,18 +24,24 @@ ACTIVITY_STYLES = {
 }
 
 
-@click.group("campaigns", invoke_without_command=True)
+@click.group("campaigns", invoke_without_command=True, hidden=True)
 @click.option("--json", "as_json", is_flag=True, help="Output as JSON")
 @click.pass_context
 def campaigns_group(ctx, as_json):
-    """View and manage ASCAM campaigns.
+    """[Deprecated] Use 'hb assessments' instead.
 
-    \b
-    Examples:
-      hb campaigns                   # Show current campaign plan
-      hb campaigns --json            # JSON output
-      hb campaigns terminate         # Terminate a running campaign
+    Campaigns and assessments are the same thing; this alias is kept for
+    backward compatibility.
     """
+    # Deprecation notice on stderr (skipped in --json mode to keep machine
+    # output clean). Shown for `hb campaigns` and its subcommands.
+    if not as_json:
+        click.secho(
+            "'hb campaigns' is deprecated — use 'hb assessments' instead.",
+            fg="yellow",
+            err=True,
+        )
+
     if ctx.invoked_subcommand is not None:
         return
 
