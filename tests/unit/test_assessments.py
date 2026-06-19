@@ -46,6 +46,25 @@ class TestHappyPath:
         )
 
     @patch(PATCH_TARGET)
+    def test_list_shows_posture_drift_new_findings(self, MockClient):
+        """The list renders posture grade+score, drift, and the renamed
+        'New Findings' column from the real assessment shape."""
+        mock = _make_client()
+        mock.get.return_value = {"data": [MOCK_ASSESSMENT], "total": 1}
+        MockClient.return_value = mock
+        # Widen the console so the 8-column table doesn't truncate.
+        result = runner.invoke(cli, ["assessments"], env={"COLUMNS": "220"})
+        assert_exit_ok(result)
+        out = result.output
+        assert "New Findings" in out  # renamed column header
+        assert "Domain" in out and "security" in out  # scope→domain
+        assert "Posture" in out and "Drift" in out
+        assert "B" in out and "72" in out  # posture grade + score
+        assert "-0.08" in out  # drift
+        assert "3" in out  # new-findings delta
+        assert "2026-06-19" in out  # started/completed epoch rendered as date
+
+    @patch(PATCH_TARGET)
     def test_list_assessments_empty(self, MockClient):
         mock = _make_client()
         mock.get.return_value = {"data": [], "total": 0}
@@ -62,6 +81,23 @@ class TestHappyPath:
         result = runner.invoke(cli, ["assessments", "show", "asmnt-001"])
         assert_exit_ok(result)
         mock.get.assert_called_once_with("projects/proj-456/assessments/asmnt-001")
+
+    @patch(PATCH_TARGET)
+    def test_show_renders_rich_card(self, MockClient):
+        """The detail card adds info the list row can't: posture trajectory +
+        trend, drift, coverage breadth, domain, and run duration."""
+        mock = _make_client()
+        mock.get.return_value = MOCK_ASSESSMENT
+        MockClient.return_value = mock
+        result = runner.invoke(cli, ["assessments", "show", "asmnt-001"], env={"COLUMNS": "220"})
+        assert_exit_ok(result)
+        out = result.output
+        assert "C" in out and "B" in out  # posture before → after grades
+        assert "improved" in out  # trend (60 → 72)
+        assert "Drift" in out
+        assert "Coverage" in out and "acceptance" in out  # plan levels, no orchestrator names
+        assert "security" in out  # domain
+        assert "25m" in out  # duration (1517s)
 
     @patch(PATCH_TARGET)
     def test_list_json(self, MockClient):
