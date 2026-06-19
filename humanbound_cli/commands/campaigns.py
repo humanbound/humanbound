@@ -79,8 +79,8 @@ def campaigns_group(ctx, as_json):
 def _display_campaign(response: dict):
     """Display campaign plan details.
 
-    Mirrors the backend CampaignPlanResponse schema:
-    {id, activity, status, plan (dict), test_count, synthesized_strategies}.
+    Mirrors the campaign plan API response:
+    {id, activity, status, plan (dict), test_count, synthesized_strategies (int count)}.
     """
     campaign = response.get("campaign", response)
 
@@ -131,9 +131,11 @@ def _display_campaign(response: dict):
     if test_count:
         console.print(f"\n[dim]Total tests planned: {test_count}[/dim]")
 
-    synthesized = campaign.get("synthesized_strategies", []) or []
-    if synthesized:
-        console.print(f"[dim]Synthesized strategies: {len(synthesized)}[/dim]")
+    # API returns a count (int); tolerate the legacy list shape during rollout.
+    raw = campaign.get("synthesized_strategies")
+    count = raw if isinstance(raw, int) else len(raw or [])
+    if count:
+        console.print(f"[dim]Synthesized strategies: {count}[/dim]")
 
 
 @campaigns_group.command("terminate")
