@@ -100,6 +100,47 @@ class TestHappyPath:
         assert "25m" in out  # duration (1517s)
 
     @patch(PATCH_TARGET)
+    def test_show_defaults_to_latest(self, MockClient):
+        """`hb assessments show` with no id resolves and renders the latest."""
+        mock = _make_client()
+        mock.get_campaign.return_value = {"id": "asmnt-001", "status": "completed"}
+        mock.get.return_value = MOCK_ASSESSMENT
+        MockClient.return_value = mock
+        result = runner.invoke(cli, ["assessments", "show"], env={"COLUMNS": "220"})
+        assert_exit_ok(result)
+        mock.get_campaign.assert_called_once_with("proj-456")
+        mock.get.assert_called_once_with("projects/proj-456/assessments/asmnt-001")
+        assert "improved" in result.output  # rich card rendered for the latest
+
+    @patch(PATCH_TARGET)
+    def test_terminate_latest(self, MockClient):
+        mock = _make_client()
+        mock.get_campaign.return_value = {"id": "camp-1", "status": "running"}
+        MockClient.return_value = mock
+        result = runner.invoke(cli, ["assessments", "terminate", "--force"])
+        assert_exit_ok(result)
+        mock.terminate_campaign.assert_called_once_with("proj-456", "camp-1")
+
+    @patch(PATCH_TARGET)
+    def test_terminate_with_explicit_id(self, MockClient):
+        mock = _make_client()
+        MockClient.return_value = mock
+        result = runner.invoke(cli, ["assessments", "terminate", "abc-123", "--force"])
+        assert_exit_ok(result)
+        mock.terminate_campaign.assert_called_once_with("proj-456", "abc-123")
+        mock.get_campaign.assert_not_called()  # explicit id ⇒ no lookup
+
+    @patch(PATCH_TARGET)
+    def test_terminate_none_active(self, MockClient):
+        mock = _make_client()
+        mock.get_campaign.return_value = {"id": "", "status": ""}
+        MockClient.return_value = mock
+        result = runner.invoke(cli, ["assessments", "terminate", "--force"])
+        assert_exit_ok(result)
+        assert "No active assessment" in result.output
+        mock.terminate_campaign.assert_not_called()
+
+    @patch(PATCH_TARGET)
     def test_list_json(self, MockClient):
         mock = _make_client()
         mock.get.return_value = {"data": [MOCK_ASSESSMENT], "total": 1}

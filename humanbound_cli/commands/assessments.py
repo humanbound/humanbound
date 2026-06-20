@@ -8,6 +8,7 @@ import json
 import click
 from rich.console import Console
 from rich.panel import Panel
+from rich.prompt import Confirm
 from rich.table import Table
 
 from .. import telemetry
@@ -153,15 +154,17 @@ def assessments_group(ctx, page, size, as_json):
 
 
 @assessments_group.command("show")
-@click.argument("assessment_id")
+@click.argument("assessment_id", required=False)
 @click.option("--json", "as_json", is_flag=True, help="Output as JSON")
 def show_assessment(assessment_id: str, as_json: bool):
-    """Show assessment details.
+    """Show assessment details (defaults to the latest assessment).
 
-    ASSESSMENT_ID: Assessment UUID.
+    ASSESSMENT_ID: Assessment UUID (optional; the latest assessment is shown
+    when omitted).
 
     \b
     Examples:
+      hb assessments show            # latest assessment
       hb assessments show <id>
       hb assessments show <id> --json
     """
@@ -179,6 +182,17 @@ def show_assessment(assessment_id: str, as_json: bool):
         raise SystemExit(1)
 
     try:
+        # Default to the latest assessment when no id is given.
+        if not assessment_id:
+            with console.status("Fetching latest assessment..."):
+                latest = client.get_campaign(project_id)
+            camp = latest.get("campaign", latest) if isinstance(latest, dict) else {}
+            assessment_id = (camp or {}).get("id", "")
+            if not assessment_id:
+                console.print("[yellow]No assessments found.[/yellow]")
+                console.print("[dim]Run 'hb test' to create one.[/dim]")
+                return
+
         with console.status("Fetching assessment..."):
             response = client.get(f"projects/{project_id}/assessments/{assessment_id}")
 
@@ -297,6 +311,71 @@ def _display_assessment(data: dict):
         f"  [bold]hb assessments report {data.get('id', '')}[/bold]  Generate full report"
     )
     console.print("  [bold]hb findings[/bold]                              View current findings")
+
+
+@assessments_group.command("terminate")
+@click.argument("assessment_id", required=False)
+@click.option("--force", is_flag=True, help="Skip confirmation prompt")
+def terminate_assessment(assessment_id: str, force: bool):
+    """Terminate a running assessment (defaults to the latest).
+
+    Stops the assessment and all of its running experiments.
+
+    \b
+    Examples:
+      hb assessments terminate          # the current/latest assessment
+      hb assessments terminate <id>
+      hb assessments terminate --force
+    """
+    client = HumanboundClient()
+
+    if not client.is_authenticated():
+        telemetry.fire_gated_command_hit()
+        console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
+        raise SystemExit(1)
+
+    project_id = client.project_id
+    if not project_id:
+        console.print("[yellow]No project selected.[/yellow]")
+        console.print("Use 'hb projects use <id>' to select a project first.")
+        raise SystemExit(1)
+
+    try:
+        # Default to the current/latest assessment when no id is given.
+        status = ""
+        if not assessment_id:
+            with console.status("Fetching current assessment..."):
+                response = client.get_campaign(project_id)
+            camp = response.get("campaign", response) if isinstance(response, dict) else {}
+            assessment_id = (camp or {}).get("id", "")
+            status = (camp or {}).get("status", "")
+            if not assessment_id:
+                console.print("[yellow]No active assessment found.[/yellow]")
+                return
+
+        if status in ("completed", "broken"):
+            console.print(f"[yellow]Assessment is already {status}.[/yellow]")
+            return
+
+        if not force:
+            if not Confirm.ask(
+                f"Terminate assessment [bold]{assessment_id}[/bold]? Running experiments will be stopped"
+            ):
+                console.print("[dim]Cancelled.[/dim]")
+                return
+
+        with console.status("Terminating assessment..."):
+            client.terminate_campaign(project_id, assessment_id)
+
+        console.print("[green]Assessment terminated.[/green]")
+        console.print(f"[dim]ID: {assessment_id}[/dim]")
+
+    except NotAuthenticatedError:
+        console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
+        raise SystemExit(1)
+    except APIError as e:
+        console.print(f"[red]Error:[/red] {e}")
+        raise SystemExit(1)
 
 
 @assessments_group.command("report")

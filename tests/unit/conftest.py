@@ -313,9 +313,9 @@ MOCK_API_KEY = {
     "created_at": "2025-01-01T00:00:00Z",
 }
 
-# Mirrors the backend AssessmentListItem schema (be/schemas/Responses.py):
-# posture snapshots are {posture: score, grade}, findings_discovered is the
-# new-findings delta. Keep in sync so the unit tests exercise the real shape.
+# Mirrors the assessment list item API response: posture snapshots are
+# {posture: score, grade}, findings_discovered is the new-findings delta.
+# Keep in sync so the unit tests exercise the real shape.
 MOCK_ASSESSMENT = {
     "id": "asmnt-001",
     "domain": ["security"],
@@ -329,17 +329,18 @@ MOCK_ASSESSMENT = {
     "completed_at": 1781846717,
     "findings_discovered": 3,
     "discovery_plan": {
+        # Mirrors the discovery_plan shape returned by the API.
         "entries": [
             {"orchestrator": "humanbound/adversarial/autonomous_red_team", "level": "system"},
-            {"orchestrator": "humanbound/adversarial/_monitoring_test", "level": "acceptance"},
+            {"orchestrator": "humanbound/adversarial/_redacted", "level": "acceptance"},
         ]
     },
 }
 
-# Mirrors the backend CampaignPlanResponse schema exactly
-# (be/schemas/Campaign.py): {id, activity, status, plan (dict),
-# test_count, synthesized_strategies}. Keep in sync — a drift here is
-# what let the `campaign_id`/`plan`-shape mismatch ship unnoticed.
+# Mirrors the campaign plan API response exactly: {id, activity, status,
+# plan (dict), test_count, synthesized_strategies (int count)}. Keep in sync
+# — a drift here is what let the `campaign_id`/`plan`-shape mismatch ship
+# unnoticed.
 MOCK_CAMPAIGN = {
     "id": "camp-001",
     "activity": "assess",
@@ -349,7 +350,7 @@ MOCK_CAMPAIGN = {
         "targets": ["finding-1", "finding-2", "finding-3"],
     },
     "test_count": 10,
-    "synthesized_strategies": [],
+    "synthesized_strategies": 0,
 }
 
 MOCK_WEBHOOK = {
