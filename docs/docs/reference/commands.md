@@ -86,7 +86,8 @@ The complete `hb` CLI reference, organised into eight categories: global flags, 
 | `hb findings update <id>` | Update finding status or severity |
 | `hb findings assign <id>` | Assign finding to a team member |
 | `hb assessments` | List past security assessments |
-| `hb assessments show <id>` | View assessment detail (posture before/after, drift, test count) |
+| `hb assessments show [id]` | View assessment detail (posture trajectory, drift, coverage, duration); defaults to the latest |
+| `hb assessments terminate [id]` | Stop a running assessment (defaults to the current/latest) |
 | `hb assessments report <id>` | Generate assessment HTML report with full test logs (-o, --no-open) |
 | `hb projects report` | Generate project HTML security report (-o, --no-open) |
 | `hb orgs report` | Generate organisation-wide HTML report (-o, --no-open) |
@@ -97,8 +98,8 @@ The complete `hb` CLI reference, organised into eight categories: global flags, 
 | Command | Description |
 |---|---|
 | `hb guardrails` | Export learned security rules and patterns |
-| `hb campaigns` | View current ASCAM campaign plan |
-| `hb campaigns terminate` | Stop running campaign |
+| `hb campaigns` | _Deprecated_ — use `hb assessments` |
+| `hb campaigns terminate` | _Deprecated_ — use `hb assessments terminate` |
 | `hb monitor` | Start, pause, or resume continuous monitoring |
 
 ## Configuration

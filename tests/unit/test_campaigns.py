@@ -43,6 +43,17 @@ class TestHappyPath:
         mock.get_campaign.assert_called_once_with("proj-456")
 
     @patch(PATCH_TARGET)
+    def test_deprecation_warning(self, MockClient):
+        """`hb campaigns` is a deprecated alias for `hb assessments`."""
+        mock = _make_client()
+        mock.get_campaign.return_value = MOCK_CAMPAIGN
+        MockClient.return_value = mock
+        result = runner.invoke(cli, ["campaigns"])
+        assert_exit_ok(result)
+        assert "deprecated" in result.output.lower()
+        assert "hb assessments" in result.output
+
+    @patch(PATCH_TARGET)
     def test_campaign_status_json(self, MockClient):
         mock = _make_client()
         mock.get_campaign.return_value = MOCK_CAMPAIGN

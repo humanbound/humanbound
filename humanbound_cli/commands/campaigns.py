@@ -24,18 +24,24 @@ ACTIVITY_STYLES = {
 }
 
 
-@click.group("campaigns", invoke_without_command=True)
+@click.group("campaigns", invoke_without_command=True, hidden=True)
 @click.option("--json", "as_json", is_flag=True, help="Output as JSON")
 @click.pass_context
 def campaigns_group(ctx, as_json):
-    """View and manage ASCAM campaigns.
+    """[Deprecated] Use 'hb assessments' instead.
 
-    \b
-    Examples:
-      hb campaigns                   # Show current campaign plan
-      hb campaigns --json            # JSON output
-      hb campaigns terminate         # Terminate a running campaign
+    Campaigns and assessments are the same thing; this alias is kept for
+    backward compatibility.
     """
+    # Deprecation notice on stderr (skipped in --json mode to keep machine
+    # output clean). Shown for `hb campaigns` and its subcommands.
+    if not as_json:
+        click.secho(
+            "'hb campaigns' is deprecated — use 'hb assessments' instead.",
+            fg="yellow",
+            err=True,
+        )
+
     if ctx.invoked_subcommand is not None:
         return
 
@@ -73,8 +79,8 @@ def campaigns_group(ctx, as_json):
 def _display_campaign(response: dict):
     """Display campaign plan details.
 
-    Mirrors the backend CampaignPlanResponse schema:
-    {id, activity, status, plan (dict), test_count, synthesized_strategies}.
+    Mirrors the campaign plan API response:
+    {id, activity, status, plan (dict), test_count, synthesized_strategies (int count)}.
     """
     campaign = response.get("campaign", response)
 
@@ -125,9 +131,11 @@ def _display_campaign(response: dict):
     if test_count:
         console.print(f"\n[dim]Total tests planned: {test_count}[/dim]")
 
-    synthesized = campaign.get("synthesized_strategies", []) or []
-    if synthesized:
-        console.print(f"[dim]Synthesized strategies: {len(synthesized)}[/dim]")
+    # API returns a count (int); tolerate the legacy list shape during rollout.
+    raw = campaign.get("synthesized_strategies")
+    count = raw if isinstance(raw, int) else len(raw or [])
+    if count:
+        console.print(f"[dim]Synthesized strategies: {count}[/dim]")
 
 
 @campaigns_group.command("terminate")
