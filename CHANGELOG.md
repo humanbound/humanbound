@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.0] — 2026-06-29
+
 ### Added
 - **`hb assessments terminate [id]`** stops a running assessment (defaults to
   the current/latest), and **`hb assessments show`** now defaults to the latest
@@ -333,5 +335,6 @@ Last release as `humanbound-cli`. See the
 [old release](https://pypi.org/project/humanbound-cli/1.1.0/) on PyPI for
 notes — that history is preserved there and is not re-documented here.
 
-[Unreleased]: https://github.com/humanbound/humanbound/compare/v2.0.0...HEAD
+[Unreleased]: https://github.com/humanbound/humanbound/compare/v2.3.0...HEAD
+[2.3.0]: https://github.com/humanbound/humanbound/releases/tag/v2.3.0
 [2.0.0]: https://github.com/humanbound/humanbound/releases/tag/v2.0.0
