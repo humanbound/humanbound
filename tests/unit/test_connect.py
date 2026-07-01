@@ -111,6 +111,7 @@ class TestHelpSurface:
             "--yes",
             "--context",
             "--endpoint",
+            "--vendor",
             "--no-test",
             "--test-category",
             "--scope",
@@ -934,3 +935,203 @@ class TestInitTelemetry:
         assert payload["no_test"] is True
         assert payload["test_category"] == "humanbound/adversarial/owasp_single_turn"
         assert payload["scope_provided"] is False
+
+
+# ---------------------------------------------------------------------------
+# Vendor registry
+# ---------------------------------------------------------------------------
+
+
+class TestVendorRegistry:
+    def test_ids_lists_openai(self):
+        from humanbound_cli import vendors
+
+        assert "openai" in vendors.ids()
+
+    def test_get_returns_openai_credential_fields(self):
+        from humanbound_cli import vendors
+
+        spec = vendors.get("openai")
+        assert spec["label"] == "OpenAI"
+        fields = spec["credentials"]
+        assert [f["name"] for f in fields] == ["api_key"]
+        assert fields[0]["secret"] is True
+        assert "OPENAI_API_KEY" in fields[0]["env"]
+
+    def test_get_unknown_vendor_raises(self):
+        from humanbound_cli import vendors
+
+        with pytest.raises(KeyError):
+            vendors.get("nope")
+
+
+# ---------------------------------------------------------------------------
+# Vendor onboarding helpers
+# ---------------------------------------------------------------------------
+
+
+class TestVendorHelpers:
+    def test_collect_credentials_from_env(self, monkeypatch):
+        from humanbound_cli.commands import connect
+
+        monkeypatch.setenv("OPENAI_API_KEY", "sk-from-env")
+        creds = connect._collect_credentials("openai")
+        assert creds == {"api_key": "sk-from-env"}
+
+    def test_collect_credentials_from_prompt(self, monkeypatch):
+        from humanbound_cli.commands import connect
+
+        monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+        with patch("rich.prompt.Prompt.ask", return_value="sk-typed") as ask:
+            creds = connect._collect_credentials("openai")
+        assert creds == {"api_key": "sk-typed"}
+        # secret field prompts with password=True
+        assert ask.call_args.kwargs.get("password") is True
+
+    def test_collect_credentials_missing_exits(self, monkeypatch):
+        from humanbound_cli.commands import connect
+
+        monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+        with patch("rich.prompt.Prompt.ask", return_value=""):
+            with pytest.raises(SystemExit):
+                connect._collect_credentials("openai")
+
+    def test_discover_targets_or_exit_empty_exits(self):
+        from humanbound_cli.commands import connect
+
+        client = MagicMock()
+        client.discover_targets.return_value = []
+        with pytest.raises(SystemExit):
+            connect._discover_targets_or_exit(client, "openai", {"api_key": "k"})
+
+    def test_discover_targets_or_exit_api_error_exits(self):
+        from humanbound_cli.commands import connect
+        from humanbound_cli.exceptions import APIError
+
+        client = MagicMock()
+        client.discover_targets.side_effect = APIError("bad key", 502, {})
+        with pytest.raises(SystemExit):
+            connect._discover_targets_or_exit(client, "openai", {"api_key": "k"})
+
+    def test_pick_target_single_auto_selects(self):
+        from humanbound_cli.commands import connect
+
+        t = {"resource_id": "asst_1", "name": "FinAssist"}
+        assert connect._pick_target([t]) is t
+
+    def test_pick_target_auto_yes_takes_first(self):
+        from humanbound_cli.commands import connect
+
+        targets = [{"resource_id": "a", "name": "A"}, {"resource_id": "b", "name": "B"}]
+        assert connect._pick_target(targets, auto_yes=True) is targets[0]
+
+    def test_pick_target_prompts_for_choice(self):
+        from humanbound_cli.commands import connect
+
+        targets = [{"resource_id": "a", "name": "A"}, {"resource_id": "b", "name": "B"}]
+        with patch("rich.prompt.IntPrompt.ask", return_value=2):
+            assert connect._pick_target(targets) is targets[1]
+
+    def test_pick_target_reprompts_on_out_of_range(self):
+        from humanbound_cli.commands import connect
+
+        targets = [{"resource_id": "a", "name": "A"}, {"resource_id": "b", "name": "B"}]
+        # First entry (9) is out of range → reprompt; second (1) is valid.
+        with patch("rich.prompt.IntPrompt.ask", side_effect=[9, 1]):
+            assert connect._pick_target(targets) is targets[0]
+
+    def test_build_vendor_connector_reinjects_real_key(self):
+        from humanbound_cli.commands import connect
+
+        picked = {
+            "resource_id": "asst_1",
+            "connector": {
+                "provider": "openai_assistants",
+                "config": {"api_key": "sk-****masked", "target_id": "asst_1"},
+            },
+        }
+        out = connect._build_vendor_connector(picked, {"api_key": "sk-real"})
+        assert out == {
+            "connector": {
+                "provider": "openai_assistants",
+                "config": {"api_key": "sk-real", "target_id": "asst_1"},
+            }
+        }
+
+
+# ---------------------------------------------------------------------------
+# Vendor flow (--vendor flag)
+# ---------------------------------------------------------------------------
+
+
+class TestVendorFlow:
+    @patch(PATCH_CLIENT)
+    def test_vendor_and_endpoint_conflict(self, MockCls):
+        MockCls.return_value = _make_authenticated_client()
+        result = runner.invoke(cli, ["connect", "--vendor", "openai", "--endpoint", "{}", "--yes"])
+        assert result.exit_code != 0
+        assert "not both" in result.output.lower()
+
+    @patch.dict("os.environ", {"OPENAI_API_KEY": "sk-real"})
+    @patch(PATCH_CLIENT)
+    def test_vendor_discovers_picks_and_creates_project(self, MockCls):
+        client = _make_authenticated_client()
+        client.discover_targets.return_value = [
+            {
+                "resource_id": "asst_1",
+                "name": "FinAssist",
+                "attributes": {"model": "gpt-4o"},
+                "connector": {
+                    "provider": "openai_assistants",
+                    "config": {"api_key": "sk-****masked", "target_id": "asst_1"},
+                },
+            }
+        ]
+        client.post.side_effect = lambda path, **kwargs: (
+            {
+                "scope": {
+                    "overall_business_scope": "Finance assistant",
+                    "intents": {"permitted": ["p1"], "restricted": ["r1"]},
+                },
+                "risk_profile": {"risk_level": "LOW", "industry": "fintech"},
+                "default_integration": {
+                    "connector": {
+                        "provider": "openai_assistants",
+                        "config": {"api_key": "sk-real", "target_id": "asst_1"},
+                    }
+                },
+            }
+            if path == "scan"
+            else {"id": "proj-new"}
+        )
+        MockCls.return_value = client
+
+        with (
+            patch("humanbound_cli.commands.connect._auto_test"),
+            patch("humanbound_cli.commands.connect._recommend_monitoring"),
+        ):
+            result = runner.invoke(cli, ["connect", "--vendor", "openai", "--yes"])
+
+        assert result.exit_code == 0, result.output
+        client.discover_targets.assert_called_once_with("openai", {"api_key": "sk-real"})
+        # scan probed the picked connector, carrying the REAL key (not the masked one)
+        scan_calls = [c for c in client.post.call_args_list if c.args[0] == "scan"]
+        assert scan_calls, "POST /scan should have run"
+        sources = scan_calls[0].kwargs["data"]["sources"]
+        endpoint_sources = [s for s in sources if s["source"] == "endpoint"]
+        assert endpoint_sources, "connector should be sent as an endpoint source"
+        cfg = endpoint_sources[0]["data"]["connector"]["config"]
+        assert cfg["api_key"] == "sk-real"
+        assert cfg["target_id"] == "asst_1"
+        # project created, with a non-dangling description naming the vendor source
+        project_calls = [c for c in client.post.call_args_list if c.args[0] == "projects"]
+        assert project_calls
+        assert "vendor (openai)" in project_calls[0].kwargs["data"]["description"]
+
+    @patch.dict("os.environ", {"OPENAI_API_KEY": "sk-real"})
+    @patch(PATCH_CLIENT)
+    def test_vendor_requires_authentication(self, MockCls):
+        MockCls.return_value = _make_unauthenticated_client()
+        result = runner.invoke(cli, ["connect", "--vendor", "openai", "--yes"])
+        assert result.exit_code != 0
+        assert "log in" in result.output.lower() or "login" in result.output.lower()

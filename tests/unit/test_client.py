@@ -21,6 +21,7 @@ from humanbound_cli.exceptions import (
     NotFoundError,
     RateLimitError,
     SessionExpiredError,
+    ValidationError,
 )
 
 # ---------------------------------------------------------------------------
@@ -485,3 +486,33 @@ class TestTokenRefresh:
 
         with pytest.raises(AuthenticationError, match="refresh failed"):
             client._refresh_token()
+
+
+class TestDiscoverTargets:
+    def test_posts_to_discover_and_returns_targets(self, client):
+        with patch("humanbound_cli.client.requests.post") as mock_post:
+            mock_post.return_value = _mock_response(
+                json_data={
+                    "vendor": "openai",
+                    "count": 1,
+                    "targets": [{"resource_id": "asst_1", "name": "FinAssist"}],
+                }
+            )
+            out = client.discover_targets("openai", {"api_key": "sk-real"})
+
+        assert out == [{"resource_id": "asst_1", "name": "FinAssist"}]
+        args, kwargs = mock_post.call_args
+        assert args[0].endswith("/discover")
+        assert kwargs["json"] == {
+            "vendor": "openai",
+            "credentials": {"api_key": "sk-real"},
+        }
+
+    def test_missing_targets_key_returns_empty_list(self, client):
+        with patch("humanbound_cli.client.requests.post") as mock_post:
+            mock_post.return_value = _mock_response(json_data={"vendor": "openai", "count": 0})
+            assert client.discover_targets("openai", {"api_key": "sk-real"}) == []
+
+    def test_requires_organisation(self, unauthenticated_client):
+        with pytest.raises(ValidationError):
+            unauthenticated_client.discover_targets("openai", {"api_key": "x"})

@@ -13,7 +13,7 @@ import click
 from rich.console import Console
 from rich.panel import Panel
 
-from .. import telemetry
+from .. import telemetry, vendors
 from ..client import HumanboundClient
 from ..exceptions import APIError, NotAuthenticatedError
 from .test import _load_integration, _resolve_context
@@ -211,9 +211,13 @@ def _display_dashboard(name: str, risk_profile: dict, has_integration: bool, has
     )
 
 
-def _get_source_description(prompt: str, endpoint: str, repo: str, openapi: str) -> str:
+def _get_source_description(
+    prompt: str, endpoint: str, repo: str, openapi: str, vendor: str | None = None
+) -> str:
     """Short human description of which --flag sources were used."""
     sources = []
+    if vendor:
+        sources.append(f"vendor ({vendor})")
     if prompt:
         sources.append(f"prompt ({Path(prompt).name})")
     if endpoint:
@@ -340,6 +344,11 @@ def _derive_agent_name(endpoint: str) -> str:
 
 @click.command("connect")
 @click.option("--endpoint", "-e", help="Agent config JSON or file path")
+@click.option(
+    "--vendor",
+    type=click.Choice(vendors.ids()),
+    help="Discover & onboard a hosted-platform agent (e.g. openai). Mutually exclusive with --endpoint.",
+)
 @click.option("--name", "-n", help="Project name (optional, auto-generated)")
 @click.option("--prompt", "-p", type=click.Path(exists=True), help="System prompt file")
 @click.option("--repo", "-r", type=click.Path(exists=True), help="Repository path")
@@ -377,6 +386,7 @@ def _derive_agent_name(endpoint: str) -> str:
 )
 def connect_command(
     endpoint,
+    vendor,
     name,
     prompt,
     repo,
@@ -405,11 +415,18 @@ def connect_command(
     success = False
 
     try:
-        has_agent_flags = any([endpoint, prompt, repo, openapi, scope_path])
+        if vendor and endpoint:
+            console.print(
+                "[red]Use --vendor (discover) or --endpoint (config file), not both.[/red]"
+            )
+            raise SystemExit(1)
+
+        has_agent_flags = any([endpoint, vendor, prompt, repo, openapi, scope_path])
 
         if has_agent_flags:
             _connect_agent(
                 endpoint,
+                vendor,
                 name,
                 prompt,
                 repo,
@@ -448,6 +465,7 @@ def connect_command(
 
 def _connect_agent(
     endpoint,
+    vendor,
     name,
     prompt,
     repo,
@@ -466,18 +484,24 @@ def _connect_agent(
     regulatory mapping, and auto-test. Local flow derives scope + lightweight
     compliance from the user's configured LLM provider and writes scope.yaml.
     """
-    source_flags = [prompt, endpoint, repo, openapi, scope_path]
+    source_flags = [prompt, endpoint, vendor, repo, openapi, scope_path]
     if not any(source_flags):
         console.print("[yellow]No extraction source provided.[/yellow]")
         console.print(
-            "Use --endpoint, --prompt, --repo, --openapi, or --scope to specify a source."
+            "Use --endpoint, --vendor, --prompt, --repo, --openapi, or --scope to specify a source."
         )
         raise SystemExit(1)
 
-    if not name:
+    # Vendor discovery names the project from the picked assistant (set later).
+    if not name and not vendor:
         name = _derive_agent_name(endpoint) if endpoint else "local-agent"
 
     client = HumanboundClient()
+    if vendor and not (client.is_authenticated() and client.organisation_id):
+        console.print("[red]hb connect --vendor requires you to be logged in.[/red]")
+        console.print("[dim]Run 'hb login' first.[/dim]")
+        raise SystemExit(1)
+
     if client.is_authenticated() and client.organisation_id:
         _connect_agent_platform(
             client,
@@ -493,6 +517,7 @@ def _connect_agent(
             no_test=no_test,
             test_category_arg=test_category_arg,
             scope_path=scope_path,
+            vendor=vendor,
         )
     else:
         _connect_agent_local(endpoint, name, prompt, repo, openapi, context, level, yes, timeout)
@@ -512,6 +537,7 @@ def _connect_agent_platform(
     no_test=False,
     test_category_arg=None,
     scope_path=None,
+    vendor=None,
 ):
     """Platform flow: POST /scan -> create project -> auto-test -> dashboard."""
     resolved_category = test_category_arg or DEFAULT_TEST_CATEGORY
@@ -530,6 +556,16 @@ def _connect_agent_platform(
             f"[yellow]! {'/'.join(ignored)} ignored when --scope is set "
             f"(scope comes from the file).[/yellow]"
         )
+
+    # Resolve --vendor into a connector integration (discover -> pick -> build).
+    vendor_integration = None
+    if vendor:
+        credentials = _collect_credentials(vendor)
+        targets = _discover_targets_or_exit(client, vendor, credentials)
+        picked = _pick_target(targets, auto_yes=yes)
+        vendor_integration = _build_vendor_connector(picked, credentials)
+        if not name:
+            name = picked.get("name") or "hosted-agent"
 
     console.print(f"\n[bold]Connecting agent:[/bold] {name}\n")
 
@@ -553,11 +589,12 @@ def _connect_agent_platform(
                 {"source": "text", "data": {"text": _serialize_scope_to_text(user_scope)}}
             )
 
-            # If --endpoint is also passed, keep its config for default_integration
-            # but DO NOT include it as a /scan source (no agent probing).
-            if endpoint:
-                local_integration = _load_integration(endpoint)
-                chat_ep = local_integration.get("chat_completion", {}).get("endpoint", "")
+            # If --endpoint or --vendor is also passed, keep its config for
+            # default_integration but DO NOT include it as a /scan source.
+            integration = vendor_integration or (_load_integration(endpoint) if endpoint else None)
+            if integration:
+                local_integration = integration
+                chat_ep = integration.get("chat_completion", {}).get("endpoint", "")
                 console.print(
                     f"  [green]\u2713[/green] Endpoint integration: [dim]{chat_ep or '(from config)'}[/dim]"
                 )
@@ -626,14 +663,14 @@ def _connect_agent_platform(
                 else:
                     console.print("  [yellow]![/yellow] OpenAPI spec: could not parse")
 
-            # --endpoint -> endpoint source (API probing)
-            if endpoint:
-                bot_config = _load_integration(endpoint)
-                chat_ep = bot_config.get("chat_completion", {}).get("endpoint", "")
+            # --endpoint / --vendor -> endpoint source (API probing)
+            integration = vendor_integration or (_load_integration(endpoint) if endpoint else None)
+            if integration:
+                chat_ep = integration.get("chat_completion", {}).get("endpoint", "")
                 console.print(
                     f"  [green]\u2713[/green] Endpoint source: [dim]{chat_ep or '(from config)'}[/dim]"
                 )
-                sources.append({"source": "endpoint", "data": bot_config})
+                sources.append({"source": "endpoint", "data": integration})
 
             # Merge accumulated text parts into a single text source
             if text_parts:
@@ -692,7 +729,7 @@ def _connect_agent_platform(
                 console.print("[yellow]Cancelled.[/yellow]")
                 return
 
-        description = f"Project created via 'hb connect' from {_get_source_description(prompt, endpoint, repo, openapi)}"
+        description = f"Project created via 'hb connect' from {_get_source_description(prompt, endpoint, repo, openapi, vendor)}"
         with console.status("[dim]Creating project...[/dim]"):
             project_data = {
                 "name": name,
@@ -1119,6 +1156,105 @@ def _build_monitoring_message(risk_level: str, matching_regs: list) -> str:
     )
 
     return "\n".join(lines)
+
+
+# -- Vendor discovery (--vendor) -----------------------------------------------
+
+
+def _collect_credentials(vendor: str) -> dict:
+    """Collect a vendor's credential fields: env candidate first, else prompt.
+
+    Secret fields prompt with hidden input. A required field that is empty and
+    cannot be supplied (no env, no input) exits with a clear message. No secret
+    is ever read from argv.
+    """
+    import os
+
+    from rich.prompt import Prompt
+
+    spec = vendors.get(vendor)
+    creds: dict = {}
+    for field in spec["credentials"]:
+        value = None
+        for env_name in field.get("env", []):
+            if os.environ.get(env_name):
+                value = os.environ[env_name]
+                break
+        if value is None:
+            try:
+                value = Prompt.ask(field["label"], password=field.get("secret", False))
+            except (EOFError, click.Abort):
+                value = None
+        if not value:
+            envs = " or ".join(f"${e}" for e in field.get("env", [])) or "the credential"
+            console.print(f"[red]Missing {field['label']}.[/red] Set {envs} or run interactively.")
+            raise SystemExit(1)
+        creds[field["name"]] = value
+    return creds
+
+
+def _discover_targets_or_exit(client, vendor: str, credentials: dict) -> list:
+    """Call POST /discover; exit cleanly on auth failure or empty result."""
+    try:
+        with console.status("[dim]Discovering deployed agents...[/dim]"):
+            targets = client.discover_targets(vendor, credentials)
+    except APIError as e:
+        console.print(f"[red]Discovery failed:[/red] {e}")
+        console.print("[dim]The vendor credential may be invalid or the service unreachable.[/dim]")
+        raise SystemExit(1)
+    if not targets:
+        console.print("[yellow]No agents found for this credential.[/yellow]")
+        raise SystemExit(1)
+    return targets
+
+
+def _pick_target(targets: list, auto_yes: bool = False) -> dict:
+    """Render discovered targets and return the chosen one (auto when unambiguous)."""
+    from rich.prompt import IntPrompt
+    from rich.table import Table
+
+    if len(targets) == 1 or auto_yes:
+        chosen = targets[0]
+        label = chosen.get("name") or chosen["resource_id"]
+        console.print(f"  [green]✓[/green] Selected: [dim]{label}[/dim]")
+        return chosen
+
+    table = Table(show_header=True, header_style="bold")
+    table.add_column("#", justify="right")
+    table.add_column("Name")
+    table.add_column("ID", style="dim")
+    table.add_column("Model", style="dim")
+    for i, t in enumerate(targets, 1):
+        table.add_row(
+            str(i),
+            t.get("name") or "(unnamed)",
+            t.get("resource_id", ""),
+            (t.get("attributes") or {}).get("model", ""),
+        )
+    console.print(table)
+    # Prompt with a range (not click.Choice's inline [1/2/.../N]) so it stays clean at any count.
+    n = len(targets)
+    while True:
+        choice = IntPrompt.ask(f"Which agent? \\[[bold magenta]1-{n}[/bold magenta]]")
+        if 1 <= choice <= n:
+            return targets[choice - 1]
+        console.print(f"[red]Enter a number between 1 and {n}.[/red]")
+
+
+def _build_vendor_connector(picked: dict, credentials: dict) -> dict:
+    """Build a ``default_integration`` connector block, re-injecting the real credential.
+
+    The /discover response masks the secret; overwrite it with the real value the
+    caller holds so both the scan probe and the persisted integration use the true
+    credential. The connector ``provider`` is forwarded from the backend unchanged.
+    """
+    connector = picked["connector"]
+    return {
+        "connector": {
+            "provider": connector["provider"],
+            "config": {**connector["config"], **credentials},
+        }
+    }
 
 
 # -- Auto-test helper ----------------------------------------------------------
