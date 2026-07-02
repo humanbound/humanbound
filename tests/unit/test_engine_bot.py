@@ -74,6 +74,18 @@ def test_bot_inherits_from_response_extractor(bot):
     assert isinstance(bot, ResponseExtractor)
 
 
+def test_bot_rejects_connector_config():
+    """The offline engine is classic-HTTP only; connector configs must fail fast."""
+    connector_cfg = {
+        "connector": {
+            "provider": "openai_assistants",
+            "config": {"api_key": "sk-x", "target_id": "asst_x"},
+        }
+    }
+    with pytest.raises(ValueError, match="not supported by the offline engine"):
+        Bot(connector_cfg, e_id="exp-abc")
+
+
 # ────────────────────────────────────────────────────────────────
 # __extract_ai_response — dict with standard keys, custom, fallback
 # ────────────────────────────────────────────────────────────────

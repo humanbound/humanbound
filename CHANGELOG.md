@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **`hb connect --vendor <id>`** discovers hosted-platform agents (currently `openai`) from a
+  vendor credential and onboards the one you pick — the credential is read from the vendor's
+  env var (e.g. `OPENAI_API_KEY`) or a hidden prompt, never from the command line. The picked
+  agent becomes the project's integration. Requires being logged in.
+
+### Changed
+- The offline local engine (`hb test --local`) now fails fast with a clear error when given a
+  hosted-platform connector config, instead of an opaque per-conversation failure. Connectors
+  work via `hb connect` (SaaS); the offline engine remains classic HTTP/SSE/WebSocket only.
+
+### Documentation
+- Documented that `hb connect --endpoint` also accepts a hosted-platform connector block
+  (`{ "connector": { "provider": "openai_assistants", "config": { … } } }`), not only the
+  classic HTTP shape.
+
 ## [2.3.0] — 2026-06-29
 
 ### Added
