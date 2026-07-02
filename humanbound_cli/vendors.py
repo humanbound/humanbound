@@ -12,6 +12,10 @@ discovery call, picker, connector build, and onboarding flow are vendor-agnostic
 VENDORS: dict[str, dict] = {
     "openai": {
         "label": "OpenAI",
+        "notice": (
+            "The Assistants API is deprecated and will be removed in August 2026. "
+            "The recommended replacement is the Responses API."
+        ),
         "credentials": [
             {
                 "name": "api_key",

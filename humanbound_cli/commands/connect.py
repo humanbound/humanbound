@@ -347,7 +347,7 @@ def _derive_agent_name(endpoint: str) -> str:
 @click.option(
     "--vendor",
     type=click.Choice(vendors.ids()),
-    help="Discover & onboard a hosted-platform agent (e.g. openai). Mutually exclusive with --endpoint.",
+    help="Discover & onboard a hosted-platform agent from a vendor account. Mutually exclusive with --endpoint.",
 )
 @click.option("--name", "-n", help="Project name (optional, auto-generated)")
 @click.option("--prompt", "-p", type=click.Path(exists=True), help="System prompt file")
@@ -560,6 +560,9 @@ def _connect_agent_platform(
     # Resolve --vendor into a connector integration (discover -> pick -> build).
     vendor_integration = None
     if vendor:
+        notice = vendors.get(vendor).get("notice")
+        if notice:
+            console.print(Panel(notice, border_style="yellow", title="Deprecation notice"))
         credentials = _collect_credentials(vendor)
         targets = _discover_targets_or_exit(client, vendor, credentials)
         picked = _pick_target(targets, auto_yes=yes)

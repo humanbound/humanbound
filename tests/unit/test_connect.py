@@ -1127,6 +1127,9 @@ class TestVendorFlow:
         project_calls = [c for c in client.post.call_args_list if c.args[0] == "projects"]
         assert project_calls
         assert "vendor (openai)" in project_calls[0].kwargs["data"]["description"]
+        # vendor's deprecation notice is surfaced (registry-driven, mirrors the UI banner)
+        assert "deprecated" in result.output
+        assert "Responses API" in result.output
 
     @patch.dict("os.environ", {"OPENAI_API_KEY": "sk-real"})
     @patch(PATCH_CLIENT)

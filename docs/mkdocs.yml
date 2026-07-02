@@ -83,6 +83,7 @@ nav:
     - API Keys: management/api-keys.md
     - Team & Collaboration: management/collaboration.md
   - 🔌 Integrations:
+    - Agent Discovery: integrations/discovery.md
     - Telemetry (Whitebox): integrations/telemetry.md
     - CI/CD: integrations/cicd.md
     - SIEM: integrations/siem.md
