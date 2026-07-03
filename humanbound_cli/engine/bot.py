@@ -585,28 +585,32 @@ class Bot(ResponseExtractor):
 
     # STEP 1: Session start
     # - execute any required auth calls to get access tokens (will be used in init call and chat completion calls if needed)
-    # - start the thread/session with the bot
+    # - optionally start the thread/session; skipped when thread_init is not configured
     def init(self):
         try:
-            # 1.1 - execute any required auth calls to get access tokens (if related endpoint is defined)
-            endpoint = self.bot_config["thread_auth"]["endpoint"]
-            if endpoint != "":
-                base_payload, _, endpoint = self.__make_api_call(
+            # 1.1 - optional auth call; skipped when thread_auth is null/missing/empty-endpoint
+            auth = self.bot_config.get("thread_auth") or {}
+            if auth.get("endpoint", ""):
+                base_payload, _, _ = self.__make_api_call(
                     {},
-                    endpoint,
-                    copy.deepcopy(self.bot_config["thread_auth"]["headers"]),
-                    copy.deepcopy(self.bot_config["thread_auth"]["payload"]),
+                    auth["endpoint"],
+                    copy.deepcopy(auth.get("headers", {})),
+                    copy.deepcopy(auth.get("payload", {})),
                 )
                 time.sleep(1)  # small delay to avoid race conditions
             else:
                 base_payload = {}
 
-            # 2.2 - start the thread/session with the bot
-            temp_payload, _, endpoint = self.__make_api_call(
+            # 2.2 - optional thread/session start; skipped when thread_init is null/missing/empty-endpoint
+            init_cfg = self.bot_config.get("thread_init") or {}
+            if not init_cfg.get("endpoint", ""):
+                return base_payload
+
+            temp_payload, _, _ = self.__make_api_call(
                 base_payload,
-                self.bot_config["thread_init"]["endpoint"],
-                copy.deepcopy(self.bot_config["thread_init"]["headers"]),
-                copy.deepcopy(self.bot_config["thread_init"]["payload"]),
+                init_cfg["endpoint"],
+                copy.deepcopy(init_cfg.get("headers", {})),
+                copy.deepcopy(init_cfg.get("payload", {})),
             )
 
             # append the session start payload to the base payload
