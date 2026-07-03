@@ -6,13 +6,17 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Discover and assess AI services across your cloud environment — a client-side scan that surfaces shadow AI and feeds findings into the platform.">
+        <meta name="description" content="Discover the agents deployed on a hosted platform (e.g. OpenAI Assistants) from a vendor credential and onboard one as a Humanbound project — no hand-written config.">
       
       
       
         <link rel="canonical" href="https://docs.humanbound.ai/integrations/discovery/">
       
       
+        <link rel="prev" href="../../management/collaboration/">
+      
+      
+        <link rel="next" href="../telemetry/">
       
       
         
@@ -23,7 +27,7 @@
     
     
       
-        <title>AI Discovery - Humanbound</title>
+        <title>Agent Discovery - Humanbound</title>
       
     
     
@@ -60,24 +64,24 @@
   
   <meta property="og:site_name" content="Humanbound" />
   <meta property="og:locale" content="en_US" />
-  <meta property="og:image:alt" content="Discover and assess AI services across your cloud environment — a client-side scan that surfaces shadow AI and feeds findings into the platform." />
-  <meta name="twitter:image:alt" content="Discover and assess AI services across your cloud environment — a client-side scan that surfaces shadow AI and feeds findings into the platform." />
+  <meta property="og:image:alt" content="Discover the agents deployed on a hosted platform (e.g. OpenAI Assistants) from a vendor credential and onboard one as a Humanbound project — no hand-written config." />
+  <meta name="twitter:image:alt" content="Discover the agents deployed on a hosted platform (e.g. OpenAI Assistants) from a vendor credential and onboard one as a Humanbound project — no hand-written config." />
   
-  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/integrations/discovery/#article","headline":"AI Discovery","description":"Discover and assess AI services across your cloud environment \u2014 a client-side scan that surfaces shadow AI and feeds findings into the platform.","url":"https://docs.humanbound.ai/integrations/discovery/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-06-02T10:20:06+03:00","keywords":"AI discovery, hb discover command, shadow AI detection, cloud AI inventory, Microsoft AI scanner, AI asset inventory, cloud connectors, model lifecycle tracking"}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/integrations/discovery/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Agent Discovery","item":"https://docs.humanbound.ai/integrations/discovery/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/integrations/discovery/#article","headline":"Agent Discovery","description":"Discover the agents deployed on a hosted platform (e.g. OpenAI Assistants) from a vendor credential and onboard one as a Humanbound project \u2014 no hand-written config.","url":"https://docs.humanbound.ai/integrations/discovery/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-07-03T11:01:08+03:00","keywords":"vendor discovery, hb connect --vendor, OpenAI Assistants onboarding, hosted platform agents, agent discovery"}]}</script>
   
 
   
 <meta property="og:type" content="website" />
-<meta property="og:title" content="AI Discovery - Humanbound" />
-<meta property="og:description" content="Discover and assess AI services across your cloud environment — a client-side scan that surfaces shadow AI and feeds findings into the platform." />
+<meta property="og:title" content="Agent Discovery - Humanbound" />
+<meta property="og:description" content="Discover the agents deployed on a hosted platform (e.g. OpenAI Assistants) from a vendor credential and onboard one as a Humanbound project — no hand-written config." />
 <meta property="og:image" content="https://docs.humanbound.ai/assets/images/social/integrations/discovery.png" />
 <meta property="og:image:type" content="image/png" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
 <meta property="og:url" content="https://docs.humanbound.ai/integrations/discovery/" />
 <meta property="twitter:card" content="summary_large_image" />
-<meta property="twitter:title" content="AI Discovery - Humanbound" />
-<meta property="twitter:description" content="Discover and assess AI services across your cloud environment — a client-side scan that surfaces shadow AI and feeds findings into the platform." />
+<meta property="twitter:title" content="Agent Discovery - Humanbound" />
+<meta property="twitter:description" content="Discover the agents deployed on a hosted platform (e.g. OpenAI Assistants) from a vendor credential and onboard one as a Humanbound project — no hand-written config." />
 <meta property="twitter:image" content="https://docs.humanbound.ai/assets/images/social/integrations/discovery.png" />
 </head>
   
@@ -96,7 +100,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#ai-discovery" class="md-skip">
+        <a href="#agent-discovery" class="md-skip">
           Skip to content
         </a>
       
@@ -126,7 +130,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              AI Discovery
+              Agent Discovery
             
           </span>
         </div>
@@ -1606,8 +1610,10 @@
       
   
   
+    
   
   
+  
     
     
     
@@ -1618,13 +1624,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_11" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" checked>
         
           
           <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
@@ -1645,7 +1649,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_11">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1655,6 +1659,103 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent Discovery
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent Discovery
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#how-it-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How it works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#supported-vendors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Supported vendors
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
             
               
                 
@@ -2109,96 +2210,56 @@
   
 
 
-<h1 id="ai-discovery">AI Discovery</h1>
-<p>Discover and assess AI services across your cloud environment. The discovery pipeline scans your tenant client-side, sends results to the Humanbound platform for security evaluation (38 evidence signals, 15 SAI threat classes), and produces an assessed inventory with posture scoring and model lifecycle tracking.</p>
-<h2 id="discovery">Discovery</h2>
-<p>Run <code>hb discover</code> to scan your cloud environment for AI services. The scanner authenticates via device-code flow, queries multiple API layers (service principals, sign-in logs, resource graph, Copilot Studio agents, Azure OpenAI deployments), and sends results to the platform for analysis.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Scan and display results</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>$<span class="w"> </span>hb<span class="w"> </span>discover
+<h1 id="agent-discovery">Agent Discovery</h1>
+<p>Onboard an agent deployed on a hosted platform (currently OpenAI Assistants) without writing a
+connector config by hand: <code>hb connect --vendor</code> lists the agents your credential can see
+and turns the one you pick into a Humanbound project. Requires being logged in (<code>hb login</code>).</p>
+<h2 id="how-it-works">How it works</h2>
+<ol>
+<li>Pick a vendor: <code>hb connect --vendor openai</code>.</li>
+<li>Supply the credential — read from the vendor's env var (e.g. <code>OPENAI_API_KEY</code>) or a
+   hidden interactive prompt. Credentials are <strong>never</strong> passed on the command line.</li>
+<li>The backend queries the vendor API and returns your deployed agents (e.g. OpenAI
+   Assistants); the CLI lists them.</li>
+<li>Pick one — it becomes the project's <code>default_integration</code>, and the usual <code>hb connect</code>
+   flow continues (scope probe or <code>--scope</code>, project creation, first test).</li>
+</ol>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Discover and onboard (reads $OPENAI_API_KEY or prompts)</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>hb<span class="w"> </span>connect<span class="w"> </span>--vendor<span class="w"> </span>openai
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># Scan, save to inventory, and export HTML report</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>$<span class="w"> </span>hb<span class="w"> </span>discover<span class="w"> </span>--save<span class="w"> </span>--report
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="c1"># Verbose mode (show raw API responses from each layer)</span>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>$<span class="w"> </span>hb<span class="w"> </span>discover<span class="w"> </span>--verbose
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="c1"># Output as JSON</span>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>$<span class="w"> </span>hb<span class="w"> </span>discover<span class="w"> </span>--json
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># Bring your own scope and project name</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>hb<span class="w"> </span>connect<span class="w"> </span>--vendor<span class="w"> </span>openai<span class="w"> </span>--scope<span class="w"> </span>./scope.yaml<span class="w"> </span>--name<span class="w"> </span><span class="s2">&quot;Prod Assistant&quot;</span>
 </code></pre></div>
-<p>The discovery report includes:</p>
-<ul>
-<li><strong>Deployed Agents</strong> -- Copilot Studio agents with channel, auth, and network details</li>
-<li><strong>AI Endpoints</strong> -- Azure OpenAI deployments with model lifecycle badges (retired, deprecated, retiring soon)</li>
-<li><strong>AI Adoption</strong> -- Licensed and consented AI services (M365 Copilot, etc.)</li>
-<li><strong>In Development</strong> -- ML projects and staged resources</li>
-<li><strong>Resource Topology</strong> -- Interactive Mermaid diagram showing connections between agents, endpoints, models, and channels</li>
-<li><strong>Security Evaluations</strong> -- Per-service threat analysis with SAI threat classes, risk scores, and remediation guidance</li>
-<li><strong>Posture Estimate</strong> -- Organisation-level AI discovery posture score</li>
-</ul>
-<h2 id="cloud-connectors">Cloud Connectors</h2>
-<p>Register cloud connectors for persistent discovery. Connectors store encrypted credentials and enable re-discovery (scheduled or on-demand).</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Register a Microsoft connector</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>$<span class="w"> </span>hb<span class="w"> </span>connectors<span class="w"> </span>create<span class="w"> </span>--tenant-id<span class="w"> </span>&lt;id&gt;<span class="w"> </span>--client-id<span class="w"> </span>&lt;id&gt;<span class="w"> </span>--client-secret
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="c1"># Register with explicit vendor and display name</span>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>$<span class="w"> </span>hb<span class="w"> </span>connectors<span class="w"> </span>create<span class="w"> </span>--vendor<span class="w"> </span>microsoft<span class="w"> </span>--tenant-id<span class="w"> </span>&lt;id&gt;<span class="w"> </span>--client-id<span class="w"> </span>&lt;id&gt;<span class="w"> </span>--name<span class="w"> </span><span class="s2">&quot;Production&quot;</span>
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="c1"># List connectors</span>
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>$<span class="w"> </span>hb<span class="w"> </span>connectors
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="c1"># Export connectors as HTML report</span>
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>$<span class="w"> </span>hb<span class="w"> </span>connectors<span class="w"> </span>--report
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="c1"># Test connectivity</span>
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>$<span class="w"> </span>hb<span class="w"> </span>connectors<span class="w"> </span><span class="nb">test</span><span class="w"> </span>&lt;connector-id&gt;
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>
-<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="c1"># Update credentials, name, or status</span>
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>$<span class="w"> </span>hb<span class="w"> </span>connectors<span class="w"> </span>update<span class="w"> </span>&lt;connector-id&gt;<span class="w"> </span>--client-secret
-<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>$<span class="w"> </span>hb<span class="w"> </span>connectors<span class="w"> </span>update<span class="w"> </span>&lt;connector-id&gt;<span class="w"> </span>--name<span class="w"> </span><span class="s2">&quot;New Name&quot;</span><span class="w"> </span>--status<span class="w"> </span>disabled
-<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>
-<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="c1"># Remove a connector</span>
-<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>$<span class="w"> </span>hb<span class="w"> </span>connectors<span class="w"> </span>delete<span class="w"> </span>&lt;connector-id&gt;
-</code></pre></div>
-<h2 id="ai-inventory">AI Inventory</h2>
-<p>After running <code>hb discover --save</code>, discovered assets are persisted to your AI inventory. Use the inventory commands to view, govern, and onboard assets for security testing.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># List all inventory assets</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>$<span class="w"> </span>hb<span class="w"> </span>inventory
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1"># Export as HTML report</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>$<span class="w"> </span>hb<span class="w"> </span>inventory<span class="w"> </span>--report
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="c1"># Filter by category, vendor, risk, or sanctioned status</span>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>$<span class="w"> </span>hb<span class="w"> </span>inventory<span class="w"> </span>--category<span class="w"> </span>copilot_studio_agent<span class="w"> </span>--risk-level<span class="w"> </span>high
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>$<span class="w"> </span>hb<span class="w"> </span>inventory<span class="w"> </span>--vendor<span class="w"> </span>microsoft<span class="w"> </span>--sanctioned
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>$<span class="w"> </span>hb<span class="w"> </span>inventory<span class="w"> </span>--unsanctioned<span class="w"> </span>--risk-level<span class="w"> </span>critical
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>
-<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="c1"># View asset details (with optional HTML report)</span>
-<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>$<span class="w"> </span>hb<span class="w"> </span>inventory<span class="w"> </span>view<span class="w"> </span>&lt;asset-id&gt;
-<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>$<span class="w"> </span>hb<span class="w"> </span>inventory<span class="w"> </span>view<span class="w"> </span>&lt;asset-id&gt;<span class="w"> </span>--report
-<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>
-<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="c1"># Update governance fields</span>
-<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>$<span class="w"> </span>hb<span class="w"> </span>inventory<span class="w"> </span>update<span class="w"> </span>&lt;asset-id&gt;<span class="w"> </span>--sanctioned<span class="w"> </span>--owner<span class="w"> </span><span class="s2">&quot;security@company.com&quot;</span>
-<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>$<span class="w"> </span>hb<span class="w"> </span>inventory<span class="w"> </span>update<span class="w"> </span>&lt;asset-id&gt;<span class="w"> </span>--department<span class="w"> </span><span class="s2">&quot;Engineering&quot;</span><span class="w"> </span>--business-purpose<span class="w"> </span><span class="s2">&quot;Customer support&quot;</span>
-<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>$<span class="w"> </span>hb<span class="w"> </span>inventory<span class="w"> </span>update<span class="w"> </span>&lt;asset-id&gt;<span class="w"> </span>--has-policy<span class="w"> </span>--has-risk-assessment
-<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>
-<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a><span class="c1"># View AI discovery posture (with optional HTML report)</span>
-<a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a>$<span class="w"> </span>hb<span class="w"> </span>inventory<span class="w"> </span>posture
-<a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a>$<span class="w"> </span>hb<span class="w"> </span>inventory<span class="w"> </span>posture<span class="w"> </span>--report
-<a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a>
-<a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a><span class="c1"># Onboard an asset into a security testing project</span>
-<a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a>$<span class="w"> </span>hb<span class="w"> </span>inventory<span class="w"> </span>onboard<span class="w"> </span>&lt;asset-id&gt;
-<a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a>
-<a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a><span class="c1"># Archive an asset</span>
-<a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a>$<span class="w"> </span>hb<span class="w"> </span>inventory<span class="w"> </span>archive<span class="w"> </span>&lt;asset-id&gt;
-</code></pre></div>
-<h2 id="model-lifecycle">Model Lifecycle</h2>
-<p>Discovery tracks model lifecycle status across all endpoints. Models approaching end-of-life are flagged with badges in both the CLI output and HTML report:</p>
-<ul>
-<li><strong>RETIRED</strong> -- Model is no longer available. Migrate immediately.</li>
-<li><strong>DEPRECATED</strong> -- Model is deprecated with a known retirement date.</li>
-<li><strong>RETIRING SOON</strong> -- Model retirement within 90 days. Plan migration.</li>
-</ul>
-<p>Lifecycle warnings appear in the hero metrics, executive summary, endpoints table, and resource topology diagram.</p>
+<p>The discovery response is not persisted — only the picked agent's connector config is
+stored, and subsequent <code>hb test</code> runs use it automatically.</p>
+<p>See <a href="../../getting-started/agent-config/#hosted-platform-connector">Agent Configuration</a>
+for the connector config this produces, and the
+<a href="../../reference/commands/">commands reference</a> for all <code>hb connect</code> flags.</p>
+<h2 id="supported-vendors">Supported vendors</h2>
+<table>
+<thead>
+<tr>
+<th>Vendor</th>
+<th>id</th>
+<th>Credential</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>OpenAI (Assistants)</td>
+<td><code>openai</code></td>
+<td>API key (<code>OPENAI_API_KEY</code>)</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="admonition-title">Assistants API deprecation</p>
+<p>The Assistants API is deprecated and will be removed in August 2026. The recommended
+replacement is the Responses API. A Responses-based connector (<code>openai_responses</code>) is
+planned and will run alongside <code>openai_assistants</code>.</p>
+</div>
+<p>More vendors are added over time; <code>hb connect --vendor</code> with no valid id lists the
+currently supported ones.</p>
 
 
 

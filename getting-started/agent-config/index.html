@@ -67,7 +67,7 @@
   <meta property="og:image:alt" content="Define the JSON endpoint config Humanbound uses to talk to your agent — HTTP/WS, headers, payload templating, streaming, response extraction." />
   <meta name="twitter:image:alt" content="Define the JSON endpoint config Humanbound uses to talk to your agent — HTTP/WS, headers, payload templating, streaming, response extraction." />
   
-  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/getting-started/agent-config/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Agent Configuration","item":"https://docs.humanbound.ai/getting-started/agent-config/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/getting-started/agent-config/#article","headline":"Agent Configuration","description":"Define the JSON endpoint config Humanbound uses to talk to your agent \u2014 HTTP/WS, headers, payload templating, streaming, response extraction.","url":"https://docs.humanbound.ai/getting-started/agent-config/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-06-09T12:56:14+03:00","keywords":"agent configuration, bot-config.json, humanbound endpoint config, agent integration, chat completion endpoint, telemetry configuration, whitebox agentic testing, $PROMPT placeholder"}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/getting-started/agent-config/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Agent Configuration","item":"https://docs.humanbound.ai/getting-started/agent-config/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/getting-started/agent-config/#article","headline":"Agent Configuration","description":"Define the JSON endpoint config Humanbound uses to talk to your agent \u2014 HTTP/WS, headers, payload templating, streaming, response extraction.","url":"https://docs.humanbound.ai/getting-started/agent-config/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-07-03T11:01:08+03:00","keywords":"agent configuration, bot-config.json, humanbound endpoint config, agent integration, chat completion endpoint, telemetry configuration, whitebox agentic testing, $PROMPT placeholder"}]}</script>
   
 
   
@@ -487,6 +487,17 @@
     <span class="md-ellipsis">
       
         Example: With OAuth Authentication
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hosted-platform-connector" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hosted-Platform Connector
       
     </span>
   </a>
@@ -1769,6 +1780,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../integrations/discovery/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent Discovery
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../integrations/telemetry/" class="md-nav__link">
         
   
@@ -2308,19 +2347,57 @@
 <p class="admonition-title">Tip</p>
 <p>Save your config file as <code>bot-config.json</code> (or <code>agent-config.json</code>) in your project root and use <code>hb connect -n "My Agent" -e ./bot-config.json</code> to connect with the integration pre-configured.</p>
 </div>
+<h2 id="hosted-platform-connector">Hosted-Platform Connector</h2>
+<p>Instead of the classic HTTP shape, <code>--endpoint</code> also accepts a <strong>connector</strong> block that
+drives an agent deployed on a hosted platform (currently OpenAI Assistants) — no self-hosted
+server needed:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="p">{</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="nt">&quot;connector&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="nt">&quot;provider&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;openai_assistants&quot;</span><span class="p">,</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="nt">&quot;config&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">      </span><span class="nt">&quot;api_key&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;sk-...&quot;</span><span class="p">,</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">      </span><span class="nt">&quot;target_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;asst_...&quot;</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="p">}</span>
+</code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">Assistants API deprecation</p>
+<p>The Assistants API is deprecated and will be removed in August 2026. The recommended
+replacement is the Responses API. A Responses-based connector (<code>openai_responses</code>) is
+planned and will run alongside <code>openai_assistants</code>.</p>
+</div>
+<ul>
+<li><code>provider</code> — the connector transport (<code>openai_assistants</code> today).</li>
+<li><code>config.api_key</code> / <code>config.target_id</code> — the platform credential and the assistant id.</li>
+<li><code>config.input_template</code> — <em>advanced, optional.</em> A JSON envelope sent as the message text, with
+  any exact <code>"$PROMPT"</code> value swapped for the prompt (e.g. <code>{ "message": "$PROMPT" }</code> → the
+  assistant receives <code>{"message": "&lt;prompt&gt;"}</code>). Omit it to send the prompt as plain text; use a
+  template only if your assistant is built to read a JSON envelope.</li>
+</ul>
+<p>To discover these values automatically instead of hand-writing them, use
+<code>hb connect --vendor openai</code> (see <a href="../../integrations/discovery/">Discovery</a>).</p>
+<div class="admonition warning">
+<p class="admonition-title">Offline caveat</p>
+<p>A connector config works whenever the test runs on the platform — both <code>hb connect</code>
+and a logged-in <code>hb test</code> send it to the backend, which hosts the conversation. It does
+<strong>not</strong> work in the offline local engine (<code>hb test --local</code>, or <code>hb test</code> while logged
+out), which implements only the classic HTTP/SSE/WebSocket transport and rejects
+connector configs with a clear error.</p>
+</div>
 <h2 id="telemetry-optional">Telemetry (Optional)</h2>
 <p>The <code>telemetry</code> block enables <strong>whitebox agentic testing</strong>. When present, Humanbound fetches tool calls, memory operations, and resource usage from your observability platform after each conversation, giving the judge visibility into what the agent <em>did</em> -- not just what it <em>said</em>.</p>
 <p>If the <code>telemetry</code> block is present, it is enabled. No separate flag needed.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="p">{</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="nt">&quot;telemetry&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;langfuse&quot;</span><span class="p">,</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="nt">&quot;mode&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;end_of_conversation&quot;</span><span class="p">,</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">    </span><span class="nt">&quot;endpoint&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;https://cloud.langfuse.com/api/public/sessions/$session_id&quot;</span><span class="p">,</span>
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">    </span><span class="nt">&quot;headers&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">      </span><span class="nt">&quot;Authorization&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Basic &lt;base64(public_key:secret_key)&gt;&quot;</span>
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">  </span><span class="p">}</span>
-<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="p">{</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="nt">&quot;telemetry&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;langfuse&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span><span class="nt">&quot;mode&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;end_of_conversation&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">    </span><span class="nt">&quot;endpoint&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;https://cloud.langfuse.com/api/public/sessions/$session_id&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">    </span><span class="nt">&quot;headers&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">      </span><span class="nt">&quot;Authorization&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Basic &lt;base64(public_key:secret_key)&gt;&quot;</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="p">}</span>
 </code></pre></div>
 <p>Supported platforms: <strong>LangFuse</strong>, <strong>LangSmith</strong>, <strong>OpenAI Assistants</strong>, <strong>Weights &amp; Biases</strong>, <strong>Helicone</strong>, <strong>AgentOps</strong>, and <strong>Custom</strong> (via <code>extraction_map</code>).</p>
 <p>For full configuration details, vendor-specific examples, and the custom extraction map reference, see the <a href="../../integrations/telemetry/">Telemetry Integration Guide</a>.</p>
