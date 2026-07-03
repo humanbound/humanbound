@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.0] — 2026-07-03
+
 ### Added
 - **`hb connect --vendor <id>`** discovers hosted-platform agents (currently `openai`) from a
   vendor credential and onboards the one you pick — the credential is read from the vendor's
@@ -17,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The offline local engine (`hb test --local`) now fails fast with a clear error when given a
   hosted-platform connector config, instead of an opaque per-conversation failure. Connectors
   work via `hb connect` (SaaS); the offline engine remains classic HTTP/SSE/WebSocket only.
+
+### Fixed
+- `humanbound.__version__` now reads the installed package metadata instead of a hardcoded
+  string that had been stuck at `2.0.1` since that release.
 
 ### Documentation
 - Documented that `hb connect --endpoint` also accepts a hosted-platform connector block
@@ -351,6 +357,7 @@ Last release as `humanbound-cli`. See the
 [old release](https://pypi.org/project/humanbound-cli/1.1.0/) on PyPI for
 notes — that history is preserved there and is not re-documented here.
 
-[Unreleased]: https://github.com/humanbound/humanbound/compare/v2.3.0...HEAD
+[Unreleased]: https://github.com/humanbound/humanbound/compare/v2.4.0...HEAD
+[2.4.0]: https://github.com/humanbound/humanbound/releases/tag/v2.4.0
 [2.3.0]: https://github.com/humanbound/humanbound/releases/tag/v2.3.0
 [2.0.0]: https://github.com/humanbound/humanbound/releases/tag/v2.0.0
