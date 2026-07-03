@@ -12,7 +12,12 @@ from `humanbound` for stability.
 
 from __future__ import annotations
 
-__version__ = "2.0.1"
+from importlib.metadata import version as _v
+
+try:
+    __version__ = _v("humanbound")
+except Exception:
+    __version__ = "dev"
 
 from humanbound.bot import Bot, ResponseExtractor
 from humanbound.callbacks import EngineCallbacks
