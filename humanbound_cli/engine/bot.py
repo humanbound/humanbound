@@ -73,6 +73,11 @@ class ResponseExtractor:
 #
 class Bot(ResponseExtractor):
     def __init__(self, bot_config, e_id):
+        if "connector" in bot_config:
+            raise ValueError(
+                "Connector configs are not supported by the offline engine. "
+                "Use 'hb connect' (requires login) to test hosted-platform agents."
+            )
         self.bot_config = bot_config
         self.e_id = e_id
 

@@ -1,118 +1,54 @@
 ---
-description: "Discover and assess AI services across your cloud environment — a client-side scan that surfaces shadow AI and feeds findings into the platform."
+description: "Discover the agents deployed on a hosted platform (e.g. OpenAI Assistants) from a vendor credential and onboard one as a Humanbound project — no hand-written config."
 keywords:
-  - AI discovery
-  - hb discover command
-  - shadow AI detection
-  - cloud AI inventory
-  - Microsoft AI scanner
-  - AI asset inventory
-  - cloud connectors
-  - model lifecycle tracking
+  - vendor discovery
+  - hb connect --vendor
+  - OpenAI Assistants onboarding
+  - hosted platform agents
+  - agent discovery
 ---
 
-# AI Discovery
+# Agent Discovery
 
-Discover and assess AI services across your cloud environment. The discovery pipeline scans your tenant client-side, sends results to the Humanbound platform for security evaluation (38 evidence signals, 15 SAI threat classes), and produces an assessed inventory with posture scoring and model lifecycle tracking.
+Onboard an agent deployed on a hosted platform (currently OpenAI Assistants) without writing a
+connector config by hand: `hb connect --vendor` lists the agents your credential can see
+and turns the one you pick into a Humanbound project. Requires being logged in (`hb login`).
 
-## Discovery
+## How it works
 
-Run `hb discover` to scan your cloud environment for AI services. The scanner authenticates via device-code flow, queries multiple API layers (service principals, sign-in logs, resource graph, Copilot Studio agents, Azure OpenAI deployments), and sends results to the platform for analysis.
-
-```bash
-# Scan and display results
-$ hb discover
-
-# Scan, save to inventory, and export HTML report
-$ hb discover --save --report
-
-# Verbose mode (show raw API responses from each layer)
-$ hb discover --verbose
-
-# Output as JSON
-$ hb discover --json
-```
-
-The discovery report includes:
-
-- **Deployed Agents** -- Copilot Studio agents with channel, auth, and network details
-- **AI Endpoints** -- Azure OpenAI deployments with model lifecycle badges (retired, deprecated, retiring soon)
-- **AI Adoption** -- Licensed and consented AI services (M365 Copilot, etc.)
-- **In Development** -- ML projects and staged resources
-- **Resource Topology** -- Interactive Mermaid diagram showing connections between agents, endpoints, models, and channels
-- **Security Evaluations** -- Per-service threat analysis with SAI threat classes, risk scores, and remediation guidance
-- **Posture Estimate** -- Organisation-level AI discovery posture score
-
-## Cloud Connectors
-
-Register cloud connectors for persistent discovery. Connectors store encrypted credentials and enable re-discovery (scheduled or on-demand).
+1. Pick a vendor: `hb connect --vendor openai`.
+2. Supply the credential — read from the vendor's env var (e.g. `OPENAI_API_KEY`) or a
+   hidden interactive prompt. Credentials are **never** passed on the command line.
+3. The backend queries the vendor API and returns your deployed agents (e.g. OpenAI
+   Assistants); the CLI lists them.
+4. Pick one — it becomes the project's `default_integration`, and the usual `hb connect`
+   flow continues (scope probe or `--scope`, project creation, first test).
 
 ```bash
-# Register a Microsoft connector
-$ hb connectors create --tenant-id <id> --client-id <id> --client-secret
+# Discover and onboard (reads $OPENAI_API_KEY or prompts)
+hb connect --vendor openai
 
-# Register with explicit vendor and display name
-$ hb connectors create --vendor microsoft --tenant-id <id> --client-id <id> --name "Production"
-
-# List connectors
-$ hb connectors
-
-# Export connectors as HTML report
-$ hb connectors --report
-
-# Test connectivity
-$ hb connectors test <connector-id>
-
-# Update credentials, name, or status
-$ hb connectors update <connector-id> --client-secret
-$ hb connectors update <connector-id> --name "New Name" --status disabled
-
-# Remove a connector
-$ hb connectors delete <connector-id>
+# Bring your own scope and project name
+hb connect --vendor openai --scope ./scope.yaml --name "Prod Assistant"
 ```
 
-## AI Inventory
+The discovery response is not persisted — only the picked agent's connector config is
+stored, and subsequent `hb test` runs use it automatically.
 
-After running `hb discover --save`, discovered assets are persisted to your AI inventory. Use the inventory commands to view, govern, and onboard assets for security testing.
+See [Agent Configuration](../getting-started/agent-config.md#hosted-platform-connector)
+for the connector config this produces, and the
+[commands reference](../reference/commands.md) for all `hb connect` flags.
 
-```bash
-# List all inventory assets
-$ hb inventory
+## Supported vendors
 
-# Export as HTML report
-$ hb inventory --report
+| Vendor | id | Credential |
+|---|---|---|
+| OpenAI (Assistants) | `openai` | API key (`OPENAI_API_KEY`) |
 
-# Filter by category, vendor, risk, or sanctioned status
-$ hb inventory --category copilot_studio_agent --risk-level high
-$ hb inventory --vendor microsoft --sanctioned
-$ hb inventory --unsanctioned --risk-level critical
+!!! note "Assistants API deprecation"
+    The Assistants API is deprecated and will be removed in August 2026. The recommended
+    replacement is the Responses API. A Responses-based connector (`openai_responses`) is
+    planned and will run alongside `openai_assistants`.
 
-# View asset details (with optional HTML report)
-$ hb inventory view <asset-id>
-$ hb inventory view <asset-id> --report
-
-# Update governance fields
-$ hb inventory update <asset-id> --sanctioned --owner "security@company.com"
-$ hb inventory update <asset-id> --department "Engineering" --business-purpose "Customer support"
-$ hb inventory update <asset-id> --has-policy --has-risk-assessment
-
-# View AI discovery posture (with optional HTML report)
-$ hb inventory posture
-$ hb inventory posture --report
-
-# Onboard an asset into a security testing project
-$ hb inventory onboard <asset-id>
-
-# Archive an asset
-$ hb inventory archive <asset-id>
-```
-
-## Model Lifecycle
-
-Discovery tracks model lifecycle status across all endpoints. Models approaching end-of-life are flagged with badges in both the CLI output and HTML report:
-
-- **RETIRED** -- Model is no longer available. Migrate immediately.
-- **DEPRECATED** -- Model is deprecated with a known retirement date.
-- **RETIRING SOON** -- Model retirement within 90 days. Plan migration.
-
-Lifecycle warnings appear in the hero metrics, executive summary, endpoints table, and resource topology diagram.
+More vendors are added over time; `hb connect --vendor` with no valid id lists the
+currently supported ones.
