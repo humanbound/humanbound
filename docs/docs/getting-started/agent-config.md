@@ -52,14 +52,14 @@ The `--endpoint / -e` flag on `hb connect` accepts a JSON config file (or inline
 ## Configuration Fields
 
 - **`chat_completion`** (required) -- The endpoint your agent listens on for chat messages. This is the only required section.
-- **`thread_init`** (required) -- Thread or session creation endpoint, called once per conversation before sending messages.
+- **`thread_init`** (optional) -- Thread or session creation endpoint, called once per conversation before sending messages. Omit it (or leave the endpoint empty) for stateless agents that need no session.
 - **`thread_auth`** (optional) -- For agents that require authentication (e.g., OAuth token exchange) before testing can begin.
 - **`$PROMPT`** -- The placeholder in the payload that gets replaced with each test prompt at runtime.
 - **`streaming`** -- Transport: `null` (REST, default), `"websocket"`, or `"sse"`. Leave `null` if your agent returns a single JSON response per request.
 - **`telemetry`** (optional) -- Enables white-box agentic testing by collecting tool calls, memory operations, and resource usage from your observability platform. See [Telemetry](#telemetry-optional) below.
 
 !!! info "Note"
-    At minimum, you must provide `chat_completion` and `thread_init`. `headers` and `payload` fields are required in each section but can be empty objects if not needed. Use them to pass API keys, content types, or other metadata as needed by your agent. If no `"$PROMPT"` placeholder is found in the payload, Humanbound will append the prompt to the end of the payload by default assuming OpenAI-style input. The agent output should be in the response body of the `chat_completion` endpoint for Humanbound to capture it for analysis. The expected response format is a JSON object with any of `content | text | response | resp | answer | ans | message | reply | output` field containing the agent's reply (Humanbound walks the response recursively, so the field can be nested).
+    At minimum, you must provide `chat_completion`. `headers` and `payload` fields are required in each section you include but can be empty objects if not needed. Use them to pass API keys, content types, or other metadata as needed by your agent. If no `"$PROMPT"` placeholder is found in the payload, Humanbound will append the prompt to the end of the payload by default assuming OpenAI-style input. The agent output should be in the response body of the `chat_completion` endpoint for Humanbound to capture it for analysis. The expected response format is a JSON object with any of `content | text | response | resp | answer | ans | message | reply | output` field containing the agent's reply (Humanbound walks the response recursively, so the field can be nested).
 
 ## Basic Example
 

@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **`thread_init` is now optional in agent configs.** Stateless agents that need no session
+  step can omit `thread_init` — or leave its endpoint empty, or set it to `null`. `hb test`
+  and the local engine skip session creation when it isn't configured, mirroring the
+  already-optional `thread_auth`; only `chat_completion` is required. Configs that do provide
+  a `thread_init` endpoint are unchanged and still validated.
+
 ## [2.4.0] — 2026-07-03
 
 ### Added

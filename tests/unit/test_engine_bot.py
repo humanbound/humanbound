@@ -325,6 +325,54 @@ def test_init_with_auth_step_merges_payloads(bot_config):
     assert out == {"access_token": "tok", "session_id": "sess"}
 
 
+def test_init_skips_thread_init_when_endpoint_empty(bot_config):
+    bot_config["thread_auth"] = {"endpoint": "", "headers": {}, "payload": {}}
+    bot_config["thread_init"] = {"endpoint": "", "headers": {}, "payload": {}}
+    b = Bot(bot_config, "exp-1")
+    with patch("humanbound_cli.engine.bot.requests.post") as post:
+        out = b.init()
+    assert out == {}
+    post.assert_not_called()
+
+
+def test_init_skips_thread_init_when_null(bot_config):
+    bot_config["thread_auth"] = None
+    bot_config["thread_init"] = None
+    b = Bot(bot_config, "exp-1")
+    with patch("humanbound_cli.engine.bot.requests.post") as post:
+        out = b.init()
+    assert out == {}
+    post.assert_not_called()
+
+
+def test_init_skips_thread_init_when_missing(bot_config):
+    bot_config.pop("thread_auth", None)
+    bot_config.pop("thread_init", None)
+    b = Bot(bot_config, "exp-1")
+    with patch("humanbound_cli.engine.bot.requests.post") as post:
+        out = b.init()
+    assert out == {}
+    post.assert_not_called()
+
+
+def test_init_runs_auth_then_skips_thread_init(bot_config):
+    bot_config["thread_auth"] = {
+        "endpoint": "https://agent.example/auth",
+        "headers": {},
+        "payload": {},
+    }
+    bot_config["thread_init"] = None
+    b = Bot(bot_config, "exp-1")
+    with (
+        patch("humanbound_cli.engine.bot.requests.post") as post,
+        patch("humanbound_cli.engine.bot.time.sleep"),
+    ):
+        post.return_value = _mock_post(payload={"access_token": "tok"})
+        out = b.init()
+    assert out == {"access_token": "tok"}
+    assert post.call_count == 1  # auth fired, thread_init skipped
+
+
 def test_init_bad_status_raises(bot):
     with patch("humanbound_cli.engine.bot.requests.post") as post:
         post.return_value = _mock_post(status=500, text="boom")
