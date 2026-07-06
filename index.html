@@ -65,7 +65,7 @@
   <meta property="og:image:alt" content="Open-source AI agent security testing — automated adversarial probes, LLM-as-a-Judge evaluation, runtime firewall, and posture scoring." />
   <meta name="twitter:image:alt" content="Open-source AI agent security testing — automated adversarial probes, LLM-as-a-Judge evaluation, runtime firewall, and posture scoring." />
   
-  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/#article","headline":"Humanbound","description":"Open-source AI agent security testing \u2014 automated adversarial probes, LLM-as-a-Judge evaluation, runtime firewall, and posture scoring.","url":"https://docs.humanbound.ai/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-06-09T12:56:14+03:00","keywords":"humanbound, AI agent security testing, LLM security platform, adversarial AI testing, OWASP LLM testing, prompt injection testing, AI security posture, humanbound CLI"}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/#article","headline":"Humanbound","description":"Open-source AI agent security testing \u2014 automated adversarial probes, LLM-as-a-Judge evaluation, runtime firewall, and posture scoring.","url":"https://docs.humanbound.ai/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-07-06T14:16:58+03:00","keywords":"humanbound, AI agent security testing, LLM security platform, adversarial AI testing, OWASP LLM testing, prompt injection testing, AI security posture, humanbound CLI"}]}</script>
   
 
   
@@ -2410,8 +2410,8 @@
 </tr>
 <tr>
 <td><code>thread_init</code></td>
-<td>Yes</td>
-<td>Session/thread creation endpoint. Called once per conversation to initialize a thread before sending chat messages.</td>
+<td>No</td>
+<td>Session/thread creation endpoint, called once per conversation to initialize a thread before sending chat messages. Omit for stateless agents that need no session.</td>
 </tr>
 <tr>
 <td><code>streaming</code></td>
@@ -2422,7 +2422,7 @@
 </table>
 <div class="admonition info">
 <p class="admonition-title">Minimal config</p>
-<p><code>chat_completion</code> and <code>thread_init</code> are required. Skip <code>thread_auth</code> if your agent uses simple API key auth and doesn't need OAuth.</p>
+<p><code>chat_completion</code> is the only required section. Skip <code>thread_init</code> for stateless agents that need no session, and <code>thread_auth</code> if your agent uses simple API key auth and doesn't need OAuth.</p>
 </div>
 <p>Then point Humanbound at it:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>hb<span class="w"> </span>connect<span class="w"> </span>-n<span class="w"> </span><span class="s2">&quot;My Agent&quot;</span><span class="w"> </span>-e<span class="w"> </span>./bot-config.json<span class="w">  </span><span class="c1"># Connect, scan, and auto-test</span>
