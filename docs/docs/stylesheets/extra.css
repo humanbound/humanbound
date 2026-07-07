@@ -331,19 +331,26 @@ body,
 }
 
 /* ============================================================
-   Cookie consent — simple, non-blocking banner
+   Cookie consent — non-blocking banner
    ============================================================ */
-/* Toggle list hidden — but the analytics category stays in the form so Accept still records consent. */
-.md-consent__settings {
-  display: none !important;
-}
-
 .md-consent__overlay {
   display: none !important;
 }
 
+/* Lay the action buttons out in a single row, all equal width, so the longer
+   "Manage settings" label doesn't render a wider button than Accept / Reject. */
+.md-consent__controls {
+  display: flex !important;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
 .md-consent__controls .md-button {
-  display: inline-block !important;
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
   width: auto !important;
   margin-top: 0 !important;
+  padding: 0.5em 0.75em !important;
+  text-align: center;
+  white-space: nowrap;
 }

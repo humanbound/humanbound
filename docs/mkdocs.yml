@@ -4,6 +4,9 @@ site_description: Humanbound documentation — AI security testing, continuous m
 repo_url: https://github.com/humanbound/humanbound
 strict: true
 
+copyright: >-
+  <a href="#__consent">Change cookie settings</a>
+
 plugins:
   - search
   - social:
@@ -117,19 +120,24 @@ markdown_extensions:
 
 extra:
   consent:
-    title: Analytics consent
+    title: Cookie consent
     description: >-
-      We use optional analytics to improve these docs. Nothing is stored on
-      your device unless you accept. Do you accept?
-      <a href="https://github.com/humanbound/humanbound/blob/main/PRIVACY.md" target="_blank" rel="noopener">Privacy policy</a>.
+      We use optional cookies: analytics to improve these docs, and advertising
+      (the Reddit Pixel). Nothing is stored on your device unless you accept —
+      use "Manage" to choose per category.
+      <a href="https://github.com/humanbound/humanbound/blob/main/PRIVACY.md#docs-site-analytics" target="_blank" rel="noopener">Privacy policy</a>.
     cookies:
       analytics: Analytics
+      advertising: Advertising
     actions:
       - accept
+      - manage
       - reject
   posthog:
     api_key: "phc_yKExP2tUyiPGg3kY3tongw36iGLTYaH7D2DfRCHpZg9r"
     host: "https://eu.i.posthog.com"
+  reddit:
+    pixel_id: "a2_j9tpj603h22k"
 
 extra_css:
   - stylesheets/extra.css
