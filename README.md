@@ -27,8 +27,7 @@
   <a href="https://pypi.org/project/humanbound/"><img src="https://img.shields.io/pypi/dm/humanbound?style=flat-square&color=FD9506" alt="Downloads"/></a>
   <a href="https://github.com/humanbound/humanbound/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/humanbound/humanbound/ci.yml?style=flat-square&color=FD9506" alt="CI"/></a>
   <a href="https://github.com/humanbound/humanbound/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-FD9506?style=flat-square" alt="License"/></a>
-  <!-- TODO(marketing): swap for the permanent vanity Discord invite once created -->
-  <a href="https://discord.gg/gQyXjVBF"><img src="https://img.shields.io/badge/discord-community-FD9506?style=flat-square" alt="Discord"/></a>
+  <a href="https://discord.gg/WgTMpmSFtN"><img src="https://img.shields.io/badge/discord-community-FD9506?style=flat-square" alt="Discord"/></a>
   <a href="https://docs.humanbound.ai/"><img src="https://img.shields.io/badge/docs-humanbound.ai-FD9506?style=flat-square" alt="Docs"/></a>
 </p>
 
@@ -198,7 +197,7 @@ loop, release process, and CLA requirement (see [CLA.md](https://github.com/huma
 - 🐛 [Report a bug](https://github.com/humanbound/humanbound/issues/new/choose)
 - 💡 [Request a feature](https://github.com/humanbound/humanbound/issues/new/choose)
 - 🔒 [Report a security issue](https://github.com/humanbound/humanbound/blob/main/SECURITY.md) — **not via public Issues**
-- 💬 [Join Discord](https://discord.gg/gQyXjVBF) <!-- TODO(marketing): permanent invite -->
+- 💬 [Join Discord](https://discord.gg/WgTMpmSFtN)
 
 ## Telemetry
 

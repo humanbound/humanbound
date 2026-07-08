@@ -101,7 +101,7 @@ Repository = "https://github.com/humanbound/humanbound"
 Issues = "https://github.com/humanbound/humanbound/issues"
 Changelog = "https://github.com/humanbound/humanbound/blob/main/CHANGELOG.md"
 Community = "https://docs.humanbound.ai/community/"
-Discord = "https://discord.gg/gQyXjVBF"
+Discord = "https://discord.gg/WgTMpmSFtN"
 
 [tool.setuptools.packages.find]
 include = ["humanbound*", "humanbound_cli*"]
