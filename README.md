@@ -81,9 +81,7 @@ hb test --endpoint ./bot-config.json --scope ./scope.yaml --wait
 
 ### Describe your agent
 
-`bot-config.json` tells the engine how to talk to your agent. Only
-`chat_completion` is required — `$PROMPT` is replaced with each attack turn.
-Session-based agents can add `thread_init` / `thread_auth`:
+`bot-config.json` tells the engine how to call your agent's API:
 
 ```json
 {
@@ -99,6 +97,22 @@ Session-based agents can add `thread_init` / `thread_auth`:
   }
 }
 ```
+
+- **`chat_completion`** (required) — the request the engine sends for every
+  conversation turn: your agent's chat endpoint.
+- **`thread_init`** (optional) — called once before each conversation to
+  create a session/thread. Stateless agents simply omit it (same for
+  `thread_auth`, an optional separate auth step).
+
+The `headers` and `payload` above are examples — they must match your agent's
+actual API input schema. The engine sends them as-is after substituting the
+placeholders:
+
+- **`$PROMPT`** — replaced with the user message of each attack turn. If no
+  `$PROMPT` appears in the payload, the engine appends the message as an
+  OpenAI-style `messages` array instead.
+- **`$CONVERSATION`** — replaced with the prior turns of the conversation,
+  for stateless agents that expect the full history in every request.
 
 `scope.yaml` declares what the agent is — and is not — allowed to do. The
 `restricted` list is what turns generic jailbreak probes into targeted
