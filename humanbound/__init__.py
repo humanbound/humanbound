@@ -27,7 +27,7 @@ from humanbound.orchestrators import (
     OwaspAgentic,
     OwaspSingleTurn,
 )
-from humanbound.runner import LocalRunner
+from humanbound.runner import LocalRunner, TestConfig
 from humanbound.schemas import (
     Insight,
     LogEntry,
@@ -51,6 +51,7 @@ __all__ = [
     "EngineCallbacks",
     # Runner
     "LocalRunner",
+    "TestConfig",
     # Orchestrator ABC + built-ins
     "OrchestratorModule",
     "OwaspAgentic",
