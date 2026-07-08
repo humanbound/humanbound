@@ -35,6 +35,7 @@ from .exceptions import (
     NotFoundError,
     RateLimitError,
     SessionExpiredError,
+    ValidationError,
 )
 
 # HTML templates for OAuth callback pages
@@ -1280,6 +1281,23 @@ class HumanboundClient:
             data["scopes"] = scopes
         return self.post("connectors", data=data)
 
+    def discover_targets(self, vendor: str, credentials: dict) -> list:
+        """Enumerate a vendor's deployed agents via ``POST /discover``.
+
+        Stateless: returns the list of discovered targets (each an agnostic
+        descriptor with a nullable ``connector`` block). Nothing is persisted.
+        This is the NEW discovery contract — not the removed Shadow-AI
+        ``trigger_discovery``/``list_connectors`` methods.
+        """
+        if not self._organisation_id:
+            raise ValidationError("No organisation selected.")
+        resp = self.post(
+            "discover",
+            data={"vendor": vendor, "credentials": credentials},
+            timeout=LONG_TIMEOUT,
+        )
+        return resp.get("targets", [])
+
     def list_connectors(self) -> list:
         """List all connectors for the current organisation."""
         if not self._organisation_id:
@@ -1412,7 +1430,3 @@ class HumanboundClient:
         if project_name:
             data["name"] = project_name
         return self.post(f"inventory/{asset_id}/onboard", data=data)
-
-
-# Import ValidationError to this module
-from .exceptions import ValidationError

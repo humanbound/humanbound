@@ -170,6 +170,9 @@ hb login
 
 ```bash
 hb connect --endpoint ./bot-config.json
+
+# Or discover a hosted-platform agent (currently OpenAI Assistants)
+hb connect --vendor openai
 ```
 
 This probes your agent, extracts scope, creates a project, and runs a first test.

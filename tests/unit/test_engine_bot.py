@@ -74,6 +74,18 @@ def test_bot_inherits_from_response_extractor(bot):
     assert isinstance(bot, ResponseExtractor)
 
 
+def test_bot_rejects_connector_config():
+    """The offline engine is classic-HTTP only; connector configs must fail fast."""
+    connector_cfg = {
+        "connector": {
+            "provider": "openai_assistants",
+            "config": {"api_key": "sk-x", "target_id": "asst_x"},
+        }
+    }
+    with pytest.raises(ValueError, match="not supported by the offline engine"):
+        Bot(connector_cfg, e_id="exp-abc")
+
+
 # ────────────────────────────────────────────────────────────────
 # __extract_ai_response — dict with standard keys, custom, fallback
 # ────────────────────────────────────────────────────────────────
@@ -311,6 +323,54 @@ def test_init_with_auth_step_merges_payloads(bot_config):
         ]
         out = b.init()
     assert out == {"access_token": "tok", "session_id": "sess"}
+
+
+def test_init_skips_thread_init_when_endpoint_empty(bot_config):
+    bot_config["thread_auth"] = {"endpoint": "", "headers": {}, "payload": {}}
+    bot_config["thread_init"] = {"endpoint": "", "headers": {}, "payload": {}}
+    b = Bot(bot_config, "exp-1")
+    with patch("humanbound_cli.engine.bot.requests.post") as post:
+        out = b.init()
+    assert out == {}
+    post.assert_not_called()
+
+
+def test_init_skips_thread_init_when_null(bot_config):
+    bot_config["thread_auth"] = None
+    bot_config["thread_init"] = None
+    b = Bot(bot_config, "exp-1")
+    with patch("humanbound_cli.engine.bot.requests.post") as post:
+        out = b.init()
+    assert out == {}
+    post.assert_not_called()
+
+
+def test_init_skips_thread_init_when_missing(bot_config):
+    bot_config.pop("thread_auth", None)
+    bot_config.pop("thread_init", None)
+    b = Bot(bot_config, "exp-1")
+    with patch("humanbound_cli.engine.bot.requests.post") as post:
+        out = b.init()
+    assert out == {}
+    post.assert_not_called()
+
+
+def test_init_runs_auth_then_skips_thread_init(bot_config):
+    bot_config["thread_auth"] = {
+        "endpoint": "https://agent.example/auth",
+        "headers": {},
+        "payload": {},
+    }
+    bot_config["thread_init"] = None
+    b = Bot(bot_config, "exp-1")
+    with (
+        patch("humanbound_cli.engine.bot.requests.post") as post,
+        patch("humanbound_cli.engine.bot.time.sleep"),
+    ):
+        post.return_value = _mock_post(payload={"access_token": "tok"})
+        out = b.init()
+    assert out == {"access_token": "tok"}
+    assert post.call_count == 1  # auth fired, thread_init skipped
 
 
 def test_init_bad_status_raises(bot):
