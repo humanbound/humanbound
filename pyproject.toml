@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "humanbound"
-version = "2.5.0"
+version = "2.5.1"
 description = "Humanbound — open-source AI agent red-team engine, SDK, and CLI."
 readme = "README.md"
 license = "Apache-2.0"
@@ -35,8 +35,10 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Environment :: Console",
     "Framework :: Pytest",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Security",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Software Development :: Testing",
@@ -97,6 +99,7 @@ Repository = "https://github.com/humanbound/humanbound"
 Issues = "https://github.com/humanbound/humanbound/issues"
 Changelog = "https://github.com/humanbound/humanbound/blob/main/CHANGELOG.md"
 Community = "https://docs.humanbound.ai/community/"
+Discord = "https://discord.gg/gQyXjVBF"
 
 [tool.setuptools.packages.find]
 include = ["humanbound*", "humanbound_cli*"]

@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.5.1] — 2026-07-08
+
+### Fixed
+- **PyPI listing**: replaced every repo-relative link in the README (CONTRIBUTING,
+  CLA, SECURITY, PRIVACY, LICENSE, TRADEMARK, CHANGELOG) with absolute GitHub URLs —
+  they returned 404 when rendered on pypi.org.
+- **PyPI logo**: the `<picture>` theme-switching block is stripped by PyPI's HTML
+  sanitizer, leaving a broken relative image. The README now uses a single absolute
+  `<img>` pointing at the self-contained logo variant that reads on both PyPI themes.
+
+### Added
+- Package metadata: `Programming Language :: Python :: 3.13` and
+  `Topic :: Scientific/Engineering :: Artificial Intelligence` classifiers, and a
+  `Discord` entry in `[project.urls]` so PyPI shows the community link in the sidebar.
+
 ## [2.5.0] — 2026-07-06
 
 ### Changed

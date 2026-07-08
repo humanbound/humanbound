@@ -1,9 +1,5 @@
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="assets/logo-light.svg"/>
-    <source media="(prefers-color-scheme: light)" srcset="assets/logo-dark.svg"/>
-    <img src="assets/logo-dark.svg" alt="Humanbound" width="280"/>
-  </picture>
+  <img src="https://raw.githubusercontent.com/humanbound/humanbound/main/assets/logo-dark.svg" alt="Humanbound" width="280"/>
 </p>
 
 <h3 align="center">humanbound</h3>
@@ -27,7 +23,7 @@
   <a href="https://pypi.org/project/humanbound/"><img src="https://img.shields.io/pypi/pyversions/humanbound?style=flat-square&color=FD9506" alt="Python versions"/></a>
   <a href="https://pypi.org/project/humanbound/"><img src="https://img.shields.io/pypi/dm/humanbound?style=flat-square&color=FD9506" alt="Downloads"/></a>
   <a href="https://github.com/humanbound/humanbound/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/humanbound/humanbound/ci.yml?style=flat-square&color=FD9506" alt="CI"/></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-FD9506?style=flat-square" alt="License"/></a>
+  <a href="https://github.com/humanbound/humanbound/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-FD9506?style=flat-square" alt="License"/></a>
   <a href="https://discord.gg/gQyXjVBF"><img src="https://img.shields.io/badge/discord-community-FD9506?style=flat-square" alt="Discord"/></a>
   <a href="https://docs.humanbound.ai/"><img src="https://img.shields.io/badge/docs-humanbound.ai-FD9506?style=flat-square" alt="Docs"/></a>
 </p>
@@ -114,28 +110,28 @@ integration, and API reference all live on
   renamed [`humanbound-firewall`](https://github.com/humanbound/humanbound-firewall)
   (formerly `hb-firewall`) alongside the CLI.
 
-See [CHANGELOG.md](./CHANGELOG.md) for the full 2.0.0 release notes.
+See [CHANGELOG.md](https://github.com/humanbound/humanbound/blob/main/CHANGELOG.md) for the full 2.0.0 release notes.
 
 ## Contributing
 
-Contributions welcome. See [CONTRIBUTING.md](./CONTRIBUTING.md) for the dev
-loop, release process, and CLA requirement (see [CLA.md](./CLA.md)).
+Contributions welcome. See [CONTRIBUTING.md](https://github.com/humanbound/humanbound/blob/main/CONTRIBUTING.md) for the dev
+loop, release process, and CLA requirement (see [CLA.md](https://github.com/humanbound/humanbound/blob/main/CLA.md)).
 
 - 🐛 [Report a bug](https://github.com/humanbound/humanbound/issues/new/choose)
 - 💡 [Request a feature](https://github.com/humanbound/humanbound/issues/new/choose)
-- 🔒 [Report a security issue](./SECURITY.md) — **not via public Issues**
+- 🔒 [Report a security issue](https://github.com/humanbound/humanbound/blob/main/SECURITY.md) — **not via public Issues**
 - 💬 [Join Discord](https://discord.gg/gQyXjVBF)
 
 ## Telemetry
 
 The `hb` CLI sends anonymous usage data to help us improve it.
 Disable with `hb telemetry disable`, `HB_TELEMETRY_DISABLED=1`, or
-`DO_NOT_TRACK=1`. Full disclosure: [PRIVACY.md](./PRIVACY.md).
+`DO_NOT_TRACK=1`. Full disclosure: [PRIVACY.md](https://github.com/humanbound/humanbound/blob/main/PRIVACY.md).
 
 ## License
 
-[Apache-2.0](./LICENSE). Free to use in any context — commercial or
-open-source — with attribution. See [TRADEMARK.md](./TRADEMARK.md) for the
+[Apache-2.0](https://github.com/humanbound/humanbound/blob/main/LICENSE). Free to use in any context — commercial or
+open-source — with attribution. See [TRADEMARK.md](https://github.com/humanbound/humanbound/blob/main/TRADEMARK.md) for the
 trademark policy. The code is open; the name is not.
 
 The sibling project [`humanbound-firewall`](https://github.com/humanbound/humanbound-firewall)
