@@ -193,7 +193,7 @@ live on [docs.humanbound.ai](https://docs.humanbound.ai/).
 ## Release highlights
 
 - **Clean name**: `humanbound` is the PyPI install. The old `humanbound-cli`
-  package is a discontinued transitional stub; install `humanbound` directly.
+  package has been yanked from PyPI; install `humanbound` directly.
 - **Public SDK namespace** alongside the CLI — use the CLI or drive the
   engine from Python.
 - **Firewall integration**: `pip install humanbound[firewall]` pulls

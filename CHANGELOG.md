@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.6.0] — 2026-07-09
 
+### Removed
+- **`humanbound-cli` transitional stub retired.** All 29 `humanbound-cli`
+  releases on PyPI were yanked on 2026-07-09 (past the 2026-06-20 window
+  announced in 2.0.0), with the yank reason pointing users to
+  `pip install humanbound`. Pinned installs (`humanbound-cli==1.2.2`) still
+  work with a warning; unpinned installs now fail with the redirect message.
+
 ### Added
 - **`TestConfig` is now part of the public SDK namespace**
   (`from humanbound import TestConfig`). It was the only missing piece for
