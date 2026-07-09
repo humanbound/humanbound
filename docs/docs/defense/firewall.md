@@ -26,27 +26,27 @@ Traditional web application firewalls (WAFs) operate on HTTP requests, matching 
 
 ## Architecture: Graduated Confidence
 
-The Humanbound Firewall implements a multi-tier evaluation architecture where each tier represents a different tradeoff between speed, cost, and analytical depth. User messages enter at Tier 0 and escalate upward only when lower tiers cannot make a confident decision. This design ensures that the majority of requests — both legitimate and clearly malicious — are resolved in milliseconds without LLM cost, while genuinely ambiguous inputs receive full contextual analysis.
+The Humanbound Firewall implements a multi-tier evaluation architecture where each tier represents a different tradeoff between speed, cost, and analytical depth. User messages enter at Tier 0 and escalate upward only when lower tiers cannot make a confident decision. This design ensures that the majority of requests — both legitimate and clearly malicious — are resolved by fast local tiers without LLM cost, while genuinely ambiguous inputs receive full contextual analysis.
 
 ```
 User Input
     │
-[ Tier 0 ]  Sanitization                    ~0ms, zero cost
+[ Tier 0 ]  Sanitization                    no model call, zero cost
     │        Strips invisible control characters, zero-width joiners,
     │        bidirectional overrides. Always active. Eliminates an
     │        entire class of encoding-based attacks before any model runs.
     │
-[ Tier 1 ]  Attack Detection Ensemble       ~15-50ms, zero cost
+[ Tier 1 ]  Attack Detection Ensemble       local model inference, zero cost
     │        Pre-trained models run in parallel (DeBERTa, Azure Content
     │        Safety, or custom APIs). Configurable consensus threshold.
     │        Catches the majority of known prompt injection patterns.
     │
-[ Tier 2 ]  Agent-Specific Classification   ~10ms, zero cost
+[ Tier 2 ]  Agent-Specific Classification   local model inference, zero cost
     │        Fine-tuned on adversarial test data from YOUR agent.
     │        Detects attacks that generic models miss. Fast-tracks
     │        legitimate requests that match known benign patterns.
     │
-[ Tier 3 ]  LLM Judge                       ~1-2s, token cost
+[ Tier 3 ]  LLM Judge                       LLM call, token cost
              Full contextual analysis against the agent's security
              policy, permitted intents, and restricted actions.
              Called only when lower tiers cannot reach confidence.
@@ -253,7 +253,7 @@ humanbound-firewall ships with a SetFit-based classifier that fine-tunes a sente
 hb firewall train --model detectors/setfit_classifier.py
 ```
 
-SetFit takes curated examples from your test logs, generates contrastive pairs (attack vs benign), and fine-tunes [all-MiniLM-L6-v2](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2) to separate them in embedding space. Training takes ~10 minutes on CPU.
+SetFit takes curated examples from your test logs, generates contrastive pairs (attack vs benign), and fine-tunes [all-MiniLM-L6-v2](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2) to separate them in embedding space. Training runs on CPU — no GPU required.
 
 !!! tip "Hugging Face token (optional, recommended)"
     The base model is downloaded from the Hugging Face Hub on first training run. Without authentication, you may hit rate limits or see a warning like `You are sending unauthenticated requests to the HF Hub`.
