@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.6.0] — 2026-07-09
+
+### Removed
+- **`humanbound-cli` transitional stub retired.** All 29 `humanbound-cli`
+  releases on PyPI were yanked on 2026-07-09 (past the 2026-06-20 window
+  announced in 2.0.0), with the yank reason pointing users to
+  `pip install humanbound`. Pinned installs (`humanbound-cli==1.2.2`) still
+  work with a warning; unpinned installs now fail with the redirect message.
+
+### Added
+- **`TestConfig` is now part of the public SDK namespace**
+  (`from humanbound import TestConfig`). It was the only missing piece for
+  driving a full test run through the stable API: construct a `TestConfig`,
+  pass it to `LocalRunner.start()`, poll `get_status()`, and read
+  `get_posture()` / `get_result()` — no `humanbound_cli.*` imports needed.
+- Package metadata: `Programming Language :: Python :: 3.13` and
+  `Topic :: Scientific/Engineering :: Artificial Intelligence` classifiers, and a
+  `Discord` entry in `[project.urls]` so PyPI shows the community link in the sidebar.
+
+### Fixed
+- **`import humanbound` crashed on a core-only install** (`pip install
+  humanbound` without extras) with `ModuleNotFoundError: No module named
+  'httpx'` — `httpx` was used at module level by the engine's bot adapter but
+  only declared in the `[engine]` extra. `httpx` (and `certifi`, previously
+  present only transitively) are now core dependencies. Affected at least
+  2.2.0–2.5.0.
+
+### Changed
+- **README refresh** (new positioning + PyPI rendering fixes): leads with
+  adversarial agent testing and the test-to-guardrail loop, adds real
+  `bot-config.json` / `scope.yaml` examples and a runnable SDK example, and
+  replaces the stale "What's shipping in 2.0" section with release highlights.
+  All repo-relative links are now absolute GitHub URLs (they returned 404 on
+  pypi.org) and the logo no longer relies on the `<picture>` block that PyPI's
+  HTML sanitizer strips.
+- Package summary now reads "Open-source adversarial testing engine, SDK, and
+  CLI for AI agents."
+
 ## [2.5.0] — 2026-07-06
 
 ### Changed
