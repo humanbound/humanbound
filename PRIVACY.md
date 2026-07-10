@@ -1,12 +1,21 @@
 # Privacy and Telemetry
 
-The Humanbound CLI (`hb`) collects anonymous usage data to help us understand
-how the tool is used and improve it. This document is the authoritative
-description of what we collect, what we don't, and how to disable it.
+The Humanbound **CLI** (`hb`) and **documentation site** (`docs.humanbound.ai`)
+collect anonymous usage data to help us understand how they're used and improve
+them. This document is the authoritative description of what we collect, what we
+don't, and how to disable or refuse it — for **both** surfaces.
+
+> **Visiting from the docs site?** Jump to [Docs site](#docs-site-analytics) —
+> the rest of this document is about the `hb` command-line tool.
 
 ## Scope
 
-This document describes how the `hb` CLI handles **anonymous usage telemetry**.
+This document covers **two surfaces**:
+
+- **The `hb` CLI** — anonymous usage telemetry (the bulk of this document).
+- **The documentation site** (`docs.humanbound.ai`) — anonymous web analytics
+  and an advertising pixel (the Reddit Pixel); see [Docs site](#docs-site-analytics).
+
 For broader privacy questions about the Humanbound Platform — data collected
 via `api.humanbound.ai`, account data, billing, support — contact
 [privacy@humanbound.ai](mailto:privacy@humanbound.ai).
@@ -145,16 +154,23 @@ any of:
 
 ## Sub-processors
 
-We share telemetry data with one third-party processor:
+We share data with the following third-party processors:
 
 | Processor | Purpose | Location | Terms |
 |---|---|---|---|
 | PostHog | Product analytics ingestion and dashboard | EU (Frankfurt) | [posthog.com/terms](https://posthog.com/terms), [posthog.com/dpa](https://posthog.com/dpa) |
+| Reddit | Advertising measurement, docs site (with advertising consent) | United States | [Advertising Data Processing Agreement](https://business.reddithelp.com/s/article/Reddit-Advertising-Data-Processing-Agreement) |
 
 PostHog acts as a Data Processor under GDPR Art. 28. Our use of PostHog is
 governed by their published Terms of Service and Data Processing Addendum
 (linked above). They store and process the telemetry data on our behalf
 and, per their published terms, do not use it for their own purposes.
+
+**Reddit** receives docs-site advertising data — a page-visit signal plus
+standard ad signals (see [Advertising](#advertising-reddit-pixel)) — **only when
+you accept advertising cookies**. Any transfer to the United States is governed
+by the international-transfer terms in Reddit's
+[Advertising Data Processing Agreement](https://business.reddithelp.com/s/article/Reddit-Advertising-Data-Processing-Agreement).
 
 ## Docs site analytics
 
@@ -170,13 +186,33 @@ nothing is tied to an account and no personal data is collected.
   withdraw your choice anytime via the banner.
 - **What we collect:** page views and traffic source only, tagged `source: docs`.
   Autocapture is off, so individual clicks and form inputs are never captured.
-- **No IP storage:** your IP address is never recorded as an event property
-  (`ip: false`, with `$ip`/`$ip_address` on a denylist) and server-side IP
-  geolocation is disabled (`$geoip_disable`), so it is neither stored nor used
-  to locate you.
+- **No IP storage** *(in this analytics)***:** your IP address is never recorded
+  as an event property (`ip: false`, with `$ip`/`$ip_address` on a denylist) and
+  server-side IP geolocation is disabled (`$geoip_disable`), so it is neither
+  stored nor used to locate you. *(The optional advertising pixel below is
+  different — see Advertising.)*
 - **Do Not Track:** if your browser sends a `DNT` signal, no analytics are sent.
 - **Region & processor:** PostHog EU Cloud (Frankfurt) — same processor and DPA
   as [Sub-processors](#sub-processors) above.
+
+### Advertising (Reddit Pixel)
+
+The docs site uses the **Reddit Pixel** to measure the effectiveness of our
+advertising on Reddit. It runs **only with your consent** and is handled
+separately from the anonymous analytics above:
+
+- **Separate consent.** It is gated on its own **Advertising** cookie category —
+  distinct from Analytics — so you can accept analytics but reject advertising.
+  Nothing loads and nothing is sent unless you accept advertising cookies (legal
+  basis: your consent, GDPR Art. 6(1)(a)).
+- **What it sends:** a page-visit signal only. The docs site has no login or
+  forms, so no email or account data is involved.
+- **What it collects:** once loaded with your consent, the pixel collects standard
+  advertising signals — your IP address, browser/device information, screen size,
+  and a Reddit click identifier. Unlike our own analytics, these are shared with
+  **Reddit, Inc.** (United States) — see [Sub-processors](#sub-processors).
+- **Withdrawing consent:** change or withdraw your choice anytime via the cookie
+  banner ("Manage").
 
 ## Your rights under GDPR
 
