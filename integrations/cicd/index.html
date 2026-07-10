@@ -2363,6 +2363,10 @@
     <div class="md-footer-meta__inner md-grid">
       <div class="md-copyright">
   
+    <div class="md-copyright__highlight">
+      <a href="#__consent">Change cookie settings</a>
+    </div>
+  
   
     Made with
     <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
@@ -2389,11 +2393,9 @@
 
 
 
-  
-
-<h4>Analytics consent</h4>
-<p>We use optional analytics to improve these docs. Nothing is stored on your device unless you accept. Do you accept? <a href="https://github.com/humanbound/humanbound/blob/main/PRIVACY.md" target="_blank" rel="noopener">Privacy policy</a>.</p>
-<input class="md-toggle" type="checkbox" id="__settings" checked>
+<h4>Cookie consent</h4>
+<p>We use optional cookies: analytics to improve these docs, and advertising (the Reddit Pixel). Nothing is stored on your device unless you accept — use "Manage" to choose per category. <a href="https://github.com/humanbound/humanbound/blob/main/PRIVACY.md#docs-site-analytics" target="_blank" rel="noopener">Privacy policy</a>.</p>
+<input class="md-toggle" type="checkbox" id="__settings" >
 <div class="md-consent__settings">
   <ul class="task-list">
     
@@ -2434,6 +2436,23 @@
 
       
     
+      
+        
+  
+  
+    
+    
+  
+  <li class="task-list-item">
+    <label class="task-list-control">
+      <input type="checkbox" name="advertising" checked>
+      <span class="task-list-indicator"></span>
+      Advertising
+    </label>
+  </li>
+
+      
+    
   </ul>
 </div>
 <div class="md-consent__controls">
@@ -2442,6 +2461,12 @@
       <button class="md-button md-button--primary">Accept</button>
     
     
+    
+  
+    
+    
+    
+      <label class="md-button" for="__settings">Manage settings</label>
     
   
     
@@ -2492,6 +2517,28 @@
   // capture_pageview is off; drive pageviews via document$ so navigation.instant
   // (XHR page swaps, no reload) is counted on every navigation.
   document$.subscribe(function () { posthog.capture('$pageview'); });
+</script>
+
+  
+<script>
+  // Reddit advertising pixel — loads only with ADVERTISING consent (separate
+  // from the analytics category that gates PostHog). Reddit's rdt has no
+  // consent-mode API, so we withhold the script entirely until consent.
+  // Material reloads the page on any consent change, so reading the stored
+  // choice once here is enough (no live listener needed).
+  var consent = (typeof __md_get === "function") ? __md_get("__consent") : null;
+  var advertisingConsent = !!(consent && consent.advertising);
+
+  if (advertisingConsent) {
+    // Reddit Pixel bootstrap. Note: we do NOT fire PageVisit here — it's fired
+    // from document$ below so Material's instant navigation (XHR page swaps)
+    // counts every page exactly once, with no duplicate on the initial load.
+    !function(w,d){if(!w.rdt){var p=w.rdt=function(){p.sendEvent?p.sendEvent.apply(p,arguments):p.callQueue.push(arguments)};p.callQueue=[];var t=d.createElement("script");t.src="https://www.redditstatic.com/ads/pixel.js",t.async=!0;var s=d.getElementsByTagName("script")[0];s.parentNode.insertBefore(t,s)}}(window,document);
+    rdt('init', "a2_j9tpj603h22k");
+
+    // document$ emits on initial load and on every navigation.instant swap.
+    document$.subscribe(function () { rdt('track', 'PageVisit'); });
+  }
 </script>
 
 
