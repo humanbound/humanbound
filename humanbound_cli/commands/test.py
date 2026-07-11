@@ -576,7 +576,7 @@ def test_command(
             _findings_seen = 0
 
         # Display results (same rendering, canonical shapes)
-        _display_results(result, posture)
+        all_errored = _display_results(result, posture)
 
         # Next suggestions — vary by mode
         if is_platform:
@@ -597,6 +597,15 @@ def test_command(
                     ("hb guardrails -o rules.yaml", "Export firewall rules"),
                 ]
             )
+
+        # A run where every conversation errored is a scan failure, not a pass.
+        # Fail the command so CI can't misread it as green — independent of
+        # --fail-on, which only inspects insight severity and sees nothing here.
+        if all_errored:
+            console.print(
+                "\n[red]No conversations completed — treating this run as a failure.[/red]"
+            )
+            raise SystemExit(1)
 
         # Check fail-on condition
         if fail_on:
@@ -827,11 +836,28 @@ def _wait_verbose(runner, experiment_id: str) -> str:
     return status.status
 
 
-def _display_results(result: TestResult, posture: Posture):
+def _all_errored(stats: dict) -> bool:
+    """True when the run produced conversations but none completed — i.e. every
+    conversation errored (0 pass, 0 fail, >0 error).
+
+    Such a run carries no security signal at all and must not be presented as a
+    pass: "Pass: 0 / Fail: 0" on a fully-errored run reads as "my agent is clean"
+    when in fact nothing was actually tested.
+    """
+    total = stats.get("total", 0) or 0
+    completed = (stats.get("pass", 0) or 0) + (stats.get("fail", 0) or 0)
+    errored = stats.get("error", 0) or 0
+    return total > 0 and completed == 0 and errored > 0
+
+
+def _display_results(result: TestResult, posture: Posture) -> bool:
     """Display experiment results with posture grade and findings summary.
 
     Uses canonical TestResult and Posture shapes — works identically
     for both platform and local runners.
+
+    Returns True when every conversation errored (see ``_all_errored``), so the
+    caller can exit non-zero instead of treating the run as a pass.
     """
     status = result.status
     status_color = {
@@ -841,6 +867,13 @@ def _display_results(result: TestResult, posture: Posture):
     }.get(status, "white")
 
     stats = result.stats
+    errored = stats.get("error", 0) or 0
+    all_errored = _all_errored(stats)
+
+    # A run where every conversation errored produced no security signal — don't
+    # paint it green, and don't let "Pass: 0 / Fail: 0" read as a clean pass.
+    if all_errored:
+        status_color = "red"
 
     # Build results panel content
     panel_lines = [
@@ -850,6 +883,17 @@ def _display_results(result: TestResult, posture: Posture):
         f"  [green]Pass:[/green] {stats.get('pass', 0)}",
         f"  [red]Fail:[/red] {stats.get('fail', 0)}",
     ]
+    if errored:
+        panel_lines.append(f"  [yellow]Errored:[/yellow] {errored}")
+
+    if all_errored:
+        panel_lines.append("")
+        panel_lines.append("[red bold]⚠ No conversations completed — every one errored.[/red bold]")
+        panel_lines.append(
+            "[red]This is NOT a passing result. Check the agent endpoint/config and "
+            "connectivity, then re-run.[/red]"
+        )
+        panel_lines.append("[dim]Inspect the failures with: hb logs[/dim]")
 
     # Posture grade (available from both runners)
     if posture.grade is not None:
@@ -879,8 +923,9 @@ def _display_results(result: TestResult, posture: Posture):
         )
         panel_lines.append(f"[dim]Previously: {posture.previous_grade}{prev_score_str}[/dim]")
 
+    panel_title = "Experiment Complete — no results" if all_errored else "Experiment Complete"
     console.print(
-        Panel("\n".join(panel_lines), title="Experiment Complete", border_style=status_color)
+        Panel("\n".join(panel_lines), title=panel_title, border_style=status_color)
     )
 
     # Show insights if available
@@ -903,6 +948,8 @@ def _display_results(result: TestResult, posture: Posture):
             console.print(
                 f"  {i}. [{severity_color}]{severity_str.upper()}[/{severity_color}]: {insight.get('explanation', '')}"
             )
+
+    return all_errored
 
 
 def _severity_label(severity) -> str:
