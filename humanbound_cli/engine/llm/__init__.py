@@ -4,6 +4,10 @@
 
 SUPPORTED_PROVIDERS = ["openai", "claude", "gemini", "grok", "azureopenai", "ollama"]
 
+# User-facing aliases → canonical provider name. "anthropic" matches both the
+# PyPI package and the wording in the README/[engine] extra ("Anthropic provider").
+PROVIDER_ALIASES = {"anthropic": "claude"}
+
 
 def get_llm_pinger(model_provider):
     """Return an LLMPinger instance for the given provider.
@@ -16,6 +20,7 @@ def get_llm_pinger(model_provider):
         LLMPinger instance with ping(system_p, user_p, max_tokens, temperature) method.
     """
     name = model_provider["name"] if isinstance(model_provider, dict) else model_provider.name
+    name = PROVIDER_ALIASES.get(name, name)
 
     if name == "azureopenai":
         from .azureopenai import LLMPinger
