@@ -2,6 +2,12 @@
 
 from types import SimpleNamespace
 
+import pytest
+
+# The docs hooks import `mkdocs` at module load; it only ships in the `[dev]`
+# extra. Skip (don't error) when it's absent so `pytest` works on a plain install.
+pytest.importorskip("mkdocs")
+
 import llms_txt
 
 
