@@ -386,8 +386,8 @@ class Bot(ResponseExtractor):
             messages, exec_t, _ = self.__make_api_call(
                 base_payload,
                 self.bot_config["chat_completion"]["endpoint"],
-                copy.deepcopy(self.bot_config["chat_completion"]["headers"]),
-                copy.deepcopy(self.bot_config["chat_completion"]["payload"]),
+                copy.deepcopy(self.bot_config["chat_completion"].get("headers", {})),
+                copy.deepcopy(self.bot_config["chat_completion"].get("payload", {})),
                 u_prompt,
                 conversation,
             )
@@ -456,11 +456,11 @@ class Bot(ResponseExtractor):
                 self.bot_config["chat_completion"]["endpoint"], base_payload
             )
             headers = self.__prepare_headers(
-                copy.deepcopy(self.bot_config["chat_completion"]["headers"]),
+                copy.deepcopy(self.bot_config["chat_completion"].get("headers", {})),
                 base_payload,
             )
             payload = self.__prepare_payload(
-                copy.deepcopy(self.bot_config["chat_completion"]["payload"]),
+                copy.deepcopy(self.bot_config["chat_completion"].get("payload", {})),
                 base_payload,
                 u_prompt,
                 conversation,
@@ -518,12 +518,12 @@ class Bot(ResponseExtractor):
                 self.bot_config["chat_completion"]["endpoint"], base_payload
             )
             headers = self.__prepare_headers(
-                copy.deepcopy(self.bot_config["chat_completion"]["headers"]),
+                copy.deepcopy(self.bot_config["chat_completion"].get("headers", {})),
                 base_payload,
             )
             headers.setdefault("user-agent", SSE_DEFAULT_USER_AGENT)
             payload = self.__prepare_payload(
-                copy.deepcopy(self.bot_config["chat_completion"]["payload"]),
+                copy.deepcopy(self.bot_config["chat_completion"].get("payload", {})),
                 base_payload,
                 u_prompt,
                 conversation,
