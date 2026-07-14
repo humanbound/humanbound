@@ -206,7 +206,7 @@ for full release notes.
 ## Contributing
 
 Contributions welcome. See [CONTRIBUTING.md](https://github.com/humanbound/humanbound/blob/main/CONTRIBUTING.md) for the dev
-loop, release process, and CLA requirement (see [CLA.md](https://github.com/humanbound/humanbound/blob/main/CLA.md)).
+loop, release process, and DCO sign-off requirement (see [DCO.md](https://github.com/humanbound/humanbound/blob/main/DCO.md)).
 
 - 🐛 [Report a bug](https://github.com/humanbound/humanbound/issues/new/choose)
 - 💡 [Request a feature](https://github.com/humanbound/humanbound/issues/new/choose)

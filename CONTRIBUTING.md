@@ -37,18 +37,39 @@ Use the provided templates:
 **Do not file security issues publicly.** See [SECURITY.md](./SECURITY.md) for
 the private disclosure channel.
 
-## Contributor License Agreement (CLA) — required
+## Developer Certificate of Origin (DCO) — required
 
-Every external contribution must be covered by the
-[Humanbound Contributor License Agreement](./CLA.md). The CLA gives
-Humanbound the operational flexibility to evolve the project (including
-offering managed services on the Humanbound Platform) while preserving Your
-right to use Your own contributions elsewhere and Your authorship in the
-project's git history.
+This project does **not** use a CLA. Contributions are accepted under the
+[Developer Certificate of Origin](./DCO.md) — the same lightweight mechanism
+used by the Linux kernel, CNCF projects, and GitLab. You keep the copyright
+to your work; it is licensed inbound = outbound under
+[Apache-2.0](./LICENSE), exactly like the rest of the codebase.
 
-The first time you open a pull request, the CLAAssistant bot will comment
-with a one-line instruction to sign. Sign once and all your future
-contributions are covered.
+There is nothing to sign — just add the `-s` flag when committing:
+
+```bash
+git commit -s -m "your message"
+```
+
+CI checks that every commit in a pull request carries the resulting
+`Signed-off-by` trailer. Forgot one? `git commit --amend -s` (or
+`git rebase --signoff main` for a whole branch) and force-push.
+
+## Third-party code and licenses
+
+To keep the project safely redistributable under Apache-2.0:
+
+- **Code copied or vendored into this repository** must be under a
+  permissive license: Apache-2.0, MIT, BSD (2- or 3-clause), or ISC.
+  Include the upstream copyright notice and license text, and mention the
+  origin in your PR description.
+- **New runtime dependencies** must be permissively licensed as above;
+  weak-copyleft dependencies (MPL-2.0, LGPL) are acceptable only as
+  unmodified, dynamically imported packages and need maintainer sign-off.
+- **GPL, AGPL, SSPL, or BSL-licensed code cannot be accepted** in any form
+  (vendored, copied, or as a dependency).
+
+If you're unsure about a license, ask in the PR before writing code.
 
 ## Change workflow
 

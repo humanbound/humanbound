@@ -1,0 +1,42 @@
+name: DCO
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  dco:
+    name: Signed-off-by check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify every commit carries a Signed-off-by trailer
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const commits = await github.paginate(github.rest.pulls.listCommits, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+            });
+            // Merge commits are bot-generated and exempt, matching the
+            // behavior of the standard probot DCO app.
+            const missing = commits
+              .filter(c => c.parents.length < 2)
+              .filter(c => !/^Signed-off-by: .+ <.+@.+>$/m.test(c.commit.message));
+            if (missing.length === 0) {
+              core.info(`All ${commits.length} commit(s) are signed off.`);
+              return;
+            }
+            const list = missing
+              .map(c => `  ${c.sha.slice(0, 7)} ${c.commit.message.split('\n')[0]}`)
+              .join('\n');
+            core.setFailed(
+              `${missing.length} commit(s) are missing a Signed-off-by trailer (see DCO.md):\n` +
+              `${list}\n\n` +
+              `Fix with "git commit --amend -s" (single commit) or ` +
+              `"git rebase --signoff origin/main" (whole branch), then force-push.`
+            );

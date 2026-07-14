@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Contribution policy: CLA replaced by DCO.** External contributions no
+  longer require signing the Humanbound Contributor License Agreement.
+  Contributions are now accepted under the Developer Certificate of Origin
+  v1.1 (see `DCO.md`) — sign commits with `git commit -s`. Contributors keep
+  their copyright; contributions are licensed inbound = outbound under
+  Apache-2.0. `CLA.md` is removed and a `dco.yml` workflow now checks
+  `Signed-off-by` trailers on every pull request.
+- `CONTRIBUTING.md` gains an explicit third-party license policy: vendored
+  code must be permissively licensed (Apache-2.0/MIT/BSD/ISC); GPL, AGPL,
+  SSPL, and BSL code cannot be accepted.
+
+### Added
+- `NOTICE` file per Apache-2.0 section 4(d).
+
 ## [2.6.0] — 2026-07-09
 
 ### Removed
