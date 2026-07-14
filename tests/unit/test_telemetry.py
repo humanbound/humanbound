@@ -50,6 +50,8 @@ def _isolate(monkeypatch, tmp_path):
         monkeypatch.delenv(v, raising=False)
     monkeypatch.setenv("HOME", str(tmp_path))
     monkeypatch.setattr("sys.stdout.isatty", lambda: True)
+    # Test suite runs from source; force non-editable so telemetry isn't auto-disabled.
+    monkeypatch.setattr(consent, "_is_editable_install", lambda: False)
     consent.reset_cache()
     client.reset_for_tests()
     yield
@@ -154,6 +156,12 @@ def test_consent_disabled_in_dev_mode(monkeypatch):
     monkeypatch.setenv("HUMANBOUND_DEV", "1")
     assert consent.is_enabled() is False
     assert "dev mode" in consent.disabled_reason()
+
+
+def test_consent_disabled_in_editable_install(monkeypatch):
+    monkeypatch.setattr(consent, "_is_editable_install", lambda: True)
+    assert consent.is_enabled() is False
+    assert "editable" in consent.disabled_reason()
 
 
 def test_consent_disabled_when_not_tty(monkeypatch):
@@ -334,6 +342,24 @@ def _write_credentials_with_user_id(tmp_path: Path, user_id: str | None) -> None
     creds.write_text(_json.dumps({"api_token": fake_jwt}))
 
 
+def _write_credentials_with_user_id_and_email(
+    tmp_path: Path, user_id: str, email: str | None
+) -> None:
+    """Fake credentials.json with a user_id-claim JWT plus a top-level email."""
+    import base64 as _b64
+    import json as _json
+
+    claims = {"sub": "m2m-app-id", "https://aiandme.io/user_id": user_id}
+    payload = _b64.urlsafe_b64encode(_json.dumps(claims).encode()).rstrip(b"=").decode()
+    fake_jwt = f"header.{payload}.sig"
+    creds = tmp_path / ".humanbound" / "credentials.json"
+    creds.parent.mkdir(parents=True, exist_ok=True)
+    doc = {"api_token": fake_jwt}
+    if email is not None:
+        doc["email"] = email
+    creds.write_text(_json.dumps(doc))
+
+
 def test_identify_from_credentials_reads_user_id_claim(tmp_path, mock_posthog):
     _write_credentials_with_user_id(tmp_path, "auth0|user123")
     client.identify_from_credentials()
@@ -358,6 +384,34 @@ def test_capture_uses_user_id_from_credentials_when_present(tmp_path, mock_posth
     client.capture("posture_view", {"is_local": True})
     assert mock_posthog.capture.call_args.kwargs["distinct_id"] == "auth0|user123"
     assert mock_posthog.capture.call_args.kwargs["properties"]["is_authenticated"] is True
+
+
+def test_ensure_init_enables_geoip_enrichment(mock_posthog):
+    # capture() triggers _ensure_init(); geo enrichment must be turned on
+    # by flipping the SDK's disable_geoip default off.
+    client.capture("install")
+    assert mock_posthog.disable_geoip is False
+
+
+def test_capture_sets_email_person_property_when_authed(tmp_path, mock_posthog):
+    _write_credentials_with_user_id_and_email(tmp_path, "auth0|user123", "dev@example.com")
+    client.capture("test_start", {"test_level": "unit"})
+    props = mock_posthog.capture.call_args.kwargs["properties"]
+    assert props["is_authenticated"] is True
+    assert props["$set"] == {"email": "dev@example.com"}
+
+
+def test_capture_omits_email_when_anonymous(mock_posthog):
+    client.capture("install")
+    props = mock_posthog.capture.call_args.kwargs["properties"]
+    assert "$set" not in props
+
+
+def test_capture_omits_email_when_authed_but_no_email_stored(tmp_path, mock_posthog):
+    _write_credentials_with_user_id_and_email(tmp_path, "auth0|user123", None)
+    client.capture("test_start", {"test_level": "unit"})
+    props = mock_posthog.capture.call_args.kwargs["properties"]
+    assert "$set" not in props
 
 
 def test_shutdown_calls_flush_then_shutdown(mock_posthog):

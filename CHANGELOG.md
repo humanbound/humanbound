@@ -7,7 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Telemetry: IP-based geolocation.** CLI and docs-site analytics now derive an
+  approximate location (country, region, city, and coarse coordinates) from the
+  request IP via PostHog GeoIP enrichment; the raw IP is discarded after
+  enrichment and never stored. Docs-site geolocation is gated on Analytics
+  consent; the CLI follows the existing opt-out model and applies to pre- and
+  post-login events.
+- **Telemetry: account email on logged-in CLI events.** After `hb login`, the
+  account email is attached as a PostHog person property to measure CLI→Platform
+  conversion. Anonymous (pre-login) events never carry an email.
+- `NOTICE` file per Apache-2.0 section 4(d).
+
 ### Changed
+- `PRIVACY.md` documents the IP-derived approximate location and email person
+  property, corrects the analytics retention period to **1 year**, and adds an
+  honest note that `hb logout` does not re-anonymize prior events.
 - **Contribution policy: CLA replaced by DCO.** External contributions no
   longer require signing the Humanbound Contributor License Agreement.
   Contributions are now accepted under the Developer Certificate of Origin
@@ -19,8 +34,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   code must be permissively licensed (Apache-2.0/MIT/BSD/ISC); GPL, AGPL,
   SSPL, and BSL code cannot be accepted.
 
-### Added
-- `NOTICE` file per Apache-2.0 section 4(d).
+### Fixed
+- Telemetry is now auto-disabled on **editable / source-checkout installs**
+  (`pip install -e .`); previously only `HUMANBOUND_DEV=1` disabled development
+  runs.
 
 ## [2.6.0] — 2026-07-09
 
