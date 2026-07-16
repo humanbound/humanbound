@@ -219,6 +219,8 @@ class Bot(ResponseExtractor):
                         )
                 return conversation_map_to_openai, False
 
+            if not item:
+                return item, False
             if item[0] == "$":
                 key = item[1:]
                 return (base_payload[key] if len(key) and key in base_payload else None), False
