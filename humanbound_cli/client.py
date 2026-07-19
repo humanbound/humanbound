@@ -1054,6 +1054,48 @@ class HumanboundClient:
         """Update a finding."""
         return self.put(f"projects/{project_id}/findings/{finding_id}", data=data)
 
+    def retest_finding(self, finding_id: str, testing_level: str = "unit") -> dict:
+        """Trigger a regression retest for a finding.
+
+        Replays the finding's own recorded attacks against the current agent to
+        verify whether it is actually fixed. Fire-and-poll: returns immediately
+        with the new experiment id; poll ``get_experiment_status`` and read the
+        outcome from the experiment ``results.regression`` on completion.
+
+        The route is top-level (``findings/{id}/retest``): the backend resolves
+        the project from the finding and authorizes on the organisation header,
+        so no project header is sent.
+
+        Args:
+            finding_id: Finding UUID.
+            testing_level: Replay breadth — 'unit' (representatives only),
+                'system' (+cluster samples), or 'acceptance' (+more).
+
+        Returns:
+            ``{"experiment_id": ..., "status": "running"}``.
+        """
+        return self.post(
+            f"findings/{finding_id}/retest",
+            data={"testing_level": testing_level},
+            include_project=False,
+        )
+
+    def list_finding_regressions(self, finding_id: str) -> list:
+        """List a finding's regression-retest history (newest first).
+
+        Top-level route (``findings/{id}/regressions``), org-scoped like
+        ``retest_finding``.
+
+        Args:
+            finding_id: Finding UUID.
+
+        Returns:
+            List of ``{experiment_id, outcome, partial, testing_level,
+            created_at}``; empty when the finding has never been retested.
+        """
+        response = self.get(f"findings/{finding_id}/regressions", include_project=False)
+        return response if isinstance(response, list) else response.get("data", response)
+
     # -------------------------------------------------------------------------
     # Experiment Extensions
     # -------------------------------------------------------------------------
