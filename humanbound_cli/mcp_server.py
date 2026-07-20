@@ -112,6 +112,8 @@ def hb_whoami() -> str:
         )
     except HumanboundError as e:
         return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
+        return _err(e)
 
 
 @mcp.tool()
@@ -121,6 +123,8 @@ def hb_list_organisations() -> str:
         client = _get_client()
         return _ok(client.list_organisations())
     except HumanboundError as e:
+        return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
         return _err(e)
 
 
@@ -143,6 +147,8 @@ def hb_set_organisation(organisation_id: str) -> str:
         )
     except HumanboundError as e:
         return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
+        return _err(e)
 
 
 @mcp.tool()
@@ -161,6 +167,8 @@ def hb_set_project(project_id: str) -> str:
         client.set_project(project_id)
         return _ok({"project_id": project_id, "message": "Project set successfully."})
     except HumanboundError as e:
+        return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
         return _err(e)
 
 
@@ -182,6 +190,8 @@ def hb_list_projects(page: int = 1, size: int = 50) -> str:
         return _ok(client.list_projects(page=page, size=size))
     except HumanboundError as e:
         return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
+        return _err(e)
 
 
 @mcp.tool()
@@ -195,6 +205,8 @@ def hb_get_project(project_id: str) -> str:
         client = _get_client()
         return _ok(client.get(f"projects/{project_id}", include_project=True))
     except HumanboundError as e:
+        return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
         return _err(e)
 
 
@@ -219,6 +231,8 @@ def hb_update_project(
         return _ok(client.update_project(project_id, data))
     except HumanboundError as e:
         return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
+        return _err(e)
 
 
 @mcp.tool()
@@ -233,6 +247,8 @@ def hb_delete_project(project_id: str) -> str:
         client.delete_project(project_id)
         return _ok({"message": f"Project {project_id} deleted."})
     except HumanboundError as e:
+        return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
         return _err(e)
 
 
@@ -256,6 +272,8 @@ def hb_create_project(name: str, description: str | None = None) -> str:
         return _ok(client.post("projects", data=data, include_project=False))
     except HumanboundError as e:
         return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
+        return _err(e)
 
 
 # =========================================================================
@@ -276,6 +294,8 @@ def hb_list_experiments(page: int = 1, size: int = 50) -> str:
         return _ok(client.list_experiments(page=page, size=size))
     except HumanboundError as e:
         return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
+        return _err(e)
 
 
 @mcp.tool()
@@ -289,6 +309,8 @@ def hb_get_experiment(experiment_id: str) -> str:
         client = _get_client()
         return _ok(client.get_experiment(experiment_id))
     except HumanboundError as e:
+        return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
         return _err(e)
 
 
@@ -309,6 +331,8 @@ def hb_get_experiment_status(experiment_id: str) -> str:
         client = _get_client()
         return _ok(client.get_experiment_status(experiment_id))
     except HumanboundError as e:
+        return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
         return _err(e)
 
 
@@ -332,6 +356,8 @@ def hb_get_experiment_logs(
         return _ok(client.get_experiment_logs(experiment_id, page=page, size=size, result=result))
     except HumanboundError as e:
         return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
+        return _err(e)
 
 
 @mcp.tool()
@@ -345,6 +371,8 @@ def hb_terminate_experiment(experiment_id: str) -> str:
         client = _get_client()
         return _ok(client.terminate_experiment(experiment_id))
     except HumanboundError as e:
+        return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
         return _err(e)
 
 
@@ -360,6 +388,8 @@ def hb_delete_experiment(experiment_id: str) -> str:
         client.delete_experiment(experiment_id)
         return _ok({"message": f"Experiment {experiment_id} deleted."})
     except HumanboundError as e:
+        return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
         return _err(e)
 
 
@@ -452,6 +482,8 @@ def hb_run_test(
         return _ok(result)
     except HumanboundError as e:
         return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
+        return _err(e)
 
 
 # =========================================================================
@@ -495,6 +527,8 @@ def hb_get_project_logs(
         )
     except HumanboundError as e:
         return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
+        return _err(e)
 
 
 # =========================================================================
@@ -509,6 +543,8 @@ def hb_list_providers() -> str:
         client = _get_client()
         return _ok(client.list_providers())
     except HumanboundError as e:
+        return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
         return _err(e)
 
 
@@ -538,6 +574,8 @@ def hb_add_provider(
             integration["endpoint"] = endpoint
         return _ok(client.add_provider(name, integration, is_default=is_default))
     except HumanboundError as e:
+        return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
         return _err(e)
 
 
@@ -575,6 +613,8 @@ def hb_update_provider(
         return _ok(client.update_provider(provider_id, data))
     except HumanboundError as e:
         return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
+        return _err(e)
 
 
 @mcp.tool()
@@ -589,6 +629,8 @@ def hb_remove_provider(provider_id: str) -> str:
         client.remove_provider(provider_id)
         return _ok({"message": f"Provider {provider_id} removed."})
     except HumanboundError as e:
+        return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
         return _err(e)
 
 
@@ -624,6 +666,8 @@ def hb_list_findings(
         )
     except HumanboundError as e:
         return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
+        return _err(e)
 
 
 @mcp.tool()
@@ -658,6 +702,8 @@ def hb_update_finding(
         return _ok(client.update_finding(pid, finding_id, data))
     except HumanboundError as e:
         return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
+        return _err(e)
 
 
 # =========================================================================
@@ -684,6 +730,8 @@ def hb_get_coverage(project_id: str | None = None, include_gaps: bool = False) -
             return _err(ValueError("No project selected. Use hb_set_project first."))
         return _ok(client.get_coverage(pid, include_gaps=include_gaps))
     except HumanboundError as e:
+        return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
         return _err(e)
 
 
@@ -713,6 +761,8 @@ def hb_get_posture(project_id: str | None = None) -> str:
         return _ok(client.get(f"projects/{pid}/posture", include_project=True))
     except HumanboundError as e:
         return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
+        return _err(e)
 
 
 @mcp.tool()
@@ -729,6 +779,8 @@ def hb_get_posture_trends(project_id: str | None = None) -> str:
             return _err(ValueError("No project selected. Use hb_set_project first."))
         return _ok(client.get_posture_trends(pid))
     except HumanboundError as e:
+        return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
         return _err(e)
 
 
@@ -747,6 +799,8 @@ def hb_get_shadow_posture() -> str:
         client = _get_client()
         return _ok(client.get_shadow_posture())
     except HumanboundError as e:
+        return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
         return _err(e)
 
 
@@ -788,6 +842,8 @@ def hb_export_guardrails(
         )
         return _ok(result)
     except HumanboundError as e:
+        return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
         return _err(e)
 
 
@@ -834,6 +890,8 @@ def hb_create_connector(
         )
     except HumanboundError as e:
         return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
+        return _err(e)
 
 
 @mcp.tool()
@@ -843,6 +901,8 @@ def hb_list_connectors() -> str:
         client = _get_client()
         return _ok(client.list_connectors())
     except HumanboundError as e:
+        return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
         return _err(e)
 
 
@@ -857,6 +917,8 @@ def hb_get_connector(connector_id: str) -> str:
         client = _get_client()
         return _ok(client.get_connector(connector_id))
     except HumanboundError as e:
+        return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
         return _err(e)
 
 
@@ -887,6 +949,8 @@ def hb_update_connector(
         return _ok(client.update_connector(connector_id, data))
     except HumanboundError as e:
         return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
+        return _err(e)
 
 
 @mcp.tool()
@@ -902,6 +966,8 @@ def hb_delete_connector(connector_id: str) -> str:
         return _ok({"message": f"Connector {connector_id} deleted."})
     except HumanboundError as e:
         return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
+        return _err(e)
 
 
 @mcp.tool()
@@ -915,6 +981,8 @@ def hb_test_connector(connector_id: str) -> str:
         client = _get_client()
         return _ok(client.test_connector(connector_id))
     except HumanboundError as e:
+        return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
         return _err(e)
 
 
@@ -936,6 +1004,8 @@ def hb_trigger_discovery(connector_id: str) -> str:
         client = _get_client()
         return _ok(client.trigger_discovery(connector_id))
     except HumanboundError as e:
+        return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
         return _err(e)
 
 
@@ -981,6 +1051,8 @@ def hb_list_inventory(
         )
     except HumanboundError as e:
         return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
+        return _err(e)
 
 
 @mcp.tool()
@@ -994,6 +1066,8 @@ def hb_get_inventory_asset(asset_id: str) -> str:
         client = _get_client()
         return _ok(client.get_inventory_asset(asset_id))
     except HumanboundError as e:
+        return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
         return _err(e)
 
 
@@ -1036,6 +1110,8 @@ def hb_update_inventory_asset(
         return _ok(client.update_inventory_asset(asset_id, data))
     except HumanboundError as e:
         return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
+        return _err(e)
 
 
 @mcp.tool()
@@ -1049,6 +1125,8 @@ def hb_archive_inventory_asset(asset_id: str) -> str:
         client = _get_client()
         return _ok(client.archive_inventory_asset(asset_id))
     except HumanboundError as e:
+        return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
         return _err(e)
 
 
@@ -1070,6 +1148,8 @@ def hb_onboard_inventory_asset(asset_id: str, project_name: str | None = None) -
         return _ok(client.onboard_inventory_asset(asset_id, project_name=project_name))
     except HumanboundError as e:
         return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
+        return _err(e)
 
 
 # =========================================================================
@@ -1090,20 +1170,30 @@ def hb_list_api_keys(page: int = 1, limit: int = 50) -> str:
         return _ok(client.list_api_keys(page=page, limit=limit))
     except HumanboundError as e:
         return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
+        return _err(e)
 
 
 @mcp.tool()
 def hb_create_api_key(name: str, scopes: str = "admin") -> str:
     """Create a new API key.
 
+    Security note: the default 'admin' scope grants full account authority and
+    the created key is returned in the tool result (and so may be retained in
+    the MCP host's transcript/logs). Prefer passing an explicit, least-privilege
+    ``scopes`` value for the task at hand rather than relying on the default.
+
     Args:
         name: Key name/label.
-        scopes: Comma-separated scopes (default 'admin').
+        scopes: Comma-separated scopes. Defaults to 'admin' (full access) --
+            override with the narrowest scope that works.
     """
     try:
         client = _get_client()
         return _ok(client.create_api_key(name, scopes=scopes))
     except HumanboundError as e:
+        return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
         return _err(e)
 
 
@@ -1126,6 +1216,8 @@ def hb_update_api_key(key_id: str, name: str | None = None, scopes: str | None =
         return _ok(client.update_api_key(key_id, data))
     except HumanboundError as e:
         return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
+        return _err(e)
 
 
 @mcp.tool()
@@ -1140,6 +1232,8 @@ def hb_delete_api_key(key_id: str) -> str:
         client.delete_api_key(key_id)
         return _ok({"message": f"API key {key_id} deleted."})
     except HumanboundError as e:
+        return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
         return _err(e)
 
 
@@ -1156,6 +1250,8 @@ def hb_list_members() -> str:
         return _ok(client.list_members())
     except HumanboundError as e:
         return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
+        return _err(e)
 
 
 @mcp.tool()
@@ -1171,6 +1267,8 @@ def hb_invite_member(email: str, access_level: str = "member") -> str:
         return _ok(client.invite_member(email, access_level))
     except HumanboundError as e:
         return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
+        return _err(e)
 
 
 @mcp.tool()
@@ -1185,6 +1283,8 @@ def hb_remove_member(member_id: str) -> str:
         client.remove_member(member_id)
         return _ok({"message": f"Member {member_id} removed."})
     except HumanboundError as e:
+        return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
         return _err(e)
 
 
@@ -1214,6 +1314,8 @@ def hb_create_webhook(
         return _ok(client.create_webhook(url=url, secret=secret, name=name, event_types=types_list))
     except HumanboundError as e:
         return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
+        return _err(e)
 
 
 @mcp.tool()
@@ -1229,6 +1331,8 @@ def hb_delete_webhook(webhook_id: str) -> str:
         return _ok({"message": f"Webhook {webhook_id} deleted."})
     except HumanboundError as e:
         return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
+        return _err(e)
 
 
 @mcp.tool()
@@ -1242,6 +1346,8 @@ def hb_get_webhook(webhook_id: str) -> str:
         client = _get_client()
         return _ok(client.get_webhook(webhook_id))
     except HumanboundError as e:
+        return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
         return _err(e)
 
 
@@ -1259,6 +1365,8 @@ def hb_list_webhook_deliveries(webhook_id: str, page: int = 1, size: int = 25) -
         return _ok(client.list_webhook_deliveries(webhook_id, page=page, size=size))
     except HumanboundError as e:
         return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
+        return _err(e)
 
 
 @mcp.tool()
@@ -1272,6 +1380,8 @@ def hb_test_webhook(webhook_id: str) -> str:
         client = _get_client()
         return _ok(client.test_webhook(webhook_id))
     except HumanboundError as e:
+        return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
         return _err(e)
 
 
@@ -1305,6 +1415,8 @@ def hb_replay_webhook(
         )
     except HumanboundError as e:
         return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
+        return _err(e)
 
 
 # =========================================================================
@@ -1332,6 +1444,8 @@ def hb_get_campaign(project_id: str | None = None) -> str:
         return _ok(client.get_campaign(pid))
     except HumanboundError as e:
         return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
+        return _err(e)
 
 
 @mcp.tool()
@@ -1351,6 +1465,8 @@ def hb_terminate_campaign(campaign_id: str, project_id: str | None = None) -> st
             return _err(ValueError("No project selected. Use hb_set_project first."))
         return _ok(client.terminate_campaign(pid, campaign_id))
     except HumanboundError as e:
+        return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
         return _err(e)
 
 
@@ -1520,6 +1636,8 @@ def hb_connect(
 
     except HumanboundError as e:
         return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
+        return _err(e)
 
 
 # =========================================================================
@@ -1557,6 +1675,8 @@ def hb_upload_conversations(
     except json.JSONDecodeError as e:
         return _err(ValueError(f"Invalid JSON in conversations: {e}"))
     except HumanboundError as e:
+        return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
         return _err(e)
 
 
@@ -1701,6 +1821,8 @@ def hb_redteam_analyze(experiment_id: str) -> str:
         )
     except HumanboundError as e:
         return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
+        return _err(e)
 
 
 @mcp.tool()
@@ -1736,6 +1858,8 @@ def hb_redteam_start(
         )
     except HumanboundError as e:
         return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
+        return _err(e)
 
 
 @mcp.tool()
@@ -1763,6 +1887,8 @@ def hb_redteam_execute(experiment_id: str, session_id: str, burst_turns: int = 5
         )
     except HumanboundError as e:
         return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
+        return _err(e)
 
 
 @mcp.tool()
@@ -1788,6 +1914,8 @@ def hb_redteam_direct(experiment_id: str, session_id: str, input: str) -> str:
             )
         )
     except HumanboundError as e:
+        return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
         return _err(e)
 
 
@@ -1815,6 +1943,8 @@ def hb_redteam_judge(experiment_id: str, session_id: str) -> str:
         )
     except HumanboundError as e:
         return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
+        return _err(e)
 
 
 @mcp.tool()
@@ -1837,6 +1967,8 @@ def hb_redteam_complete(experiment_id: str) -> str:
             )
         )
     except HumanboundError as e:
+        return _err(e)
+    except Exception as e:  # fall back to a structured error instead of leaking a raw traceback
         return _err(e)
 
 
