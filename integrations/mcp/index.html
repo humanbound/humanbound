@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../images/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -67,7 +67,7 @@
   <meta property="og:image:alt" content="Drive Humanbound from Claude Code, Cursor, Windsurf, or Copilot via the built-in MCP server — ask about posture, findings, and runs in your IDE." />
   <meta name="twitter:image:alt" content="Drive Humanbound from Claude Code, Cursor, Windsurf, or Copilot via the built-in MCP server — ask about posture, findings, and runs in your IDE." />
   
-  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/integrations/mcp/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"MCP Server","item":"https://docs.humanbound.ai/integrations/mcp/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/integrations/mcp/#article","headline":"MCP Server","description":"Drive Humanbound from Claude Code, Cursor, Windsurf, or Copilot via the built-in MCP server \u2014 ask about posture, findings, and runs in your IDE.","url":"https://docs.humanbound.ai/integrations/mcp/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-06-02T10:20:06+03:00","keywords":"MCP server, Model Context Protocol, Claude Code integration, Cursor integration, IDE security testing, hb mcp command, MCP tools, AI coding assistant integration"}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/integrations/mcp/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"MCP Server","item":"https://docs.humanbound.ai/integrations/mcp/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/integrations/mcp/#article","headline":"MCP Server","description":"Drive Humanbound from Claude Code, Cursor, Windsurf, or Copilot via the built-in MCP server \u2014 ask about posture, findings, and runs in your IDE.","url":"https://docs.humanbound.ai/integrations/mcp/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-07-20T11:47:21+03:00","keywords":"MCP server, Model Context Protocol, Claude Code integration, Cursor integration, IDE security testing, hb mcp command, MCP tools, AI coding assistant integration"}]}</script>
   
 
   
@@ -2324,6 +2324,10 @@
 <td>List findings with optional status/severity filters</td>
 </tr>
 <tr>
+<td><code>retest_finding</code></td>
+<td>Replay a finding's recorded attacks to verify whether it is fixed</td>
+</tr>
+<tr>
 <td><code>get_coverage</code></td>
 <td>Test coverage summary and untested categories</td>
 </tr>
@@ -2346,6 +2350,7 @@
 <ul>
 <li><em>"What's my current security posture score?"</em></li>
 <li><em>"Show me all critical findings that are still open"</em></li>
+<li><em>"Retest finding abc123 to check whether my fix holds"</em></li>
 <li><em>"What attack categories haven't been tested yet?"</em></li>
 <li><em>"Did the last experiment find any prompt injection vulnerabilities?"</em></li>
 <li><em>"What ASCAM phase is my project currently in?"</em></li>
@@ -2516,7 +2521,7 @@
     
     
   
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   

@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../images/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -67,7 +67,7 @@
   <meta property="og:image:alt" content="Findings are persistent vulnerability records that track security issues across test cycles — they remember when they first appeared and which regressions reintroduced them." />
   <meta name="twitter:image:alt" content="Findings are persistent vulnerability records that track security issues across test cycles — they remember when they first appeared and which regressions reintroduced them." />
   
-  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/aisecops/findings/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Findings","item":"https://docs.humanbound.ai/aisecops/findings/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/aisecops/findings/#article","headline":"Findings","description":"Findings are persistent vulnerability records that track security issues across test cycles \u2014 they remember when they first appeared and which regressions reintroduced them.","url":"https://docs.humanbound.ai/aisecops/findings/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-06-12T14:12:41+03:00","keywords":"findings management, finding lifecycle, vulnerability tracking, finding delegation, regression detection, hb findings command, finding webhook events, severity weighted penalties"}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/aisecops/findings/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Findings","item":"https://docs.humanbound.ai/aisecops/findings/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/aisecops/findings/#article","headline":"Findings","description":"Findings are persistent vulnerability records that track security issues across test cycles \u2014 they remember when they first appeared and which regressions reintroduced them.","url":"https://docs.humanbound.ai/aisecops/findings/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-07-20T11:47:21+03:00","keywords":"findings management, finding lifecycle, vulnerability tracking, finding delegation, regression detection, regression retest, hb findings retest, hb findings command, finding webhook events, severity weighted penalties"}]}</script>
   
 
   
@@ -1431,6 +1431,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#verifying-a-fix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verifying a Fix
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#team-delegation" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2347,26 +2358,72 @@
 - Findings seen again remain <strong>open</strong>
 - Findings not seen transition to <strong>stale</strong> after 14 days
 - Stale findings that reappear transition to <strong>regressed</strong>
-- Users can manually mark findings as <strong>fixed</strong></p>
+- Users can manually mark findings as <strong>fixed</strong> — and confirm that claim with a <a href="#verifying-a-fix">regression retest</a></p>
+<h2 id="verifying-a-fix">Verifying a Fix</h2>
+<p>Marking a finding <strong>fixed</strong> by hand is a claim; a <strong>regression retest</strong> checks it. <code>hb findings retest &lt;id&gt;</code> replays the finding's own recorded attacks against the <em>current</em> agent and reports whether the vulnerability is really gone:</p>
+<table>
+<thead>
+<tr>
+<th>Outcome</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>not_reproduced</code></td>
+<td>None of the replayed attacks fired again — evidence the fix holds.</td>
+</tr>
+<tr>
+<td><code>still_vulnerable</code></td>
+<td>An attack fired again. The finding is automatically flipped <strong>fixed → regressed</strong>.</td>
+</tr>
+<tr>
+<td><code>insufficient_evidence</code></td>
+<td>The finding has no replayable attack evidence, so nothing could be tested. Never treated as a pass.</td>
+</tr>
+</tbody>
+</table>
+<p>A retest runs as a normal experiment (fire-and-poll): the command returns an experiment id immediately, or <code>--watch</code> waits and prints the outcome.</p>
+<p><strong>How much gets replayed</strong> is controlled by <code>--testing-level</code>, using the same <code>unit</code> / <code>system</code> / <code>acceptance</code> ladder as <a href="../../testing/test-command/"><code>hb test</code></a>:</p>
+<ul>
+<li><code>unit</code> (default) — replays the finding's <strong>representative</strong> attacks: a curated, deduplicated sample of the distinct ways it was triggered, so a retest is a fast, focused check rather than an exhaustive replay of every recorded conversation.</li>
+<li><code>system</code> / <code>acceptance</code> — add cluster samples around those representatives for broader coverage (<code>--deep</code> and <code>--full</code> are shortcuts, mirroring <code>hb test</code>).</li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Fire a retest and get the experiment id back</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>hb<span class="w"> </span>findings<span class="w"> </span>retest<span class="w"> </span>&lt;finding-id&gt;
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># Wait for the verdict</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>hb<span class="w"> </span>findings<span class="w"> </span>retest<span class="w"> </span>&lt;finding-id&gt;<span class="w"> </span>--watch
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="c1"># Broader replay</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>hb<span class="w"> </span>findings<span class="w"> </span>retest<span class="w"> </span>&lt;finding-id&gt;<span class="w"> </span>--full
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="c1"># See a finding&#39;s past retests</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>hb<span class="w"> </span>findings<span class="w"> </span>regressions<span class="w"> </span>&lt;finding-id&gt;
+</code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">On-demand check</p>
+<p>Retesting is manual — it does not run automatically as part of monitoring. Use it once you believe a finding is fixed, then mark it <strong>fixed</strong> after a retest comes back <code>not_reproduced</code>.</p>
+</div>
 <h2 id="team-delegation">Team Delegation</h2>
 <p>When a finding is identified, someone needs to own it — investigate the root cause, implement a fix, and verify the resolution. <a href="../../reference/glossary/#aisecops-operations">Finding</a> delegation assigns this responsibility to a specific team member and tracks progress through four stages: unassigned → assigned → in progress → verified.</p>
 <p>See <a href="../../management/collaboration/">Team &amp; Collaboration</a> for the full delegation workflow, roles, and webhook notifications.</p>
 <h3 id="cli-usage">CLI Usage</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># List all findings</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>hb<span class="w"> </span>findings
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># Filter by status or severity</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>hb<span class="w"> </span>findings<span class="w"> </span>--status<span class="w"> </span>open
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>hb<span class="w"> </span>findings<span class="w"> </span>--severity<span class="w"> </span>critical
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="c1"># Mark a finding as fixed</span>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>hb<span class="w"> </span>findings<span class="w"> </span>update<span class="w"> </span>&lt;finding-id&gt;<span class="w"> </span>--status<span class="w"> </span>fixed
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="c1"># Update severity</span>
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>hb<span class="w"> </span>findings<span class="w"> </span>update<span class="w"> </span>&lt;finding-id&gt;<span class="w"> </span>--severity<span class="w"> </span>high
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="c1"># Export as JSON</span>
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>hb<span class="w"> </span>findings<span class="w"> </span>--json
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># List all findings</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>hb<span class="w"> </span>findings
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="c1"># Filter by status or severity</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>hb<span class="w"> </span>findings<span class="w"> </span>--status<span class="w"> </span>open
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>hb<span class="w"> </span>findings<span class="w"> </span>--severity<span class="w"> </span>critical
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="c1"># Mark a finding as fixed</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>hb<span class="w"> </span>findings<span class="w"> </span>update<span class="w"> </span>&lt;finding-id&gt;<span class="w"> </span>--status<span class="w"> </span>fixed
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="c1"># Update severity</span>
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>hb<span class="w"> </span>findings<span class="w"> </span>update<span class="w"> </span>&lt;finding-id&gt;<span class="w"> </span>--severity<span class="w"> </span>high
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="c1"># Export as JSON</span>
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>hb<span class="w"> </span>findings<span class="w"> </span>--json
 </code></pre></div>
 <h3 id="webhook-notifications">Webhook Notifications</h3>
 <p>When findings are assigned or their delegation status changes, webhook events are emitted:</p>
@@ -2393,7 +2450,7 @@
 </tbody>
 </table>
 <p>Configure webhooks to route these to Slack, email, or your ticketing system:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>hb<span class="w"> </span>webhooks<span class="w"> </span>create<span class="w"> </span>--url<span class="w"> </span>https://slack.example.com/webhook<span class="w"> </span>--events<span class="w"> </span>finding.assigned,finding.resolution_verified
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>hb<span class="w"> </span>webhooks<span class="w"> </span>create<span class="w"> </span>--url<span class="w"> </span>https://slack.example.com/webhook<span class="w"> </span>--events<span class="w"> </span>finding.assigned,finding.resolution_verified
 </code></pre></div>
 <h2 id="connection-to-posture">Connection to Posture</h2>
 <p>Findings directly impact the posture score through severity-weighted penalties:</p>
@@ -2594,7 +2651,7 @@
     
     
   
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   
