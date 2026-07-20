@@ -406,6 +406,36 @@ class TestConvenienceMethods:
         )
         assert "findings" in call_url
 
+    @patch("humanbound_cli.client.requests.post")
+    def test_retest_finding_shaping(self, mock_post, client):
+        mock_post.return_value = _mock_response(
+            202, {"experiment_id": "exp-reg-1", "status": "running"}
+        )
+        result = client.retest_finding("find-001", testing_level="system")
+        assert result["experiment_id"] == "exp-reg-1"
+        call = mock_post.call_args
+        call_url = call.args[0] if call.args else call.kwargs.get("url", "")
+        # Top-level route (project resolved from the finding server-side).
+        assert call_url.endswith("findings/find-001/retest")
+        assert call.kwargs.get("json") == {"testing_level": "system"}
+        headers = call.kwargs.get("headers", {})
+        assert headers.get("organisation_id") == "org-123"
+        assert "project_id" not in headers
+
+    @patch("humanbound_cli.client.requests.get")
+    def test_list_finding_regressions_shaping(self, mock_get, client):
+        mock_get.return_value = _mock_response(
+            200, [{"experiment_id": "exp-reg-1", "outcome": "not_reproduced"}]
+        )
+        result = client.list_finding_regressions("find-001")
+        assert isinstance(result, list)
+        assert result[0]["outcome"] == "not_reproduced"
+        call = mock_get.call_args
+        call_url = call.args[0] if call.args else call.kwargs.get("url", "")
+        assert call_url.endswith("findings/find-001/regressions")
+        headers = call.kwargs.get("headers", {})
+        assert "project_id" not in headers
+
     @patch("humanbound_cli.client.requests.get")
     def test_list_members(self, mock_get, client):
         mock_get.return_value = _mock_response(200, {"data": [{"email": "a@b.c"}]})
