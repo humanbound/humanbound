@@ -70,6 +70,17 @@ def _user_id_from_credentials() -> str | None:
         return None
 
 
+def _email_from_credentials() -> str | None:
+    """Return the account email persisted in credentials.json, or None."""
+    f = _credentials_file()
+    if not f.exists():
+        return None
+    try:
+        return json.loads(f.read_text()).get("email") or None
+    except Exception:
+        return None
+
+
 def _resolve_distinct_id() -> str:
     """Auth'd user id if available, else the anonymous machine UUID."""
     global _user_id
@@ -97,6 +108,9 @@ def _ensure_init() -> bool:
             _posthog.host = config.get_posthog_host()
             # Reasonable defaults; SDK handles batching + background flush.
             _posthog.disabled = False
+            # disable_geoip defaults to True in posthog-python; flip it off so
+            # PostHog derives country/region/city. Raw IP is discarded project-side.
+            _posthog.disable_geoip = False
             _initialized_ok = True
         except Exception:
             _initialized_ok = False
@@ -123,6 +137,10 @@ def capture(event: str, properties: dict | None = None) -> None:
         merged = baseline(is_authenticated=is_auth)
         if properties:
             merged.update(properties)
+        if is_auth:
+            email = _email_from_credentials()
+            if email:
+                merged["$set"] = {"email": email}
         _posthog.capture(
             distinct_id=distinct_id,
             event=event,
