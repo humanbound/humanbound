@@ -20,6 +20,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   SSPL, and BSL code cannot be accepted.
 
 ### Added
+- **Finding regression retest.** `hb findings retest <id>` replays a finding's
+  own recorded attacks against the current agent to check whether it is
+  actually fixed, reporting `still_vulnerable`, `not_reproduced`, or
+  `insufficient_evidence`. Fire-and-return by default (prints the experiment
+  id); `--watch` polls to completion and shows the outcome, and
+  `--testing-level unit|system|acceptance` (with `--deep`/`--full` shortcuts,
+  matching `hb test`) controls replay breadth.
+  `hb findings regressions <id>` lists a finding's retest history. Exposed to
+  agents via the `hb_retest_finding` and `hb_list_finding_regressions` MCP
+  tools.
 - `NOTICE` file per Apache-2.0 section 4(d).
 
 ## [2.6.0] — 2026-07-09
