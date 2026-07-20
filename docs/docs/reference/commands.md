@@ -86,6 +86,8 @@ The complete `hb` CLI reference, organised into eight categories: global flags, 
 | `hb findings` | List persistent vulnerability findings (--page, --size, -o \<file\>) |
 | `hb findings update <id>` | Update finding status or severity |
 | `hb findings assign <id>` | Assign finding to a team member |
+| `hb findings retest <id>` | Retest a finding to verify a fix (--testing-level unit\|system\|acceptance, --deep, --full, --watch) |
+| `hb findings regressions <id>` | Show a finding's regression-retest history |
 | `hb assessments` | List past security assessments |
 | `hb assessments show [id]` | View assessment detail (posture trajectory, drift, coverage, duration); defaults to the latest |
 | `hb assessments terminate [id]` | Stop a running assessment (defaults to the current/latest) |
