@@ -660,6 +660,49 @@ def hb_update_finding(
         return _err(e)
 
 
+@mcp.tool()
+def hb_retest_finding(finding_id: str, testing_level: str = "unit") -> str:
+    """Retest a finding to verify whether it is actually fixed.
+
+    Replays the finding's OWN recorded attacks against the current agent and
+    reports an outcome: 'still_vulnerable', 'not_reproduced', or
+    'insufficient_evidence'.
+
+    Fire-and-poll: this returns immediately with the new experiment id.
+    Workflow: poll hb_get_experiment_status every 15-30 seconds until the
+    status is no longer 'Running', then call hb_get_experiment and read the
+    outcome from results.regression.
+
+    Args:
+        finding_id: Finding UUID.
+        testing_level: Replay breadth (same ladder as hb_run_test) — 'unit'
+            (representatives only), 'system' (+cluster samples), or
+            'acceptance' (+more).
+    """
+    try:
+        client = _get_client()
+        return _ok(client.retest_finding(finding_id, testing_level=testing_level))
+    except HumanboundError as e:
+        return _err(e)
+
+
+@mcp.tool()
+def hb_list_finding_regressions(finding_id: str) -> str:
+    """List a finding's regression-retest history (newest first).
+
+    Each entry is a past retest: {experiment_id, outcome, partial,
+    testing_level, created_at}. Empty when the finding has never been retested.
+
+    Args:
+        finding_id: Finding UUID.
+    """
+    try:
+        client = _get_client()
+        return _ok(client.list_finding_regressions(finding_id))
+    except HumanboundError as e:
+        return _err(e)
+
+
 # =========================================================================
 # COVERAGE & POSTURE TOOLS
 # =========================================================================

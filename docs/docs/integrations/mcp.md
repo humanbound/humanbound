@@ -71,6 +71,7 @@ If your client launches with a minimal `PATH` and can't find `hb`, replace `"hb"
 |---|---|
 | `get_posture` | Current security posture score, grade, and trend data for the active project |
 | `get_findings` | List findings with optional status/severity filters |
+| `retest_finding` | Replay a finding's recorded attacks to verify whether it is fixed |
 | `get_coverage` | Test coverage summary and untested categories |
 | `get_experiments` | Recent experiments with status, results, and configuration |
 | `get_logs` | Conversation logs and verdicts from a specific experiment |
@@ -82,6 +83,7 @@ Once configured, you can ask your AI assistant questions like:
 
 - *"What's my current security posture score?"*
 - *"Show me all critical findings that are still open"*
+- *"Retest finding abc123 to check whether my fix holds"*
 - *"What attack categories haven't been tested yet?"*
 - *"Did the last experiment find any prompt injection vulnerabilities?"*
 - *"What ASCAM phase is my project currently in?"*

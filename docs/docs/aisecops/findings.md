@@ -6,6 +6,8 @@ keywords:
   - vulnerability tracking
   - finding delegation
   - regression detection
+  - regression retest
+  - hb findings retest
   - hb findings command
   - finding webhook events
   - severity weighted penalties
@@ -51,7 +53,41 @@ The lifecycle is automatic. When monitoring runs a new test cycle:
 - Findings seen again remain **open**
 - Findings not seen transition to **stale** after 14 days
 - Stale findings that reappear transition to **regressed**
-- Users can manually mark findings as **fixed**
+- Users can manually mark findings as **fixed** — and confirm that claim with a [regression retest](#verifying-a-fix)
+
+## Verifying a Fix
+
+Marking a finding **fixed** by hand is a claim; a **regression retest** checks it. `hb findings retest <id>` replays the finding's own recorded attacks against the *current* agent and reports whether the vulnerability is really gone:
+
+| Outcome | Meaning |
+|---|---|
+| `not_reproduced` | None of the replayed attacks fired again — evidence the fix holds. |
+| `still_vulnerable` | An attack fired again. The finding is automatically flipped **fixed → regressed**. |
+| `insufficient_evidence` | The finding has no replayable attack evidence, so nothing could be tested. Never treated as a pass. |
+
+A retest runs as a normal experiment (fire-and-poll): the command returns an experiment id immediately, or `--watch` waits and prints the outcome.
+
+**How much gets replayed** is controlled by `--testing-level`, using the same `unit` / `system` / `acceptance` ladder as [`hb test`](../testing/test-command.md):
+
+- `unit` (default) — replays the finding's **representative** attacks: a curated, deduplicated sample of the distinct ways it was triggered, so a retest is a fast, focused check rather than an exhaustive replay of every recorded conversation.
+- `system` / `acceptance` — add cluster samples around those representatives for broader coverage (`--deep` and `--full` are shortcuts, mirroring `hb test`).
+
+```bash
+# Fire a retest and get the experiment id back
+hb findings retest <finding-id>
+
+# Wait for the verdict
+hb findings retest <finding-id> --watch
+
+# Broader replay
+hb findings retest <finding-id> --full
+
+# See a finding's past retests
+hb findings regressions <finding-id>
+```
+
+!!! note "On-demand check"
+    Retesting is manual — it does not run automatically as part of monitoring. Use it once you believe a finding is fixed, then mark it **fixed** after a retest comes back `not_reproduced`.
 
 ## Team Delegation
 
