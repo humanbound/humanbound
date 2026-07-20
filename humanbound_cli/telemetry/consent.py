@@ -56,6 +56,18 @@ def _write_state(state: dict) -> None:
     f.chmod(0o600)
 
 
+def _is_editable_install() -> bool:
+    """True when running from a source checkout (editable / dev install).
+
+    A wheel install lives under site-packages; a source checkout has the
+    project's pyproject.toml one level above the package. Fail open.
+    """
+    try:
+        return (Path(__file__).resolve().parents[2] / "pyproject.toml").is_file()
+    except Exception:
+        return False
+
+
 def _compute() -> tuple[bool, str | None]:
     """Return (enabled, reason_if_disabled). Order matters — first match wins."""
     if os.environ.get("DO_NOT_TRACK") == "1":
@@ -69,6 +81,8 @@ def _compute() -> tuple[bool, str | None]:
             return False, f"CI detected ({v})"
     if os.environ.get("HUMANBOUND_DEV") == "1":
         return False, "dev mode (HUMANBOUND_DEV=1)"
+    if _is_editable_install():
+        return False, "editable/development install"
     if not sys.stdout.isatty():
         return False, "non-TTY stdout"
     return True, None
