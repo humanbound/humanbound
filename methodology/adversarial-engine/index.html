@@ -2703,6 +2703,7 @@ Goal hijacking, tool misuse, cross-tool injection chains, privilege escalation, 
   var consent = (typeof __md_get === "function") ? __md_get("__consent") : null;
   var analyticsConsent = !!(consent && consent.analytics);
 
+  var ipEnabled = analyticsConsent;   // IP is personal data → collect only with consent
   posthog.init("phc_yKExP2tUyiPGg3kY3tongw36iGLTYaH7D2DfRCHpZg9r", {
     api_host: "https://eu.i.posthog.com",
     persistence: analyticsConsent ? 'localStorage' : 'memory',
@@ -2710,12 +2711,12 @@ Goal hijacking, tool misuse, cross-tool injection chains, privilege escalation, 
     respect_dnt: true,
     capture_pageview: false,
     autocapture: false,
-    ip: false,
-    property_denylist: ['$ip', '$ip_address'],
+    ip: ipEnabled,
+    property_denylist: ipEnabled ? [] : ['$ip', '$ip_address'],
   });
   // No consent: clear any persistent id from a prior consented visit.
   if (!analyticsConsent) { posthog.reset(); }
-  posthog.register({ source: 'docs', $geoip_disable: true });
+  posthog.register({ source: 'docs', $geoip_disable: !ipEnabled });
 
   // capture_pageview is off; drive pageviews via document$ so navigation.instant
   // (XHR page swaps, no reload) is counted on every navigation.
