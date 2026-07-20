@@ -4,6 +4,7 @@
 
 import base64
 import hashlib
+import html
 import http.server
 import json
 import os
@@ -26,6 +27,7 @@ from .config import (
     get_auth0_client_id,
     get_auth0_domain,
     get_base_url,
+    write_secure_file,
 )
 from .exceptions import (
     APIError,
@@ -380,7 +382,12 @@ class HumanboundClient:
                     self.send_response(400)
                     self.send_header("Content-type", "text/html")
                     self.end_headers()
-                    error_html = ERROR_HTML.replace("{{ERROR}}", str(auth_result["error"]))
+                    # error_description is an attacker-influenceable query
+                    # parameter on the OAuth redirect; escape it before
+                    # interpolating into the page to prevent reflected XSS.
+                    error_html = ERROR_HTML.replace(
+                        "{{ERROR}}", html.escape(str(auth_result["error"]))
+                    )
                     self.wfile.write(error_html.encode())
 
             def log_message(self, format, *args):
@@ -579,10 +586,11 @@ class HumanboundClient:
         return {}
 
     def _save_credentials(self, refresh_token: str | None = None) -> None:
-        """Save credentials to disk."""
-        CONFIG_DIR.mkdir(parents=True, exist_ok=True)
-        TOKEN_FILE.chmod(0o600) if TOKEN_FILE.exists() else None
+        """Save credentials to disk with owner-only (0600) permissions.
 
+        Written atomically so the file never exists on disk in a world-readable
+        state, even on first creation (see ``write_secure_file``).
+        """
         credentials = {
             "api_token": self._api_token,
             "expires_at": self._token_expires_at,
@@ -595,8 +603,7 @@ class HumanboundClient:
             "default_organisation_id": self._default_organisation_id,
         }
 
-        TOKEN_FILE.write_text(json.dumps(credentials))
-        TOKEN_FILE.chmod(0o600)
+        write_secure_file(TOKEN_FILE, json.dumps(credentials))
 
     # -------------------------------------------------------------------------
     # Context Management
