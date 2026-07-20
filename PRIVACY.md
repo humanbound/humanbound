@@ -34,17 +34,18 @@ This document does **NOT** cover:
 
 ## TL;DR
 
-- Telemetry is **on by default**. Before you log in, events carry only an
-  anonymous machine UUID and no personal data.
-- **After you log in** with `hb login`, events are associated with an opaque
-  user identifier (your Auth0 `sub`) so we can measure CLI→Platform
-  conversion.
+- Telemetry is **on by default**. Before you log in, events carry an
+  anonymous machine UUID and your IP address — used only to derive an
+  approximate location (country, region, city, and coarse coordinates); the IP
+  itself is not stored.
+- **After you log in** with `hb login`, events are tied to an opaque user
+  identifier (your Auth0 `sub`), and your account **email** is attached as a
+  person property.
 - Disable with `hb telemetry disable`, `HB_TELEMETRY_DISABLED=1`, or
   `DO_NOT_TRACK=1`.
 - Automatically disabled in CI, editable dev installs, and when stdout is
   piped (non-TTY).
-- Data goes to PostHog EU Cloud (Frankfurt region) and is retained for
-  24 months.
+- Data goes to PostHog EU Cloud and is retained for 1 year.
 
 ## What we collect
 
@@ -58,16 +59,25 @@ Every event includes these baseline properties that we set explicitly:
 | `distinct_id` | `tlm_<uuid>` / `auth0\|abc123` | Anonymous machine ID until you log in, then a stable opaque identifier so events can be attributed to your Humanbound account |
 
 In addition, the PostHog Python client library automatically attaches a small
-set of properties to every event it sends. These are technical metadata only —
-no personal data — and include:
+set of properties to every event it sends. Most are technical metadata; one
+is a derived, approximate location:
 
 - `$os`, `$os_version` (e.g. `Mac OS X`, `15.5`)
 - `$python_version`, `$python_runtime` (e.g. `3.12.10`, `CPython`)
 - `$lib`, `$lib_version` (always `posthog-python` plus the SDK version)
-- `$geoip_disable: true` — PostHog's server-side IP geolocation is disabled on our project
+- `$geoip_*` — an approximate location PostHog derives from the request's source
+  IP at ingestion: country, region, and city, plus coarse map coordinates and
+  related fields, accurate only to roughly city level. PostHog discards the raw
+  IP ("Discard client IP data"). Applies to every event while telemetry is
+  enabled, including before login.
 
 We do not have ability to opt out of these PostHog-attached properties individually;
 disabling telemetry entirely (see below) stops all of them.
+
+For events sent **while you're logged in**, we additionally attach your
+account **email** as a PostHog person property (`$set: { email }`), read
+locally from `~/.humanbound/credentials.json`. Anonymous, pre-login events
+never carry an email.
 
 The seven events:
 
@@ -85,33 +95,42 @@ The seven events:
 
 We explicitly **do not** send:
 
-- Hostnames, OS usernames, IP addresses (PostHog disables server-side IP
-  geolocation on our project)
+- Hostnames, OS usernames
 - File paths, repository paths, endpoint URLs, API base URLs
 - Test prompts, model responses, finding text, configuration file contents
 - Environment variable *values* (we only check the *presence* of CI sentinels)
 - Authentication tokens, API keys, or refresh tokens
 - Names, organization names, billing details
-- Your email address
+
+Your IP address is used transiently for geolocation but **not stored** — see
+[What we collect](#what-we-collect).
 
 ## Identity
 
 **Before you log in:** every event carries an anonymous machine UUID stored
 in `~/.humanbound/telemetry.json` (mode 0600). Different machines get
-different UUIDs. No personal data is associated with the UUID — it's a fresh
-random value generated locally on first run.
+different UUIDs. While telemetry is enabled, each event's source IP is used
+transiently for geolocation (see [What we collect](#what-we-collect)); the IP
+is not stored or linked to the UUID.
 
 **When you run `hb login` successfully:** we send PostHog's `$identify` call
 to associate the prior anonymous UUID with an **opaque user identifier**
-(your Auth0 `sub`, e.g. `auth0|abc123`). From that point on, telemetry events
-from your machine are tagged with this opaque identifier instead of the
-anonymous UUID. PostHog stitches the prior anonymous timeline to your account
-so we can measure CLI→Platform conversion.
+(your Auth0 `sub`, e.g. `auth0|abc123`), and subsequent events attach your
+account email as a person property (`$set: { email }`). From that point on,
+telemetry events from your machine are tagged with this opaque identifier
+instead of the anonymous UUID. PostHog stitches the prior anonymous timeline
+to your account so we can measure CLI→Platform conversion.
 
 If you'd rather not associate telemetry events with your account at all, the
 supported path is to **not log in to the CLI**. Local mode (`hb test --local`,
 basic `hb posture`, etc.) works without login and never associates events
 with your account.
+
+**Logging out:** `hb logout` reverts the CLI to the anonymous machine UUID,
+but this is **not** re-anonymization — login permanently aliases that UUID to
+your account in PostHog and stores your email as a person property, so events
+from this machine stay associated with your account. The UUID is not reset on
+logout.
 
 ## How to disable
 
@@ -149,8 +168,7 @@ any of:
 ## Data destination and retention
 
 - Destination: PostHog EU Cloud, region Frankfurt (`eu.i.posthog.com`)
-- Retention: **24 months** from event ingestion. Events older than this are
-  deleted from PostHog automatically per our project's retention configuration.
+- Retention: **1 year** from event ingestion.
 
 ## Sub-processors
 
@@ -158,7 +176,7 @@ We share data with the following third-party processors:
 
 | Processor | Purpose | Location | Terms |
 |---|---|---|---|
-| PostHog | Product analytics ingestion and dashboard | EU (Frankfurt) | [posthog.com/terms](https://posthog.com/terms), [posthog.com/dpa](https://posthog.com/dpa) |
+| PostHog | Product analytics; receives the request IP for geolocation (discarded after deriving an approximate location) and, for logged-in CLI users, the account email | EU (Frankfurt) | [posthog.com/terms](https://posthog.com/terms), [posthog.com/dpa](https://posthog.com/dpa) |
 | Reddit | Advertising measurement, docs site (with advertising consent) | United States | [Advertising Data Processing Agreement](https://business.reddithelp.com/s/article/Reddit-Advertising-Data-Processing-Agreement) |
 
 PostHog acts as a Data Processor under GDPR Art. 28. Our use of PostHog is
@@ -176,21 +194,22 @@ by the international-transfer terms in Reddit's
 
 The documentation site (`docs.humanbound.ai`) sends **anonymous** web analytics
 to the same PostHog project as the CLI. There is no login on the docs site, so
-nothing is tied to an account and no personal data is collected.
+nothing is ever tied to an account, an email, or a name.
 
 - **Cookieless by default:** until you accept **Analytics** in the cookie
   banner, PostHog stores nothing on your device — no cookies, no local storage —
-  and each visit is a fresh anonymous session.
-- **With consent:** if you accept, we keep a first-party identifier in your
-  browser's local storage to recognize returning visits. You can change or
-  withdraw your choice anytime via the banner.
-- **What we collect:** page views and traffic source only, tagged `source: docs`.
-  Autocapture is off, so individual clicks and form inputs are never captured.
-- **No IP storage** *(in this analytics)***:** your IP address is never recorded
-  as an event property (`ip: false`, with `$ip`/`$ip_address` on a denylist) and
-  server-side IP geolocation is disabled (`$geoip_disable`), so it is neither
-  stored nor used to locate you. *(The optional advertising pixel below is
-  different — see Advertising.)*
+  and each visit is a fresh anonymous session. Your IP address is never
+  recorded as an event property (`ip: false`, with `$ip`/`$ip_address` on a
+  denylist) and server-side IP geolocation is disabled (`$geoip_disable: true`).
+- **With consent:** we keep a first-party identifier in your browser's local
+  storage to recognize returning visits, and PostHog derives an approximate
+  location from your IP, then discards it (as in
+  [What we collect](#what-we-collect)). Withdraw anytime via the banner to
+  return to the cookieless, IP-free behavior above.
+- **What we collect:** page views and traffic source only, tagged `source: docs`,
+  plus derived location once you've consented (see above). Autocapture is off,
+  so individual clicks and form inputs are never captured. *(The optional
+  advertising pixel below is different — see Advertising.)*
 - **Do Not Track:** if your browser sends a `DNT` signal, no analytics are sent.
 - **Region & processor:** PostHog EU Cloud (Frankfurt) — same processor and DPA
   as [Sub-processors](#sub-processors) above.
