@@ -419,6 +419,37 @@ def test_ping_non_streaming_with_string_response(bot):
     assert resp == "plain text response"
 
 
+def test_ping_non_streaming_without_headers_or_payload():
+    # A chat_completion block with only an endpoint (no `headers`/`payload`) is a
+    # natural shape for a no-auth agent. It must not crash with KeyError; the
+    # engine should default both to {}. Regression test for #51.
+    bot = Bot({"chat_completion": {"endpoint": "https://agent.example/chat"}}, "exp-abc")
+    with patch("humanbound_cli.engine.bot.requests.post") as post:
+        post.return_value = _mock_post(payload={"content": "agent says hi"})
+        resp, _, *_ = asyncio.run(bot.ping({}, "user prompt"))
+        sent = post.call_args.kwargs["json"]
+    assert resp == "agent says hi"
+    # With no `$PROMPT` placeholder and an empty payload, the engine falls back to
+    # the OpenAI-style messages array.
+    assert sent["messages"][-1] == {"role": "user", "content": "user prompt"}
+
+
+@pytest.mark.parametrize(
+    "bot_config",
+    [
+        {},  # no chat_completion block at all
+        {"chat_completion": {}},  # block present, endpoint missing
+        {"chat_completion": {"endpoint": ""}},  # endpoint empty
+    ],
+)
+def test_ping_fails_clearly_when_endpoint_is_missing(bot_config):
+    # Unlike headers/payload, `endpoint` is genuinely required — a missing one
+    # must surface as a clear config error, not a raw KeyError.
+    bot = Bot(bot_config, "exp-abc")
+    with pytest.raises(Exception, match="chat_completion.endpoint"):
+        asyncio.run(bot.ping({}, "user prompt"))
+
+
 # ────────────────────────────────────────────────────────────────
 # Telemetry — smoke coverage
 # ────────────────────────────────────────────────────────────────

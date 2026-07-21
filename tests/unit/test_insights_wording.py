@@ -37,21 +37,25 @@ def _result():
 class TestTerminalWording:
     def test_insights_section_says_insights_not_findings(self):
         with console.capture() as cap:
-            _display_results(_result(), Posture(grade="F", overall_score=40.0))
+            _display_results(_result(), Posture(grade="F", overall_score=40.0), all_errored=False)
         out = cap.get()
         assert "Top Insights (1 total)" in out
         assert "Top Findings" not in out
 
     def test_insights_section_explains_not_tracked_across_runs(self):
         with console.capture() as cap:
-            _display_results(_result(), Posture(grade="F", overall_score=40.0))
+            _display_results(_result(), Posture(grade="F", overall_score=40.0), all_errored=False)
         out = cap.get()
         assert "not tracked across runs" in out
         assert "hb findings" in out
 
     def test_open_findings_labeled_as_project_level(self):
         with console.capture() as cap:
-            _display_results(_result(), Posture(grade="F", overall_score=40.0, finding_count=2))
+            _display_results(
+                _result(),
+                Posture(grade="F", overall_score=40.0, finding_count=2),
+                all_errored=False,
+            )
         out = cap.get()
         assert "Open Findings (project): 2" in out
 
@@ -64,7 +68,7 @@ class TestTerminalWording:
         )
         result.insights[0]["explanation"] = long_explanation
         with console.capture() as cap:
-            _display_results(result, Posture(grade="F", overall_score=40.0))
+            _display_results(result, Posture(grade="F", overall_score=40.0), all_errored=False)
         out = " ".join(cap.get().split())
         assert long_explanation in out
 
@@ -72,7 +76,7 @@ class TestTerminalWording:
         result = _result()
         result.insights = []
         with console.capture() as cap:
-            _display_results(result, Posture(grade="A", overall_score=95.0))
+            _display_results(result, Posture(grade="A", overall_score=95.0), all_errored=False)
         out = cap.get()
         assert "Top Insights" not in out
         assert "not tracked across runs" not in out

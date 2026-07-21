@@ -47,8 +47,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   GitHub Action (local-mode Quickstart, SARIF/Security-tab guidance) plus a
   working GitLab/CLI example, replacing the prior platform-mode-only examples
   that could not run.
+- **`hb test` exit codes are now an explicit contract**, documented in
+  `hb test --help`: `0` scan completed with no `--fail-on` match, `1` scan
+  completed and the `--fail-on` condition matched, `2` the scan itself failed
+  (run status `Failed`, or no conversation completed). Previously a `Failed`
+  run exited `1` with no message; it now exits `2` with a reason line, and a
+  scan failure takes precedence over `--fail-on`.
 
 ### Fixed
+- **Bot configs without `chat_completion.headers`/`payload` no longer crash
+  every conversation** (#51). Both keys are optional and default to `{}` across
+  all three transports (non-streaming, WebSocket, SSE); an omitted payload uses
+  the documented OpenAI-style `messages` fallback. A missing
+  `chat_completion.endpoint` now fails with a clear config error instead of a
+  raw `KeyError`.
+- **A run where every conversation errored is no longer reported as passing**
+  (#51). Instead of a green `Finished / Pass: 0 / Fail: 0` panel and exit `0`,
+  `hb test` now shows an `Errored: N` count with an explicit "NOT a passing
+  result" warning and exits `2` — an all-error run reading as "safe" was the
+  dangerous failure mode for a security scanner.
 - **Dead Discord invite replaced** (#55). `CONTRIBUTING.md`, the community and
   plugins docs pages, and the new-issue chooser linked `discord.gg/gQyXjVBF`,
   which no longer resolves; all references now use the live permanent invite

@@ -377,17 +377,34 @@ class Bot(ResponseExtractor):
         except:
             return resp.text, time.time() - t_start, endpoint
 
+    # resolve the chat_completion request config - single source of truth for all
+    # three transports (__chat / __stream / __stream_sse):
+    #   - `endpoint` is required and validated here with a clear message
+    #   - `headers` / `payload` are optional and default to {} (#51)
+    #   - headers/payload are deep-copied so per-request placeholder substitution
+    #     never mutates the shared bot config
+    def __chat_completion_request(self):
+        cfg = self.bot_config.get("chat_completion") or {}
+        if not cfg.get("endpoint"):
+            raise Exception("400/'chat_completion.endpoint' is required in the bot config.")
+        return (
+            cfg["endpoint"],
+            copy.deepcopy(cfg.get("headers", {})),
+            copy.deepcopy(cfg.get("payload", {})),
+        )
+
     #
     # Handle chat completion requests (streaming and non-streaming)
     #
     def __chat(self, base_payload, u_prompt, conversation):
         try:
             # a. ping
+            endpoint, headers, payload = self.__chat_completion_request()
             messages, exec_t, _ = self.__make_api_call(
                 base_payload,
-                self.bot_config["chat_completion"]["endpoint"],
-                copy.deepcopy(self.bot_config["chat_completion"]["headers"]),
-                copy.deepcopy(self.bot_config["chat_completion"]["payload"]),
+                endpoint,
+                headers,
+                payload,
                 u_prompt,
                 conversation,
             )
@@ -452,19 +469,10 @@ class Bot(ResponseExtractor):
 
     async def __stream(self, base_payload, u_prompt, conversation=None):
         try:
-            endpoint = self.__prepare_endpoint(
-                self.bot_config["chat_completion"]["endpoint"], base_payload
-            )
-            headers = self.__prepare_headers(
-                copy.deepcopy(self.bot_config["chat_completion"]["headers"]),
-                base_payload,
-            )
-            payload = self.__prepare_payload(
-                copy.deepcopy(self.bot_config["chat_completion"]["payload"]),
-                base_payload,
-                u_prompt,
-                conversation,
-            )
+            endpoint, headers, payload = self.__chat_completion_request()
+            endpoint = self.__prepare_endpoint(endpoint, base_payload)
+            headers = self.__prepare_headers(headers, base_payload)
+            payload = self.__prepare_payload(payload, base_payload, u_prompt, conversation)
 
             try:
                 from websockets.asyncio.client import connect
@@ -514,20 +522,11 @@ class Bot(ResponseExtractor):
     # SSE streaming. Same chunk contract as WS; per-turn telemetry not supported.
     async def __stream_sse(self, base_payload, u_prompt, conversation=None):
         try:
-            endpoint = self.__prepare_endpoint(
-                self.bot_config["chat_completion"]["endpoint"], base_payload
-            )
-            headers = self.__prepare_headers(
-                copy.deepcopy(self.bot_config["chat_completion"]["headers"]),
-                base_payload,
-            )
+            endpoint, headers, payload = self.__chat_completion_request()
+            endpoint = self.__prepare_endpoint(endpoint, base_payload)
+            headers = self.__prepare_headers(headers, base_payload)
             headers.setdefault("user-agent", SSE_DEFAULT_USER_AGENT)
-            payload = self.__prepare_payload(
-                copy.deepcopy(self.bot_config["chat_completion"]["payload"]),
-                base_payload,
-                u_prompt,
-                conversation,
-            )
+            payload = self.__prepare_payload(payload, base_payload, u_prompt, conversation)
 
             buffer, t_start = "", time.time()
             async with httpx.AsyncClient(

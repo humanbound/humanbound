@@ -16,6 +16,8 @@ faq:
     a: "Yes. The official [`humanbound/actions`](https://github.com/marketplace/actions/humanbound-ai-agent-security-testing) Action wraps `hb test` — it installs the CLI, runs the scan, gates the build with `fail-on`, and uploads findings to the GitHub Security tab as SARIF. Reference it as `uses: humanbound/actions@v1`."
   - q: What does the --fail-on flag do in CI/CD?
     a: The `--fail-on` flag causes the `hb test` command to exit with a non-zero status code when vulnerabilities at or above the specified severity are found. Thresholds are `critical`, `high`, `medium`, `low`, and `any`, allowing you to configure how strict your security gate is.
+  - q: What exit codes does hb test return?
+    a: "`0` — the scan completed and no `--fail-on` condition matched. `1` — the scan completed and the `--fail-on` condition matched. `2` — the scan itself failed: the run ended with status `Failed`, or every conversation errored so nothing was actually tested. A scan failure exits `2` regardless of `--fail-on`, so a broken scan can never pass your gate."
   - q: What does --wait do and why should I use it in CI/CD?
     a: "`--wait` tells Humanbound to block until the test run completes before the command exits. Always use `--wait` in CI/CD pipelines to ensure results are available before the job finishes or artifacts are exported. (The GitHub Action passes `--wait` for you.)"
 ---
@@ -32,7 +34,7 @@ Action; on **GitLab** and other systems, run the `hb` CLI directly.
 1. **Your pipeline boots the agent** (or points at a running one) and hands its endpoint to Humanbound.
 2. **Humanbound attacks it** — multi-turn adversarial conversations (OWASP-aligned prompt injection, tool misuse, data exfiltration, and more).
 3. **An LLM judge scores every response** and records findings with severities.
-4. **The result gates your build** — `fail-on` sets the exit code; on GitHub, findings also land in the Security tab as SARIF, with a severity summary on the run page.
+4. **The result gates your build** — exit `0` on a clean pass, `1` when `fail-on` matches, and `2` when the scan itself failed (run `Failed`, or every conversation errored — a broken scan can never read as green). On GitHub, findings also land in the Security tab as SARIF, with a severity summary on the run page.
 
 ## GitHub Actions
 
