@@ -70,6 +70,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   plugins docs pages, and the new-issue chooser linked `discord.gg/gQyXjVBF`,
   which no longer resolves; all references now use the live permanent invite
   `discord.gg/WgTMpmSFtN`, matching README and the PyPI project link.
+- **`pytest` no longer aborts at collection on a plain install** (#54). The
+  three docs-hook test modules import `mkdocs`, which only ships in the `[dev]`
+  extra; after `pip install -e .` the whole suite died with 3 collection errors
+  before a single test ran. They now `pytest.importorskip("mkdocs")` — a plain
+  install reports them as skipped, and they run normally under `[dev]`/CI.
 - Telemetry is now auto-disabled on **editable / source-checkout installs**
   (`pip install -e .`); previously only `HUMANBOUND_DEV=1` disabled development
   runs.

@@ -3,6 +3,9 @@
 from types import SimpleNamespace
 
 import pytest
+
+pytest.importorskip("mkdocs")
+
 import schema  # docs/hooks/schema.py via conftest sys.path injection
 
 
