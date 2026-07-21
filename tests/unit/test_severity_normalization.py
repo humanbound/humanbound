@@ -34,7 +34,7 @@ class TestDisplayNumericSeverity:
     def test_numeric_severity_renders_label_not_unknown(self):
         result = _result([_insight(80.0)])
         with console.capture() as cap:
-            _display_results(result, Posture(grade="F", overall_score=40.0))
+            _display_results(result, Posture(grade="F", overall_score=40.0), all_errored=False)
         out = cap.get()
         assert "CRITICAL" in out
         assert "UNKNOWN" not in out
@@ -42,7 +42,7 @@ class TestDisplayNumericSeverity:
     def test_string_severity_still_renders(self):
         result = _result([_insight("high")])
         with console.capture() as cap:
-            _display_results(result, Posture(grade="C", overall_score=70.0))
+            _display_results(result, Posture(grade="C", overall_score=70.0), all_errored=False)
         out = cap.get()
         assert "HIGH" in out
         assert "UNKNOWN" not in out
@@ -52,7 +52,7 @@ class TestDisplayNumericSeverity:
         del insight["severity"]
         result = _result([insight])
         with console.capture() as cap:
-            _display_results(result, Posture(grade="C", overall_score=70.0))
+            _display_results(result, Posture(grade="C", overall_score=70.0), all_errored=False)
         assert "UNKNOWN" in cap.get()
 
 

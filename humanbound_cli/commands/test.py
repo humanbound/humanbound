@@ -20,6 +20,13 @@ from ..exceptions import APIError, NotAuthenticatedError
 
 console = Console()
 
+# Process exit codes — part of the CI contract, documented in `hb test --help`.
+# The 1 vs 2 split follows the grep/pytest convention: "the scan ran and found
+# something" is a different condition than "the scan itself could not run".
+EXIT_OK = 0  # scan completed; no --fail-on condition met
+EXIT_FINDINGS = 1  # scan completed; --fail-on condition matched
+EXIT_RUN_FAILED = 2  # scan failed: run status Failed, or no conversation completed
+
 # Default test category
 DEFAULT_TEST_CATEGORY = "humanbound/adversarial/owasp_agentic"
 
@@ -346,6 +353,12 @@ def test_command(
       hb test --deep                              # System-level test (~45 min)
       hb test --full                              # Acceptance-level test (~90 min)
       hb test --category humanbound/behavioral/qa # Behavioral/QA tests
+
+    \b
+    Exit codes:
+      0  scan completed; no --fail-on condition met
+      1  scan completed; the --fail-on condition matched
+      2  scan failed: run status Failed, or no conversation completed
     """
     # Resolve shorthand flags — explicit --testing-level / --test-category win
     if category and test_category == DEFAULT_TEST_CATEGORY:
@@ -576,7 +589,8 @@ def test_command(
             _findings_seen = 0
 
         # Display results (same rendering, canonical shapes)
-        _display_results(result, posture)
+        all_errored = _all_errored(result.stats)
+        _display_results(result, posture, all_errored)
 
         # Next suggestions — vary by mode
         if is_platform:
@@ -598,17 +612,12 @@ def test_command(
                 ]
             )
 
-        # Check fail-on condition
-        if fail_on:
-            exit_code = _check_fail_on(result, fail_on)
-            if exit_code != 0:
-                console.print(f"\n[red]Failing due to --fail-on={fail_on} condition[/red]")
-                raise SystemExit(exit_code)
-
-        if final_status == "Failed":
-            raise SystemExit(1)
-
-        outcome = "completed"
+        exit_code, exit_reason = _resolve_exit(result, final_status, fail_on)
+        # A --fail-on exit is still a completed scan; a run failure is not.
+        outcome = "error" if exit_code == EXIT_RUN_FAILED else "completed"
+        if exit_code != EXIT_OK:
+            console.print(f"\n[red]{exit_reason}[/red]")
+            raise SystemExit(exit_code)
 
     except NotAuthenticatedError:
         telemetry.fire_gated_command_hit()
@@ -827,11 +836,44 @@ def _wait_verbose(runner, experiment_id: str) -> str:
     return status.status
 
 
-def _display_results(result: TestResult, posture: Posture):
-    """Display experiment results with posture grade and findings summary.
+def _all_errored(stats: dict) -> bool:
+    """True when the run produced conversations but none completed — i.e. every
+    conversation errored (0 pass, 0 fail, >0 error).
 
-    Uses canonical TestResult and Posture shapes — works identically
-    for both platform and local runners.
+    Such a run carries no security signal at all and must not be presented as a
+    pass: "Pass: 0 / Fail: 0" on a fully-errored run reads as "my agent is clean"
+    when in fact nothing was actually tested.
+    """
+    total = stats.get("total", 0) or 0
+    completed = (stats.get("pass", 0) or 0) + (stats.get("fail", 0) or 0)
+    errored = stats.get("error", 0) or 0
+    return total > 0 and completed == 0 and errored > 0
+
+
+def _resolve_exit(result: TestResult, final_status: str, fail_on: str) -> tuple[int, str | None]:
+    """Single source of truth for hb test's exit code (see `Exit codes` in --help).
+
+    Checked in severity order: a run that failed outright — or where every
+    conversation errored, i.e. nothing was actually tested — is a scan failure
+    (EXIT_RUN_FAILED) regardless of --fail-on, which only inspects insight
+    severity and sees nothing in either case.
+    """
+    if final_status == "Failed":
+        return EXIT_RUN_FAILED, "Run failed — no results produced."
+    if _all_errored(result.stats):
+        return EXIT_RUN_FAILED, "No conversations completed — treating this run as a failure."
+    if fail_on and _check_fail_on(result, fail_on) != 0:
+        return EXIT_FINDINGS, f"Failing due to --fail-on={fail_on} condition"
+    return EXIT_OK, None
+
+
+def _build_results_panel(
+    result: TestResult, posture: Posture, all_errored: bool
+) -> tuple[str, list[str], str]:
+    """Build the results panel as data: (title, lines, border_style).
+
+    Pure — no console access — so tests can assert on structure instead of
+    scraping rendered output.
     """
     status = result.status
     status_color = {
@@ -841,8 +883,13 @@ def _display_results(result: TestResult, posture: Posture):
     }.get(status, "white")
 
     stats = result.stats
+    errored = stats.get("error", 0) or 0
 
-    # Build results panel content
+    # A run where every conversation errored produced no security signal — don't
+    # paint it green, and don't let "Pass: 0 / Fail: 0" read as a clean pass.
+    if all_errored:
+        status_color = "red"
+
     panel_lines = [
         f"[bold]Status:[/bold] [{status_color}]{status}[/{status_color}]\n",
         "[bold]Results:[/bold]",
@@ -850,6 +897,17 @@ def _display_results(result: TestResult, posture: Posture):
         f"  [green]Pass:[/green] {stats.get('pass', 0)}",
         f"  [red]Fail:[/red] {stats.get('fail', 0)}",
     ]
+    if errored:
+        panel_lines.append(f"  [yellow]Errored:[/yellow] {errored}")
+
+    if all_errored:
+        panel_lines.append("")
+        panel_lines.append("[red bold]⚠ No conversations completed — every one errored.[/red bold]")
+        panel_lines.append(
+            "[red]This is NOT a passing result. Check the agent endpoint/config and "
+            "connectivity, then re-run.[/red]"
+        )
+        panel_lines.append("[dim]Inspect the failures with: hb logs[/dim]")
 
     # Posture grade (available from both runners)
     if posture.grade is not None:
@@ -879,9 +937,19 @@ def _display_results(result: TestResult, posture: Posture):
         )
         panel_lines.append(f"[dim]Previously: {posture.previous_grade}{prev_score_str}[/dim]")
 
-    console.print(
-        Panel("\n".join(panel_lines), title="Experiment Complete", border_style=status_color)
-    )
+    panel_title = "Experiment Complete — no results" if all_errored else "Experiment Complete"
+    return panel_title, panel_lines, status_color
+
+
+def _display_results(result: TestResult, posture: Posture, all_errored: bool) -> None:
+    """Display experiment results with posture grade and findings summary.
+
+    Uses canonical TestResult and Posture shapes — works identically
+    for both platform and local runners. Rendering only: the caller computes
+    `all_errored` (and the exit code) via `_all_errored` / `_resolve_exit`.
+    """
+    title, lines, border_style = _build_results_panel(result, posture, all_errored)
+    console.print(Panel("\n".join(lines), title=title, border_style=border_style))
 
     # Show insights if available
     insights = result.insights
