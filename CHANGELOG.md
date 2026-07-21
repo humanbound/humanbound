@@ -66,6 +66,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `hb test` now shows an `Errored: N` count with an explicit "NOT a passing
   result" warning and exits `2` — an all-error run reading as "safe" was the
   dangerous failure mode for a security scanner.
+- **Dead Discord invite replaced** (#55). `CONTRIBUTING.md`, the community and
+  plugins docs pages, and the new-issue chooser linked `discord.gg/gQyXjVBF`,
+  which no longer resolves; all references now use the live permanent invite
+  `discord.gg/WgTMpmSFtN`, matching README and the PyPI project link.
 - Telemetry is now auto-disabled on **editable / source-checkout installs**
   (`pip install -e .`); previously only `HUMANBOUND_DEV=1` disabled development
   runs.
