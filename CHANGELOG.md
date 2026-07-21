@@ -43,6 +43,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `CONTRIBUTING.md` gains an explicit third-party license policy: vendored
   code must be permissively licensed (Apache-2.0/MIT/BSD/ISC); GPL, AGPL,
   SSPL, and BSL code cannot be accepted.
+- **Docs: CI/CD integration page** rewritten to lead with the `humanbound/actions`
+  GitHub Action (local-mode Quickstart, SARIF/Security-tab guidance) plus a
+  working GitLab/CLI example, replacing the prior platform-mode-only examples
+  that could not run.
 
 ### Fixed
 - Telemetry is now auto-disabled on **editable / source-checkout installs**
