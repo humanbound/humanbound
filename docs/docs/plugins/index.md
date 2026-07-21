@@ -98,4 +98,4 @@ depend on a particular shape.
 
 - **Repository:** [github.com/humanbound/plugins](https://github.com/humanbound/plugins)
 - **Roadmap:** [github.com/humanbound/plugins/blob/main/ROADMAP.md](https://github.com/humanbound/plugins/blob/main/ROADMAP.md)
-- **Discord:** [discord.gg/gQyXjVBF](https://discord.gg/gQyXjVBF)
+- **Discord:** [discord.gg/WgTMpmSFtN](https://discord.gg/WgTMpmSFtN)

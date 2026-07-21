@@ -49,6 +49,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   that could not run.
 
 ### Fixed
+- **Dead Discord invite replaced** (#55). `CONTRIBUTING.md`, the community and
+  plugins docs pages, and the new-issue chooser linked `discord.gg/gQyXjVBF`,
+  which no longer resolves; all references now use the live permanent invite
+  `discord.gg/WgTMpmSFtN`, matching README and the PyPI project link.
 - Telemetry is now auto-disabled on **editable / source-checkout installs**
   (`pip install -e .`); previously only `HUMANBOUND_DEV=1` disabled development
   runs.
