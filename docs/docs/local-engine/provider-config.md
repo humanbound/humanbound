@@ -58,7 +58,7 @@ Config is stored at `~/.humanbound/config.yaml`. Never sent to Humanbound.
 | Provider | `HB_PROVIDER` | Key prefix | Notes |
 |---|---|---|---|
 | OpenAI | `openai` | `sk-` | GPT-4o, GPT-4.1, etc. |
-| Anthropic | `claude` | `sk-ant-` | Claude 3.5, Claude 4, etc. |
+| Anthropic | `anthropic` or `claude` | `sk-ant-` | Claude 3.5, Claude 4, etc. |
 | Google | `gemini` | | Gemini Pro, etc. |
 | Azure OpenAI | `azureopenai` | | Requires `HB_ENDPOINT` with `?api-version=` |
 | Grok (xAI) | `grok` | | |

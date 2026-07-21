@@ -55,6 +55,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   scan failure takes precedence over `--fail-on`.
 
 ### Fixed
+- **`HB_PROVIDER=anthropic` is now accepted** (#53). The engine only recognized
+  the internal name `claude`, while the README advertises the "Anthropic"
+  provider and the SDK package is `anthropic`. Provider names are now
+  normalized (trimmed, lowercased) and `anthropic` maps to `claude`; the
+  "Unsupported LLM provider" error also lists the available aliases.
 - **Bot configs without `chat_completion.headers`/`payload` no longer crash
   every conversation** (#51). Both keys are optional and default to `{}` across
   all three transports (non-streaming, WebSocket, SSE); an omitted payload uses
