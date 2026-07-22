@@ -152,3 +152,44 @@ def clear_opt_out() -> None:
         state["id"] = f"tlm_{uuid.uuid4()}"
     state["opted_out"] = False
     _write_state(state)
+
+
+def is_dev_or_ci_environment() -> bool:
+    """True in CI, dev mode, or editable installs — machines that are not
+    real users and must never be counted, not even by the disabled ping."""
+    if any(os.environ.get(v) for v in _CI_ENV_VARS):
+        return True
+    if os.environ.get("HUMANBOUND_DEV") == "1":
+        return True
+    return _is_editable_install()
+
+
+def disabled_ping_reason() -> str | None:
+    """Ping-eligible disable reason, or None.
+
+    Mirrors the first three checks of _compute(); CI, dev-mode, editable, and
+    non-TTY disables are not ping-eligible.
+    """
+    if os.environ.get("DO_NOT_TRACK") == "1":
+        return "DO_NOT_TRACK"
+    if os.environ.get("HB_TELEMETRY_DISABLED") == "1":
+        return "HB_TELEMETRY_DISABLED"
+    if _read_state().get("opted_out") is True:
+        return "opt_out_state"
+    return None
+
+
+def disabled_ping_already_sent() -> bool:
+    return _read_state().get("disabled_ping_sent") is True
+
+
+def mark_disabled_ping_sent() -> bool:
+    """Persist the once-ever flag. Returns False if the write failed — the
+    caller must then skip the send so the event can never fire twice."""
+    try:
+        state = _read_state()
+        state["disabled_ping_sent"] = True
+        _write_state(state)
+        return True
+    except Exception:
+        return False

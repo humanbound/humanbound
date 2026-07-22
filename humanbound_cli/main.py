@@ -199,7 +199,7 @@ def main():
     """Entrypoint with session expiry handling and telemetry init."""
     from .exceptions import NotAuthenticatedError, SessionExpiredError
 
-    telemetry_pkg.maybe_fire_install_event()
+    telemetry_pkg.maybe_fire_startup_events()
     atexit.register(telemetry_pkg.shutdown)
 
     try:

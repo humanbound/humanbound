@@ -858,3 +858,371 @@ def test_first_run_notice_does_not_print_when_disabled(monkeypatch, capfd):
 
     captured = capfd.readouterr()
     assert "PRIVACY.md" not in captured.err
+
+
+# === Section 9 — telemetry_disabled ping: consent helpers ===
+
+
+@pytest.mark.parametrize("var", ["DO_NOT_TRACK", "HB_TELEMETRY_DISABLED"])
+def test_disabled_ping_reason_env_vars(monkeypatch, var):
+    monkeypatch.setenv(var, "1")
+    assert consent.disabled_ping_reason() == var
+
+
+def test_disabled_ping_reason_opt_out_state(tmp_path):
+    _write_state(tmp_path, {"id": "tlm_x", "opted_out": True})
+    assert consent.disabled_ping_reason() == "opt_out_state"
+
+
+def test_disabled_ping_reason_none_on_clean_machine():
+    assert consent.disabled_ping_reason() is None
+
+
+def test_disabled_ping_reason_none_for_non_tty_only(monkeypatch):
+    # Non-TTY disables telemetry but is not a user choice — not ping-eligible.
+    monkeypatch.setattr("sys.stdout.isatty", lambda: False)
+    assert consent.disabled_ping_reason() is None
+
+
+def test_disabled_ping_reason_priority_matches_compute(monkeypatch, tmp_path):
+    # DO_NOT_TRACK wins over HB var and opt-out state, matching _compute() order.
+    monkeypatch.setenv("DO_NOT_TRACK", "1")
+    monkeypatch.setenv("HB_TELEMETRY_DISABLED", "1")
+    _write_state(tmp_path, {"id": "tlm_x", "opted_out": True})
+    assert consent.disabled_ping_reason() == "DO_NOT_TRACK"
+
+
+def test_disabled_ping_flag_roundtrip(tmp_path):
+    assert consent.disabled_ping_already_sent() is False
+    assert consent.mark_disabled_ping_sent() is True
+    assert consent.disabled_ping_already_sent() is True
+    state = _read_state(tmp_path)
+    assert state.get("disabled_ping_sent") is True
+
+
+def test_mark_disabled_ping_preserves_existing_state(tmp_path):
+    _write_state(tmp_path, {"id": "tlm_keep", "opted_out": True})
+    assert consent.mark_disabled_ping_sent() is True
+    state = _read_state(tmp_path)
+    assert state == {"id": "tlm_keep", "opted_out": True, "disabled_ping_sent": True}
+
+
+def test_mark_disabled_ping_creates_no_uuid(tmp_path):
+    # A DO_NOT_TRACK-from-first-run machine must not get a machine UUID.
+    assert consent.mark_disabled_ping_sent() is True
+    state = _read_state(tmp_path)
+    assert "id" not in state
+
+
+def test_mark_disabled_ping_returns_false_on_write_failure(monkeypatch):
+    def boom(state):
+        raise OSError("read-only filesystem")
+
+    monkeypatch.setattr(consent, "_write_state", boom)
+    assert consent.mark_disabled_ping_sent() is False
+
+
+# === Section 10 — telemetry_disabled ping: client sender ===
+
+
+def test_capture_disabled_ping_sends_minimal_event(monkeypatch, mock_posthog):
+    monkeypatch.setenv("DO_NOT_TRACK", "1")
+    consent.reset_cache()
+
+    client.capture_disabled_ping("DO_NOT_TRACK")
+
+    assert mock_posthog.capture.call_count == 1
+    call = mock_posthog.capture.call_args
+    assert re.match(r"^tlm_optout_[0-9a-f-]{36}$", call.kwargs["distinct_id"])
+    assert call.kwargs["event"] == "telemetry_disabled"
+    props = call.kwargs["properties"]
+    assert props["reason"] == "DO_NOT_TRACK"
+    assert props["source"] == "cli"
+    assert "hb_version" in props
+    assert props["$geoip_disable"] is True
+    assert props["$process_person_profile"] is False
+    # Minimal property set — nothing beyond these keys.
+    assert set(props) == {
+        "reason",
+        "source",
+        "hb_version",
+        "$geoip_disable",
+        "$process_person_profile",
+    }
+
+
+def test_capture_disabled_ping_fresh_id_each_call(mock_posthog):
+    client.capture_disabled_ping("DO_NOT_TRACK")
+    client.capture_disabled_ping("DO_NOT_TRACK")
+    ids = [c.kwargs["distinct_id"] for c in mock_posthog.capture.call_args_list]
+    assert ids[0] != ids[1]
+
+
+def test_capture_disabled_ping_never_attaches_email(tmp_path, mock_posthog):
+    _write_credentials_with_user_id_and_email(tmp_path, "auth0|user123", "dev@example.com")
+    client.capture_disabled_ping("HB_TELEMETRY_DISABLED")
+    props = mock_posthog.capture.call_args.kwargs["properties"]
+    assert "$set" not in props
+    assert mock_posthog.capture.call_args.kwargs["distinct_id"].startswith("tlm_optout_")
+
+
+def test_capture_disabled_ping_swallows_exceptions(mock_posthog):
+    mock_posthog.capture.side_effect = RuntimeError("network down")
+    client.capture_disabled_ping("DO_NOT_TRACK")
+
+
+# === Section 11 — telemetry_disabled ping: startup orchestration ===
+
+
+def _capture_ping_calls(monkeypatch):
+    calls = []
+    monkeypatch.setattr(
+        "humanbound_cli.telemetry.capture_disabled_ping",
+        lambda reason: calls.append(reason),
+    )
+    return calls
+
+
+@pytest.mark.parametrize("var", ["DO_NOT_TRACK", "HB_TELEMETRY_DISABLED"])
+def test_ping_fires_for_env_var(monkeypatch, tmp_path, var):
+    monkeypatch.setenv(var, "1")
+    consent.reset_cache()
+    calls = _capture_ping_calls(monkeypatch)
+
+    telemetry_pkg.maybe_fire_disabled_ping(argv=["hb", "test"])
+
+    assert calls == [var]
+    state = _read_state(tmp_path)
+    assert state.get("disabled_ping_sent") is True
+    assert "id" not in state  # no machine UUID generated
+
+
+def test_ping_fires_for_preexisting_opt_out(monkeypatch, tmp_path):
+    _write_state(tmp_path, {"id": "tlm_old", "opted_out": True})
+    consent.reset_cache()
+    calls = _capture_ping_calls(monkeypatch)
+
+    telemetry_pkg.maybe_fire_disabled_ping(argv=["hb", "test"])
+
+    assert calls == ["opt_out_state"]
+    assert _read_state(tmp_path).get("disabled_ping_sent") is True
+
+
+def test_ping_does_not_fire_when_enabled(monkeypatch, tmp_path):
+    calls = _capture_ping_calls(monkeypatch)
+    telemetry_pkg.maybe_fire_disabled_ping(argv=["hb", "test"])
+    assert calls == []
+    assert not _telemetry_file(tmp_path).exists()
+
+
+def test_ping_fires_only_once(monkeypatch, tmp_path):
+    monkeypatch.setenv("DO_NOT_TRACK", "1")
+    consent.reset_cache()
+    calls = _capture_ping_calls(monkeypatch)
+
+    telemetry_pkg.maybe_fire_disabled_ping(argv=["hb", "test"])
+    telemetry_pkg.maybe_fire_disabled_ping(argv=["hb", "test"])
+
+    assert calls == ["DO_NOT_TRACK"]
+
+
+@pytest.mark.parametrize("ci_var", ["CI", "GITHUB_ACTIONS", "GITLAB_CI"])
+def test_ping_suppressed_in_ci(monkeypatch, tmp_path, ci_var):
+    monkeypatch.setenv("DO_NOT_TRACK", "1")
+    monkeypatch.setenv(ci_var, "true")
+    consent.reset_cache()
+    calls = _capture_ping_calls(monkeypatch)
+
+    telemetry_pkg.maybe_fire_disabled_ping(argv=["hb", "test"])
+
+    assert calls == []
+    assert not _telemetry_file(tmp_path).exists()
+
+
+def test_ping_suppressed_in_dev_mode(monkeypatch, tmp_path):
+    monkeypatch.setenv("DO_NOT_TRACK", "1")
+    monkeypatch.setenv("HUMANBOUND_DEV", "1")
+    consent.reset_cache()
+    calls = _capture_ping_calls(monkeypatch)
+
+    telemetry_pkg.maybe_fire_disabled_ping(argv=["hb", "test"])
+
+    assert calls == []
+
+
+def test_ping_suppressed_in_editable_install(monkeypatch, tmp_path):
+    monkeypatch.setenv("DO_NOT_TRACK", "1")
+    monkeypatch.setattr(consent, "_is_editable_install", lambda: True)
+    consent.reset_cache()
+    calls = _capture_ping_calls(monkeypatch)
+
+    telemetry_pkg.maybe_fire_disabled_ping(argv=["hb", "test"])
+
+    assert calls == []
+
+
+def test_ping_suppressed_for_non_tty_only(monkeypatch, tmp_path):
+    monkeypatch.setattr("sys.stdout.isatty", lambda: False)
+    consent.reset_cache()
+    calls = _capture_ping_calls(monkeypatch)
+
+    telemetry_pkg.maybe_fire_disabled_ping(argv=["hb", "test"])
+
+    assert calls == []
+    assert not _telemetry_file(tmp_path).exists()
+
+
+def test_ping_requires_tty_even_with_env_var(monkeypatch, tmp_path):
+    # Containers/scripts get a fresh HOME per run, so a non-TTY ping would
+    # fire once per container instead of once per machine. Headless runs
+    # stay silent; only interactive users are counted.
+    monkeypatch.setenv("DO_NOT_TRACK", "1")
+    monkeypatch.setattr("sys.stdout.isatty", lambda: False)
+    consent.reset_cache()
+    calls = _capture_ping_calls(monkeypatch)
+
+    telemetry_pkg.maybe_fire_disabled_ping(argv=["hb", "test"])
+
+    assert calls == []
+    assert not _telemetry_file(tmp_path).exists()
+
+
+def test_ping_skipped_for_hb_telemetry_subcommand(monkeypatch, tmp_path):
+    monkeypatch.setenv("DO_NOT_TRACK", "1")
+    consent.reset_cache()
+    calls = _capture_ping_calls(monkeypatch)
+
+    telemetry_pkg.maybe_fire_disabled_ping(argv=["hb", "telemetry", "status"])
+
+    assert calls == []
+    assert not _telemetry_file(tmp_path).exists()
+
+
+def test_ping_fail_closed_when_flag_unwritable(monkeypatch, tmp_path):
+    monkeypatch.setenv("DO_NOT_TRACK", "1")
+    consent.reset_cache()
+    calls = _capture_ping_calls(monkeypatch)
+
+    def boom(state):
+        raise OSError("read-only filesystem")
+
+    monkeypatch.setattr(consent, "_write_state", boom)
+
+    telemetry_pkg.maybe_fire_disabled_ping(argv=["hb", "test"])
+
+    assert calls == []
+
+
+def test_ping_never_raises(monkeypatch):
+    monkeypatch.setenv("DO_NOT_TRACK", "1")
+    consent.reset_cache()
+    monkeypatch.setattr(
+        "humanbound_cli.telemetry.capture_disabled_ping",
+        lambda reason: (_ for _ in ()).throw(RuntimeError("boom")),
+    )
+    telemetry_pkg.maybe_fire_disabled_ping(argv=["hb", "test"])
+
+
+def test_main_fires_startup_events(monkeypatch):
+    calls = []
+    monkeypatch.setattr(
+        "humanbound_cli.telemetry.maybe_fire_install_event",
+        lambda argv=None: calls.append("install"),
+    )
+    monkeypatch.setattr(
+        "humanbound_cli.telemetry.maybe_fire_disabled_ping",
+        lambda argv=None: calls.append("ping"),
+    )
+    monkeypatch.setattr("humanbound_cli.main.cli", lambda **kwargs: None)
+
+    main_module.main()
+
+    assert calls == ["install", "ping"]
+
+
+# === Section 12 — telemetry_disabled ping: `hb telemetry disable` path ===
+
+
+def test_disable_fires_final_event_with_machine_identity(tmp_path, mock_posthog):
+    _prime_consent_for_clirunner()
+    runner = CliRunner()
+    result = runner.invoke(telemetry_group, ["disable"])
+
+    assert result.exit_code == 0
+    assert mock_posthog.capture.call_count == 1
+    call = mock_posthog.capture.call_args
+    assert call.kwargs["event"] == "telemetry_disabled"
+    assert call.kwargs["properties"]["reason"] == "command"
+    # Normal identity — the machine UUID, not a one-shot optout id.
+    assert call.kwargs["distinct_id"].startswith("tlm_")
+    assert not call.kwargs["distinct_id"].startswith("tlm_optout_")
+    state = _read_state(tmp_path)
+    assert state.get("opted_out") is True
+    assert state.get("disabled_ping_sent") is True
+    assert "final" in result.output.lower()
+
+
+def test_disable_does_not_fire_twice(tmp_path, mock_posthog):
+    _write_state(tmp_path, {"id": "tlm_x", "opted_out": False, "disabled_ping_sent": True})
+    _prime_consent_for_clirunner()
+    runner = CliRunner()
+    result = runner.invoke(telemetry_group, ["disable"])
+
+    assert result.exit_code == 0
+    mock_posthog.capture.assert_not_called()
+    assert _read_state(tmp_path).get("opted_out") is True
+
+
+def test_disable_when_env_disabled_sends_nothing_and_leaves_flag_unset(
+    monkeypatch, tmp_path, mock_posthog
+):
+    # Env-disabled at command time: no event now; the startup ping on a later
+    # run owns the send (with the env reason), so the flag must stay unset.
+    monkeypatch.setenv("HB_TELEMETRY_DISABLED", "1")
+    _prime_consent_for_clirunner()
+    runner = CliRunner()
+    result = runner.invoke(telemetry_group, ["disable"])
+
+    assert result.exit_code == 0
+    mock_posthog.capture.assert_not_called()
+    state = _read_state(tmp_path)
+    assert state.get("opted_out") is True
+    assert state.get("disabled_ping_sent") is not True
+
+
+def test_disable_then_env_var_yields_one_event_total(monkeypatch, tmp_path, mock_posthog):
+    _prime_consent_for_clirunner()
+    runner = CliRunner()
+    runner.invoke(telemetry_group, ["disable"])
+    assert mock_posthog.capture.call_count == 1
+
+    monkeypatch.setenv("DO_NOT_TRACK", "1")
+    consent.reset_cache()
+    telemetry_pkg.maybe_fire_disabled_ping(argv=["hb", "test"])
+
+    assert mock_posthog.capture.call_count == 1  # still just the command event
+
+
+def test_disable_fail_closed_when_flag_unwritable(monkeypatch, mock_posthog):
+    _prime_consent_for_clirunner()
+
+    def boom(state):
+        raise OSError("read-only filesystem")
+
+    monkeypatch.setattr(consent, "_write_state", boom)
+    runner = CliRunner()
+    runner.invoke(telemetry_group, ["disable"])
+
+    # No event when the once-ever gate cannot be persisted.
+    mock_posthog.capture.assert_not_called()
+
+
+def test_first_run_notice_mentions_final_optout_event(monkeypatch, capfd):
+    monkeypatch.setattr("humanbound_cli.telemetry.consent.is_enabled", lambda: True)
+    monkeypatch.setattr("humanbound_cli.telemetry.capture", lambda event, properties=None: None)
+
+    telemetry_pkg.maybe_fire_install_event()
+
+    captured = capfd.readouterr()
+    assert "final opt-out event" in captured.err
+    assert "PRIVACY.md" in captured.err

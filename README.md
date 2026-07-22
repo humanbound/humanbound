@@ -217,7 +217,9 @@ loop, release process, and DCO sign-off requirement (see [DCO.md](https://github
 
 The `hb` CLI sends anonymous usage data to help us improve it.
 Disable with `hb telemetry disable`, `HB_TELEMETRY_DISABLED=1`, or
-`DO_NOT_TRACK=1`. Full disclosure: [PRIVACY.md](https://github.com/humanbound/humanbound/blob/main/PRIVACY.md).
+`DO_NOT_TRACK=1`. Turning telemetry off sends one final anonymous
+`telemetry_disabled` event (once per machine, ever) so we can count
+opt-outs. Full disclosure: [PRIVACY.md](https://github.com/humanbound/humanbound/blob/main/PRIVACY.md).
 
 ## License
 
