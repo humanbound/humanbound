@@ -10,6 +10,7 @@ sites only specify event-specific properties on top of these.
 import base64
 import json
 import threading
+import uuid
 from pathlib import Path
 
 import posthog as _posthog
@@ -148,6 +149,30 @@ def capture(event: str, properties: dict | None = None) -> None:
         )
     except Exception:
         # Telemetry must never break the CLI. Swallow.
+        pass
+
+
+def capture_disabled_ping(reason: str) -> None:
+    """Send the once-ever `telemetry_disabled` event for a machine whose
+    telemetry is off — the only send path that skips the consent check,
+    disclosed in PRIVACY.md. One-shot random id, no geolocation, no person
+    profile, no account identity. Never raises.
+    """
+    try:
+        if not _ensure_init():
+            return
+        _posthog.capture(
+            distinct_id=f"tlm_optout_{uuid.uuid4()}",
+            event="telemetry_disabled",
+            properties={
+                "source": "cli",
+                "hb_version": __version__,
+                "reason": reason,
+                "$geoip_disable": True,
+                "$process_person_profile": False,
+            },
+        )
+    except Exception:
         pass
 
 

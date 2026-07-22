@@ -5,6 +5,7 @@
 import click
 from rich.console import Console
 
+from .. import telemetry as telemetry_pkg
 from ..telemetry import consent
 
 console = Console()
@@ -35,13 +36,35 @@ def telemetry_enable():
     )
 
 
+def _fire_final_optout_event() -> bool:
+    """Send the once-ever `telemetry_disabled` event while telemetry is still
+    enabled, gated on the shared `disabled_ping_sent` flag. Returns whether
+    the event was sent."""
+    if not consent.is_enabled() or consent.disabled_ping_already_sent():
+        return False
+    if not consent.mark_disabled_ping_sent():
+        return False
+    telemetry_pkg.capture("telemetry_disabled", {"reason": "command"})
+    return True
+
+
 @telemetry_group.command("disable")
 def telemetry_disable():
     """Disable telemetry on this machine."""
+    fired = _fire_final_optout_event()
     consent.write_opt_out()
     consent.reset_cache()
     console.print("[yellow]Telemetry disabled.[/yellow]")
-    console.print("No events will be sent from this machine.")
+    console.print(
+        "A final [bold]telemetry_disabled[/bold] event was sent so we can "
+        "count opt-outs; nothing further will be sent from this machine."
+        if fired
+        else "No events will be sent from this machine."
+    )
+    console.print(
+        "Details: [link=https://github.com/humanbound/humanbound/blob/main/PRIVACY.md]"
+        "PRIVACY.md[/link]"
+    )
 
 
 @telemetry_group.command("status")

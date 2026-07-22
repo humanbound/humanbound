@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Telemetry: one-time opt-out event.** Disabling telemetry — via
+  `hb telemetry disable`, `DO_NOT_TRACK=1`, or `HB_TELEMETRY_DISABLED=1` —
+  now sends a single, final `telemetry_disabled` event (at most once per
+  machine, ever) so opt-outs can be counted. Env-var opt-outs are sent under
+  a fresh one-shot random ID with geolocation and person profiles disabled;
+  CI, dev installs, and non-TTY runs never send it. This is a deliberate,
+  documented deviation from the `DO_NOT_TRACK` convention — see
+  `PRIVACY.md` ("How to disable").
 - **Telemetry: IP-based geolocation.** CLI and docs-site analytics now derive an
   approximate location (country, region, city, and coarse coordinates) from the
   request IP via PostHog GeoIP enrichment; the raw IP is discarded after
