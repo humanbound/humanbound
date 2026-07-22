@@ -8,6 +8,7 @@ import re
 import ssl
 import time
 import traceback
+from urllib.parse import urlparse
 
 import certifi
 import httpx
@@ -51,6 +52,20 @@ def truncate(match):
     if len(url) > MIN_URL_LENGTH:
         return url[:MIN_URL_LENGTH] + "..."
     return url
+
+
+def _raise_if_redirect(resp):
+    """Reject a redirect instead of following it: requests/httpx only strip
+    Authorization on a cross-origin redirect, so a custom-named auth header
+    (see __prepare_headers) would otherwise be re-sent to the new host."""
+    if not resp.is_redirect:
+        return
+    location = resp.headers.get("location", "")
+    host = urlparse(location).hostname or location or "unknown"
+    raise Exception(
+        f"{resp.status_code}/Endpoint returned a redirect to '{host}'. Redirects are "
+        "not followed for security reasons; set your config endpoint to the final URL."
+    )
 
 
 #
@@ -361,10 +376,23 @@ class Bot(ResponseExtractor):
         payload = self.__prepare_payload(payload1, base_payload, u_prompt, conversation)
         t_start = time.time()
 
-        resp = requests.post(endpoint, headers=headers, json=payload, timeout=REQUESTS_TIMEOUT)
+        resp = requests.post(
+            endpoint,
+            headers=headers,
+            json=payload,
+            timeout=REQUESTS_TIMEOUT,
+            allow_redirects=False,
+        )
         if resp.status_code == 405:
             t_start = time.time()
-            resp = requests.get(endpoint, headers=headers, params=payload, timeout=REQUESTS_TIMEOUT)
+            resp = requests.get(
+                endpoint,
+                headers=headers,
+                params=payload,
+                timeout=REQUESTS_TIMEOUT,
+                allow_redirects=False,
+            )
+        _raise_if_redirect(resp)
         if resp.status_code != 200 and resp.status_code != 201:
             raise Exception(
                 f"{resp.status_code}/{resp.text} - {url_pattern.sub(truncate, endpoint)}"
@@ -475,23 +503,34 @@ class Bot(ResponseExtractor):
             payload = self.__prepare_payload(payload, base_payload, u_prompt, conversation)
 
             try:
-                from websockets.asyncio.client import connect
+                import websockets.asyncio.client as ws_client
+                from websockets.exceptions import SecurityError
             except ImportError as e:
                 raise ImportError(
                     "Streaming bots require the [engine] extra. "
                     "Install with: pip install humanbound[engine]"
                 ) from e
 
-            async with connect(
-                endpoint,
-                open_timeout=REQUESTS_TIMEOUT,
-                ping_timeout=REQUESTS_TIMEOUT,
-                close_timeout=REQUESTS_TIMEOUT,
-                ssl=ssl_context,
-                additional_headers=headers,
-            ) as websocket:
-                await websocket.send(json.dumps(payload, ensure_ascii=False))
-                message, exec_t = await self.__listen(websocket)
+            # websockets strips no auth header on redirect and has no per-call
+            # toggle; cap the module budget so only the initial handshake is sent.
+            ws_client.MAX_REDIRECTS = 1
+
+            try:
+                async with ws_client.connect(
+                    endpoint,
+                    open_timeout=REQUESTS_TIMEOUT,
+                    ping_timeout=REQUESTS_TIMEOUT,
+                    close_timeout=REQUESTS_TIMEOUT,
+                    ssl=ssl_context,
+                    additional_headers=headers,
+                ) as websocket:
+                    await websocket.send(json.dumps(payload, ensure_ascii=False))
+                    message, exec_t = await self.__listen(websocket)
+            except SecurityError as e:
+                raise Exception(
+                    "3xx/WebSocket endpoint attempted a redirect, which is not followed "
+                    "for security reasons; set your config endpoint to the final URL."
+                ) from e
 
             # NOTE: Streaming mode doesn't support per-turn metadata extraction
             # since chunks are processed incrementally and final response object isn't available
@@ -532,7 +571,7 @@ class Bot(ResponseExtractor):
             async with httpx.AsyncClient(
                 timeout=REQUESTS_TIMEOUT,
                 verify=ssl_context,
-                follow_redirects=True,
+                follow_redirects=False,
             ) as client:
                 async with client.stream(
                     "POST",
@@ -540,6 +579,7 @@ class Bot(ResponseExtractor):
                     headers=headers,
                     json=payload,
                 ) as resp:
+                    _raise_if_redirect(resp)
                     resp.raise_for_status()
                     async for line in resp.aiter_lines():
                         if not line.startswith("data:"):
@@ -715,10 +755,23 @@ class Telemetry:
         method = self.config.get("method", "GET").upper()
 
         if method == "POST":
-            resp = requests.post(endpoint, headers=headers, json=payload, timeout=REQUESTS_TIMEOUT)
+            resp = requests.post(
+                endpoint,
+                headers=headers,
+                json=payload,
+                timeout=REQUESTS_TIMEOUT,
+                allow_redirects=False,
+            )
         else:  # GET
-            resp = requests.get(endpoint, headers=headers, params=payload, timeout=REQUESTS_TIMEOUT)
+            resp = requests.get(
+                endpoint,
+                headers=headers,
+                params=payload,
+                timeout=REQUESTS_TIMEOUT,
+                allow_redirects=False,
+            )
 
+        _raise_if_redirect(resp)
         if resp.status_code != 200 and resp.status_code != 201:
             raise Exception(
                 f"{resp.status_code}/{resp.text} - {url_pattern.sub(truncate, endpoint)}"
