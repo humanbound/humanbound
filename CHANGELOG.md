@@ -84,6 +84,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`pip install -e .`); previously only `HUMANBOUND_DEV=1` disabled development
   runs.
 
+### Security
+- **Credential leak on redirect (CWE-522).** A malicious or compromised target
+  endpoint could cause the engine to disclose the operator's agent auth
+  credential by returning an HTTP/WebSocket redirect. Fixed by refusing redirects
+  on all target-agent and telemetry transports; upgrading is recommended.
+  Endpoints that legitimately relied on a redirect must now be configured with
+  their final URL.
+
 ## [2.6.0] — 2026-07-09
 
 ### Removed
