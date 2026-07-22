@@ -48,6 +48,8 @@ def _isolate(monkeypatch, tmp_path):
     and reset cached state on both consent and client modules."""
     for v in _ENV_VARS_TO_STRIP:
         monkeypatch.delenv(v, raising=False)
+    # Dead port: an unmocked send must never reach the real PostHog host.
+    monkeypatch.setenv("HB_POSTHOG_HOST", "http://127.0.0.1:9")
     monkeypatch.setenv("HOME", str(tmp_path))
     monkeypatch.setattr("sys.stdout.isatty", lambda: True)
     # Test suite runs from source; force non-editable so telemetry isn't auto-disabled.
@@ -440,7 +442,8 @@ def _prime_consent_for_clirunner():
     consent.is_enabled()
 
 
-def test_telemetry_disable_sets_opt_out_flag_and_confirms(tmp_path):
+def test_telemetry_disable_sets_opt_out_flag_and_confirms(tmp_path, mock_posthog):
+    # mock_posthog looks unused but intercepts the real telemetry_disabled send.
     _prime_consent_for_clirunner()
     runner = CliRunner()
     result = runner.invoke(telemetry_group, ["disable"])
