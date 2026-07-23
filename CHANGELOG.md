@@ -14,6 +14,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   a raw `IndexError: string index out of range`. Empty strings are not
   placeholders, so they now pass through unchanged like any other literal value.
 
+### Documentation
+- **Clarify that the Ollama "air-gap" provider requires the `[engine]` extra.**
+  The README and docs showed the Ollama path under a plain
+  `pip install humanbound`, but the provider imports the `openai` SDK that ships
+  only in `[engine]`, so `HB_PROVIDER=ollama` failed with
+  `ModuleNotFoundError: No module named 'openai'` on a core install. The install
+  snippets now use `humanbound[engine]` for the air-gap path.
+
 ## [2.7.0] — 2026-07-22
 
 ### Added

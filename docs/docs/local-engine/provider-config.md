@@ -80,6 +80,9 @@ export HB_ENDPOINT="https://your-resource.openai.azure.com/openai/deployments/yo
 For zero external network calls — everything runs locally:
 
 ```bash
+# Install
+pip install "humanbound[engine]"
+
 # Start ollama
 ollama serve
 ollama pull llama3.1:8b

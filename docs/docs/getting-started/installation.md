@@ -54,7 +54,7 @@ hb --help
 
 | Extra | Install | What it adds |
 |---|---|---|
-| `engine` | `pip install "humanbound[engine]"` | Local testing engine (OpenAI, Anthropic, Google SDKs) |
+| `engine` | `pip install "humanbound[engine]"` | Local testing engine (OpenAI, Anthropic, Google SDKs, Ollama) |
 | `firewall` | `pip install "humanbound[firewall]"` | Firewall training (humanbound-firewall, scikit-learn, torch) |
 | `mcp` | `pip install "humanbound[mcp]"` | MCP server for AI coding assistants |
 

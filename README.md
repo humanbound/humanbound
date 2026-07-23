@@ -50,7 +50,7 @@ so the same run that finds a hole also patches it.
 
 ```bash
 pip install humanbound                       # CLI + SDK, core deps
-pip install humanbound[engine]               # + OpenAI / Anthropic / Gemini providers
+pip install humanbound[engine]               # + OpenAI / Anthropic / Gemini / Ollama providers
 pip install humanbound[firewall]             # + humanbound-firewall runtime
 pip install humanbound[engine,firewall]      # everything
 ```
@@ -71,9 +71,10 @@ hb logs                            # full multi-turn conversation logs
 hb report -o report.html           # HTML report
 ```
 
-Full air-gap with [Ollama](https://ollama.com) — zero external API calls:
+Full air-gap with [Ollama](https://ollama.com) — zero external API calls (requires the `[engine]` extra):
 
 ```bash
+pip install humanbound[engine]
 export HB_PROVIDER=ollama
 export HB_MODEL=llama3.1:8b
 hb test --endpoint ./bot-config.json --scope ./scope.yaml --wait
