@@ -163,6 +163,29 @@ def test_parse_payload_passes_through_plain_string(bot):
     assert found is False
 
 
+def test_parse_payload_passes_through_empty_string(bot):
+    # An empty string is not a placeholder — it must pass through unchanged
+    # rather than crashing on the item[0] prefix check.
+    out, found = bot._Bot__parse_payload_item("", {}, u_prompt="ignored")
+    assert out == ""
+    assert found is False
+
+
+def test_prepare_headers_allows_empty_value(bot):
+    # Empty header values (e.g. an optional meta header left blank) must not crash.
+    out = bot._Bot__prepare_headers({"x-optional-meta": ""}, {})
+    assert out["x-optional-meta"] == ""
+
+
+def test_parse_payload_passes_through_non_string_scalars(bot):
+    # None / numbers / booleans aren't placeholders — they fall through the
+    # dict/list/str checks and are returned unchanged (the "other base type" path).
+    for value in [None, 0, 42, 3.14, True]:
+        out, found = bot._Bot__parse_payload_item(value, {})
+        assert out is value
+        assert found is False
+
+
 # ────────────────────────────────────────────────────────────────
 # __prepare_endpoint — path templating
 # ────────────────────────────────────────────────────────────────
