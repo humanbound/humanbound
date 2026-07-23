@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Empty string values in a bot config no longer crash the run** (#64). An
+  empty `headers` or `payload` value (e.g. an optional header left blank) hit an
+  unguarded `item[0]` first-character check in the placeholder parser and raised
+  a raw `IndexError: string index out of range`. Empty strings are not
+  placeholders, so they now pass through unchanged like any other literal value.
+
 ## [2.7.0] — 2026-07-22
 
 ### Added

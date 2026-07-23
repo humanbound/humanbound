@@ -234,11 +234,11 @@ class Bot(ResponseExtractor):
                         )
                 return conversation_map_to_openai, False
 
-            if item[0] == "$":
+            if item.startswith("$"):
                 key = item[1:]
                 return (base_payload[key] if len(key) and key in base_payload else None), False
 
-            if item[0] == "\\":
+            if item.startswith("\\"):
                 return item[1:], False
 
         # fallback - return the item as is (probably a string without any placeholders or other base type)
