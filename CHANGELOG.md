@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **`--quick` help now matches its behavior** (#72). The flag advertised "top 4
+  OWASP categories, ~5 minutes" but only selected the `unit` testing level —
+  already the default — with no category filtering anywhere, so every scan ran
+  all categories. The help now reads "Shortcut for --testing-level unit"; as a
+  bonus, an explicit `--testing-level` combined with `--quick` (e.g.
+  `-l system --quick`) is no longer downgraded to `unit`.
 - **Empty string values in a bot config no longer crash the run** (#64). An
   empty `headers` or `payload` value (e.g. an optional header left blank) hit an
   unguarded `item[0]` first-character check in the placeholder parser and raised

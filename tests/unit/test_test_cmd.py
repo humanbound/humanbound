@@ -85,6 +85,43 @@ class TestHappyPath:
         assert _started_config(r).testing_level == "acceptance"
 
     @patch(RUNNER_PATCH)
+    def test_quick_flag_keeps_unit_level(self, mock_get_runner):
+        client = _make_client()
+        r = platform_runner(client)
+        mock_get_runner.return_value = r
+
+        result = runner.invoke(cli, ["test", "--quick"])
+
+        assert_exit_ok(result)
+        assert _started_config(r).testing_level == "unit"
+
+    @patch(RUNNER_PATCH)
+    def test_quick_does_not_downgrade_explicit_level(self, mock_get_runner):
+        """--quick maps to the default unit depth; an explicit --testing-level
+        must win rather than being silently downgraded to unit."""
+        client = _make_client()
+        r = platform_runner(client)
+        mock_get_runner.return_value = r
+
+        result = runner.invoke(cli, ["test", "--testing-level", "system", "--quick"])
+
+        assert_exit_ok(result)
+        assert _started_config(r).testing_level == "system"
+
+    @patch(RUNNER_PATCH)
+    def test_conflicting_depth_flags_quick_wins(self, mock_get_runner):
+        """Depth shortcuts resolve first-match-wins (quick > deep > full), so
+        combining all three deterministically yields the quick/unit level."""
+        client = _make_client()
+        r = platform_runner(client)
+        mock_get_runner.return_value = r
+
+        result = runner.invoke(cli, ["test", "--quick", "--deep", "--full"])
+
+        assert_exit_ok(result)
+        assert _started_config(r).testing_level == "unit"
+
+    @patch(RUNNER_PATCH)
     def test_no_auto_start(self, mock_get_runner):
         client = _make_client()
         r = platform_runner(client)

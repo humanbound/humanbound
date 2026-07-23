@@ -257,7 +257,7 @@ def _fire_test_complete(
     "-q",
     is_flag=True,
     default=False,
-    help="Quick scan: top 4 OWASP categories, ~5 minutes",
+    help="Shortcut for --testing-level unit (fastest scan)",
 )
 @click.option(
     "--no-auto-start",
@@ -363,12 +363,19 @@ def test_command(
     # Resolve shorthand flags — explicit --testing-level / --test-category win
     if category and test_category == DEFAULT_TEST_CATEGORY:
         test_category = category
+    # --quick/--deep/--full select a testing level (first match wins), applied
+    # only when the user didn't set --testing-level explicitly.
     if quick:
-        testing_level = "unit"  # quick uses unit depth but fewer categories
-    elif deep and testing_level == "unit":
-        testing_level = "system"
-    elif full and testing_level == "unit":
-        testing_level = "acceptance"
+        shortcut_level = "unit"
+    elif deep:
+        shortcut_level = "system"
+    elif full:
+        shortcut_level = "acceptance"
+    else:
+        shortcut_level = None
+
+    if shortcut_level and testing_level == "unit":
+        testing_level = shortcut_level
 
     # Convert language code to full name if needed (e.g. "en" -> "english")
     lang = LANG_CODE_MAP.get(lang.lower(), lang)
