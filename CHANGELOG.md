@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **Interrupting a local run no longer discards completed conversations**
+  (#75, reported by @guillaume-flambard). Local runs buffered finished
+  conversations and delivered them to the results writer only in batches, and
+  the batch was dropped once the run was cancelled — so `Ctrl+C` could leave
+  `hb posture` and `hb logs` with nothing despite a long run. Local runs now
+  flush every conversation as it is judged and still deliver whatever finished
+  when a run is interrupted, so completed work always reaches disk. Batched
+  (platform) log delivery is unchanged.
 - **`--quick` help now matches its behavior** (#72). The flag advertised "top 4
   OWASP categories, ~5 minutes" but only selected the `unit` testing level —
   already the default — with no category filtering anywhere, so every scan ran
@@ -21,8 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   placeholders, so they now pass through unchanged like any other literal value.
 
 ### Documentation
-- **Clarify that the Ollama "air-gap" provider requires the `[engine]` extra.**
-  The README and docs showed the Ollama path under a plain
+- **Clarify that the Ollama "air-gap" provider requires the `[engine]` extra**
+  (#52). The README and docs showed the Ollama path under a plain
   `pip install humanbound`, but the provider imports the `openai` SDK that ships
   only in `[engine]`, so `HB_PROVIDER=ollama` failed with
   `ModuleNotFoundError: No module named 'openai'` on a core install. The install
