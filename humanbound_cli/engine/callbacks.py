@@ -36,3 +36,26 @@ class EngineCallbacks:
 
     max_workers: int = 0
     """Override max thread workers. 0 = use default. 1 = single-threaded (debug mode)."""
+
+    flush_every_log: bool = False
+    """Flush each completed conversation to on_logs immediately, even after
+    termination. Set by in-process runners so an interrupt keeps finished work."""
+
+    def should_flush_every(self) -> bool:
+        """Flush per conversation instead of buffering (local sinks, debug runs)."""
+        return self.flush_every_log or self.max_workers == 1
+
+    def deliver_logs(self, logs: list) -> None:
+        """Hand completed logs to on_logs. Cancellation stops new work, not
+        delivery of finished work; batched sinks still suppress post-cancel."""
+        if not logs:
+            return
+        if self.is_terminated() and not self.flush_every_log:
+            return
+        self.on_logs(list(logs))
+
+
+def log_buffer_len(callbacks: EngineCallbacks | None, default: int) -> int:
+    """Orchestrator log-batching size: 0 (flush every log) when the sink asks
+    for it, else the orchestrator's default."""
+    return 0 if callbacks and callbacks.should_flush_every() else default

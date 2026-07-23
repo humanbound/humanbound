@@ -42,6 +42,7 @@ class _LocalRun:
             is_terminated=self._terminated.is_set,
             on_error=lambda title, details: logger.warning(f"[{title}] {details}"),
             get_strategies=lambda pid: [],  # no cross-session FSLF locally
+            flush_every_log=True,
         )
 
         if self.config.debug:
