@@ -3,6 +3,7 @@
 """Humanbound SDK configuration."""
 
 import os
+import tempfile
 from pathlib import Path
 
 # Default API base URL (can be overridden for on-prem deployments)
@@ -24,6 +25,42 @@ LONG_TIMEOUT = 120  # For operations like report generation
 # PostHog telemetry configuration.
 POSTHOG_PUBLIC_KEY = "phc_yKExP2tUyiPGg3kY3tongw36iGLTYaH7D2DfRCHpZg9r"
 POSTHOG_HOST = "https://eu.i.posthog.com"
+
+
+def write_secure_file(path, content: str) -> None:
+    """Atomically write ``content`` to ``path`` with owner-only (0600) permissions.
+
+    The file is created via a temporary file in the same directory and then
+    atomically ``os.replace``-d into place, so it never exists on disk in a
+    partially-written or world-readable state. This closes the brief window in
+    which a naive ``write_text`` followed by ``chmod`` leaves a freshly-created
+    file at the process umask (typically ``0644`` -> group/world readable).
+
+    File modes are advisory no-ops on Windows, where user-profile ACLs apply
+    instead; behaviour there is unchanged.
+    """
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        path.parent.chmod(0o700)
+    except (OSError, NotImplementedError):
+        pass
+
+    fd, tmp = tempfile.mkstemp(dir=str(path.parent), prefix=f".{path.name}.", suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            handle.write(content)
+        try:
+            os.chmod(tmp, 0o600)
+        except (OSError, NotImplementedError):
+            pass
+        os.replace(tmp, path)
+    except BaseException:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
 
 
 def get_base_url() -> str:
