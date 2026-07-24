@@ -131,6 +131,7 @@ class LLMPinger:
                 headers=headers,
                 json=payload,
                 timeout=LLM_PING_TIMEOUT,
+                allow_redirects=False,
             )
 
             # handle response
@@ -203,6 +204,7 @@ class EmbeddingsExtractor:
             },
             json={"input": data},
             timeout=90,  # 90 second timeout (cold start: model download + load + inference)
+            allow_redirects=False,
         )
         if response.status_code != 200:
             raise Exception(f"Embeddings API error {response.status_code}: {response.text[:500]}")

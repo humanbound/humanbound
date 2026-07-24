@@ -2,6 +2,8 @@
 # Copyright (c) 2024-2026 Humanbound
 """Tests for the LLM pinger factory: provider name resolution and aliases."""
 
+from unittest.mock import MagicMock, patch
+
 import pytest
 
 from humanbound_cli.engine.llm import (
@@ -64,3 +66,58 @@ class TestAliasReachesClaudePinger:
         pytest.importorskip("anthropic")  # SDK ships in the [engine] extra
         pinger = get_llm_pinger({"name": "anthropic", "integration": {"api_key": "x"}})
         assert type(pinger).__module__ == "humanbound_cli.engine.llm.claude"
+
+
+class TestPingersDisableRedirects:
+    """Credential-bearing ``requests.post`` calls must not follow redirects.
+
+    ``requests`` strips only ``Authorization`` on a cross-host redirect, not custom
+    headers such as ``Api-Key`` / ``x-hb-key-internal``, so a redirecting endpoint
+    could re-send the provider key to another host. Mirrors the bot HTTP/SSE
+    reject-redirect behavior (see ``test_engine_bot.py``).
+    """
+
+    @staticmethod
+    def _resp(payload):
+        r = MagicMock()
+        r.status_code = 200
+        r.json.return_value = payload
+        return r
+
+    def test_azure_pinger_disables_redirects(self):
+        pytest.importorskip("openai")  # azureopenai imports the openai SDK ([engine] extra)
+        from humanbound_cli.engine.llm.azureopenai import LLMPinger
+
+        provider = {
+            "integration": {
+                "api_key": "k",
+                "model": "gpt-4o",
+                "endpoint": "https://user.example/chat",
+            }
+        }
+        completion = {"choices": [{"message": {"content": "hi"}}], "usage": {}}
+        with patch("humanbound_cli.engine.llm.azureopenai.requests.post") as post:
+            post.return_value = self._resp(completion)
+            LLMPinger(provider).ping("sys", "usr")
+        assert post.call_args.kwargs.get("allow_redirects") is False
+
+    def test_embeddings_extractor_disables_redirects(self):
+        pytest.importorskip("openai")
+        from humanbound_cli.engine.llm.azureopenai import EmbeddingsExtractor
+
+        provider = {"integration": {"api_key": "k", "endpoint": "https://user.example/embed"}}
+        with patch("humanbound_cli.engine.llm.azureopenai.requests.post") as post:
+            post.return_value = self._resp({"data": [{"embedding": [0.1, 0.2]}]})
+            EmbeddingsExtractor(provider).encode(["a"])
+        assert post.call_args.kwargs.get("allow_redirects") is False
+
+    def test_openai_pinger_disables_redirects(self):
+        pytest.importorskip("openai")
+        from humanbound_cli.engine.llm.openai import LLMPinger
+
+        provider = {"integration": {"api_key": "k", "model": "gpt-4o"}}
+        completion = {"choices": [{"message": {"content": "hi"}}], "usage": {}}
+        with patch("humanbound_cli.engine.llm.openai.requests.post") as post:
+            post.return_value = self._resp(completion)
+            LLMPinger(provider).ping("sys", "usr")
+        assert post.call_args.kwargs.get("allow_redirects") is False

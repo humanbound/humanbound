@@ -28,6 +28,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   a raw `IndexError: string index out of range`. Empty strings are not
   placeholders, so they now pass through unchanged like any other literal value.
 
+### Security
+- **LLM provider API calls no longer follow HTTP redirects**, so credential
+  headers can't be re-sent to a redirected host.
+
 ### Documentation
 - **Clarify that the Ollama "air-gap" provider requires the `[engine]` extra**
   (#52). The README and docs showed the Ollama path under a plain
