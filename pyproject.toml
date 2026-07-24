@@ -80,7 +80,7 @@ dev = [
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
     "pytest-timeout>=2.3",
-    "ruff>=0.6",
+    "ruff==0.15.12",
     "mypy>=1.11",
     "build>=1.2",
     "twine>=5.0",
