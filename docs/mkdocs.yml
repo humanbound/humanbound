@@ -89,6 +89,7 @@ nav:
     - Agent Discovery: integrations/discovery.md
     - Telemetry (Whitebox): integrations/telemetry.md
     - CI/CD: integrations/cicd.md
+    - Docker: integrations/docker.md
     - SIEM: integrations/siem.md
     - MCP Server: integrations/mcp.md
   - 🧩 Plugins [Preview]:

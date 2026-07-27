@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Official Docker image** — `ghcr.io/humanbound/humanbound`, published to
+  GitHub Container Registry on every release (multi-arch `linux/amd64` +
+  `linux/arm64`; tags `:X.Y.Z`, `:X.Y`, `:X`, `:latest`). Runs the CLI with no
+  Python install: mount your project at `/workspace`, run `hb` commands as
+  usual, and results persist to the host through the mount. Ships the
+  `[engine]` extra for local-mode testing. Built from source in CI with
+  provenance attestation and SBOM; PRs touching the Docker files get an
+  automatic build + smoke test. See the new
+  [Docker integration docs](https://docs.humanbound.ai/integrations/docker/).
+
 ### Fixed
 - **Interrupting a local run no longer discards completed conversations**
   (#75, reported by @guillaume-flambard). Local runs buffered finished

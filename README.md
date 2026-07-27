@@ -55,6 +55,16 @@ pip install humanbound[firewall]             # + humanbound-firewall runtime
 pip install humanbound[engine,firewall]      # everything
 ```
 
+### Docker
+
+Run the CLI from the official image ([docs](https://docs.humanbound.ai/integrations/docker/)):
+
+```bash
+docker run --rm -v "$PWD":/workspace \
+  -e HB_PROVIDER=openai -e HB_API_KEY=$OPENAI_API_KEY -e HB_MODEL=gpt-4o-mini \
+  ghcr.io/humanbound/humanbound:2 test --endpoint ./bot-config.json --wait
+```
+
 ### CLI usage
 
 ```bash

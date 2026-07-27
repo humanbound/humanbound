@@ -1,0 +1,37 @@
+name: Docker
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "docker/**"
+      - ".dockerignore"
+      - "pyproject.toml"
+      - ".github/workflows/docker.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-smoke:
+    name: Build image + smoke test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - name: Build (amd64, no push)
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          file: docker/Dockerfile
+          load: true
+          tags: humanbound:smoke
+      - name: Smoke test
+        run: |
+          docker run --rm humanbound:smoke --version
+          docker run --rm humanbound:smoke test --help
+          docker run --rm --entrypoint python humanbound:smoke -c "import openai, anthropic, google.generativeai"
+          test "$(docker run --rm --entrypoint id humanbound:smoke -u)" = "1000"
