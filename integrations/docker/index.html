@@ -6,17 +6,17 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Discover the agents deployed on a hosted platform (e.g. OpenAI Assistants) from a vendor credential and onboard one as a Humanbound project — no hand-written config.">
+        <meta name="description" content="Run the Humanbound CLI from the official Docker image — no Python install required. Covers the quickstart, file mounts, and platform auth; see CI/CD for pipeline examples.">
       
       
       
-        <link rel="canonical" href="https://docs.humanbound.ai/integrations/discovery/">
+        <link rel="canonical" href="https://docs.humanbound.ai/integrations/docker/">
       
       
-        <link rel="prev" href="../../management/collaboration/">
+        <link rel="prev" href="../cicd/">
       
       
-        <link rel="next" href="../telemetry/">
+        <link rel="next" href="../siem/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>Agent Discovery - Humanbound</title>
+        <title>Docker - Humanbound</title>
       
     
     
@@ -64,25 +64,25 @@
   
   <meta property="og:site_name" content="Humanbound" />
   <meta property="og:locale" content="en_US" />
-  <meta property="og:image:alt" content="Discover the agents deployed on a hosted platform (e.g. OpenAI Assistants) from a vendor credential and onboard one as a Humanbound project — no hand-written config." />
-  <meta name="twitter:image:alt" content="Discover the agents deployed on a hosted platform (e.g. OpenAI Assistants) from a vendor credential and onboard one as a Humanbound project — no hand-written config." />
+  <meta property="og:image:alt" content="Run the Humanbound CLI from the official Docker image — no Python install required. Covers the quickstart, file mounts, and platform auth; see CI/CD for pipeline examples." />
+  <meta name="twitter:image:alt" content="Run the Humanbound CLI from the official Docker image — no Python install required. Covers the quickstart, file mounts, and platform auth; see CI/CD for pipeline examples." />
   
-  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/integrations/discovery/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Agent Discovery","item":"https://docs.humanbound.ai/integrations/discovery/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/integrations/discovery/#article","headline":"Agent Discovery","description":"Discover the agents deployed on a hosted platform (e.g. OpenAI Assistants) from a vendor credential and onboard one as a Humanbound project \u2014 no hand-written config.","url":"https://docs.humanbound.ai/integrations/discovery/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-07-03T11:01:08+03:00","keywords":"vendor discovery, hb connect --vendor, OpenAI Assistants onboarding, hosted platform agents, agent discovery"}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/integrations/docker/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Docker","item":"https://docs.humanbound.ai/integrations/docker/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/integrations/docker/#article","headline":"Docker","description":"Run the Humanbound CLI from the official Docker image \u2014 no Python install required. Covers the quickstart, file mounts, and platform auth; see CI/CD for pipeline examples.","url":"https://docs.humanbound.ai/integrations/docker/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-07-27T18:10:02+03:00","keywords":"Docker image, ghcr.io/humanbound/humanbound, hb CLI Docker, container security testing, docker run hb test, host.docker.internal, Docker CI/CD"}]}</script>
   
 
   
 <meta property="og:type" content="website" />
-<meta property="og:title" content="Agent Discovery - Humanbound" />
-<meta property="og:description" content="Discover the agents deployed on a hosted platform (e.g. OpenAI Assistants) from a vendor credential and onboard one as a Humanbound project — no hand-written config." />
-<meta property="og:image" content="https://docs.humanbound.ai/assets/images/social/integrations/discovery.png" />
+<meta property="og:title" content="Docker - Humanbound" />
+<meta property="og:description" content="Run the Humanbound CLI from the official Docker image — no Python install required. Covers the quickstart, file mounts, and platform auth; see CI/CD for pipeline examples." />
+<meta property="og:image" content="https://docs.humanbound.ai/assets/images/social/integrations/docker.png" />
 <meta property="og:image:type" content="image/png" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
-<meta property="og:url" content="https://docs.humanbound.ai/integrations/discovery/" />
+<meta property="og:url" content="https://docs.humanbound.ai/integrations/docker/" />
 <meta property="twitter:card" content="summary_large_image" />
-<meta property="twitter:title" content="Agent Discovery - Humanbound" />
-<meta property="twitter:description" content="Discover the agents deployed on a hosted platform (e.g. OpenAI Assistants) from a vendor credential and onboard one as a Humanbound project — no hand-written config." />
-<meta property="twitter:image" content="https://docs.humanbound.ai/assets/images/social/integrations/discovery.png" />
+<meta property="twitter:title" content="Docker - Humanbound" />
+<meta property="twitter:description" content="Run the Humanbound CLI from the official Docker image — no Python install required. Covers the quickstart, file mounts, and platform auth; see CI/CD for pipeline examples." />
+<meta property="twitter:image" content="https://docs.humanbound.ai/assets/images/social/integrations/docker.png" />
 </head>
   
   
@@ -100,7 +100,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#agent-discovery" class="md-skip">
+        <a href="#docker" class="md-skip">
           Skip to content
         </a>
       
@@ -130,7 +130,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Agent Discovery
+              Docker
             
           </span>
         </div>
@@ -1664,37 +1664,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Agent Discovery
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../discovery/" class="md-nav__link">
         
   
   
@@ -1710,48 +1683,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#how-it-works" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        How it works
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#supported-vendors" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Supported vendors
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1817,10 +1748,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../docker/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docker
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1836,6 +1794,103 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#quick-start-local-mode-no-login" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick start (local mode — no login)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#two-different-keys" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Two different keys
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#files-in-results-out" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Files in, results out
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reaching-an-agent-on-your-host" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reaching an agent on your host
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#platform-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Platform commands
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#using-the-image-in-ci" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using the image in CI
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Notes
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -2238,56 +2293,116 @@
   
 
 
-<h1 id="agent-discovery">Agent Discovery</h1>
-<p>Onboard an agent deployed on a hosted platform (currently OpenAI Assistants) without writing a
-connector config by hand: <code>hb connect --vendor</code> lists the agents your credential can see
-and turns the one you pick into a Humanbound project. Requires being logged in (<code>hb login</code>).</p>
-<h2 id="how-it-works">How it works</h2>
-<ol>
-<li>Pick a vendor: <code>hb connect --vendor openai</code>.</li>
-<li>Supply the credential — read from the vendor's env var (e.g. <code>OPENAI_API_KEY</code>) or a
-   hidden interactive prompt. Credentials are <strong>never</strong> passed on the command line.</li>
-<li>The backend queries the vendor API and returns your deployed agents (e.g. OpenAI
-   Assistants); the CLI lists them.</li>
-<li>Pick one — it becomes the project's <code>default_integration</code>, and the usual <code>hb connect</code>
-   flow continues (scope probe or <code>--scope</code>, project creation, first test).</li>
-</ol>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Discover and onboard (reads $OPENAI_API_KEY or prompts)</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>hb<span class="w"> </span>connect<span class="w"> </span>--vendor<span class="w"> </span>openai
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># Bring your own scope and project name</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>hb<span class="w"> </span>connect<span class="w"> </span>--vendor<span class="w"> </span>openai<span class="w"> </span>--scope<span class="w"> </span>./scope.yaml<span class="w"> </span>--name<span class="w"> </span><span class="s2">&quot;Prod Assistant&quot;</span>
+<h1 id="docker">Docker</h1>
+<p>Run the <code>hb</code> CLI anywhere Docker runs — no Python required. The official
+image is published to GitHub Container Registry on every release:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>docker<span class="w"> </span>pull<span class="w"> </span>ghcr.io/humanbound/humanbound
 </code></pre></div>
-<p>The discovery response is not persisted — only the picked agent's connector config is
-stored, and subsequent <code>hb test</code> runs use it automatically.</p>
-<p>See <a href="../../getting-started/agent-config/#hosted-platform-connector">Agent Configuration</a>
-for the connector config this produces, and the
-<a href="../../reference/commands/">commands reference</a> for all <code>hb connect</code> flags.</p>
-<h2 id="supported-vendors">Supported vendors</h2>
+<p><strong>Pin a tag in CI.</strong> <code>:X.Y.Z</code>, <code>:X.Y</code>, and <code>:X</code> are published for every
+release; <code>:latest</code> is for interactive experimentation, not pipelines.
+Un-tagged and <code>:latest</code> always point at the newest release; <code>:2</code> tracks the
+newest <code>2.x.y</code> and is re-pointed with every release in that major line;
+<code>:2.7</code> and <code>:2.7.0</code> freeze to progressively narrower versions.</p>
+<h2 id="quick-start-local-mode-no-login">Quick start (local mode — no login)</h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">&quot;</span>:/workspace<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span>-e<span class="w"> </span><span class="nv">HB_PROVIDER</span><span class="o">=</span>openai<span class="w"> </span>-e<span class="w"> </span><span class="nv">HB_API_KEY</span><span class="o">=</span><span class="nv">$OPENAI_API_KEY</span><span class="w"> </span>-e<span class="w"> </span><span class="nv">HB_MODEL</span><span class="o">=</span>gpt-4o-mini<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span>ghcr.io/humanbound/humanbound<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">  </span><span class="nb">test</span><span class="w"> </span>--endpoint<span class="w"> </span>./endpoint.json<span class="w"> </span>--wait<span class="w"> </span>--fail-on<span class="w"> </span>high
+</code></pre></div>
+<ul>
+<li><code>--rm</code> — the container runs one command, exits with <code>hb</code>'s exit code
+  (<code>0</code> pass / <code>1</code> findings at or above <code>--fail-on</code> / <code>2</code> error), and removes
+  itself.</li>
+<li><code>-v "$PWD":/workspace</code> — mounts your project at the image's working directory.
+  Inputs are read through it and results are written back through it.</li>
+</ul>
+<h2 id="two-different-keys">Two different keys</h2>
 <table>
 <thead>
 <tr>
-<th>Vendor</th>
-<th>id</th>
-<th>Credential</th>
+<th>Variable</th>
+<th>What it is</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>OpenAI (Assistants)</td>
-<td><code>openai</code></td>
-<td>API key (<code>OPENAI_API_KEY</code>)</td>
+<td><code>HB_API_KEY</code></td>
+<td>Your <strong>LLM provider</strong> key (OpenAI, Anthropic, …) — powers the attacker/judge models in local mode</td>
+</tr>
+<tr>
+<td><code>HUMANBOUND_API_KEY</code></td>
+<td>Your <strong>Humanbound platform</strong> project key — headless platform auth (coming soon)</td>
 </tr>
 </tbody>
 </table>
-<div class="admonition note">
-<p class="admonition-title">Assistants API deprecation</p>
-<p>The Assistants API is deprecated and will be removed in August 2026. The recommended
-replacement is the Responses API. A Responses-based connector (<code>openai_responses</code>) is
-planned and will run alongside <code>openai_assistants</code>.</p>
-</div>
-<p>More vendors are added over time; <code>hb connect --vendor</code> with no valid id lists the
-currently supported ones.</p>
+<h2 id="files-in-results-out">Files in, results out</h2>
+<p>All file options (<code>--endpoint</code>, <code>--scope</code>, <code>--prompt</code>, <code>--context</code>,
+<code>--repo</code>) are read inside the container. The rule: <strong>mount your project at
+<code>/workspace</code> and use relative paths</strong> — <code>--scope ./scope.yaml</code> resolves to the
+mounted host file. Absolute host paths do not exist inside the container, and
+what happens next depends on the option: <code>--scope</code>, <code>--prompt</code>, and <code>--repo</code>
+fail fast with a "does not exist" error; <code>--endpoint</code> falls through to "must
+be a JSON string or path to a JSON file"; <code>--context</code> does neither — a
+nonexistent path is silently treated as the literal context string. Double
+check <code>--context</code> in particular, since a typo'd path won't error, it'll just
+send the wrong text to the judge.</p>
+<p>Results persist to <code>./.humanbound/results/exp-*/</code> on your host through the
+same mount. Reports too:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">&quot;</span>:/workspace<span class="w"> </span>ghcr.io/humanbound/humanbound<span class="w"> </span>report<span class="w"> </span>-o<span class="w"> </span>./report.html
+</code></pre></div>
+<p>Inline escape hatches (no files needed): <code>--endpoint</code> accepts a JSON string
+and <code>--context</code> accepts a plain string — useful for templating from CI
+secrets.</p>
+<p><strong>Two different <code>.humanbound</code> directories.</strong> <code>&lt;project&gt;/.humanbound/results/</code>
+is written relative to your workdir and persists on the host through the
+<code>/workspace</code> mount above — that's the test results and reports. <code>~/.humanbound/</code>
+in the container's home directory is a separate thing entirely: platform
+credentials, config, and the telemetry identity. It only exists inside the
+container if you mount it yourself, as shown in <a href="#platform-commands">Platform commands</a>.</p>
+<h2 id="reaching-an-agent-on-your-host">Reaching an agent on your host</h2>
+<p>Inside a container, <code>localhost</code> is the container. If the agent under test
+runs on your machine:</p>
+<ul>
+<li><strong>macOS / Windows:</strong> use <code>http://host.docker.internal:&lt;port&gt;</code> in your
+  endpoint config.</li>
+<li><strong>Linux:</strong> add <code>--add-host=host.docker.internal:host-gateway</code> to
+  <code>docker run</code>, or use <code>--network host</code>.</li>
+</ul>
+<h2 id="platform-commands">Platform commands</h2>
+<p><code>hb status</code>, project-scoped <code>hb logs</code>, and platform-mode <code>hb test</code> need platform auth:</p>
+<ul>
+<li><strong>Today:</strong> log in on the host, then mount your credentials (read-write —
+  the CLI refreshes tokens):</li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>hb<span class="w"> </span>login<span class="w">   </span><span class="c1"># on the host, once</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-v<span class="w"> </span>~/.humanbound:/home/hb/.humanbound<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span>ghcr.io/humanbound/humanbound<span class="w"> </span>status
+</code></pre></div>
+<ul>
+<li><strong>Coming soon:</strong> <code>-e HUMANBOUND_API_KEY=&lt;project-key&gt;</code> — headless project-key
+  auth, no browser involved.</li>
+</ul>
+<h2 id="using-the-image-in-ci">Using the image in CI</h2>
+<p>For ready-made GitLab and CircleCI snippets that run this image in
+your pipeline, see <a href="../cicd/#other-ci-systems-via-the-docker-image">CI/CD Integration</a>.</p>
+<h2 id="notes">Notes</h2>
+<ul>
+<li>Linux bind-mount permissions: the container runs as uid 1000; add
+  <code>--user $(id -u):$(id -g)</code> if your uid differs and result files come out
+  root-owned or unwritable.</li>
+<li>Telemetry follows the CLI's normal rules — auto-disabled when a CI
+  environment variable is set, and <code>-e HB_TELEMETRY_DISABLED=1</code> or
+  <code>-e DO_NOT_TRACK=1</code> always works. It's also auto-disabled whenever the
+  container has no TTY, which is every <code>docker run</code> without <code>-it</code> — including
+  all of the example commands on this page — so scripted and CI runs never
+  send anything. The fresh-machine caveat (a new anonymous ID and <code>install</code>
+  event per container) only applies to interactive <code>-it</code> runs without a
+  mounted <code>~/.humanbound</code>; mounting it as shown in Platform commands keeps the
+  telemetry identity stable.</li>
+<li>Commands that open a browser (<code>hb login</code>, <code>hb docs</code>) don't work inside a
+  container — run them on the host.</li>
+</ul>
 
 
 

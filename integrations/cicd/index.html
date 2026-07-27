@@ -16,7 +16,7 @@
         <link rel="prev" href="../telemetry/">
       
       
-        <link rel="next" href="../siem/">
+        <link rel="next" href="../docker/">
       
       
         
@@ -67,7 +67,7 @@
   <meta property="og:image:alt" content="Run Humanbound in CI/CD — use the humanbound/actions GitHub Action or the hb CLI to gate builds on agent security, surface findings in the Security tab, and catch regressions." />
   <meta name="twitter:image:alt" content="Run Humanbound in CI/CD — use the humanbound/actions GitHub Action or the hb CLI to gate builds on agent security, surface findings in the Security tab, and catch regressions." />
   
-  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/integrations/cicd/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"CI/CD","item":"https://docs.humanbound.ai/integrations/cicd/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/integrations/cicd/#article","headline":"CI/CD","description":"Run Humanbound in CI/CD \u2014 use the humanbound/actions GitHub Action or the hb CLI to gate builds on agent security, surface findings in the Security tab, and catch regressions.","url":"https://docs.humanbound.ai/integrations/cicd/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-07-21T17:07:32+03:00","keywords":"CI/CD security testing, GitHub Actions integration, humanbound/actions GitHub Action, GitLab CI integration, SARIF security tab, --fail-on threshold, security gate, automated security tests, pipeline integration, --wait CI flag"},{"@type":"FAQPage","@id":"https://docs.humanbound.ai/integrations/cicd/#faq","isPartOf":{"@id":"https://docs.humanbound.ai/integrations/cicd/#article"},"mainEntity":[{"@type":"Question","name":"Is there a GitHub Action for Humanbound?","acceptedAnswer":{"@type":"Answer","text":"Yes. The official [`humanbound/actions`](https://github.com/marketplace/actions/humanbound-ai-agent-security-testing) Action wraps `hb test` \u2014 it installs the CLI, runs the scan, gates the build with `fail-on`, and uploads findings to the GitHub Security tab as SARIF. Reference it as `uses: humanbound/actions@v1`."}},{"@type":"Question","name":"What does the --fail-on flag do in CI/CD?","acceptedAnswer":{"@type":"Answer","text":"The `--fail-on` flag causes the `hb test` command to exit with a non-zero status code when vulnerabilities at or above the specified severity are found. Thresholds are `critical`, `high`, `medium`, `low`, and `any`, allowing you to configure how strict your security gate is."}},{"@type":"Question","name":"What exit codes does hb test return?","acceptedAnswer":{"@type":"Answer","text":"`0` \u2014 the scan completed and no `--fail-on` condition matched. `1` \u2014 the scan completed and the `--fail-on` condition matched. `2` \u2014 the scan itself failed: the run ended with status `Failed`, or every conversation errored so nothing was actually tested. A scan failure exits `2` regardless of `--fail-on`, so a broken scan can never pass your gate."}},{"@type":"Question","name":"What does --wait do and why should I use it in CI/CD?","acceptedAnswer":{"@type":"Answer","text":"`--wait` tells Humanbound to block until the test run completes before the command exits. Always use `--wait` in CI/CD pipelines to ensure results are available before the job finishes or artifacts are exported. (The GitHub Action passes `--wait` for you.)"}}]}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/integrations/cicd/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"CI/CD","item":"https://docs.humanbound.ai/integrations/cicd/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/integrations/cicd/#article","headline":"CI/CD","description":"Run Humanbound in CI/CD \u2014 use the humanbound/actions GitHub Action or the hb CLI to gate builds on agent security, surface findings in the Security tab, and catch regressions.","url":"https://docs.humanbound.ai/integrations/cicd/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-07-27T18:10:02+03:00","keywords":"CI/CD security testing, GitHub Actions integration, humanbound/actions GitHub Action, GitLab CI integration, SARIF security tab, --fail-on threshold, security gate, automated security tests, pipeline integration, --wait CI flag, GitLab CI Docker, CircleCI Docker"},{"@type":"FAQPage","@id":"https://docs.humanbound.ai/integrations/cicd/#faq","isPartOf":{"@id":"https://docs.humanbound.ai/integrations/cicd/#article"},"mainEntity":[{"@type":"Question","name":"Is there a GitHub Action for Humanbound?","acceptedAnswer":{"@type":"Answer","text":"Yes. The official [`humanbound/actions`](https://github.com/marketplace/actions/humanbound-ai-agent-security-testing) Action wraps `hb test` \u2014 it installs the CLI, runs the scan, gates the build with `fail-on`, and uploads findings to the GitHub Security tab as SARIF. Reference it as `uses: humanbound/actions@v1`."}},{"@type":"Question","name":"What does the --fail-on flag do in CI/CD?","acceptedAnswer":{"@type":"Answer","text":"The `--fail-on` flag causes the `hb test` command to exit with a non-zero status code when vulnerabilities at or above the specified severity are found. Thresholds are `critical`, `high`, `medium`, `low`, and `any`, allowing you to configure how strict your security gate is."}},{"@type":"Question","name":"What exit codes does hb test return?","acceptedAnswer":{"@type":"Answer","text":"`0` \u2014 the scan completed and no `--fail-on` condition matched. `1` \u2014 the scan completed and the `--fail-on` condition matched. `2` \u2014 the scan itself failed: the run ended with status `Failed`, or every conversation errored so nothing was actually tested. A scan failure exits `2` regardless of `--fail-on`, so a broken scan can never pass your gate."}},{"@type":"Question","name":"What does --wait do and why should I use it in CI/CD?","acceptedAnswer":{"@type":"Answer","text":"`--wait` tells Humanbound to block until the test run completes before the command exits. Always use `--wait` in CI/CD pipelines to ensure results are available before the job finishes or artifacts are exported. (The GitHub Action passes `--wait` for you.)"}}]}]}</script>
   
 
   
@@ -1827,6 +1827,45 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#other-ci-systems-via-the-docker-image" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Other CI systems (via the Docker image)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Other CI systems (via the Docker image)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#gitlab-ci" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GitLab CI
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#circleci" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CircleCI
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#frequently-asked-questions" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1841,6 +1880,34 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../docker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docker
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -2357,6 +2424,31 @@ for local mode, point <code>--endpoint</code> at your agent, and gate with <code
 <p>Always use <code>--wait</code> in CI/CD so the test completes before the job finishes (the GitHub
 Action does this for you). Use <code>--fail-on</code> to enforce a security quality gate.</p>
 </div>
+<h2 id="other-ci-systems-via-the-docker-image">Other CI systems (via the Docker image)</h2>
+<p>These snippets run the official <a href="../docker/"><code>ghcr.io/humanbound/humanbound</code></a> image directly in
+local mode — no Python install needed on the runner. See the <a href="../docker/">Docker page</a> for mount
+and networking details (workspace mounts, <code>host.docker.internal</code>, platform-auth mounts).</p>
+<h3 id="gitlab-ci">GitLab CI</h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nt">adversarial-test</span><span class="p">:</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="nt">image</span><span class="p">:</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ghcr.io/humanbound/humanbound:2</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span><span class="nt">entrypoint</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;&quot;</span><span class="p p-Indicator">]</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span><span class="nt">script</span><span class="p">:</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hb test --endpoint ./endpoint.json --wait --fail-on high</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">  </span><span class="nt">variables</span><span class="p">:</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">    </span><span class="nt">HB_PROVIDER</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">openai</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">    </span><span class="nt">HB_MODEL</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gpt-4o-mini</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">    </span><span class="nt">HB_API_KEY</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$OPENAI_API_KEY</span>
+</code></pre></div>
+<h3 id="circleci">CircleCI</h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nt">jobs</span><span class="p">:</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="nt">adversarial-test</span><span class="p">:</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="nt">docker</span><span class="p">:</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ghcr.io/humanbound/humanbound:2</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">    </span><span class="nt">steps</span><span class="p">:</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">checkout</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hb test --endpoint ./endpoint.json --wait --fail-on high</span>
+</code></pre></div>
 <h2 id="frequently-asked-questions">Frequently asked questions</h2>
 <details class="question">
 <summary>Is there a GitHub Action for Humanbound?</summary>
