@@ -11,6 +11,8 @@ keywords:
   - automated security tests
   - pipeline integration
   - --wait CI flag
+  - GitLab CI Docker
+  - CircleCI Docker
 faq:
   - q: Is there a GitHub Action for Humanbound?
     a: "Yes. The official [`humanbound/actions`](https://github.com/marketplace/actions/humanbound-ai-agent-security-testing) Action wraps `hb test` — it installs the CLI, runs the scan, gates the build with `fail-on`, and uploads findings to the GitHub Security tab as SARIF. Reference it as `uses: humanbound/actions@v1`."
@@ -125,5 +127,38 @@ The same pattern works on Jenkins, CircleCI, and others — install `humanbound[
 !!! tip
     Always use `--wait` in CI/CD so the test completes before the job finishes (the GitHub
     Action does this for you). Use `--fail-on` to enforce a security quality gate.
+
+## Other CI systems (via the Docker image)
+
+These snippets run the official [`ghcr.io/humanbound/humanbound`](docker.md) image directly in
+local mode — no Python install needed on the runner. See the [Docker page](docker.md) for mount
+and networking details (workspace mounts, `host.docker.internal`, platform-auth mounts).
+
+### GitLab CI
+
+```yaml
+adversarial-test:
+  image:
+    name: ghcr.io/humanbound/humanbound:2
+    entrypoint: [""]
+  script:
+    - hb test --endpoint ./endpoint.json --wait --fail-on high
+  variables:
+    HB_PROVIDER: openai
+    HB_MODEL: gpt-4o-mini
+    HB_API_KEY: $OPENAI_API_KEY
+```
+
+### CircleCI
+
+```yaml
+jobs:
+  adversarial-test:
+    docker:
+      - image: ghcr.io/humanbound/humanbound:2
+    steps:
+      - checkout
+      - run: hb test --endpoint ./endpoint.json --wait --fail-on high
+```
 
 <!-- faq -->
