@@ -150,6 +150,14 @@ Deploy the output with
 your agent is protected against exactly the attacks it just failed. No other
 open-source tool closes this loop.
 
+## Show you tested with Humanbound
+
+Ran `hb test` against your agent? Add this badge to your README:
+
+[![Tested with Humanbound](https://img.shields.io/badge/tested%20with-humanbound-FD9506?style=flat-square)](https://github.com/humanbound/humanbound)
+
+`[![Tested with Humanbound](https://img.shields.io/badge/tested%20with-humanbound-FD9506?style=flat-square)](https://github.com/humanbound/humanbound)`
+
 ## Python SDK
 
 ```python
