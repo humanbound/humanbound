@@ -14,7 +14,7 @@ parser tests would live alongside their respective real fixtures.
 from __future__ import annotations
 
 import asyncio
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -22,6 +22,7 @@ from humanbound_cli.engine.bot import (
     Bot,
     ResponseExtractor,
     Telemetry,
+    _raise_if_redirect,
 )
 
 # ────────────────────────────────────────────────────────────────
@@ -53,10 +54,12 @@ def bot(bot_config):
     return Bot(bot_config, e_id="exp-abc")
 
 
-def _mock_post(status=200, payload=None, text=""):
+def _mock_post(status=200, payload=None, text="", is_redirect=False, location=None):
     r = MagicMock()
     r.status_code = status
     r.text = text
+    r.is_redirect = is_redirect
+    r.headers = {"location": location} if location else {}
     r.json = MagicMock(return_value=payload or {})
     return r
 
@@ -158,6 +161,29 @@ def test_parse_payload_passes_through_plain_string(bot):
     out, found = bot._Bot__parse_payload_item("unchanged", {}, u_prompt="ignored")
     assert out == "unchanged"
     assert found is False
+
+
+def test_parse_payload_passes_through_empty_string(bot):
+    # An empty string is not a placeholder — it must pass through unchanged
+    # rather than crashing on the item[0] prefix check.
+    out, found = bot._Bot__parse_payload_item("", {}, u_prompt="ignored")
+    assert out == ""
+    assert found is False
+
+
+def test_prepare_headers_allows_empty_value(bot):
+    # Empty header values (e.g. an optional meta header left blank) must not crash.
+    out = bot._Bot__prepare_headers({"x-optional-meta": ""}, {})
+    assert out["x-optional-meta"] == ""
+
+
+def test_parse_payload_passes_through_non_string_scalars(bot):
+    # None / numbers / booleans aren't placeholders — they fall through the
+    # dict/list/str checks and are returned unchanged (the "other base type" path).
+    for value in [None, 0, 42, 3.14, True]:
+        out, found = bot._Bot__parse_payload_item(value, {})
+        assert out is value
+        assert found is False
 
 
 # ────────────────────────────────────────────────────────────────
@@ -419,6 +445,37 @@ def test_ping_non_streaming_with_string_response(bot):
     assert resp == "plain text response"
 
 
+def test_ping_non_streaming_without_headers_or_payload():
+    # A chat_completion block with only an endpoint (no `headers`/`payload`) is a
+    # natural shape for a no-auth agent. It must not crash with KeyError; the
+    # engine should default both to {}. Regression test for #51.
+    bot = Bot({"chat_completion": {"endpoint": "https://agent.example/chat"}}, "exp-abc")
+    with patch("humanbound_cli.engine.bot.requests.post") as post:
+        post.return_value = _mock_post(payload={"content": "agent says hi"})
+        resp, _, *_ = asyncio.run(bot.ping({}, "user prompt"))
+        sent = post.call_args.kwargs["json"]
+    assert resp == "agent says hi"
+    # With no `$PROMPT` placeholder and an empty payload, the engine falls back to
+    # the OpenAI-style messages array.
+    assert sent["messages"][-1] == {"role": "user", "content": "user prompt"}
+
+
+@pytest.mark.parametrize(
+    "bot_config",
+    [
+        {},  # no chat_completion block at all
+        {"chat_completion": {}},  # block present, endpoint missing
+        {"chat_completion": {"endpoint": ""}},  # endpoint empty
+    ],
+)
+def test_ping_fails_clearly_when_endpoint_is_missing(bot_config):
+    # Unlike headers/payload, `endpoint` is genuinely required — a missing one
+    # must surface as a clear config error, not a raw KeyError.
+    bot = Bot(bot_config, "exp-abc")
+    with pytest.raises(Exception, match="chat_completion.endpoint"):
+        asyncio.run(bot.ping({}, "user prompt"))
+
+
 # ────────────────────────────────────────────────────────────────
 # Telemetry — smoke coverage
 # ────────────────────────────────────────────────────────────────
@@ -449,3 +506,88 @@ def test_telemetry_has_no_data_returns_true_for_empty():
     # Smoke-check: does not raise for standard inputs.
     result = t._has_telemetry_data({})
     assert isinstance(result, bool)
+
+
+# ────────────────────────────────────────────────────────────────
+# Redirect credential-leak guard
+# ────────────────────────────────────────────────────────────────
+
+
+def test_raise_if_redirect_handles_missing_location():
+    with pytest.raises(Exception, match="not followed for security"):
+        _raise_if_redirect(_mock_post(status=307, is_redirect=True))
+
+
+def test_make_api_call_rejects_redirect_and_disables_following(bot):
+    redirect = _mock_post(status=302, is_redirect=True, location="https://evil.example/steal")
+    with patch("humanbound_cli.engine.bot.requests.post", return_value=redirect) as post:
+        with pytest.raises(Exception, match=r"evil\.example"):
+            bot._Bot__make_api_call({}, "https://agent.example/chat", {}, {"m": "x"})
+    assert post.call_args.kwargs.get("allow_redirects") is False
+
+
+def test_make_api_call_rejects_redirect_on_405_get_fallback(bot):
+    post_405 = _mock_post(status=405)
+    get_302 = _mock_post(status=302, is_redirect=True, location="https://evil.example/steal")
+    with (
+        patch("humanbound_cli.engine.bot.requests.post", return_value=post_405),
+        patch("humanbound_cli.engine.bot.requests.get", return_value=get_302) as get,
+    ):
+        with pytest.raises(Exception, match="not followed for security"):
+            bot._Bot__make_api_call({}, "https://agent.example/chat", {}, {"m": "x"})
+    assert get.call_args.kwargs.get("allow_redirects") is False
+
+
+def test_make_api_call_allows_normal_2xx(bot):
+    ok = _mock_post(status=200, payload={"content": "hi"})
+    with patch("humanbound_cli.engine.bot.requests.post", return_value=ok):
+        data, _, _ = bot._Bot__make_api_call({}, "https://agent.example/chat", {}, {"m": "x"})
+    assert data == {"content": "hi"}
+
+
+def test_telemetry_make_api_call_rejects_redirect():
+    tel = Telemetry(
+        {"endpoint": "https://tele.example/fetch", "headers": {}, "payload": {}, "method": "POST"},
+        e_id="e1",
+    )
+    redirect = _mock_post(status=302, is_redirect=True, location="https://evil.example/steal")
+    with patch("humanbound_cli.engine.bot.requests.post", return_value=redirect) as post:
+        with pytest.raises(Exception, match="not followed for security"):
+            tel._Telemetry__make_api_call({}, "https://tele.example/fetch", {}, {})
+    assert post.call_args.kwargs.get("allow_redirects") is False
+
+
+def _async_cm(enter_value):
+    cm = MagicMock()
+    cm.__aenter__ = AsyncMock(return_value=enter_value)
+    cm.__aexit__ = AsyncMock(return_value=False)
+    return cm
+
+
+def test_stream_sse_rejects_redirect_and_disables_following(bot):
+    redirect_resp = MagicMock()
+    redirect_resp.is_redirect = True
+    redirect_resp.status_code = 302
+    redirect_resp.headers = {"location": "https://evil.example/steal"}
+
+    client = MagicMock()
+    client.stream = MagicMock(return_value=_async_cm(redirect_resp))
+
+    with patch("humanbound_cli.engine.bot.httpx.AsyncClient", return_value=_async_cm(client)) as ac:
+        with pytest.raises(Exception, match="not followed for security"):
+            asyncio.run(bot._Bot__stream_sse({}, "hi"))
+    assert ac.call_args.kwargs.get("follow_redirects") is False
+
+
+def test_stream_websocket_blocks_handshake_redirect(bot):
+    import websockets.asyncio.client as wsc
+    from websockets.exceptions import SecurityError
+
+    def _boom(*a, **k):
+        raise SecurityError("more than 1 redirects")
+
+    with patch.object(wsc, "connect", side_effect=_boom):
+        with pytest.raises(Exception, match="not followed for security"):
+            asyncio.run(bot._Bot__stream({}, "hi"))
+    # module-level redirect budget capped to the initial handshake
+    assert wsc.MAX_REDIRECTS == 1

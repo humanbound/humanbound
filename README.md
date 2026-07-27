@@ -50,7 +50,7 @@ so the same run that finds a hole also patches it.
 
 ```bash
 pip install humanbound                       # CLI + SDK, core deps
-pip install humanbound[engine]               # + OpenAI / Anthropic / Gemini providers
+pip install humanbound[engine]               # + OpenAI / Anthropic / Gemini / Ollama providers
 pip install humanbound[firewall]             # + humanbound-firewall runtime
 pip install humanbound[engine,firewall]      # everything
 ```
@@ -71,9 +71,10 @@ hb logs                            # full multi-turn conversation logs
 hb report -o report.html           # HTML report
 ```
 
-Full air-gap with [Ollama](https://ollama.com) — zero external API calls:
+Full air-gap with [Ollama](https://ollama.com) — zero external API calls (requires the `[engine]` extra):
 
 ```bash
+pip install humanbound[engine]
 export HB_PROVIDER=ollama
 export HB_MODEL=llama3.1:8b
 hb test --endpoint ./bot-config.json --scope ./scope.yaml --wait
@@ -217,7 +218,9 @@ loop, release process, and DCO sign-off requirement (see [DCO.md](https://github
 
 The `hb` CLI sends anonymous usage data to help us improve it.
 Disable with `hb telemetry disable`, `HB_TELEMETRY_DISABLED=1`, or
-`DO_NOT_TRACK=1`. Full disclosure: [PRIVACY.md](https://github.com/humanbound/humanbound/blob/main/PRIVACY.md).
+`DO_NOT_TRACK=1`. Turning telemetry off sends one final anonymous
+`telemetry_disabled` event (once per machine, ever) so we can count
+opt-outs. Full disclosure: [PRIVACY.md](https://github.com/humanbound/humanbound/blob/main/PRIVACY.md).
 
 ## License
 

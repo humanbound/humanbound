@@ -5,22 +5,25 @@ on:
     tags:
       - "v*"
 
-permissions:
-  contents: write
-  id-token: write
+# No workflow-level permissions block: each job requests only what it needs
+# (least privilege). Elevated scopes -- especially id-token: write, which can
+# mint an OIDC token for Trusted Publishing -- are confined to the single job
+# that uses them, so a compromised action/step in another job cannot reach them.
 
 jobs:
   build-main:
     name: Build humanbound
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: "3.12"
       - run: python -m pip install --upgrade pip build
       - run: python -m build
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: dist-main
           path: dist/
@@ -35,11 +38,11 @@ jobs:
     permissions:
       id-token: write
     steps:
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: dist-main
           path: dist/
-      - uses: pypa/gh-action-pypi-publish@release/v1
+      - uses: pypa/gh-action-pypi-publish@ba38be9e461d3875417946c167d0b5f3d385a247 # v1.14.1
         with:
           attestations: true
 
@@ -47,9 +50,11 @@ jobs:
     name: Create GitHub Release
     needs: [publish-main]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/download-artifact@v8
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: dist-main
           path: dist/
@@ -60,7 +65,7 @@ jobs:
           VERSION="${TAG#v}"
           awk "/^## \[${VERSION}\]/{flag=1;print;next}/^## \[/{flag=0}flag" CHANGELOG.md > release_notes.md
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
-      - uses: softprops/action-gh-release@v3
+      - uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3
         with:
           tag_name: ${{ steps.changelog.outputs.tag }}
           body_path: release_notes.md

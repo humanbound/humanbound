@@ -3,8 +3,11 @@
 import logging
 from types import SimpleNamespace
 
-import lint
 import pytest
+
+pytest.importorskip("mkdocs")
+
+import lint
 from mkdocs.exceptions import PluginError
 
 

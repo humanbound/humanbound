@@ -2,6 +2,10 @@
 
 from types import SimpleNamespace
 
+import pytest
+
+pytest.importorskip("mkdocs")
+
 import llms_txt
 
 

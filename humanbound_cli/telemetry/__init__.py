@@ -14,7 +14,14 @@ Public API:
 """
 
 from . import consent as _consent
-from .client import capture, identify, identify_from_credentials, is_enabled, shutdown
+from .client import (
+    capture,
+    capture_disabled_ping,
+    identify,
+    identify_from_credentials,
+    is_enabled,
+    shutdown,
+)
 
 
 def fire_gated_command_hit() -> None:
@@ -67,12 +74,51 @@ def _print_first_run_notice() -> None:
 
         click.echo(
             "humanbound: anonymous usage data is enabled to help improve the CLI. "
-            "No personal data is sent. Disable with `hb telemetry disable`. "
+            "No personal data is sent. Disable with `hb telemetry disable` "
+            "(disabling sends a single, final opt-out event). "
             "Details: https://github.com/humanbound/humanbound/blob/main/PRIVACY.md",
             err=True,
         )
     except Exception:
         pass
+
+
+def maybe_fire_disabled_ping(argv: list[str] | None = None) -> None:
+    """Fire the once-ever `telemetry_disabled` event when telemetry is off
+    because of DO_NOT_TRACK, HB_TELEMETRY_DISABLED, or a pre-existing opt-out.
+
+    Interactive (TTY) runs only — containers and scripts get a fresh HOME per
+    run, so a headless ping would fire once per container instead of once per
+    machine. Never fires in CI, dev mode, or editable installs, never fires
+    twice per machine (`disabled_ping_sent` in telemetry.json), and skips
+    `hb telemetry` subcommands. If the flag cannot be persisted the event is
+    not sent — "at most once" wins over capturing it. Never raises.
+    """
+    try:
+        import sys
+
+        argv = argv if argv is not None else sys.argv
+        if len(argv) >= 2 and argv[1] == "telemetry":
+            return
+        if not sys.stdout.isatty():
+            return
+        if _consent.is_enabled() or _consent.is_dev_or_ci_environment():
+            return
+        reason = _consent.disabled_ping_reason()
+        if reason is None or _consent.disabled_ping_already_sent():
+            return
+        if _consent.mark_disabled_ping_sent():
+            capture_disabled_ping(reason)
+    except Exception:
+        pass
+
+
+def maybe_fire_startup_events(argv: list[str] | None = None) -> None:
+    """Fire the startup events: `install` on the first enabled run, or the
+    once-ever `telemetry_disabled` ping when telemetry is off. The two are
+    mutually exclusive — each no-ops unless its condition holds."""
+    maybe_fire_install_event(argv)
+    maybe_fire_disabled_ping(argv)
 
 
 __all__ = [
@@ -81,6 +127,8 @@ __all__ = [
     "identify",
     "identify_from_credentials",
     "is_enabled",
+    "maybe_fire_disabled_ping",
     "maybe_fire_install_event",
+    "maybe_fire_startup_events",
     "shutdown",
 ]

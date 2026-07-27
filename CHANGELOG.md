@@ -7,7 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Interrupting a local run no longer discards completed conversations**
+  (#75, reported by @guillaume-flambard). Local runs buffered finished
+  conversations and delivered them to the results writer only in batches, and
+  the batch was dropped once the run was cancelled — so `Ctrl+C` could leave
+  `hb posture` and `hb logs` with nothing despite a long run. Local runs now
+  flush every conversation as it is judged and still deliver whatever finished
+  when a run is interrupted, so completed work always reaches disk. Batched
+  (platform) log delivery is unchanged.
+- **`--quick` help now matches its behavior** (#72). The flag advertised "top 4
+  OWASP categories, ~5 minutes" but only selected the `unit` testing level —
+  already the default — with no category filtering anywhere, so every scan ran
+  all categories. The help now reads "Shortcut for --testing-level unit"; as a
+  bonus, an explicit `--testing-level` combined with `--quick` (e.g.
+  `-l system --quick`) is no longer downgraded to `unit`.
+- **Empty string values in a bot config no longer crash the run** (#64). An
+  empty `headers` or `payload` value (e.g. an optional header left blank) hit an
+  unguarded `item[0]` first-character check in the placeholder parser and raised
+  a raw `IndexError: string index out of range`. Empty strings are not
+  placeholders, so they now pass through unchanged like any other literal value.
+
+### Security
+- **LLM provider API calls no longer follow HTTP redirects**, so credential
+  headers can't be re-sent to a redirected host.
+
+### Documentation
+- **Clarify that the Ollama "air-gap" provider requires the `[engine]` extra**
+  (#52). The README and docs showed the Ollama path under a plain
+  `pip install humanbound`, but the provider imports the `openai` SDK that ships
+  only in `[engine]`, so `HB_PROVIDER=ollama` failed with
+  `ModuleNotFoundError: No module named 'openai'` on a core install. The install
+  snippets now use `humanbound[engine]` for the air-gap path.
+
+## [2.7.0] — 2026-07-22
+
 ### Added
+- **Telemetry: one-time opt-out event.** Disabling telemetry — via
+  `hb telemetry disable`, `DO_NOT_TRACK=1`, or `HB_TELEMETRY_DISABLED=1` —
+  now sends a single, final `telemetry_disabled` event (at most once per
+  machine, ever) so opt-outs can be counted. Env-var opt-outs are sent under
+  a fresh one-shot random ID with geolocation and person profiles disabled;
+  CI, dev installs, and non-TTY runs never send it. This is a deliberate,
+  documented deviation from the `DO_NOT_TRACK` convention — see
+  `PRIVACY.md` ("How to disable").
 - **Telemetry: IP-based geolocation.** CLI and docs-site analytics now derive an
   approximate location (country, region, city, and coarse coordinates) from the
   request IP via PostHog GeoIP enrichment; the raw IP is discarded after
@@ -43,11 +86,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `CONTRIBUTING.md` gains an explicit third-party license policy: vendored
   code must be permissively licensed (Apache-2.0/MIT/BSD/ISC); GPL, AGPL,
   SSPL, and BSL code cannot be accepted.
+- **Docs: CI/CD integration page** rewritten to lead with the `humanbound/actions`
+  GitHub Action (local-mode Quickstart, SARIF/Security-tab guidance) plus a
+  working GitLab/CLI example, replacing the prior platform-mode-only examples
+  that could not run.
+- **`hb test` exit codes are now an explicit contract**, documented in
+  `hb test --help`: `0` scan completed with no `--fail-on` match, `1` scan
+  completed and the `--fail-on` condition matched, `2` the scan itself failed
+  (run status `Failed`, or no conversation completed). Previously a `Failed`
+  run exited `1` with no message; it now exits `2` with a reason line, and a
+  scan failure takes precedence over `--fail-on`.
 
 ### Fixed
+- **`HB_PROVIDER=anthropic` is now accepted** (#53). The engine only recognized
+  the internal name `claude`, while the README advertises the "Anthropic"
+  provider and the SDK package is `anthropic`. Provider names are now
+  normalized (trimmed, lowercased) and `anthropic` maps to `claude`; the
+  "Unsupported LLM provider" error also lists the available aliases.
+- **Bot configs without `chat_completion.headers`/`payload` no longer crash
+  every conversation** (#51). Both keys are optional and default to `{}` across
+  all three transports (non-streaming, WebSocket, SSE); an omitted payload uses
+  the documented OpenAI-style `messages` fallback. A missing
+  `chat_completion.endpoint` now fails with a clear config error instead of a
+  raw `KeyError`.
+- **A run where every conversation errored is no longer reported as passing**
+  (#51). Instead of a green `Finished / Pass: 0 / Fail: 0` panel and exit `0`,
+  `hb test` now shows an `Errored: N` count with an explicit "NOT a passing
+  result" warning and exits `2` — an all-error run reading as "safe" was the
+  dangerous failure mode for a security scanner.
+- **Dead Discord invite replaced** (#55). `CONTRIBUTING.md`, the community and
+  plugins docs pages, and the new-issue chooser linked `discord.gg/gQyXjVBF`,
+  which no longer resolves; all references now use the live permanent invite
+  `discord.gg/WgTMpmSFtN`, matching README and the PyPI project link.
+- **`pytest` no longer aborts at collection on a plain install** (#54). The
+  three docs-hook test modules import `mkdocs`, which only ships in the `[dev]`
+  extra; after `pip install -e .` the whole suite died with 3 collection errors
+  before a single test ran. They now `pytest.importorskip("mkdocs")` — a plain
+  install reports them as skipped, and they run normally under `[dev]`/CI.
 - Telemetry is now auto-disabled on **editable / source-checkout installs**
   (`pip install -e .`); previously only `HUMANBOUND_DEV=1` disabled development
   runs.
+
+### Security
+- **Credential leak on redirect (CWE-522).** A malicious or compromised target
+  endpoint could cause the engine to disclose the operator's agent auth
+  credential by returning an HTTP/WebSocket redirect. Fixed by refusing redirects
+  on all target-agent and telemetry transports; upgrading is recommended.
+  Endpoints that legitimately relied on a redirect must now be configured with
+  their final URL.
 
 ## [2.6.0] — 2026-07-09
 
@@ -446,7 +532,9 @@ Last release as `humanbound-cli`. See the
 [old release](https://pypi.org/project/humanbound-cli/1.1.0/) on PyPI for
 notes — that history is preserved there and is not re-documented here.
 
-[Unreleased]: https://github.com/humanbound/humanbound/compare/v2.5.0...HEAD
+[Unreleased]: https://github.com/humanbound/humanbound/compare/v2.7.0...HEAD
+[2.7.0]: https://github.com/humanbound/humanbound/releases/tag/v2.7.0
+[2.6.0]: https://github.com/humanbound/humanbound/releases/tag/v2.6.0
 [2.5.0]: https://github.com/humanbound/humanbound/releases/tag/v2.5.0
 [2.4.0]: https://github.com/humanbound/humanbound/releases/tag/v2.4.0
 [2.3.0]: https://github.com/humanbound/humanbound/releases/tag/v2.3.0

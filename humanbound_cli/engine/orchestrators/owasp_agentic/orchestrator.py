@@ -12,7 +12,7 @@ import traceback
 from concurrent.futures import ThreadPoolExecutor
 
 from ...bot import Bot, Telemetry
-from ...callbacks import EngineCallbacks
+from ...callbacks import EngineCallbacks, log_buffer_len
 from ...schemas import LogsAnonymous, Status
 from .config import TestingConfiguration
 from .generator import Conversationer, Synthesizer
@@ -144,7 +144,7 @@ async def __do_single_pipeline_run(
         )
         if len(logs) > logs_buffer_len:
             __do_register_logs(organisation_id, experiment, logs, callbacks=callbacks)
-            logs_buffer_len = LOGS_BUFFER_LENGTH
+            logs_buffer_len = log_buffer_len(callbacks, LOGS_BUFFER_LENGTH)
             logs = []
         time.sleep(2)
     except Exception as e:
@@ -183,15 +183,8 @@ def __do_register_logs(
     logs,
     callbacks=None,
 ):
-    if not len(logs):
-        return
-
-    if callbacks and callbacks.is_terminated():
-        return
-
-    # Emit logs via callback
     if callbacks:
-        callbacks.on_logs(list(logs))
+        callbacks.deliver_logs(logs)
 
 
 def __do_thread_run(
@@ -221,11 +214,9 @@ def __do_thread_run(
     ):
         e_id = experiment["id"]
         logs = []
-        # Debug mode: flush after every conversation (no buffering)
-        if callbacks and callbacks.max_workers == 1:
-            logs_buffer_len = 0
-        else:
-            logs_buffer_len = min(INIT_LOGS_BUFFER_LENGTH, LOGS_BUFFER_LENGTH)
+        logs_buffer_len = log_buffer_len(
+            callbacks, min(INIT_LOGS_BUFFER_LENGTH, LOGS_BUFFER_LENGTH)
+        )
 
         judge = Judge(
             model_provider,

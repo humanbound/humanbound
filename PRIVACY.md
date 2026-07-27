@@ -43,6 +43,10 @@ This document does **NOT** cover:
   person property.
 - Disable with `hb telemetry disable`, `HB_TELEMETRY_DISABLED=1`, or
   `DO_NOT_TRACK=1`.
+- When telemetry is turned off — by any mechanism, **including
+  `DO_NOT_TRACK=1`** — a single, final `telemetry_disabled` event is sent, at
+  most once per machine ever, so we can count opt-outs. See
+  [How to disable](#how-to-disable).
 - Automatically disabled in CI, editable dev installs, and when stdout is
   piped (non-TTY).
 - Data goes to PostHog EU Cloud and is retained for 1 year.
@@ -79,7 +83,7 @@ account **email** as a PostHog person property (`$set: { email }`), read
 locally from `~/.humanbound/credentials.json`. Anonymous, pre-login events
 never carry an email.
 
-The seven events:
+The eight events:
 
 | Event | When it fires | Event-specific properties |
 |---|---|---|
@@ -90,6 +94,7 @@ The seven events:
 | `posture_view` | When posture is rendered | `is_local`, `mode`, `has_coverage` |
 | `findings_view` | When findings list is rendered | `filter_applied` |
 | `gated_command_hit` | When a platform-only feature is attempted without login | `command` (e.g. `hb monitor`) |
+| `telemetry_disabled` | Once per machine ever, when telemetry is disabled — at `hb telemetry disable`, or on the first run with `DO_NOT_TRACK=1` / `HB_TELEMETRY_DISABLED=1` set | `reason` (`command`, `DO_NOT_TRACK`, `HB_TELEMETRY_DISABLED`, `opt_out_state`) |
 
 ## What we don't collect
 
@@ -142,6 +147,36 @@ export HB_TELEMETRY_DISABLED=1        # One shell session
 export DO_NOT_TRACK=1                 # Honored by many CLIs (see consoledonottrack.com)
 ```
 
+### The one-time opt-out event
+
+When telemetry on a machine is disabled, the CLI sends a **single, final
+`telemetry_disabled` event** so we can count how many installations opt out.
+It fires at most **once per machine, ever** — tracked by a
+`disabled_ping_sent` flag in `~/.humanbound/telemetry.json` — and applies to
+all three mechanisms above. We know the `DO_NOT_TRACK` convention reads
+"send nothing at all"; this event is a deliberate, documented exception to
+it, limited to the properties below.
+
+- **Properties:** the disable `reason` (`command`, `DO_NOT_TRACK`,
+  `HB_TELEMETRY_DISABLED`, or `opt_out_state`), the CLI version, and
+  `source: cli`. Nothing else.
+- **Identity (env-var opt-outs):** a fresh one-shot random ID
+  (`tlm_optout_<uuid>`) that is never stored and never linked to the machine
+  UUID or any account. IP geolocation and person-profile creation are
+  disabled for this event, and no email is ever attached.
+- **Identity (`hb telemetry disable`):** the event is sent at the moment you
+  run the command — while telemetry is still enabled — under the machine's
+  normal identity, like any other event.
+- **Fail closed:** if the flag cannot be written (e.g. read-only home
+  directory), the event is **not** sent — "at most once" wins over capturing
+  it.
+- It never fires from CI, dev installs, or non-interactive (non-TTY) runs —
+  scripts and containers stay silent; only interactive terminal sessions are
+  counted.
+
+After that single event, the machine is silent: nothing further is sent
+unless you explicitly re-enable telemetry.
+
 Check current state:
 
 ```bash
@@ -156,14 +191,20 @@ hb telemetry enable
 
 ## Auto-disabled environments
 
-Telemetry is automatically off (no event is sent, no UUID is generated) in
-any of:
+Telemetry is automatically off in any of:
 
 - CI environments: `CI`, `GITHUB_ACTIONS`, `BUILDKITE`, `JENKINS_HOME`,
   `TF_BUILD`, `GITLAB_CI`, `CIRCLECI`, `TRAVIS`
 - Editable dev installs of this repo, or when `HUMANBOUND_DEV=1`
 - When `stdout` is not a TTY (piped or redirected output)
-- When `DO_NOT_TRACK=1` or `HB_TELEMETRY_DISABLED=1` is set
+
+In these environments the CLI is **fully silent**: no event is sent, no UUID
+is generated, and the one-time `telemetry_disabled` event is not sent either.
+
+Setting `DO_NOT_TRACK=1` or `HB_TELEMETRY_DISABLED=1` also disables
+telemetry, with one documented exception — the
+[one-time opt-out event](#the-one-time-opt-out-event) (which is itself
+suppressed in the CI/dev environments above).
 
 ## Data destination and retention
 
@@ -259,9 +300,10 @@ forgotten" for anonymous data is to:
 1. Delete your local `~/.humanbound/telemetry.json` file
 2. Run `hb telemetry disable` to prevent further events
 
-After those two steps, no further anonymous events from your machine reach
-PostHog, and the historical anonymous events cannot be associated with you
-by us or by PostHog.
+Running `hb telemetry disable` sends one final `telemetry_disabled` event
+(see [How to disable](#how-to-disable)). After those two steps, no further
+anonymous events from your machine reach PostHog, and the historical
+anonymous events cannot be associated with you by us or by PostHog.
 
 ## Changes to this policy
 

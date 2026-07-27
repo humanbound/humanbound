@@ -22,7 +22,7 @@ Four channels for help, feedback, and updates: the Humanbound Discord server for
 
     Join the community server for support, feature discussions, and early access announcements.
 
-    [:octicons-link-external-16: Join Discord](https://discord.gg/gQyXjVBF)
+    [:octicons-link-external-16: Join Discord](https://discord.gg/WgTMpmSFtN)
 
 - :computer: **GitHub**
 

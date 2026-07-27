@@ -86,6 +86,7 @@ class LLMPinger:
                 "temperature": temperature,
             },
             timeout=LLM_PING_TIMEOUT,
+            allow_redirects=False,
         )
 
     def ping(
