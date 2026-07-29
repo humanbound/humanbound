@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.8.0] — 2026-07-30
+
 ### Added
 - **Official Docker image** — `ghcr.io/humanbound/humanbound`, published to
   GitHub Container Registry on every release (multi-arch `linux/amd64` +
@@ -565,7 +567,8 @@ Last release as `humanbound-cli`. See the
 [old release](https://pypi.org/project/humanbound-cli/1.1.0/) on PyPI for
 notes — that history is preserved there and is not re-documented here.
 
-[Unreleased]: https://github.com/humanbound/humanbound/compare/v2.7.0...HEAD
+[Unreleased]: https://github.com/humanbound/humanbound/compare/v2.8.0...HEAD
+[2.8.0]: https://github.com/humanbound/humanbound/releases/tag/v2.8.0
 [2.7.0]: https://github.com/humanbound/humanbound/releases/tag/v2.7.0
 [2.6.0]: https://github.com/humanbound/humanbound/releases/tag/v2.6.0
 [2.5.0]: https://github.com/humanbound/humanbound/releases/tag/v2.5.0
