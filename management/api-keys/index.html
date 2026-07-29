@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Create and rotate API keys for programmatic access to Humanbound — for CI/CD pipelines, automation scripts, and SIEM forwarders.">
+        <meta name="description" content="Create and scope Humanbound user API keys (hb_…) for headless access — CI/CD pipelines, Docker, automation scripts, and SIEM forwarders.">
       
       
       
@@ -64,16 +64,16 @@
   
   <meta property="og:site_name" content="Humanbound" />
   <meta property="og:locale" content="en_US" />
-  <meta property="og:image:alt" content="Create and rotate API keys for programmatic access to Humanbound — for CI/CD pipelines, automation scripts, and SIEM forwarders." />
-  <meta name="twitter:image:alt" content="Create and rotate API keys for programmatic access to Humanbound — for CI/CD pipelines, automation scripts, and SIEM forwarders." />
+  <meta property="og:image:alt" content="Create and scope Humanbound user API keys (hb_…) for headless access — CI/CD pipelines, Docker, automation scripts, and SIEM forwarders." />
+  <meta name="twitter:image:alt" content="Create and scope Humanbound user API keys (hb_…) for headless access — CI/CD pipelines, Docker, automation scripts, and SIEM forwarders." />
   
-  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/management/api-keys/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"API Keys","item":"https://docs.humanbound.ai/management/api-keys/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/management/api-keys/#article","headline":"API Keys","description":"Create and rotate API keys for programmatic access to Humanbound \u2014 for CI/CD pipelines, automation scripts, and SIEM forwarders.","url":"https://docs.humanbound.ai/management/api-keys/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-06-02T10:20:06+03:00","keywords":"API keys, hb api-keys command, API key scopes, programmatic access, API key rotation, CI/CD authentication, read scope API key"},{"@type":"FAQPage","@id":"https://docs.humanbound.ai/management/api-keys/#faq","isPartOf":{"@id":"https://docs.humanbound.ai/management/api-keys/#article"},"mainEntity":[{"@type":"Question","name":"How do I create a Humanbound API key?","acceptedAnswer":{"@type":"Answer","text":"Run `hb api-keys create --name \"CI Key\"` to create a key. The key value is shown only once during creation \u2014 store it securely immediately, because it cannot be retrieved again."}},{"@type":"Question","name":"What happens if I lose my API key?","acceptedAnswer":{"@type":"Answer","text":"API keys are shown only once during creation. If lost, you must revoke the existing key with `hb api-keys delete <id>` and create a new one."}},{"@type":"Question","name":"What scopes are available for API keys?","acceptedAnswer":{"@type":"Answer","text":"Three scopes are available \u2014 `admin` for full access including user management and sensitive operations, `write` for creating and modifying projects and running tests, and `read` for view-only access to projects, experiments, and results."}},{"@type":"Question","name":"How do I deactivate an API key without deleting it?","acceptedAnswer":{"@type":"Answer","text":"Run `hb api-keys update <id> --inactive` to deactivate a key. You can reactivate it later with `hb api-keys update <id> --active`."}}]}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/management/api-keys/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"API Keys","item":"https://docs.humanbound.ai/management/api-keys/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/management/api-keys/#article","headline":"API Keys","description":"Create and scope Humanbound user API keys (hb_\u2026) for headless access \u2014 CI/CD pipelines, Docker, automation scripts, and SIEM forwarders.","url":"https://docs.humanbound.ai/management/api-keys/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-07-29T17:52:40+03:00","keywords":"API keys, hb api-keys command, HUMANBOUND_API_KEY, headless authentication, API key scopes, programmatic access, API key rotation, CI/CD authentication"},{"@type":"FAQPage","@id":"https://docs.humanbound.ai/management/api-keys/#faq","isPartOf":{"@id":"https://docs.humanbound.ai/management/api-keys/#article"},"mainEntity":[{"@type":"Question","name":"How do I create a Humanbound API key?","acceptedAnswer":{"@type":"Answer","text":"Run `hb api-keys create --name \"CI Key\"` to create a key. The key value (an `hb_\u2026` secret) is shown only once during creation \u2014 store it securely immediately, because it cannot be retrieved again."}},{"@type":"Question","name":"How do I use an API key without logging in?","acceptedAnswer":{"@type":"Answer","text":"Set `HUMANBOUND_API_KEY=hb_\u2026` in the environment. The CLI then authenticates with that key instead of `hb login`, acting as the key's owner. Add `HUMANBOUND_PROJECT_ID` (and optionally `HUMANBOUND_ORG_ID`) to select the target project headlessly."}},{"@type":"Question","name":"What happens if I lose my API key?","acceptedAnswer":{"@type":"Answer","text":"API keys are shown only once during creation. If lost, revoke the existing key with `hb api-keys delete <id>` and create a new one."}},{"@type":"Question","name":"What scopes are available for API keys?","acceptedAnswer":{"@type":"Answer","text":"Three cumulative scopes \u2014 `read` (view-only), `write` (adds creating projects and running tests), and `admin` (everything write can do, plus admin-level actions). A route declares a minimum, so a `write` key can also read. The default is `read`."}},{"@type":"Question","name":"Which organisations can an API key access?","acceptedAnswer":{"@type":"Answer","text":"Only organisations you OWN. A key never reaches an organisation where you are merely a member (admin, developer, or expert), and you can narrow it further with `--org` and `--projects`."}},{"@type":"Question","name":"How do I deactivate an API key without deleting it?","acceptedAnswer":{"@type":"Answer","text":"Run `hb api-keys update <id> --inactive` to deactivate a key. You can reactivate it later with `hb api-keys update <id> --active`."}}]}]}</script>
   
 
   
 <meta property="og:type" content="website" />
 <meta property="og:title" content="API Keys - Humanbound" />
-<meta property="og:description" content="Create and rotate API keys for programmatic access to Humanbound — for CI/CD pipelines, automation scripts, and SIEM forwarders." />
+<meta property="og:description" content="Create and scope Humanbound user API keys (hb_…) for headless access — CI/CD pipelines, Docker, automation scripts, and SIEM forwarders." />
 <meta property="og:image" content="https://docs.humanbound.ai/assets/images/social/management/api-keys.png" />
 <meta property="og:image:type" content="image/png" />
 <meta property="og:image:width" content="1200" />
@@ -81,7 +81,7 @@
 <meta property="og:url" content="https://docs.humanbound.ai/management/api-keys/" />
 <meta property="twitter:card" content="summary_large_image" />
 <meta property="twitter:title" content="API Keys - Humanbound" />
-<meta property="twitter:description" content="Create and rotate API keys for programmatic access to Humanbound — for CI/CD pipelines, automation scripts, and SIEM forwarders." />
+<meta property="twitter:description" content="Create and scope Humanbound user API keys (hb_…) for headless access — CI/CD pipelines, Docker, automation scripts, and SIEM forwarders." />
 <meta property="twitter:image" content="https://docs.humanbound.ai/assets/images/social/management/api-keys.png" />
 </head>
   
@@ -1610,10 +1610,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#list-api-keys" class="md-nav__link">
+  <a href="#create-a-key" class="md-nav__link">
     <span class="md-ellipsis">
       
-        List API Keys
+        Create a key
       
     </span>
   </a>
@@ -1621,10 +1621,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#create-api-key" class="md-nav__link">
+  <a href="#use-a-key-headlessly" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Create API Key
+        Use a key headlessly
       
     </span>
   </a>
@@ -1632,10 +1632,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#update-api-key" class="md-nav__link">
+  <a href="#which-commands-work-headlessly" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Update API Key
+        Which commands work headlessly
       
     </span>
   </a>
@@ -1643,10 +1643,43 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#revoke-api-key" class="md-nav__link">
+  <a href="#what-a-key-can-reach" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Revoke API Key
+        What a key can reach
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#list-keys" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        List keys
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#update-a-key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Update a key
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#revoke-a-key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Revoke a key
       
     </span>
   </a>
@@ -2283,56 +2316,214 @@
 
 
 <h1 id="api-keys">API Keys</h1>
-<p>The <code>hb api-keys</code> commands create and manage API keys for programmatic access to the Humanbound platform — the credential CI/CD pipelines, automation scripts, and SIEM forwarders use to authenticate. Keys are issued with one of three scopes (admin, write, read) and shown only once at creation. The commands cover create, list, update (rename, activate, deactivate), and revoke.</p>
-<h2 id="list-api-keys">List API Keys</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>hb<span class="w"> </span>api-keys<span class="w"> </span>list
-</code></pre></div>
-<h2 id="create-api-key">Create API Key</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Create key (shows key once!)</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>hb<span class="w"> </span>api-keys<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span><span class="s2">&quot;CI Key&quot;</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="c1"># Create scoped key</span>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>hb<span class="w"> </span>api-keys<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span><span class="s2">&quot;CI Key&quot;</span><span class="w"> </span>--scopes<span class="w"> </span><span class="nb">read</span>
-</code></pre></div>
+<p>A Humanbound <strong>user API key</strong> (<code>hb_…</code>) is the credential for <strong>headless</strong> access — CI/CD
+pipelines, the Docker image, automation scripts, and SIEM forwarders — where an interactive
+<code>hb login</code> isn't possible. The key authenticates <strong>as its owner</strong>, bounded by the scope and
+selection you give it. <code>hb api-keys</code> covers create, list, update, and revoke.</p>
 <div class="admonition warning">
-<p class="admonition-title">Important</p>
-<p>API keys are shown only once during creation. Store them securely. If lost, you must revoke and create a new key.</p>
+<p class="admonition-title">Shown once</p>
+<p>The key value appears only in the <code>create</code> response. Only a hash is stored, so it can
+never be retrieved again — copy it straight into your secret store. Lost a key? Revoke
+it and create a new one.</p>
 </div>
-<h2 id="update-api-key">Update API Key</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Update name</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>hb<span class="w"> </span>api-keys<span class="w"> </span>update<span class="w"> </span>&lt;id&gt;<span class="w"> </span>--name<span class="w"> </span><span class="s2">&quot;New Name&quot;</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1"># Activate key</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>hb<span class="w"> </span>api-keys<span class="w"> </span>update<span class="w"> </span>&lt;id&gt;<span class="w"> </span>--active
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="c1"># Deactivate key</span>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>hb<span class="w"> </span>api-keys<span class="w"> </span>update<span class="w"> </span>&lt;id&gt;<span class="w"> </span>--inactive
+<h2 id="create-a-key">Create a key</h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Least privilege by default: read-only, all orgs you own</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>hb<span class="w"> </span>api-keys<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span><span class="s2">&quot;CI Key&quot;</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># Scoped: read-only, one org, one project, expires at a fixed time</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>hb<span class="w"> </span>api-keys<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span><span class="s2">&quot;CI Key&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">  </span>--scope<span class="w"> </span><span class="nb">read</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">  </span>--org<span class="w"> </span>2ab8ff03-2325-4f95-b22e-9262c09682c3<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">  </span>--projects<span class="w"> </span>68c7169a-6cb1-4f61-825f-bf1fd195ad7d<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">  </span>--expires<span class="w"> </span><span class="m">1767225600</span>
 </code></pre></div>
-<h2 id="revoke-api-key">Revoke API Key</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Revoke with confirmation</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>hb<span class="w"> </span>api-keys<span class="w"> </span>delete<span class="w"> </span>&lt;id&gt;
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1"># Skip confirmation</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>hb<span class="w"> </span>api-keys<span class="w"> </span>delete<span class="w"> </span>&lt;id&gt;<span class="w"> </span>--force
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Meaning</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--name</code></td>
+<td>Label shown in <code>hb api-keys list</code></td>
+<td>required</td>
+</tr>
+<tr>
+<td><code>--scope</code></td>
+<td><code>read</code> | <code>write</code> | <code>admin</code> (cumulative)</td>
+<td><code>read</code></td>
+</tr>
+<tr>
+<td><code>--org</code></td>
+<td>Restrict to organisation id(s); repeatable</td>
+<td>all orgs you own</td>
+</tr>
+<tr>
+<td><code>--projects</code></td>
+<td>Restrict to project id(s); repeatable</td>
+<td>all projects you own</td>
+</tr>
+<tr>
+<td><code>--expires</code></td>
+<td>Expiry as epoch seconds</td>
+<td>never expires</td>
+</tr>
+</tbody>
+</table>
+<p><code>--org</code> and <code>--projects</code> are validated at creation: you can only scope a key to an
+organisation you <strong>own</strong> and to projects inside it. Anything else is rejected immediately,
+so you never end up holding a key that silently can't do anything.</p>
+<h2 id="use-a-key-headlessly">Use a key headlessly</h2>
+<p>Set the key in the environment — no <code>hb login</code>, no browser:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HUMANBOUND_API_KEY</span><span class="o">=</span>hb_…<span class="w">            </span><span class="c1"># the key from `create`</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HUMANBOUND_ORG_ID</span><span class="o">=</span>&lt;org-id&gt;<span class="w">         </span><span class="c1"># the organisation you own</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HUMANBOUND_PROJECT_ID</span><span class="o">=</span>&lt;project-id&gt;<span class="w"> </span><span class="c1"># the project to work on</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>hb<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--wait<span class="w"> </span>--fail-on<span class="w"> </span>high<span class="w">             </span><span class="c1"># run a scan and gate the build</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>hb<span class="w"> </span>findings<span class="w">                               </span><span class="c1"># read findings</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>hb<span class="w"> </span>posture<span class="w">                                </span><span class="c1"># read the security posture</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>hb<span class="w"> </span>report<span class="w"> </span>-o<span class="w"> </span>report.html<span class="w">                  </span><span class="c1"># export a report</span>
 </code></pre></div>
-<h2 id="scopes">Scopes</h2>
+<p>With <code>HUMANBOUND_API_KEY</code> set, the CLI sends the key on every request and skips OAuth
+entirely.</p>
+<p>See <a href="../../integrations/cicd/">CI/CD Integration</a> and <a href="../../integrations/docker/">Docker</a>
+for ready-made pipeline snippets.</p>
+<h2 id="which-commands-work-headlessly">Which commands work headlessly</h2>
+<p>The connect → test → gate loop a pipeline needs:</p>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Minimum scope</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>hb connect</code></td>
+<td><code>write</code></td>
+<td>Provisions a project + integration; use <code>--yes</code> for non-interactive</td>
+</tr>
+<tr>
+<td><code>hb test</code></td>
+<td><code>write</code></td>
+<td>Pass <code>--provider-id</code> to skip provider auto-selection</td>
+</tr>
+<tr>
+<td><code>hb status &lt;id&gt;</code></td>
+<td><code>read</code></td>
+<td>Single experiment; <code>--all</code> is <strong>not</strong> available headlessly</td>
+</tr>
+<tr>
+<td><code>hb logs</code></td>
+<td><code>read</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>hb findings</code></td>
+<td><code>read</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>hb posture</code></td>
+<td><code>read</code></td>
+<td>Also <code>--org</code></td>
+</tr>
+<tr>
+<td><code>hb report</code></td>
+<td><code>read</code></td>
+<td>Project, <code>--org</code>, and <code>--assessment &lt;id&gt;</code> reports</td>
+</tr>
+<tr>
+<td><code>hb assessments list\|show</code></td>
+<td><code>read</code></td>
+<td>Find the assessment id for <code>hb report --assessment</code></td>
+</tr>
+<tr>
+<td><code>hb providers</code></td>
+<td><code>read</code></td>
+<td>List only</td>
+</tr>
+</tbody>
+</table>
+<p>Anything not listed still requires <code>hb login</code>. Notably:</p>
 <ul>
-<li><strong>admin</strong>: Full access including user management and sensitive operations</li>
-<li><strong>write</strong>: Create and modify projects, run tests, update findings</li>
-<li><strong>read</strong>: View-only access to projects, experiments, and results</li>
+<li><strong><code>hb api-keys …</code></strong> — key management is deliberately interactive-only: you cannot mint,
+  rotate, or revoke a key using a key.</li>
+<li><strong><code>hb orgs</code>, <code>hb members</code>, <code>hb projects</code></strong> — organisation and team administration.</li>
+<li><strong><code>hb providers add|update|delete</code></strong> — provider setup (listing works headlessly).</li>
 </ul>
+<p>If a command isn't supported, it fails with a clear error rather than falling back to a
+browser login.</p>
+<h2 id="what-a-key-can-reach">What a key can reach</h2>
+<p>Two rules bound every request, and both must pass:</p>
+<ol>
+<li><strong>Owner-only.</strong> A key reaches <strong>only organisations its creator owns</strong> — never one where
+   you are merely a member (admin, developer, or expert). Sharing a key with a teammate
+   therefore keeps the blast radius inside your own organisation.</li>
+<li><strong><a href="../../reference/glossary/#testing-assessment">Scope</a> + selection.</strong> The route's minimum scope must be satisfied (<code>admin</code> ⊇ <code>write</code> ⊇
+   <code>read</code>), and the target org/project must be within the key's <code>--org</code> / <code>--projects</code>
+   selection.</li>
+</ol>
+<p>A key can only ever <em>narrow</em> what its owner can do — it never grants more. Key management
+itself (<code>hb api-keys …</code>) always requires an interactive login: you cannot mint a key with a key.</p>
+<div class="admonition tip">
+<p class="admonition-title">Sharing keys with your team</p>
+<p>As the organisation owner, create a tightly-scoped key (<code>--scope read</code>, one
+<code>--projects</code>, an <code>--expires</code>) and hand that to a teammate's pipeline. Requests made with
+it are attributed to you, the owner — so rotate per consumer rather than sharing one key
+everywhere.</p>
+</div>
+<h2 id="list-keys">List keys</h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>hb<span class="w"> </span>api-keys<span class="w"> </span>list
+</code></pre></div>
+<p>Shows id, name, scope, active state, and the key prefix (<code>hb_</code> + 8 characters) — never the
+secret itself.</p>
+<h2 id="update-a-key">Update a key</h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>hb<span class="w"> </span>api-keys<span class="w"> </span>update<span class="w"> </span>&lt;id&gt;<span class="w"> </span>--name<span class="w"> </span><span class="s2">&quot;New Name&quot;</span><span class="w">   </span><span class="c1"># rename</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>hb<span class="w"> </span>api-keys<span class="w"> </span>update<span class="w"> </span>&lt;id&gt;<span class="w"> </span>--scope<span class="w"> </span>write<span class="w">       </span><span class="c1"># change scope</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>hb<span class="w"> </span>api-keys<span class="w"> </span>update<span class="w"> </span>&lt;id&gt;<span class="w"> </span>--inactive<span class="w">          </span><span class="c1"># deactivate (requests → 401)</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>hb<span class="w"> </span>api-keys<span class="w"> </span>update<span class="w"> </span>&lt;id&gt;<span class="w"> </span>--active<span class="w">            </span><span class="c1"># reactivate</span>
+</code></pre></div>
+<h2 id="revoke-a-key">Revoke a key</h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>hb<span class="w"> </span>api-keys<span class="w"> </span>delete<span class="w"> </span>&lt;id&gt;<span class="w">            </span><span class="c1"># with confirmation</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>hb<span class="w"> </span>api-keys<span class="w"> </span>delete<span class="w"> </span>&lt;id&gt;<span class="w"> </span>--force<span class="w">    </span><span class="c1"># skip confirmation</span>
+</code></pre></div>
+<p>Deactivating (<code>--inactive</code>) stops a key immediately and is reversible; deleting is
+permanent. Rotation is create-new → switch the secret → revoke-old.</p>
+<h2 id="scopes">Scopes</h2>
+<p>Scopes are <strong>cumulative</strong> — a route declares the minimum it needs, so a higher scope also
+satisfies the lower ones:</p>
+<ul>
+<li><strong><code>read</code></strong> — view projects, experiments, findings, posture, and reports <em>(default)</em></li>
+<li><strong><code>write</code></strong> — everything <code>read</code> can do, plus create projects (<code>hb connect</code>) and run tests (<code>hb test</code>)</li>
+<li><strong><code>admin</code></strong> — everything <code>write</code> can do, plus admin-level actions</li>
+</ul>
+<p>Pick the lowest scope that works: a <code>read</code> key can gate a build on existing findings, but
+cannot start a test or create a project.</p>
 <h2 id="frequently-asked-questions">Frequently asked questions</h2>
 <details class="question">
 <summary>How do I create a Humanbound API key?</summary>
-<p>Run <code>hb api-keys create --name "CI Key"</code> to create a key. The key value is shown only once during creation — store it securely immediately, because it cannot be retrieved again.</p>
+<p>Run <code>hb api-keys create --name "CI Key"</code> to create a key. The key value (an <code>hb_…</code> secret) is shown only once during creation — store it securely immediately, because it cannot be retrieved again.</p>
+</details>
+<details class="question">
+<summary>How do I use an API key without logging in?</summary>
+<p>Set <code>HUMANBOUND_API_KEY=hb_…</code> in the environment. The CLI then authenticates with that key instead of <code>hb login</code>, acting as the key's owner. Add <code>HUMANBOUND_PROJECT_ID</code> (and optionally <code>HUMANBOUND_ORG_ID</code>) to select the target project headlessly.</p>
 </details>
 <details class="question">
 <summary>What happens if I lose my API key?</summary>
-<p>API keys are shown only once during creation. If lost, you must revoke the existing key with <code>hb api-keys delete &lt;id&gt;</code> and create a new one.</p>
+<p>API keys are shown only once during creation. If lost, revoke the existing key with <code>hb api-keys delete &lt;id&gt;</code> and create a new one.</p>
 </details>
 <details class="question">
 <summary>What scopes are available for API keys?</summary>
-<p>Three scopes are available — <code>admin</code> for full access including user management and sensitive operations, <code>write</code> for creating and modifying projects and running tests, and <code>read</code> for view-only access to projects, experiments, and results.</p>
+<p>Three cumulative scopes — <code>read</code> (view-only), <code>write</code> (adds creating projects and running tests), and <code>admin</code> (everything write can do, plus admin-level actions). A route declares a minimum, so a <code>write</code> key can also read. The default is <code>read</code>.</p>
+</details>
+<details class="question">
+<summary>Which organisations can an API key access?</summary>
+<p>Only organisations you OWN. A key never reaches an organisation where you are merely a member (admin, developer, or expert), and you can narrow it further with <code>--org</code> and <code>--projects</code>.</p>
 </details>
 <details class="question">
 <summary>How do I deactivate an API key without deleting it?</summary>

@@ -67,7 +67,7 @@
   <meta property="og:image:alt" content="Run the Humanbound CLI from the official Docker image — no Python install required. Covers the quickstart, file mounts, and platform auth; see CI/CD for pipeline examples." />
   <meta name="twitter:image:alt" content="Run the Humanbound CLI from the official Docker image — no Python install required. Covers the quickstart, file mounts, and platform auth; see CI/CD for pipeline examples." />
   
-  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/integrations/docker/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Docker","item":"https://docs.humanbound.ai/integrations/docker/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/integrations/docker/#article","headline":"Docker","description":"Run the Humanbound CLI from the official Docker image \u2014 no Python install required. Covers the quickstart, file mounts, and platform auth; see CI/CD for pipeline examples.","url":"https://docs.humanbound.ai/integrations/docker/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-07-27T18:10:02+03:00","keywords":"Docker image, ghcr.io/humanbound/humanbound, hb CLI Docker, container security testing, docker run hb test, host.docker.internal, Docker CI/CD"}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/integrations/docker/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Docker","item":"https://docs.humanbound.ai/integrations/docker/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/integrations/docker/#article","headline":"Docker","description":"Run the Humanbound CLI from the official Docker image \u2014 no Python install required. Covers the quickstart, file mounts, and platform auth; see CI/CD for pipeline examples.","url":"https://docs.humanbound.ai/integrations/docker/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-07-29T17:52:40+03:00","keywords":"Docker image, ghcr.io/humanbound/humanbound, hb CLI Docker, container security testing, docker run hb test, host.docker.internal, Docker CI/CD"}]}</script>
   
 
   
@@ -2332,7 +2332,7 @@ newest <code>2.x.y</code> and is re-pointed with every release in that major lin
 </tr>
 <tr>
 <td><code>HUMANBOUND_API_KEY</code></td>
-<td>Your <strong>Humanbound platform</strong> project key — headless platform auth (coming soon)</td>
+<td>Your <strong>Humanbound user API key</strong> (<code>hb_…</code>, from <code>hb api-keys create</code>) — headless platform auth via the <code>x-api-key</code> header, acting as the key's owner within its scope/selection</td>
 </tr>
 </tbody>
 </table>
@@ -2372,16 +2372,19 @@ runs on your machine:</p>
 <h2 id="platform-commands">Platform commands</h2>
 <p><code>hb status</code>, project-scoped <code>hb logs</code>, and platform-mode <code>hb test</code> need platform auth:</p>
 <ul>
-<li><strong>Today:</strong> log in on the host, then mount your credentials (read-write —
-  the CLI refreshes tokens):</li>
+<li><strong>Interactive (mounted credentials):</strong> log in on the host, then mount your
+  credentials (read-write — the CLI refreshes tokens):</li>
 </ul>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>hb<span class="w"> </span>login<span class="w">   </span><span class="c1"># on the host, once</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-v<span class="w"> </span>~/.humanbound:/home/hb/.humanbound<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span>ghcr.io/humanbound/humanbound<span class="w"> </span>status
 </code></pre></div>
 <ul>
-<li><strong>Coming soon:</strong> <code>-e HUMANBOUND_API_KEY=&lt;project-key&gt;</code> — headless project-key
-  auth, no browser involved.</li>
+<li><strong>Headless (API key):</strong> <code>-e HUMANBOUND_API_KEY=hb_…</code> authenticates as the
+  key's owner via the <code>x-api-key</code> header, so no <code>hb login</code> is involved. Pair it
+  with <code>-e HUMANBOUND_ORG_ID=&lt;id&gt;</code> and <code>-e HUMANBOUND_PROJECT_ID=&lt;id&gt;</code> to select
+  the target. See <a href="../../management/api-keys/">API Keys</a> for scoping and the list
+  of commands available headlessly.</li>
 </ul>
 <h2 id="using-the-image-in-ci">Using the image in CI</h2>
 <p>For ready-made GitLab and CircleCI snippets that run this image in

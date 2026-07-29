@@ -67,7 +67,7 @@
   <meta property="og:image:alt" content="Manage Humanbound authentication, organisation context, and access scopes for the CLI, MCP server, and API." />
   <meta name="twitter:image:alt" content="Manage Humanbound authentication, organisation context, and access scopes for the CLI, MCP server, and API." />
   
-  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/authentication/#article","headline":"Authentication","description":"Manage Humanbound authentication, organisation context, and access scopes for the CLI, MCP server, and API.","url":"https://docs.humanbound.ai/authentication/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-06-02T10:20:06+03:00","keywords":"humanbound authentication, hb login, hb logout, hb whoami, OAuth authentication, on-prem login, organisation context, humanbound credentials"}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/authentication/#article","headline":"Authentication","description":"Manage Humanbound authentication, organisation context, and access scopes for the CLI, MCP server, and API.","url":"https://docs.humanbound.ai/authentication/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-07-29T17:52:40+03:00","keywords":"humanbound authentication, hb login, hb logout, hb whoami, OAuth authentication, on-prem login, organisation context, humanbound credentials"}]}</script>
   
 
   
@@ -2040,6 +2040,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#headless-api-key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Headless (API key)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#logout" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2323,30 +2334,45 @@
 </tr>
 </tbody>
 </table>
+<h2 id="headless-api-key">Headless (API key)</h2>
+<p><code>hb login</code> opens a browser for OAuth, which isn't possible in CI/CD, Docker, or cron. There,
+authenticate with a <a href="../management/api-keys/">user API key</a> instead:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HUMANBOUND_API_KEY</span><span class="o">=</span>hb_…<span class="w">            </span><span class="c1"># from `hb api-keys create`</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HUMANBOUND_ORG_ID</span><span class="o">=</span>&lt;org-id&gt;<span class="w">         </span><span class="c1"># selects the organisation (replaces `hb orgs use`)</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HUMANBOUND_PROJECT_ID</span><span class="o">=</span>&lt;project-id&gt;<span class="w"> </span><span class="c1"># selects the project (replaces `hb projects use`)</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>hb<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--wait<span class="w"> </span>--fail-on<span class="w"> </span>high
+</code></pre></div>
+<p>When <code>HUMANBOUND_API_KEY</code> is set the CLI sends the key on every request and skips OAuth
+entirely, acting as the key's owner within the key's scope and org/project selection. No
+credentials are written to <code>~/.humanbound/</code>.</p>
+<p>Not every command is available this way — see
+<a href="../management/api-keys/#which-commands-work-headlessly">API Keys → Which commands work headlessly</a>
+for the supported set, and for scoping and rotation.</p>
 <h2 id="logout">Logout</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Revoke the backend session and clear local credentials</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>hb<span class="w"> </span><span class="nb">logout</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1"># Also revoke browser session</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>hb<span class="w"> </span><span class="nb">logout</span><span class="w"> </span>--revoke
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="c1"># Custom callback port for revoke (default: 8085)</span>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>hb<span class="w"> </span><span class="nb">logout</span><span class="w"> </span>--revoke<span class="w"> </span>--port<span class="w"> </span><span class="m">9090</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Revoke the backend session and clear local credentials</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>hb<span class="w"> </span><span class="nb">logout</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1"># Also revoke browser session</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>hb<span class="w"> </span><span class="nb">logout</span><span class="w"> </span>--revoke
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="c1"># Custom callback port for revoke (default: 8085)</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>hb<span class="w"> </span><span class="nb">logout</span><span class="w"> </span>--revoke<span class="w"> </span>--port<span class="w"> </span><span class="m">9090</span>
 </code></pre></div>
 <p><code>hb logout</code> revokes the backend session, signing out any active session on the Humanbound platform or CLI for the same user. Use <code>--revoke</code> to also clear the Auth0 SSO browser cookie.</p>
 <h2 id="check-authentication-status">Check Authentication Status</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>hb<span class="w"> </span>whoami
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>hb<span class="w"> </span>whoami
 </code></pre></div>
 <p>Shows current user, active organisation, and active project.</p>
 <h2 id="switch-organisation">Switch Organisation</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>hb<span class="w"> </span>switch<span class="w"> </span>&lt;org-id&gt;
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>hb<span class="w"> </span>switch<span class="w"> </span>&lt;org-id&gt;
 </code></pre></div>
 <h2 id="open-documentation">Open Documentation</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Open main documentation</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>hb<span class="w"> </span>docs
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="c1"># Open specific topic</span>
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>hb<span class="w"> </span>docs<span class="w"> </span>quickstart
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># Open main documentation</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>hb<span class="w"> </span>docs
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="c1"># Open specific topic</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>hb<span class="w"> </span>docs<span class="w"> </span>quickstart
 </code></pre></div>
 
 

@@ -67,7 +67,7 @@
   <meta property="og:image:alt" content="Run Humanbound in CI/CD — use the humanbound/actions GitHub Action or the hb CLI to gate builds on agent security, surface findings in the Security tab, and catch regressions." />
   <meta name="twitter:image:alt" content="Run Humanbound in CI/CD — use the humanbound/actions GitHub Action or the hb CLI to gate builds on agent security, surface findings in the Security tab, and catch regressions." />
   
-  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/integrations/cicd/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"CI/CD","item":"https://docs.humanbound.ai/integrations/cicd/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/integrations/cicd/#article","headline":"CI/CD","description":"Run Humanbound in CI/CD \u2014 use the humanbound/actions GitHub Action or the hb CLI to gate builds on agent security, surface findings in the Security tab, and catch regressions.","url":"https://docs.humanbound.ai/integrations/cicd/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-07-27T18:10:02+03:00","keywords":"CI/CD security testing, GitHub Actions integration, humanbound/actions GitHub Action, GitLab CI integration, SARIF security tab, --fail-on threshold, security gate, automated security tests, pipeline integration, --wait CI flag, GitLab CI Docker, CircleCI Docker"},{"@type":"FAQPage","@id":"https://docs.humanbound.ai/integrations/cicd/#faq","isPartOf":{"@id":"https://docs.humanbound.ai/integrations/cicd/#article"},"mainEntity":[{"@type":"Question","name":"Is there a GitHub Action for Humanbound?","acceptedAnswer":{"@type":"Answer","text":"Yes. The official [`humanbound/actions`](https://github.com/marketplace/actions/humanbound-ai-agent-security-testing) Action wraps `hb test` \u2014 it installs the CLI, runs the scan, gates the build with `fail-on`, and uploads findings to the GitHub Security tab as SARIF. Reference it as `uses: humanbound/actions@v1`."}},{"@type":"Question","name":"What does the --fail-on flag do in CI/CD?","acceptedAnswer":{"@type":"Answer","text":"The `--fail-on` flag causes the `hb test` command to exit with a non-zero status code when vulnerabilities at or above the specified severity are found. Thresholds are `critical`, `high`, `medium`, `low`, and `any`, allowing you to configure how strict your security gate is."}},{"@type":"Question","name":"What exit codes does hb test return?","acceptedAnswer":{"@type":"Answer","text":"`0` \u2014 the scan completed and no `--fail-on` condition matched. `1` \u2014 the scan completed and the `--fail-on` condition matched. `2` \u2014 the scan itself failed: the run ended with status `Failed`, or every conversation errored so nothing was actually tested. A scan failure exits `2` regardless of `--fail-on`, so a broken scan can never pass your gate."}},{"@type":"Question","name":"What does --wait do and why should I use it in CI/CD?","acceptedAnswer":{"@type":"Answer","text":"`--wait` tells Humanbound to block until the test run completes before the command exits. Always use `--wait` in CI/CD pipelines to ensure results are available before the job finishes or artifacts are exported. (The GitHub Action passes `--wait` for you.)"}}]}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/integrations/cicd/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"CI/CD","item":"https://docs.humanbound.ai/integrations/cicd/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/integrations/cicd/#article","headline":"CI/CD","description":"Run Humanbound in CI/CD \u2014 use the humanbound/actions GitHub Action or the hb CLI to gate builds on agent security, surface findings in the Security tab, and catch regressions.","url":"https://docs.humanbound.ai/integrations/cicd/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-07-29T17:52:40+03:00","keywords":"CI/CD security testing, GitHub Actions integration, humanbound/actions GitHub Action, GitLab CI integration, SARIF security tab, --fail-on threshold, security gate, automated security tests, pipeline integration, --wait CI flag, GitLab CI Docker, CircleCI Docker"},{"@type":"FAQPage","@id":"https://docs.humanbound.ai/integrations/cicd/#faq","isPartOf":{"@id":"https://docs.humanbound.ai/integrations/cicd/#article"},"mainEntity":[{"@type":"Question","name":"Is there a GitHub Action for Humanbound?","acceptedAnswer":{"@type":"Answer","text":"Yes. The official [`humanbound/actions`](https://github.com/marketplace/actions/humanbound-ai-agent-security-testing) Action wraps `hb test` \u2014 it installs the CLI, runs the scan, gates the build with `fail-on`, and uploads findings to the GitHub Security tab as SARIF. Reference it as `uses: humanbound/actions@v1`."}},{"@type":"Question","name":"What does the --fail-on flag do in CI/CD?","acceptedAnswer":{"@type":"Answer","text":"The `--fail-on` flag causes the `hb test` command to exit with a non-zero status code when vulnerabilities at or above the specified severity are found. Thresholds are `critical`, `high`, `medium`, `low`, and `any`, allowing you to configure how strict your security gate is."}},{"@type":"Question","name":"What exit codes does hb test return?","acceptedAnswer":{"@type":"Answer","text":"`0` \u2014 the scan completed and no `--fail-on` condition matched. `1` \u2014 the scan completed and the `--fail-on` condition matched. `2` \u2014 the scan itself failed: the run ended with status `Failed`, or every conversation errored so nothing was actually tested. A scan failure exits `2` regardless of `--fail-on`, so a broken scan can never pass your gate."}},{"@type":"Question","name":"What does --wait do and why should I use it in CI/CD?","acceptedAnswer":{"@type":"Answer","text":"`--wait` tells Humanbound to block until the test run completes before the command exits. Always use `--wait` in CI/CD pipelines to ensure results are available before the job finishes or artifacts are exported. (The GitHub Action passes `--wait` for you.)"}}]}]}</script>
   
 
   
@@ -1802,6 +1802,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="GitHub Actions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#local-mode-vs-platform-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Local mode vs platform mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -2353,8 +2370,52 @@ summary to the run page, and uploads findings to the <strong>Security tab</stron
 <a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="w">          </span><span class="nt">fail-on</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">high</span><span class="w"> </span><span class="c1"># fail the build on high-severity findings</span>
 </code></pre></div>
 <p>Findings gate the build via <code>fail-on</code>, land in <strong>Security → Code scanning</strong> as SARIF, and are
-summarized on the workflow run page. <strong>Local mode</strong> (shown above — your own LLM key, no account)
-works today; <strong>platform mode</strong> (<code>api-key</code>, results in the Humanbound dashboard) is coming soon.</p>
+summarized on the workflow run page.</p>
+<h3 id="local-mode-vs-platform-mode">Local mode vs platform mode</h3>
+<p>The Action runs in one of two modes — set <strong>exactly one</strong> credential:</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Credential</th>
+<th>Where the engine runs</th>
+<th>Results</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Local</strong></td>
+<td><code>provider-api-key</code> (your own LLM key)</td>
+<td>in the runner</td>
+<td>job output + SARIF; no account needed</td>
+</tr>
+<tr>
+<td><strong>Platform</strong></td>
+<td><code>api-key</code> (a Humanbound <code>hb_…</code> key)</td>
+<td>on humanbound.ai</td>
+<td>your dashboard, plus SARIF</td>
+</tr>
+</tbody>
+</table>
+<p>Platform mode uses a <a href="../../management/api-keys/">user API key</a> — no <code>hb login</code>, no browser:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">uses</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">humanbound/actions@v1</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">        </span><span class="nt">with</span><span class="p">:</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">          </span><span class="nt">api-key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${{ secrets.HUMANBOUND_API_KEY }}</span><span class="w">      </span><span class="c1"># hb_… key</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">          </span><span class="nt">org-id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${{ vars.HUMANBOUND_ORG_ID }}</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">          </span><span class="nt">project-id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${{ vars.HUMANBOUND_PROJECT_ID }}</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">          </span><span class="nt">fail-on</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">high</span>
+</code></pre></div>
+<p>Both ids are required — a headless run has no stored selection. Create the key with the least
+privilege the job needs, pinned to one project:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>hb<span class="w"> </span>api-keys<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span><span class="s2">&quot;GitHub CI&quot;</span><span class="w"> </span>--scope<span class="w"> </span>write<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span>--org<span class="w"> </span>&lt;org-id&gt;<span class="w"> </span>--projects<span class="w"> </span>&lt;project-id&gt;
+</code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">Requires humanbound ≥ 2.8.0</p>
+<p>Headless <code>HUMANBOUND_API_KEY</code> auth ships in CLI 2.8.0. The Action checks the installed
+version and fails with a clear message on older releases — pin <code>version:</code> or omit it to
+get the latest.</p>
+</div>
 <div class="admonition tip">
 <p class="admonition-title">Full reference</p>
 <p>The Action supports many more inputs — scope discovery, test categories, SARIF controls,
@@ -2398,22 +2459,22 @@ a certain severity are found:</p>
 <h2 id="gitlab-ci-and-other-ci-systems">GitLab CI (and other CI systems)</h2>
 <p>Anywhere you can't use a GitHub Action, run the <code>hb</code> CLI directly. Install the engine extra
 for local mode, point <code>--endpoint</code> at your agent, and gate with <code>--fail-on</code>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># .gitlab-ci.yml</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nt">security-test</span><span class="p">:</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="nt">stage</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">test</span>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">python:3.12</span>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">  </span><span class="nt">variables</span><span class="p">:</span>
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">    </span><span class="nt">HB_PROVIDER</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">openai</span>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">    </span><span class="nt">HB_API_KEY</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$OPENAI_API_KEY</span><span class="w"> </span><span class="c1"># attacker/judge LLM key (CI/CD variable)</span>
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">    </span><span class="nt">HB_MODEL</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gpt-4.1</span>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">  </span><span class="nt">script</span><span class="p">:</span>
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pip install &quot;humanbound[engine]&quot;</span>
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hb test --local --endpoint ./agent-config.json --wait --fail-on high</span>
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hb logs --format json -o security-results.json</span>
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="w">  </span><span class="nt">artifacts</span><span class="p">:</span>
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="w">    </span><span class="nt">paths</span><span class="p">:</span>
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">security-results.json</span>
-<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="w">    </span><span class="nt">when</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># .gitlab-ci.yml</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nt">security-test</span><span class="p">:</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="nt">stage</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">test</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">python:3.12</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span><span class="nt">variables</span><span class="p">:</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">    </span><span class="nt">HB_PROVIDER</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">openai</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">    </span><span class="nt">HB_API_KEY</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$OPENAI_API_KEY</span><span class="w"> </span><span class="c1"># attacker/judge LLM key (CI/CD variable)</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">    </span><span class="nt">HB_MODEL</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gpt-4.1</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">  </span><span class="nt">script</span><span class="p">:</span>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pip install &quot;humanbound[engine]&quot;</span>
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hb test --local --endpoint ./agent-config.json --wait --fail-on high</span>
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hb logs --format json -o security-results.json</span>
+<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="w">  </span><span class="nt">artifacts</span><span class="p">:</span>
+<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="w">    </span><span class="nt">paths</span><span class="p">:</span>
+<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">security-results.json</span>
+<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a><span class="w">    </span><span class="nt">when</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">always</span>
 </code></pre></div>
 <p>The same pattern works on Jenkins, CircleCI, and others — install <code>humanbound[engine]</code>, run
 <code>hb test --local --endpoint &lt;config&gt; --wait --fail-on &lt;severity&gt;</code>, then export results with
@@ -2429,25 +2490,25 @@ Action does this for you). Use <code>--fail-on</code> to enforce a security qual
 local mode — no Python install needed on the runner. See the <a href="../docker/">Docker page</a> for mount
 and networking details (workspace mounts, <code>host.docker.internal</code>, platform-auth mounts).</p>
 <h3 id="gitlab-ci">GitLab CI</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nt">adversarial-test</span><span class="p">:</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="nt">image</span><span class="p">:</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ghcr.io/humanbound/humanbound:2</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span><span class="nt">entrypoint</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;&quot;</span><span class="p p-Indicator">]</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span><span class="nt">script</span><span class="p">:</span>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hb test --endpoint ./endpoint.json --wait --fail-on high</span>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">  </span><span class="nt">variables</span><span class="p">:</span>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">    </span><span class="nt">HB_PROVIDER</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">openai</span>
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">    </span><span class="nt">HB_MODEL</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gpt-4o-mini</span>
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">    </span><span class="nt">HB_API_KEY</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$OPENAI_API_KEY</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nt">adversarial-test</span><span class="p">:</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="nt">image</span><span class="p">:</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ghcr.io/humanbound/humanbound:2</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span><span class="nt">entrypoint</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;&quot;</span><span class="p p-Indicator">]</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span><span class="nt">script</span><span class="p">:</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hb test --endpoint ./endpoint.json --wait --fail-on high</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">  </span><span class="nt">variables</span><span class="p">:</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">    </span><span class="nt">HB_PROVIDER</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">openai</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">    </span><span class="nt">HB_MODEL</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gpt-4o-mini</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">    </span><span class="nt">HB_API_KEY</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$OPENAI_API_KEY</span>
 </code></pre></div>
 <h3 id="circleci">CircleCI</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nt">jobs</span><span class="p">:</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="nt">adversarial-test</span><span class="p">:</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="nt">docker</span><span class="p">:</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ghcr.io/humanbound/humanbound:2</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">    </span><span class="nt">steps</span><span class="p">:</span>
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">checkout</span>
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hb test --endpoint ./endpoint.json --wait --fail-on high</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nt">jobs</span><span class="p">:</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nt">adversarial-test</span><span class="p">:</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span><span class="nt">docker</span><span class="p">:</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ghcr.io/humanbound/humanbound:2</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">    </span><span class="nt">steps</span><span class="p">:</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">checkout</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hb test --endpoint ./endpoint.json --wait --fail-on high</span>
 </code></pre></div>
 <h2 id="frequently-asked-questions">Frequently asked questions</h2>
 <details class="question">
