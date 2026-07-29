@@ -240,3 +240,5 @@ trademark policy. The code is open; the name is not.
 
 The sibling project [`humanbound-firewall`](https://github.com/humanbound/humanbound-firewall)
 is also Apache-2.0 — same license, different product.
+
+Signed-off-by: Sofia Aliferi <sofaliferi@gmail.com>
