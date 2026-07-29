@@ -71,16 +71,54 @@ class TestHappyPath:
         result = runner.invoke(cli, ["api-keys", "create", "--name", "test-key"])
         assert result.exit_code == 0
         assert "hb_secret_xxx" in result.output
-        mock.create_api_key.assert_called_once_with("test-key", "admin")
+        # default scope is read (least privilege); no selection/expiry sent
+        mock.create_api_key.assert_called_once_with(
+            "test-key", "read", organisations=None, projects=None, expires_at=None
+        )
 
     @patch(PATCH_TARGET)
-    def test_create_api_key_with_scopes(self, MockClient):
+    def test_create_api_key_with_scope(self, MockClient):
         mock = _make_client()
-        mock.create_api_key.return_value = {"id": "key-new", "key": "hb_read_xxx"}
+        mock.create_api_key.return_value = {"id": "key-new", "key": "hb_write_xxx"}
         MockClient.return_value = mock
-        result = runner.invoke(cli, ["api-keys", "create", "--name", "reader", "--scopes", "read"])
+        result = runner.invoke(cli, ["api-keys", "create", "--name", "writer", "--scope", "write"])
         assert result.exit_code == 0
-        mock.create_api_key.assert_called_once_with("reader", "read")
+        mock.create_api_key.assert_called_once_with(
+            "writer", "write", organisations=None, projects=None, expires_at=None
+        )
+
+    @patch(PATCH_TARGET)
+    def test_create_api_key_with_selection_and_expiry(self, MockClient):
+        mock = _make_client()
+        mock.create_api_key.return_value = {"id": "key-new", "key": "hb_scoped_xxx"}
+        MockClient.return_value = mock
+        result = runner.invoke(
+            cli,
+            [
+                "api-keys",
+                "create",
+                "--name",
+                "ci",
+                "--scope",
+                "read",
+                "--org",
+                "org-1",
+                "--projects",
+                "proj-1",
+                "--projects",
+                "proj-2",
+                "--expires",
+                "1700000000",
+            ],
+        )
+        assert result.exit_code == 0
+        mock.create_api_key.assert_called_once_with(
+            "ci",
+            "read",
+            organisations=["org-1"],
+            projects=["proj-1", "proj-2"],
+            expires_at=1700000000,
+        )
 
     @patch(PATCH_TARGET)
     def test_delete_api_key_with_force(self, MockClient):

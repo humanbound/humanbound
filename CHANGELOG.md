@@ -17,6 +17,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   provenance attestation and SBOM; PRs touching the Docker files get an
   automatic build + smoke test. See the new
   [Docker integration docs](https://docs.humanbound.ai/integrations/docker/).
+- **Headless authentication with user API keys.** Set `HUMANBOUND_API_KEY` (an
+  `hb_…` key from `hb api-keys create`) and the CLI authenticates via the
+  `x-api-key` header — no browser login. `HUMANBOUND_PROJECT_ID` and optionally
+  `HUMANBOUND_ORG_ID` select the target for CI, Docker, and automation. Key
+  mode always tests on the platform and surfaces auth failures as clean errors
+  — no silent local fallback, no interactive re-login. See the new
+  [API keys](https://docs.humanbound.ai/management/api-keys/) and
+  [CI/CD](https://docs.humanbound.ai/integrations/cicd/) docs.
+
+### Changed
+- **`hb api-keys create` defaults to least privilege.** `--scopes` is now
+  `--scope` (`read` | `write` | `admin`, cumulative), the default dropped from
+  `admin` to `read`, and new `--org`, `--projects`, and `--expires` options
+  bound a key to explicit organisations/projects and an expiry timestamp.
+  `list`/`update` follow the backend's `scope`/`is_active` field names, and the
+  MCP `hb_create_api_key` / `hb_update_api_key` tools use the same contract.
 
 ### Fixed
 - **Interrupting a local run no longer discards completed conversations**
@@ -42,6 +58,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 - **LLM provider API calls no longer follow HTTP redirects**, so credential
   headers can't be re-sent to a redirected host.
+- **Platform API calls no longer follow HTTP redirects either.** The headless
+  key travels in a custom `x-api-key` header, which `requests` — unlike
+  `Authorization` — does not strip on a cross-host redirect, so a redirecting
+  or compromised endpoint could re-send the key to another host. A redirect now
+  surfaces as an explicit error, matching the engine's reject-redirect
+  behavior.
 
 ### Documentation
 - **Clarify that the Ollama "air-gap" provider requires the `[engine]` extra**

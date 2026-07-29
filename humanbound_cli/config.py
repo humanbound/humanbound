@@ -31,6 +31,31 @@ def get_base_url() -> str:
     return os.environ.get("HUMANBOUND_BASE_URL", DEFAULT_BASE_URL)
 
 
+def _env_or_none(name: str) -> str | None:
+    """Return the trimmed env value, or None when unset, empty, or whitespace."""
+    value = os.environ.get(name, "").strip()
+    return value or None
+
+
+def get_api_key() -> str | None:
+    """Get the user API key (hb_… secret) for headless auth, if set.
+
+    When present, the client authenticates via the `x-api-key` header and skips
+    the OAuth/credentials flow entirely.
+    """
+    return _env_or_none("HUMANBOUND_API_KEY")
+
+
+def get_organisation_id() -> str | None:
+    """Org id for headless selection (HUMANBOUND_ORG_ID), if set."""
+    return _env_or_none("HUMANBOUND_ORG_ID")
+
+
+def get_project_id() -> str | None:
+    """Project id for headless selection (HUMANBOUND_PROJECT_ID), if set."""
+    return _env_or_none("HUMANBOUND_PROJECT_ID")
+
+
 def get_auth0_domain() -> str:
     """Get Auth0 domain from environment or default."""
     return os.environ.get("HUMANBOUND_AUTH0_DOMAIN", AUTH0_DOMAIN)

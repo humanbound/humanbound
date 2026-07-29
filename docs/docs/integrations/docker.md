@@ -46,7 +46,7 @@ docker run --rm \
 | Variable | What it is |
 |---|---|
 | `HB_API_KEY` | Your **LLM provider** key (OpenAI, Anthropic, …) — powers the attacker/judge models in local mode |
-| `HUMANBOUND_API_KEY` | Your **Humanbound platform** project key — headless platform auth (coming soon) |
+| `HUMANBOUND_API_KEY` | Your **Humanbound user API key** (`hb_…`, from `hb api-keys create`) — headless platform auth via the `x-api-key` header, acting as the key's owner within its scope/selection |
 
 ## Files in, results out
 
@@ -93,8 +93,8 @@ runs on your machine:
 
 `hb status`, project-scoped `hb logs`, and platform-mode `hb test` need platform auth:
 
-- **Today:** log in on the host, then mount your credentials (read-write —
-  the CLI refreshes tokens):
+- **Interactive (mounted credentials):** log in on the host, then mount your
+  credentials (read-write — the CLI refreshes tokens):
 
   ```bash
   hb login   # on the host, once
@@ -102,8 +102,11 @@ runs on your machine:
     ghcr.io/humanbound/humanbound status
   ```
 
-- **Coming soon:** `-e HUMANBOUND_API_KEY=<project-key>` — headless project-key
-  auth, no browser involved.
+- **Headless (API key):** `-e HUMANBOUND_API_KEY=hb_…` authenticates as the
+  key's owner via the `x-api-key` header, so no `hb login` is involved. Pair it
+  with `-e HUMANBOUND_ORG_ID=<id>` and `-e HUMANBOUND_PROJECT_ID=<id>` to select
+  the target. See [API Keys](../management/api-keys.md) for scoping and the list
+  of commands available headlessly.
 
 ## Using the image in CI
 
