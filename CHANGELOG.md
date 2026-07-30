@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+- **Local secret files are written atomically at `0600`** (#67, thanks
+  @JChario). `credentials.json`, the provider `config.yaml`, and the telemetry
+  state file could briefly exist world-readable on first write (created at the
+  process umask before `chmod`); they are now written via an atomic temp-file +
+  `os.replace` helper and are never world-readable. The OAuth login callback
+  error page also escapes the reflected `error_description` to prevent a
+  reflected-XSS in that page.
+
 ## [2.8.0] — 2026-07-30
 
 ### Added

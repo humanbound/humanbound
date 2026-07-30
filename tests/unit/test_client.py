@@ -108,6 +108,16 @@ class TestAuthentication:
         assert not token_file.exists()
 
     @patch("humanbound_cli.client.requests.get")
+    def test_logout_sweeps_stranded_temp_files(self, mock_get, client, tmp_path):
+        mock_get.return_value = _mock_response(204)
+        stray = tmp_path / ".humanbound" / ".credentials.json.abc123.tmp"
+        stray.write_text('{"refresh_token": "leak"}')
+
+        client.logout(silent=True)
+
+        assert not stray.exists()
+
+    @patch("humanbound_cli.client.requests.get")
     def test_logout_calls_server_revoke(self, mock_get, client):
         """Logout must notify the server so concurrent sessions
         (platform, other terminals) are also revoked."""

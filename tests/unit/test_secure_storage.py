@@ -36,3 +36,13 @@ def test_write_secure_file_is_owner_only(tmp_path):
     write_secure_file(target, "x")
     assert stat.S_IMODE(target.stat().st_mode) == 0o600
     assert stat.S_IMODE(target.parent.stat().st_mode) == 0o700
+
+
+def test_write_secure_file_reports_unwritable_dir_clearly(tmp_path, monkeypatch):
+    # Simulate a foreign-owned parent dir (needs root to reproduce for real).
+    def _deny(*args, **kwargs):
+        raise PermissionError(13, "Permission denied")
+
+    monkeypatch.setattr("humanbound_cli.config.tempfile.mkstemp", _deny)
+    with pytest.raises(PermissionError, match="not writable by the current user"):
+        write_secure_file(tmp_path / "credentials.json", "x")

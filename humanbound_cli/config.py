@@ -46,7 +46,15 @@ def write_secure_file(path, content: str) -> None:
     except (OSError, NotImplementedError):
         pass
 
-    fd, tmp = tempfile.mkstemp(dir=str(path.parent), prefix=f".{path.name}.", suffix=".tmp")
+    try:
+        fd, tmp = tempfile.mkstemp(dir=str(path.parent), prefix=f".{path.name}.", suffix=".tmp")
+    except PermissionError as e:
+        # mkstemp needs write on the parent dir (e.g. a root-owned ~/.humanbound).
+        raise PermissionError(
+            f"Could not write {path} securely: its directory {path.parent} is not "
+            f"writable by the current user (e.g. created by a previous root/`sudo` run). "
+            f"Fix ownership with: sudo chown -R $(id -un) {path.parent}"
+        ) from e
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as handle:
             handle.write(content)

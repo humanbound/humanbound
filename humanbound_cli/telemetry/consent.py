@@ -49,11 +49,8 @@ def _read_state() -> dict:
 
 
 def _write_state(state: dict) -> None:
-    """Persist the state dict atomically-ish with mode 0600."""
-    f = _state_file()
-    f.parent.mkdir(parents=True, exist_ok=True)
-    f.write_text(json.dumps(state) + "\n")
-    f.chmod(0o600)
+    """Persist the state dict atomically with owner-only (0600) permissions."""
+    config.write_secure_file(_state_file(), json.dumps(state) + "\n")
 
 
 def _is_editable_install() -> bool:

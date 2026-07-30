@@ -476,6 +476,13 @@ class HumanboundClient:
         if TOKEN_FILE.exists():
             TOKEN_FILE.unlink()
 
+        # A temp stranded by a crash mid-write can carry a refresh token past logout.
+        for stale in TOKEN_FILE.parent.glob(f".{TOKEN_FILE.name}.*.tmp"):
+            try:
+                stale.unlink()
+            except OSError:
+                pass
+
         if not silent:
             print("Logged out successfully.")
 
