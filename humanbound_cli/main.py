@@ -197,7 +197,7 @@ def status_alias(ctx, experiment_id: str, watch: bool, show_all: bool):
 
 def main():
     """Entrypoint with session expiry handling and telemetry init."""
-    from .exceptions import NotAuthenticatedError, SessionExpiredError
+    from .exceptions import APIError, NotAuthenticatedError, SessionExpiredError
 
     telemetry_pkg.maybe_fire_startup_events()
     atexit.register(telemetry_pkg.shutdown)
@@ -215,6 +215,9 @@ def main():
         client.logout()
         client.login()
         console.print("\n[green]Logged in.[/green] Please re-run your command.")
+    except APIError as e:
+        console.print(f"[red]Error:[/red] {e}")
+        raise SystemExit(1)
     except NotAuthenticatedError:
         # Fire gated_command_hit before re-raising so user sees the original UX
         telemetry_pkg.fire_gated_command_hit()
