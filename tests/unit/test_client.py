@@ -546,3 +546,148 @@ class TestDiscoverTargets:
     def test_requires_organisation(self, unauthenticated_client):
         with pytest.raises(ValidationError):
             unauthenticated_client.discover_targets("openai", {"api_key": "x"})
+
+
+# ---------------------------------------------------------------------------
+# Headless user API key mode (HUMANBOUND_API_KEY)
+# ---------------------------------------------------------------------------
+
+
+class TestApiKeyMode:
+    """HUMANBOUND_API_KEY → authenticate via x-api-key, skip OAuth/credentials."""
+
+    def _client(self, tmp_path, monkeypatch, **env):
+        config_dir = tmp_path / ".humanbound"
+        config_dir.mkdir(exist_ok=True)
+        token_file = config_dir / "credentials.json"
+        monkeypatch.setattr("humanbound_cli.client.CONFIG_DIR", config_dir)
+        monkeypatch.setattr("humanbound_cli.client.TOKEN_FILE", token_file)
+        monkeypatch.setattr("humanbound_cli.config.CONFIG_DIR", config_dir)
+        monkeypatch.setattr("humanbound_cli.config.TOKEN_FILE", token_file)
+        for k in ("HUMANBOUND_API_KEY", "HUMANBOUND_ORG_ID", "HUMANBOUND_PROJECT_ID"):
+            monkeypatch.delenv(k, raising=False)
+        for k, v in env.items():
+            monkeypatch.setenv(k, v)
+        return HumanboundClient(base_url="http://test.local/api")
+
+    def test_key_makes_authenticated_without_token(self, tmp_path, monkeypatch):
+        c = self._client(tmp_path, monkeypatch, HUMANBOUND_API_KEY="hb_abc123")
+        assert c.api_key == "hb_abc123"
+        assert c._api_token is None  # no OAuth token loaded
+        assert c.is_authenticated() is True
+
+    def test_key_env_whitespace_is_stripped(self, tmp_path, monkeypatch):
+        # CI secrets often carry a trailing newline (--env-file, $(cat key));
+        # a raw \n in a header value makes requests raise InvalidHeader.
+        c = self._client(
+            tmp_path,
+            monkeypatch,
+            HUMANBOUND_API_KEY=" hb_abc123\n",
+            HUMANBOUND_ORG_ID="org-1\n",
+            HUMANBOUND_PROJECT_ID=" proj-1 ",
+        )
+        assert c.api_key == "hb_abc123"
+        assert c._organisation_id == "org-1"
+        assert c._project_id == "proj-1"
+
+    def test_headers_use_x_api_key_not_bearer(self, tmp_path, monkeypatch):
+        c = self._client(
+            tmp_path,
+            monkeypatch,
+            HUMANBOUND_API_KEY="hb_abc123",
+            HUMANBOUND_ORG_ID="org-1",
+            HUMANBOUND_PROJECT_ID="proj-1",
+        )
+        headers = c._get_headers(include_org=True, include_project=True)
+        assert headers["x-api-key"] == "hb_abc123"
+        assert "Authorization" not in headers
+        assert headers["organisation_id"] == "org-1"
+        assert headers["project_id"] == "proj-1"
+
+    def test_no_key_keeps_bearer(self, tmp_path, monkeypatch):
+        c = self._client(tmp_path, monkeypatch)  # no env key
+        c._api_token = "tok"
+        headers = c._get_headers()
+        assert headers["Authorization"] == "Bearer tok"
+        assert "x-api-key" not in headers
+
+    def test_key_mode_expired_401_does_not_trigger_relogin(self, tmp_path, monkeypatch):
+        # A headless key can't re-authenticate: its "expired" 401 must surface as a plain
+        # error (ForbiddenError), NOT SessionExpiredError (which drives the OAuth re-login).
+        from humanbound_cli.exceptions import ForbiddenError, SessionExpiredError
+
+        c = self._client(tmp_path, monkeypatch, HUMANBOUND_API_KEY="hb_abc")
+        resp = MagicMock(status_code=401)
+        resp.json.return_value = {"message": "API key has expired."}
+        with pytest.raises(ForbiddenError):
+            c._handle_response(resp)
+
+    def test_session_mode_expired_401_is_session_expiry(self, tmp_path, monkeypatch):
+        # Without a key, an expired session 401 still maps to SessionExpiredError (re-login).
+        from humanbound_cli.exceptions import SessionExpiredError
+
+        c = self._client(tmp_path, monkeypatch)  # no key
+        c._api_token = "tok"
+        resp = MagicMock(status_code=401)
+        resp.json.return_value = {"message": "Session token expired."}
+        with pytest.raises(SessionExpiredError):
+            c._handle_response(resp)
+
+
+class TestClientDisablesRedirects:
+    """Credential-bearing requests must not follow redirects.
+
+    ``requests`` strips only ``Authorization`` on a cross-host redirect, not
+    custom headers such as ``x-api-key``, so a redirecting or compromised
+    endpoint could re-send a headless key to another host. Mirrors the LLM
+    pinger and bot HTTP/SSE reject-redirect behavior (see test_llm_pinger.py).
+    """
+
+    @patch("humanbound_cli.client.requests.get")
+    def test_get_disables_redirects(self, mock_get, client):
+        mock_get.return_value = _mock_response(200, {})
+        client.get("projects")
+        assert mock_get.call_args.kwargs.get("allow_redirects") is False
+
+    @patch("humanbound_cli.client.requests.post")
+    def test_post_disables_redirects(self, mock_post, client):
+        mock_post.return_value = _mock_response(200, {})
+        client.post("projects", data={})
+        assert mock_post.call_args.kwargs.get("allow_redirects") is False
+
+    @patch("humanbound_cli.client.requests.put")
+    def test_put_disables_redirects(self, mock_put, client):
+        mock_put.return_value = _mock_response(200, {})
+        client.put("projects/1", data={})
+        assert mock_put.call_args.kwargs.get("allow_redirects") is False
+
+    @patch("humanbound_cli.client.requests.delete")
+    def test_delete_disables_redirects(self, mock_delete, client):
+        mock_delete.return_value = _mock_response(204)
+        client.delete("projects/1")
+        assert mock_delete.call_args.kwargs.get("allow_redirects") is False
+
+    def test_3xx_surfaces_as_api_error(self, client):
+        resp = _mock_response(302, {"message": "Found"})
+        with pytest.raises(APIError):
+            client._handle_response(resp)
+
+
+class TestGetRunnerKeyMode:
+    """get_runner(): a headless key selects PlatformTestRunner with no local fallback."""
+
+    def test_key_selects_platform_runner(self, monkeypatch):
+        from humanbound_cli.engine import get_runner
+        from humanbound_cli.engine.platform_runner import PlatformTestRunner
+
+        monkeypatch.setenv("HUMANBOUND_API_KEY", "hb_abc123")
+        runner = get_runner()
+        assert isinstance(runner, PlatformTestRunner)
+        assert runner.client.api_key == "hb_abc123"
+
+    def test_force_local_wins_over_key(self, monkeypatch):
+        from humanbound_cli.engine import get_runner
+        from humanbound_cli.engine.local_runner import LocalTestRunner
+
+        monkeypatch.setenv("HUMANBOUND_API_KEY", "hb_abc123")
+        assert isinstance(get_runner(force_local=True), LocalTestRunner)

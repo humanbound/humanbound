@@ -22,10 +22,13 @@ from .config import (
     DEFAULT_TIMEOUT,
     LONG_TIMEOUT,
     TOKEN_FILE,
+    get_api_key,
     get_auth0_audience,
     get_auth0_client_id,
     get_auth0_domain,
     get_base_url,
+    get_organisation_id,
+    get_project_id,
 )
 from .exceptions import (
     APIError,
@@ -310,8 +313,13 @@ class HumanboundClient:
         self._email: str | None = None
         self._default_organisation_id: str | None = None
 
-        # Try to load existing credentials
-        self._load_credentials()
+        # Key mode: org/project come from env, never the credentials file.
+        self._api_key: str | None = get_api_key()
+        if self._api_key:
+            self._organisation_id = get_organisation_id()
+            self._project_id = get_project_id()
+        else:
+            self._load_credentials()
 
     # -------------------------------------------------------------------------
     # Authentication
@@ -470,6 +478,10 @@ class HumanboundClient:
         Returns:
             True if authenticated and token is not expired.
         """
+        # Key mode is stateless — the key itself is the credential.
+        if self._api_key:
+            return True
+
         if not self._api_token:
             return False
 
@@ -632,6 +644,11 @@ class HumanboundClient:
         return self._project_id
 
     @property
+    def api_key(self) -> str | None:
+        """The headless user API key (HUMANBOUND_API_KEY), if auth is key-based."""
+        return self._api_key
+
+    @property
     def username(self) -> str | None:
         """Get current username."""
         return self._username
@@ -665,10 +682,13 @@ class HumanboundClient:
         Returns:
             Headers dictionary.
         """
-        headers = {
-            "Authorization": f"Bearer {self._api_token}",
-            "Content-Type": "application/json",
-        }
+        if self._api_key:
+            headers = {"x-api-key": self._api_key, "Content-Type": "application/json"}
+        else:
+            headers = {
+                "Authorization": f"Bearer {self._api_token}",
+                "Content-Type": "application/json",
+            }
 
         if include_org and self._organisation_id:
             headers["organisation_id"] = self._organisation_id
@@ -698,14 +718,26 @@ class HumanboundClient:
         except ValueError:
             data = {"message": response.text}
 
+        if 300 <= response.status_code < 400:
+            # Never followed — a redirect would replay credential headers cross-host.
+            raise APIError(
+                f"Unexpected redirect (HTTP {response.status_code})",
+                response.status_code,
+                data,
+            )
+
         if response.status_code >= 400:
             message = data.get("message", "Unknown error")
 
             if response.status_code == 404:
                 raise NotFoundError(message, response.status_code, data)
-            elif response.status_code == 401 and "revoked" in message.lower():
-                raise SessionExpiredError(message, response.status_code, data)
-            elif response.status_code == 401 and "expired" in message.lower():
+            elif (
+                response.status_code == 401
+                and not self._api_key
+                and ("revoked" in message.lower() or "expired" in message.lower())
+            ):
+                # Session-mode only: a headless key can't be refreshed, so key-mode
+                # 401s skip this and surface as ForbiddenError instead of re-login.
                 raise SessionExpiredError(message, response.status_code, data)
             elif response.status_code in (401, 403):
                 raise ForbiddenError(message, response.status_code, data)
@@ -747,6 +779,7 @@ class HumanboundClient:
             headers=headers,
             params=params,
             timeout=timeout,
+            allow_redirects=False,
         )
         return self._handle_response(response)
 
@@ -776,6 +809,7 @@ class HumanboundClient:
             headers=self._get_headers(include_org, include_project),
             json=data,
             timeout=timeout,
+            allow_redirects=False,
         )
         return self._handle_response(response)
 
@@ -805,6 +839,7 @@ class HumanboundClient:
             headers=self._get_headers(include_org, include_project),
             json=data,
             timeout=timeout,
+            allow_redirects=False,
         )
         return self._handle_response(response)
 
@@ -831,6 +866,7 @@ class HumanboundClient:
             f"{self.base_url}/{endpoint.lstrip('/')}",
             headers=self._get_headers(include_org, include_project),
             timeout=timeout,
+            allow_redirects=False,
         )
         return self._handle_response(response)
 
@@ -1128,9 +1164,28 @@ class HumanboundClient:
         """List API keys."""
         return self.get("api-keys", params={"page": page, "limit": limit}, include_org=False)
 
-    def create_api_key(self, name: str, scopes: str = "admin") -> dict:
-        """Create a new API key."""
-        return self.post("api-keys", data={"name": name, "scopes": scopes}, include_org=False)
+    def create_api_key(
+        self,
+        name: str,
+        scope: str = "read",
+        organisations: list[str] | None = None,
+        projects: list[str] | None = None,
+        expires_at: int | None = None,
+    ) -> dict:
+        """Create a new user API key.
+
+        Selection/expiry are omitted when not given so the backend applies its
+        least-privilege defaults (scope=read, organisations/projects = all the
+        owner can reach, no expiry).
+        """
+        data: dict = {"name": name, "scope": scope}
+        if organisations:
+            data["organisations"] = list(organisations)
+        if projects:
+            data["projects"] = list(projects)
+        if expires_at is not None:
+            data["expires_at"] = expires_at
+        return self.post("api-keys", data=data, include_org=False)
 
     def delete_api_key(self, key_id: str) -> Any:
         """Delete an API key."""

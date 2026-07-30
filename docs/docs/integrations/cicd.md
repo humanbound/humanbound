@@ -73,8 +73,40 @@ jobs:
 ```
 
 Findings gate the build via `fail-on`, land in **Security → Code scanning** as SARIF, and are
-summarized on the workflow run page. **Local mode** (shown above — your own LLM key, no account)
-works today; **platform mode** (`api-key`, results in the Humanbound dashboard) is coming soon.
+summarized on the workflow run page.
+
+### Local mode vs platform mode
+
+The Action runs in one of two modes — set **exactly one** credential:
+
+| Mode | Credential | Where the engine runs | Results |
+|---|---|---|---|
+| **Local** | `provider-api-key` (your own LLM key) | in the runner | job output + SARIF; no account needed |
+| **Platform** | `api-key` (a Humanbound `hb_…` key) | on humanbound.ai | your dashboard, plus SARIF |
+
+Platform mode uses a [user API key](../management/api-keys.md) — no `hb login`, no browser:
+
+```yaml
+      - uses: humanbound/actions@v1
+        with:
+          api-key: ${{ secrets.HUMANBOUND_API_KEY }}      # hb_… key
+          org-id: ${{ vars.HUMANBOUND_ORG_ID }}
+          project-id: ${{ vars.HUMANBOUND_PROJECT_ID }}
+          fail-on: high
+```
+
+Both ids are required — a headless run has no stored selection. Create the key with the least
+privilege the job needs, pinned to one project:
+
+```bash
+hb api-keys create --name "GitHub CI" --scope write \
+  --org <org-id> --projects <project-id>
+```
+
+!!! note "Requires humanbound ≥ 2.8.0"
+    Headless `HUMANBOUND_API_KEY` auth ships in CLI 2.8.0. The Action checks the installed
+    version and fails with a clear message on older releases — pin `version:` or omit it to
+    get the latest.
 
 !!! tip "Full reference"
     The Action supports many more inputs — scope discovery, test categories, SARIF controls,

@@ -46,6 +46,27 @@ Opens your browser for OAuth authentication. Credentials are stored locally at `
 | `--port` | Local OAuth callback port (default: 8085) |
 | `--base-url` | API base URL for on-prem deployments |
 
+## Headless (API key)
+
+`hb login` opens a browser for OAuth, which isn't possible in CI/CD, Docker, or cron. There,
+authenticate with a [user API key](management/api-keys.md) instead:
+
+```bash
+export HUMANBOUND_API_KEY=hb_…            # from `hb api-keys create`
+export HUMANBOUND_ORG_ID=<org-id>         # selects the organisation (replaces `hb orgs use`)
+export HUMANBOUND_PROJECT_ID=<project-id> # selects the project (replaces `hb projects use`)
+
+hb test --wait --fail-on high
+```
+
+When `HUMANBOUND_API_KEY` is set the CLI sends the key on every request and skips OAuth
+entirely, acting as the key's owner within the key's scope and org/project selection. No
+credentials are written to `~/.humanbound/`.
+
+Not every command is available this way — see
+[API Keys → Which commands work headlessly](management/api-keys.md#which-commands-work-headlessly)
+for the supported set, and for scoping and rotation.
+
 ## Logout
 
 ```bash

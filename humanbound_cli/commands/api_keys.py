@@ -63,20 +63,20 @@ def _list_keys(as_json: bool):
         table = Table(title="API Keys")
         table.add_column("ID", style="dim")
         table.add_column("Name", style="bold")
-        table.add_column("Scopes")
+        table.add_column("Scope")
         table.add_column("Active", justify="center")
         table.add_column("Key Prefix", style="dim")
         table.add_column("Created", style="dim")
 
         for key in keys:
-            active = "[green]yes[/green]" if key.get("active", True) else "[red]no[/red]"
+            active = "[green]yes[/green]" if key.get("is_active", True) else "[red]no[/red]"
             key_val = key.get("key", key.get("key_prefix", ""))
             prefix = (key_val[:12] + "...") if len(str(key_val)) > 12 else str(key_val)
 
             table.add_row(
                 str(key.get("id", "")),
                 key.get("name", ""),
-                key.get("scopes", ""),
+                key.get("scope", ""),
                 active,
                 prefix,
                 str(key.get("created_at", ""))[:10],
@@ -95,12 +95,37 @@ def _list_keys(as_json: bool):
 @api_keys_group.command("create")
 @click.option("--name", required=True, help="Name for the API key")
 @click.option(
-    "--scopes",
-    type=click.Choice(["admin", "write", "read"]),
-    default="admin",
-    help="Key permission scope",
+    "--scope",
+    type=click.Choice(["read", "write", "admin"]),
+    default="read",
+    help="Key permission scope (cumulative: admin >= write >= read). Default: read.",
 )
-def create_key(name: str, scopes: str):
+@click.option(
+    "--org",
+    "organisations",
+    multiple=True,
+    help="Restrict the key to these organisation id(s) (repeatable). Default: all the owner can reach.",
+)
+@click.option(
+    "--projects",
+    "projects",
+    multiple=True,
+    help="Restrict the key to these project id(s) (repeatable). Default: all the owner can reach.",
+)
+@click.option(
+    "--expires",
+    "expires_at",
+    type=int,
+    default=None,
+    help="Expiry as epoch seconds (default: never expires).",
+)
+def create_key(
+    name: str,
+    scope: str,
+    organisations: tuple[str, ...],
+    projects: tuple[str, ...],
+    expires_at: int | None,
+):
     """Create a new API key.
 
     The full key is shown only once after creation - save it immediately.
@@ -114,7 +139,13 @@ def create_key(name: str, scopes: str):
 
     try:
         with console.status("Creating API key..."):
-            response = client.create_api_key(name, scopes)
+            response = client.create_api_key(
+                name,
+                scope,
+                organisations=list(organisations) or None,
+                projects=list(projects) or None,
+                expires_at=expires_at,
+            )
 
         key_value = response.get("key", response.get("api_key", ""))
 
@@ -129,7 +160,11 @@ def create_key(name: str, scopes: str):
         )
 
         console.print(f"\n  Name: [bold]{name}[/bold]")
-        console.print(f"  Scopes: {scopes}")
+        console.print(f"  Scope: {scope}")
+        console.print(f"  Organisations: {list(organisations) or ['*']}")
+        console.print(f"  Projects: {list(projects) or ['*']}")
+        if expires_at is not None:
+            console.print(f"  Expires at: {expires_at}")
         console.print(f"  ID: [dim]{response.get('id', '')}[/dim]")
 
     except NotAuthenticatedError:
@@ -143,11 +178,9 @@ def create_key(name: str, scopes: str):
 @api_keys_group.command("update")
 @click.argument("key_id")
 @click.option("--name", help="New key name")
-@click.option(
-    "--scopes", type=click.Choice(["admin", "write", "read"]), help="New permission scope"
-)
+@click.option("--scope", type=click.Choice(["read", "write", "admin"]), help="New permission scope")
 @click.option("--active/--inactive", default=None, help="Activate or deactivate key")
-def update_key(key_id: str, name: str, scopes: str, active):
+def update_key(key_id: str, name: str, scope: str, active):
     """Update an API key.
 
     KEY_ID: API key UUID (or partial ID).
@@ -159,9 +192,9 @@ def update_key(key_id: str, name: str, scopes: str, active):
         console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
         raise SystemExit(1)
 
-    if name is None and scopes is None and active is None:
+    if name is None and scope is None and active is None:
         console.print(
-            "[yellow]Nothing to update.[/yellow] Provide --name, --scopes, or --active/--inactive."
+            "[yellow]Nothing to update.[/yellow] Provide --name, --scope, or --active/--inactive."
         )
         raise SystemExit(1)
 
@@ -172,10 +205,10 @@ def update_key(key_id: str, name: str, scopes: str, active):
         payload = {}
         if name is not None:
             payload["name"] = name
-        if scopes is not None:
-            payload["scopes"] = scopes
+        if scope is not None:
+            payload["scope"] = scope
         if active is not None:
-            payload["active"] = active
+            payload["is_active"] = active
 
         with console.status("Updating API key..."):
             client.update_api_key(key_id, payload)
