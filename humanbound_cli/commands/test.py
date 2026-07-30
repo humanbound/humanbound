@@ -413,7 +413,12 @@ def test_command(
             client = runner.client
             if not client.project_id:
                 console.print("[yellow]No project selected.[/yellow]")
-                console.print("Use 'hb projects use <id>' to select a project first.")
+                if client.api_key:
+                    console.print(
+                        "Set the [bold]HUMANBOUND_PROJECT_ID[/bold] env var to the target project."
+                    )
+                else:
+                    console.print("Use 'hb projects use <id>' to select a project first.")
                 raise SystemExit(1)
         elif runner is None:
             console.print("[red]Not authenticated.[/red] Run 'hb login' first.")

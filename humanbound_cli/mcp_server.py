@@ -1136,36 +1136,36 @@ def hb_list_api_keys(page: int = 1, limit: int = 50) -> str:
 
 
 @mcp.tool()
-def hb_create_api_key(name: str, scopes: str = "admin") -> str:
+def hb_create_api_key(name: str, scope: str = "read") -> str:
     """Create a new API key.
 
     Args:
         name: Key name/label.
-        scopes: Comma-separated scopes (default 'admin').
+        scope: Permission scope 'read', 'write', or 'admin' (cumulative; default 'read').
     """
     try:
         client = _get_client()
-        return _ok(client.create_api_key(name, scopes=scopes))
+        return _ok(client.create_api_key(name, scope=scope))
     except HumanboundError as e:
         return _err(e)
 
 
 @mcp.tool()
-def hb_update_api_key(key_id: str, name: str | None = None, scopes: str | None = None) -> str:
+def hb_update_api_key(key_id: str, name: str | None = None, scope: str | None = None) -> str:
     """Update an API key.
 
     Args:
         key_id: API key UUID.
         name: New name.
-        scopes: New scopes.
+        scope: New permission scope 'read', 'write', or 'admin' (cumulative).
     """
     try:
         client = _get_client()
         data = {}
         if name is not None:
             data["name"] = name
-        if scopes is not None:
-            data["scopes"] = scopes
+        if scope is not None:
+            data["scope"] = scope
         return _ok(client.update_api_key(key_id, data))
     except HumanboundError as e:
         return _err(e)
