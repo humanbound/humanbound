@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Agentic category-worker failures no longer report a completed scan.**
+  Exceptions raised by an OWASP Agentic category worker are now surfaced through
+  the engine error callback and mark the run `Failed`; local runs preserve that
+  failure status while saving completed partial results.
+
 ### Security
 - **Local secret files are written atomically at `0600`** (#67, thanks
   @JChario). `credentials.json`, the provider `config.yaml`, and the telemetry

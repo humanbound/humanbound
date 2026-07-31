@@ -113,6 +113,18 @@ class _LocalRun:
                 callbacks=callbacks,
             )
 
+            # Preserve a terminal failure/cancellation reported by the
+            # orchestrator. Completed logs are still useful partial results.
+            if self.status in ("Failed", "Terminated"):
+                if self.logs:
+                    self.results = presenter_run(
+                        None,
+                        self.logs,
+                        test_category=self.config.test_category,
+                    )
+                    self._save_results()
+                return
+
             # Phase 3: Post-processing
             self.status = "Analysing"
             self.results = presenter_run(

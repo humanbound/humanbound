@@ -398,15 +398,34 @@ def orchestrator_run(
             )
             futures[future] = test_sub_category
 
+        category_failures = []
         for future in futures:
             try:
                 if callbacks.is_terminated():
                     future.cancel()
                     continue
                 future.result(timeout=EXPERIMENT_THREAD_TIMEOUT)
-            except Exception:
-                continue
+            except Exception as e:
+                if callbacks.is_terminated():
+                    continue
+
+                test_sub_category = futures[future]
+                category_failures.append((test_sub_category, e))
+                logger.exception(
+                    "OWASP Agentic category worker failed: %s",
+                    test_sub_category,
+                )
+                callbacks.on_error(
+                    e.__class__.__name__,
+                    {
+                        "where": "OWASP Agentic :: Category worker",
+                        "category": test_sub_category,
+                        "e": str(e),
+                        "trace": traceback.format_exc(),
+                    },
+                )
 
     # Signal completion via callback
     if not callbacks.is_terminated():
-        callbacks.on_complete(Status.Finished.value)
+        status = Status.Failed.value if category_failures else Status.Finished.value
+        callbacks.on_complete(status)
