@@ -295,6 +295,8 @@ LOGOUT_HTML = """<!DOCTYPE html>
 </body>
 </html>"""
 
+LOOPBACK_HOST = "127.0.0.1"
+
 
 class HumanboundClient:
     """API client for Humanbound platform with OAuth authentication."""
@@ -377,6 +379,14 @@ class HumanboundClient:
         class CallbackHandler(http.server.BaseHTTPRequestHandler):
             def do_GET(self):
                 parsed = urllib.parse.urlparse(self.path)
+                if parsed.path != "/callback":
+                    auth_result["error"] = "Unexpected OAuth callback path"
+                    self.send_response(404)
+                    self.send_header("Content-type", "text/html")
+                    self.end_headers()
+                    self.wfile.write(b"Not Found")
+                    return
+
                 params = urllib.parse.parse_qs(parsed.query)
 
                 if "code" in params and params.get("state", [None])[0] == state:
@@ -403,7 +413,7 @@ class HumanboundClient:
 
         # Allow port reuse to avoid "Address already in use" errors
         socketserver.TCPServer.allow_reuse_address = True
-        server = socketserver.TCPServer(("", callback_port), CallbackHandler)
+        server = socketserver.TCPServer((LOOPBACK_HOST, callback_port), CallbackHandler)
         server.timeout = 120  # 2 minute timeout
 
         try:
@@ -1530,6 +1540,7 @@ class HumanboundClient:
             headers=headers,
             json={},
             timeout=LONG_TIMEOUT,
+            allow_redirects=False,
         )
         return self._handle_response(response)
 
