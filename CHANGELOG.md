@@ -33,6 +33,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   trace still reaches the error callback and DEBUG logging.
 
 ### Security
+- **Local test result artifacts are written atomically at `0600`** under
+  `.humanbound/results/` directories hardened to `0700`. `meta.json` and
+  `logs.jsonl` retain raw prompts, model replies, and often endpoint secrets;
+  they previously inherited the process umask (commonly world-readable on first
+  write). They now use the same secure writer as `credentials.json`.
+
 - **Local secret files are written atomically at `0600`** (#67, thanks
   @JChario). `credentials.json`, the provider `config.yaml`, and the telemetry
   state file could briefly exist world-readable on first write (created at the
