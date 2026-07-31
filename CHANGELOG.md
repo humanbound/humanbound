@@ -41,6 +41,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   error page also escapes the reflected `error_description` to prevent a
   reflected-XSS in that page.
 
+### Fixed
+- **Local experiment starts no longer collide within the same second.** Each
+  local run now includes a short UUID suffix and exclusively reserves its result
+  directory before the background engine thread begins.
+
 ## [2.8.0] — 2026-07-30
 
 ### Added

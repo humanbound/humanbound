@@ -3,7 +3,7 @@
 """LocalTestRunner — runs engine in-process, results to files.
 
 Provider from env vars or ~/.humanbound/config.yaml.
-Results written to .humanbound/results/exp-{timestamp}/
+Results written to .humanbound/results/exp-{timestamp}-{uuid}/
 """
 
 import json
@@ -12,6 +12,7 @@ import os
 import threading
 import time
 import traceback
+import uuid
 from pathlib import Path
 
 from .callbacks import EngineCallbacks
@@ -173,7 +174,8 @@ class _LocalRun:
         )
 
         results_dir = Path(".humanbound/results") / self.experiment_id
-        results_dir.mkdir(parents=True, exist_ok=True)
+        if not results_dir.is_dir():
+            raise RuntimeError(f"Result directory was not allocated: {results_dir}")
 
         # Build validated ExperimentMeta
         exp_results = ExperimentResults()
@@ -234,7 +236,16 @@ class LocalTestRunner(TestRunner):
                 "Usage: hb test --endpoint ./bot-config.json --repo . --wait"
             )
 
-        experiment_id = f"exp-{time.strftime('%Y%m%d-%H%M%S')}"
+        results_root = Path(".humanbound/results")
+        while True:
+            experiment_id = f"exp-{time.strftime('%Y%m%d-%H%M%S')}-{uuid.uuid4().hex[:8]}"
+            try:
+                (results_root / experiment_id).mkdir(parents=True)
+            except FileExistsError:
+                # UUID collisions are exceptionally unlikely, but exclusive
+                # allocation ensures concurrent starts can never share a run.
+                continue
+            break
 
         run = _LocalRun(experiment_id, config)
         self._runs[experiment_id] = run
