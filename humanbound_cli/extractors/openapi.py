@@ -10,6 +10,8 @@ from typing import Any
 class OpenAPIParser:
     """Parse OpenAPI/Swagger specifications to extract bot capabilities."""
 
+    _MAX_REF_DEPTH = 32
+
     def __init__(self, spec_path: str):
         """Initialize the parser.
 
@@ -17,6 +19,7 @@ class OpenAPIParser:
             spec_path: Path to the OpenAPI spec file (JSON or YAML).
         """
         self.spec_path = Path(spec_path).resolve()
+        self._spec: dict[str, Any] | None = None
 
     def parse(self) -> dict[str, Any] | None:
         """Parse the OpenAPI specification.
@@ -53,10 +56,95 @@ class OpenAPIParser:
                     except (ImportError, Exception):
                         return None
 
+            if not isinstance(spec, dict):
+                return None
+            self._spec = spec
             return self._extract_from_spec(spec)
 
         except Exception:
             return None
+
+    def _resolve_ref(
+        self,
+        node: Any,
+        *,
+        seen: frozenset[str] | None = None,
+        depth: int = 0,
+    ) -> Any:
+        """Resolve a local JSON Pointer ``$ref`` against the loaded spec.
+
+        Only document-local refs (``#/...``) are supported. Broken refs, cycles,
+        and over-deep chains return ``None`` so extraction can skip them without
+        aborting the whole parse.
+        """
+        if not isinstance(node, dict) or "$ref" not in node:
+            return node
+        if self._spec is None or depth >= self._MAX_REF_DEPTH:
+            return None
+
+        ref = node.get("$ref")
+        if not isinstance(ref, str) or not ref.startswith("#/"):
+            return None
+
+        seen = seen or frozenset()
+        if ref in seen:
+            return None
+
+        target: Any = self._spec
+        for part in ref[2:].split("/"):
+            part = part.replace("~1", "/").replace("~0", "~")
+            if isinstance(target, dict) and part in target:
+                target = target[part]
+            else:
+                return None
+
+        if isinstance(target, dict) and "$ref" in target:
+            return self._resolve_ref(target, seen=seen | {ref}, depth=depth + 1)
+        return target
+
+    def _deref(self, node: Any) -> Any:
+        """Return ``node`` with a single level of ``$ref`` resolved when present."""
+        if isinstance(node, dict) and "$ref" in node:
+            return self._resolve_ref(node)
+        return node
+
+    def _schema_properties(self, schema: Any) -> tuple[dict[str, Any], list[str]]:
+        """Collect properties + required names from a schema, following refs/allOf."""
+        schema = self._deref(schema)
+        if not isinstance(schema, dict):
+            return {}, []
+
+        properties: dict[str, Any] = {}
+        required: list[str] = []
+
+        # Shallow allOf merge — common for composed request bodies.
+        for part in schema.get("allOf") or []:
+            part_props, part_req = self._schema_properties(part)
+            properties.update(part_props)
+            for name in part_req:
+                if name not in required:
+                    required.append(name)
+
+        raw_props = schema.get("properties") or {}
+        if isinstance(raw_props, dict):
+            for name, prop in raw_props.items():
+                resolved_prop = self._deref(prop)
+                if isinstance(resolved_prop, dict):
+                    properties[name] = resolved_prop
+
+        for name in schema.get("required") or []:
+            if isinstance(name, str) and name not in required:
+                required.append(name)
+
+        return properties, required
+
+    def _param_type(self, param: dict[str, Any]) -> str:
+        schema = param.get("schema")
+        if isinstance(schema, dict):
+            resolved = self._deref(schema)
+            if isinstance(resolved, dict) and resolved.get("type"):
+                return str(resolved["type"])
+        return str(param.get("type", "string"))
 
     def _extract_from_spec(self, spec: dict[str, Any]) -> dict[str, Any]:
         """Extract relevant information from parsed spec.
@@ -138,38 +226,44 @@ class OpenAPIParser:
             if not isinstance(param, dict):
                 continue
 
-            # Handle $ref (simplified - doesn't resolve refs)
-            if "$ref" in param:
+            resolved = self._deref(param)
+            if not isinstance(resolved, dict) or "name" not in resolved:
+                # Broken or cyclic $ref — skip rather than aborting the parse.
                 continue
 
             params.append(
                 {
-                    "name": param.get("name", ""),
-                    "in": param.get("in", ""),
-                    "required": param.get("required", False),
-                    "description": param.get("description", "")[:200],
-                    "type": param.get("schema", {}).get("type", param.get("type", "string")),
+                    "name": resolved.get("name", ""),
+                    "in": resolved.get("in", ""),
+                    "required": resolved.get("required", False),
+                    "description": str(resolved.get("description", ""))[:200],
+                    "type": self._param_type(resolved),
                 }
             )
 
         # Extract request body parameters (OpenAPI 3.x)
         request_body = operation.get("requestBody", {})
-        if request_body:
+        request_body = self._deref(request_body) or {}
+        if isinstance(request_body, dict) and request_body:
             content = request_body.get("content", {})
+            if not isinstance(content, dict):
+                content = {}
             json_content = content.get("application/json", {})
+            if not isinstance(json_content, dict):
+                json_content = {}
             schema = json_content.get("schema", {})
+            properties, required = self._schema_properties(schema)
 
-            if schema.get("properties"):
-                for name, prop in schema.get("properties", {}).items():
-                    params.append(
-                        {
-                            "name": name,
-                            "in": "body",
-                            "required": name in schema.get("required", []),
-                            "description": prop.get("description", "")[:200],
-                            "type": prop.get("type", "string"),
-                        }
-                    )
+            for name, prop in properties.items():
+                params.append(
+                    {
+                        "name": name,
+                        "in": "body",
+                        "required": name in required,
+                        "description": str(prop.get("description", ""))[:200],
+                        "type": str(prop.get("type", "string")),
+                    }
+                )
 
         return params
 
@@ -185,8 +279,11 @@ class OpenAPIParser:
         responses = {}
 
         for status, response in operation.get("responses", {}).items():
-            if isinstance(response, dict):
-                responses[str(status)] = response.get("description", "")[:200]
+            if not isinstance(response, dict):
+                continue
+            resolved = self._deref(response)
+            if isinstance(resolved, dict):
+                responses[str(status)] = str(resolved.get("description", ""))[:200]
 
         return responses
 

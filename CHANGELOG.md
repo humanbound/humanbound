@@ -59,6 +59,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   local run ID now includes a short UUID suffix (`exp-{timestamp}-{uuid8}`), so
   concurrent `hb test` processes no longer overwrite each other's `_runs` slot
   or result directory.
+- **OpenAPI extraction now resolves `$ref` parameters and request body
+  schemas.** The parser previously skipped every `$ref` parameter and only read
+  inline `properties`, so component-based specs produced incomplete parameter
+  lists on the extractor. Local JSON Pointer resolution (with cycle-safe
+  `allOf` walking and depth guards) now follows `#/components/...` and Swagger 2
+  `#/parameters/...` refs. This is groundwork for consumers of `parameters` /
+  `responses`; `hb connect` today still reads only description/method/path/
+  summary from the parse result.
 
 ## [2.8.0] — 2026-07-30
 
