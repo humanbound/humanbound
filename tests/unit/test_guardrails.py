@@ -5,6 +5,7 @@ so we patch `get_runner` and wire in a mock client via `platform_runner`.
 """
 
 import json
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from click.testing import CliRunner
@@ -16,6 +17,7 @@ from .conftest import (
     MOCK_GUARDRAILS,
     assert_exit_error,
     assert_exit_ok,
+    local_runner,
     platform_runner,
 )
 
@@ -126,6 +128,75 @@ class TestHappyPath:
             params={"include_reasoning": "true"},
             include_project=True,
         )
+
+
+class TestLocalGuardrails:
+    @patch(RUNNER_PATCH)
+    def test_exports_failed_insights_from_results_metadata(self, mock_get_runner):
+        mock_get_runner.return_value = local_runner()
+
+        with runner.isolated_filesystem():
+            experiment_dir = Path(".humanbound/results/20260803-guardrails")
+            experiment_dir.mkdir(parents=True)
+            (experiment_dir / "meta.json").write_text(
+                json.dumps(
+                    {
+                        "results": {
+                            "insights": [
+                                {
+                                    "result": "fail",
+                                    "category": "prompt_injection",
+                                    "explanation": "The bot followed an injected instruction.",
+                                    "severity": "high",
+                                }
+                            ]
+                        }
+                    }
+                )
+            )
+
+            result = runner.invoke(cli, ["guardrails"])
+
+        assert_exit_ok(result)
+        data = json.loads(result.output)
+        assert data["metadata"]["total_rules"] == 1
+        assert data["rules"] == [
+            {
+                "id": "gr-001",
+                "threat_class": "prompt_injection",
+                "pattern": "The bot followed an injected instruction.",
+                "action": "block",
+                "severity": "high",
+                "source": "20260803-guardrails",
+            }
+        ]
+
+    @patch(RUNNER_PATCH)
+    def test_uses_top_level_insights_as_legacy_fallback(self, mock_get_runner):
+        mock_get_runner.return_value = local_runner()
+
+        with runner.isolated_filesystem():
+            experiment_dir = Path(".humanbound/results/legacy-result")
+            experiment_dir.mkdir(parents=True)
+            (experiment_dir / "meta.json").write_text(
+                json.dumps(
+                    {
+                        "insights": [
+                            {
+                                "result": "fail",
+                                "category": "legacy",
+                            }
+                        ]
+                    }
+                )
+            )
+
+            result = runner.invoke(cli, ["guardrails"])
+
+        assert_exit_ok(result)
+        data = json.loads(result.output)
+        assert data["metadata"]["total_rules"] == 1
+        assert data["rules"][0]["threat_class"] == "legacy"
 
 
 class TestErrorCases:

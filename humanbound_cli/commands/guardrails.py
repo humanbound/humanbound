@@ -143,7 +143,8 @@ def _local_guardrails(output, output_format, vendor):
         raise SystemExit(1)
 
     meta = json.loads(meta_file.read_text())
-    insights = meta.get("insights", [])
+    results = meta.get("results", {})
+    insights = results.get("insights", meta.get("insights", []))
 
     # Read logs for pattern extraction
     logs = []

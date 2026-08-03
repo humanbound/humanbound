@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **`hb guardrails` now exports rules from local test results.** Local runs
+  store insights beneath `results.insights`, but the exporter only read the
+  legacy top-level key and consequently emitted an empty ruleset. The exporter
+  now reads the current schema while retaining the legacy fallback (#102).
 - **Agentic category-worker failures no longer report a completed scan.**
   (#107, thanks @Ayush7614). Exceptions raised by an OWASP Agentic category
   worker are now surfaced through the engine error callback and mark the run
