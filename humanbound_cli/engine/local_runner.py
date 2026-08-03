@@ -14,11 +14,38 @@ import time
 import traceback
 from pathlib import Path
 
+from humanbound_cli.config import write_secure_file
+
 from .callbacks import EngineCallbacks
 from .presenter import run as presenter_run
 from .runner import PaginatedLogs, Posture, TestConfig, TestResult, TestRunner, TestStatus
 
 logger = logging.getLogger("humanbound.engine.local")
+
+
+def _ensure_private_dir(path: Path) -> None:
+    """Create ``path`` (and parents) with owner-only (0700) permissions.
+
+    Local result trees contain attack prompts and the agent's raw replies.
+    Matching credential storage, directories must not inherit a world-readable
+    umask.
+    """
+    path.mkdir(parents=True, exist_ok=True)
+    try:
+        path.chmod(0o700)
+    except (OSError, NotImplementedError):
+        pass
+    # Also tighten ancestors we own under .humanbound/results/
+    try:
+        results_root = path
+        while results_root.name != "results" and results_root != results_root.parent:
+            results_root = results_root.parent
+        if results_root.name == "results":
+            results_root.chmod(0o700)
+            if results_root.parent.name == ".humanbound":
+                results_root.parent.chmod(0o700)
+    except (OSError, NotImplementedError):
+        pass
 
 
 class _LocalRun:
@@ -173,7 +200,7 @@ class _LocalRun:
         )
 
         results_dir = Path(".humanbound/results") / self.experiment_id
-        results_dir.mkdir(parents=True, exist_ok=True)
+        _ensure_private_dir(results_dir)
 
         # Build validated ExperimentMeta
         exp_results = ExperimentResults()
@@ -209,14 +236,23 @@ class _LocalRun:
             completed_at=time.strftime("%Y-%m-%dT%H:%M:%S"),
         )
 
-        (results_dir / "meta.json").write_text(json.dumps(meta.model_dump(), indent=2, default=str))
+        # meta.json / logs.jsonl hold attack prompts and agent replies —
+        # write atomically at 0600 like credentials.json.
+        write_secure_file(
+            results_dir / "meta.json",
+            json.dumps(meta.model_dump(), indent=2, default=str),
+        )
 
         # logs.jsonl — validated LogEntry schema
-        with open(results_dir / "logs.jsonl", "w") as f:
-            for log in self.logs:
-                log_obj = LogsAnonymous(**log) if isinstance(log, dict) else log
-                public = log_obj.to_public()
-                f.write(json.dumps(public.model_dump(), default=str) + "\n")
+        log_lines = []
+        for log in self.logs:
+            log_obj = LogsAnonymous(**log) if isinstance(log, dict) else log
+            public = log_obj.to_public()
+            log_lines.append(json.dumps(public.model_dump(), default=str))
+        write_secure_file(
+            results_dir / "logs.jsonl",
+            "\n".join(log_lines) + ("\n" if log_lines else ""),
+        )
 
         logger.info(f"Results saved to {results_dir}")
 
