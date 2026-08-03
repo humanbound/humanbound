@@ -5,6 +5,8 @@
 from __future__ import annotations
 
 import importlib
+import time
+from concurrent.futures import Future
 from unittest.mock import MagicMock, patch
 
 from humanbound_cli.engine.callbacks import EngineCallbacks
@@ -20,17 +22,13 @@ EXPERIMENT = {
 }
 
 
-class _Future:
-    def __init__(self, error: Exception | None = None):
-        self.error = error
-        self.cancelled = False
-
-    def result(self, timeout=None):
-        if self.error:
-            raise self.error
-
-    def cancel(self):
-        self.cancelled = True
+def _future(error: Exception | None = None) -> Future:
+    f = Future()
+    if error:
+        f.set_exception(error)
+    else:
+        f.set_result(None)
+    return f
 
 
 class _Executor:
@@ -71,7 +69,7 @@ def test_category_worker_failure_marks_agentic_run_failed_and_reports_error():
         on_error=lambda title, details: errors.append((title, details)),
     )
 
-    _run_with_futures([_Future(), _Future(RuntimeError("second category failed"))], callbacks)
+    _run_with_futures([_future(), _future(RuntimeError("second category failed"))], callbacks)
 
     assert completed == [Status.Failed.value]
     assert len(errors) == 1
@@ -91,10 +89,45 @@ def test_all_category_workers_complete_marks_agentic_run_finished():
         on_error=lambda title, details: errors.append((title, details)),
     )
 
-    _run_with_futures([_Future(), _Future()], callbacks)
+    _run_with_futures([_future(), _future()], callbacks)
 
     assert completed == [Status.Finished.value]
     assert errors == []
+
+
+def test_slow_category_worker_is_not_marked_failed():
+    """A worker that outlives the harvest poll interval but succeeds must not
+    fail the run — failures are judged after the pool joins, not on a timeout."""
+    completed = []
+    errors = []
+    logs = []
+    callbacks = EngineCallbacks(
+        on_logs=logs.extend,
+        on_complete=completed.append,
+        on_error=lambda title, details: errors.append((title, details)),
+        flush_every_log=True,
+    )
+
+    def slow_worker(*args, **kwargs):
+        time.sleep(1.5)
+        callbacks.deliver_logs([{"category": "slow"}])
+
+    with (
+        patch.object(ORCH, "Bot", return_value=object()),
+        patch.object(ORCH, "__do_thread_run", slow_worker),
+    ):
+        ORCH.orchestrator_run(
+            organisation_id="org",
+            model_provider={},
+            experiment=EXPERIMENT,
+            prompts={"slow": []},
+            few_shots_model=None,
+            callbacks=callbacks,
+        )
+
+    assert completed == [Status.Finished.value]
+    assert errors == []
+    assert logs == [{"category": "slow"}]
 
 
 def test_local_run_preserves_failed_status_reported_by_orchestrator():

@@ -21,6 +21,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   local runner's generic failure path now saves partial results the same way
   an orchestrator-reported failure does, so `owasp_single_turn` and
   `behavioral_qa` crashes no longer discard finished work.
+- **Agentic category failures are judged after the worker pool joins, not on
+  a per-future timeout.** The pool shutdown always waited for every started
+  worker, so the old 3-hour `future.result` timeout could only misreport a
+  slow-but-successful category as failed — never actually bound the run. A
+  worker crash also no longer prints its traceback twice on stderr; the full
+  trace still reaches the error callback and DEBUG logging.
 
 ### Security
 - **Local secret files are written atomically at `0600`** (#67, thanks
