@@ -118,9 +118,7 @@ def test_resolves_request_body_schema_ref(tmp_path):
                     "summary": "Chat",
                     "requestBody": {
                         "content": {
-                            "application/json": {
-                                "schema": {"$ref": "#/components/schemas/Message"}
-                            }
+                            "application/json": {"schema": {"$ref": "#/components/schemas/Message"}}
                         }
                     },
                     "responses": {"200": {"description": "ok"}},
@@ -156,9 +154,7 @@ def test_resolves_nested_schema_property_ref(tmp_path):
                 "post": {
                     "requestBody": {
                         "content": {
-                            "application/json": {
-                                "schema": {"$ref": "#/components/schemas/Request"}
-                            }
+                            "application/json": {"schema": {"$ref": "#/components/schemas/Request"}}
                         }
                     },
                     "responses": {"200": {"description": "ok"}},
@@ -200,9 +196,7 @@ def test_allof_merges_properties(tmp_path):
                 "post": {
                     "requestBody": {
                         "content": {
-                            "application/json": {
-                                "schema": {"$ref": "#/components/schemas/Ext"}
-                            }
+                            "application/json": {"schema": {"$ref": "#/components/schemas/Ext"}}
                         }
                     },
                     "responses": {"200": {"description": "ok"}},
@@ -213,6 +207,84 @@ def test_allof_merges_properties(tmp_path):
     result = OpenAPIParser(str(_write_spec(tmp_path, spec))).parse()
     names = {p["name"] for p in result["operations"][0]["parameters"]}
     assert names == {"role", "content"}
+
+
+def test_cyclic_allof_does_not_discard_spec(tmp_path):
+    """Mutually-referential allOf must not RecursionError / return None from parse()."""
+    spec = {
+        "openapi": "3.0.3",
+        "info": {"title": "CycleAllOf", "version": "1.0.0"},
+        "components": {
+            "schemas": {
+                "A": {
+                    "allOf": [{"$ref": "#/components/schemas/B"}],
+                    "properties": {"a": {"type": "string"}},
+                },
+                "B": {
+                    "allOf": [{"$ref": "#/components/schemas/A"}],
+                    "properties": {"b": {"type": "string"}},
+                },
+            }
+        },
+        "paths": {
+            "/x": {
+                "post": {
+                    "requestBody": {
+                        "content": {
+                            "application/json": {"schema": {"$ref": "#/components/schemas/A"}}
+                        }
+                    },
+                    "responses": {"200": {"description": "ok"}},
+                }
+            }
+        },
+    }
+    result = OpenAPIParser(str(_write_spec(tmp_path, spec))).parse()
+    assert result is not None
+    names = {p["name"] for p in result["operations"][0]["parameters"]}
+    assert names == {"a", "b"}
+
+
+def test_allof_fanout_is_cached_not_exponential(tmp_path):
+    """Sibling allOf branches that re-enter the same $ref must not explode runtime."""
+    schemas = {
+        f"N{i}": {
+            "allOf": [
+                {"$ref": f"#/components/schemas/N{i + 1}"},
+                {"$ref": f"#/components/schemas/N{i + 1}"},
+            ],
+            "properties": {f"p{i}": {"type": "string"}},
+        }
+        for i in range(20)
+    }
+    schemas["N20"] = {"properties": {"leaf": {"type": "string"}}}
+    spec = {
+        "openapi": "3.0.3",
+        "info": {"title": "FanOut", "version": "1.0.0"},
+        "components": {"schemas": schemas},
+        "paths": {
+            "/x": {
+                "post": {
+                    "requestBody": {
+                        "content": {
+                            "application/json": {"schema": {"$ref": "#/components/schemas/N0"}}
+                        }
+                    },
+                    "responses": {"200": {"description": "ok"}},
+                }
+            }
+        },
+    }
+    import time
+
+    started = time.perf_counter()
+    result = OpenAPIParser(str(_write_spec(tmp_path, spec))).parse()
+    elapsed = time.perf_counter() - started
+    assert result is not None
+    assert elapsed < 1.0, f"fan-out walk too slow: {elapsed:.3f}s"
+    names = {p["name"] for p in result["operations"][0]["parameters"]}
+    assert "leaf" in names
+    assert "p0" in names
 
 
 def test_cyclic_ref_does_not_loop(tmp_path):

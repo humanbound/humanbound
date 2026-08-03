@@ -10,7 +10,7 @@ from typing import Any
 class OpenAPIParser:
     """Parse OpenAPI/Swagger specifications to extract bot capabilities."""
 
-    _MAX_REF_DEPTH = 32
+    _MAX_REF_DEPTH = 32  # stack-depth backstop for allOf/$ref walks (not the cycle guard)
 
     def __init__(self, spec_path: str):
         """Initialize the parser.
@@ -20,6 +20,9 @@ class OpenAPIParser:
         """
         self.spec_path = Path(spec_path).resolve()
         self._spec: dict[str, Any] | None = None
+        # Cache complete schema property walks keyed by $ref string. Truncated
+        # (cycle/depth) results must not be cached — see _walk_schema.
+        self._props_cache: dict[str, tuple[dict[str, Any], list[str]]] = {}
 
     def parse(self) -> dict[str, Any] | None:
         """Parse the OpenAPI specification.
@@ -59,6 +62,7 @@ class OpenAPIParser:
             if not isinstance(spec, dict):
                 return None
             self._spec = spec
+            self._props_cache.clear()
             return self._extract_from_spec(spec)
 
         except Exception:
@@ -110,16 +114,44 @@ class OpenAPIParser:
 
     def _schema_properties(self, schema: Any) -> tuple[dict[str, Any], list[str]]:
         """Collect properties + required names from a schema, following refs/allOf."""
+        properties, required, _ = self._walk_schema(schema)
+        return properties, required
+
+    def _walk_schema(
+        self, schema: Any, *, seen: frozenset[str] = frozenset(), depth: int = 0
+    ) -> tuple[dict[str, Any], list[str], bool]:
+        """Walk a schema, returning (properties, required, complete).
+
+        ``complete`` is False when a cycle or the depth cap truncated the walk;
+        truncated results must not be cached, since the same schema may be
+        reachable by a shorter path elsewhere in the document.
+        """
+        if depth >= self._MAX_REF_DEPTH:
+            return {}, [], False
+
+        ref_key = None
+        if isinstance(schema, dict) and isinstance(schema.get("$ref"), str):
+            ref_key = schema["$ref"]
+            if ref_key in seen:
+                return {}, [], False
+            cached = self._props_cache.get(ref_key)
+            if cached is not None:
+                return dict(cached[0]), list(cached[1]), True
+            seen = seen | {ref_key}
+
         schema = self._deref(schema)
         if not isinstance(schema, dict):
-            return {}, []
+            return {}, [], True
 
         properties: dict[str, Any] = {}
         required: list[str] = []
+        complete = True
 
-        # Shallow allOf merge — common for composed request bodies.
         for part in schema.get("allOf") or []:
-            part_props, part_req = self._schema_properties(part)
+            part_props, part_req, part_complete = self._walk_schema(
+                part, seen=seen, depth=depth + 1
+            )
+            complete = complete and part_complete
             properties.update(part_props)
             for name in part_req:
                 if name not in required:
@@ -136,7 +168,9 @@ class OpenAPIParser:
             if isinstance(name, str) and name not in required:
                 required.append(name)
 
-        return properties, required
+        if ref_key is not None and complete:
+            self._props_cache[ref_key] = (dict(properties), list(required))
+        return properties, required, complete
 
     def _param_type(self, param: dict[str, Any]) -> str:
         schema = param.get("schema")
