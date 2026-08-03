@@ -46,13 +46,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   trace still reaches the error callback and DEBUG logging.
 
 ### Security
+- **OAuth callback listeners are loopback-only and path-validated.** Login and
+  browser-session logout now bind only to `127.0.0.1`; login accepts an
+  authorization response only at its registered `/callback` path. Remaining
+  auth-bearing client calls that bypassed the shared wrappers also refuse
+  redirects (`persist_discovery`, token exchange, refresh, logout, and API
+  session exchange), closing the gap left after #97 — including API-key mode
+  where `x-api-key` would otherwise be forwarded across a hostname change.
 - **Local test result artifacts are written atomically at `0600`** under
   `.humanbound/results/` directories hardened to `0700`. `logs.jsonl` retains
   every attack prompt and the agent's raw replies (including disclosures the
   agent wasn't supposed to make); they previously inherited the process umask
   (commonly world-readable on first write). They now use the same secure writer
   as `credentials.json`.
-
 - **Local secret files are written atomically at `0600`** (#67, thanks
   @JChario). `credentials.json`, the provider `config.yaml`, and the telemetry
   state file could briefly exist world-readable on first write (created at the
@@ -60,6 +66,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `os.replace` helper and are never world-readable. The OAuth login callback
   error page also escapes the reflected `error_description` to prevent a
   reflected-XSS in that page.
+
+### Fixed
+- **Local experiment starts no longer collide within the same second.** Each
+  local run ID now includes a short UUID suffix (`exp-{timestamp}-{uuid8}`), so
+  concurrent `hb test` processes no longer overwrite each other's `_runs` slot
+  or result directory.
+- **OpenAPI extraction now resolves `$ref` parameters and request body
+  schemas.** The parser previously skipped every `$ref` parameter and only read
+  inline `properties`, so component-based specs produced incomplete parameter
+  lists on the extractor. Local JSON Pointer resolution (with cycle-safe
+  `allOf` walking and depth guards) now follows `#/components/...` and Swagger 2
+  `#/parameters/...` refs. This is groundwork for consumers of `parameters` /
+  `responses`; `hb connect` today still reads only description/method/path/
+  summary from the parse result.
 
 ## [2.8.0] — 2026-07-30
 

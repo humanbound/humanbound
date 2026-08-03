@@ -3,7 +3,7 @@
 """LocalTestRunner — runs engine in-process, results to files.
 
 Provider from env vars or ~/.humanbound/config.yaml.
-Results written to .humanbound/results/exp-{timestamp}/
+Results written to .humanbound/results/exp-{timestamp}-{uuid}/
 """
 
 import json
@@ -12,6 +12,7 @@ import os
 import threading
 import time
 import traceback
+import uuid
 from pathlib import Path
 
 from humanbound_cli.config import write_secure_file
@@ -270,7 +271,7 @@ class LocalTestRunner(TestRunner):
                 "Usage: hb test --endpoint ./bot-config.json --repo . --wait"
             )
 
-        experiment_id = f"exp-{time.strftime('%Y%m%d-%H%M%S')}"
+        experiment_id = f"exp-{time.strftime('%Y%m%d-%H%M%S')}-{uuid.uuid4().hex[:8]}"
 
         run = _LocalRun(experiment_id, config)
         self._runs[experiment_id] = run

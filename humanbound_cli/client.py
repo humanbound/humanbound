@@ -295,6 +295,8 @@ LOGOUT_HTML = """<!DOCTYPE html>
 </body>
 </html>"""
 
+LOOPBACK_HOST = "127.0.0.1"
+
 
 class HumanboundClient:
     """API client for Humanbound platform with OAuth authentication."""
@@ -377,6 +379,14 @@ class HumanboundClient:
         class CallbackHandler(http.server.BaseHTTPRequestHandler):
             def do_GET(self):
                 parsed = urllib.parse.urlparse(self.path)
+                if parsed.path != "/callback":
+                    auth_result["error"] = "Unexpected OAuth callback path"
+                    self.send_response(404)
+                    self.send_header("Content-type", "text/html")
+                    self.end_headers()
+                    self.wfile.write(b"Not Found")
+                    return
+
                 params = urllib.parse.parse_qs(parsed.query)
 
                 if "code" in params and params.get("state", [None])[0] == state:
@@ -403,7 +413,7 @@ class HumanboundClient:
 
         # Allow port reuse to avoid "Address already in use" errors
         socketserver.TCPServer.allow_reuse_address = True
-        server = socketserver.TCPServer(("", callback_port), CallbackHandler)
+        server = socketserver.TCPServer((LOOPBACK_HOST, callback_port), CallbackHandler)
         server.timeout = 120  # 2 minute timeout
 
         try:
@@ -434,7 +444,12 @@ class HumanboundClient:
             "code_verifier": code_verifier,
         }
 
-        response = requests.post(token_url, json=token_data, timeout=DEFAULT_TIMEOUT)
+        response = requests.post(
+            token_url,
+            json=token_data,
+            timeout=DEFAULT_TIMEOUT,
+            allow_redirects=False,
+        )
         if response.status_code != 200:
             raise AuthenticationError(f"Token exchange failed: {response.text}")
 
@@ -463,6 +478,7 @@ class HumanboundClient:
                     f"{self.base_url}/logout",
                     headers={"Authorization": f"Bearer {self._api_token}"},
                     timeout=DEFAULT_TIMEOUT,
+                    allow_redirects=False,
                 )
             except (requests.ConnectionError, requests.Timeout):
                 pass
@@ -516,6 +532,7 @@ class HumanboundClient:
                 f"{self.base_url}/auth",
                 headers={"Authorization": f"Bearer {self._auth0_token}"},
                 timeout=DEFAULT_TIMEOUT,
+                allow_redirects=False,
             )
         except requests.ConnectionError:
             raise AuthenticationError(
@@ -563,6 +580,7 @@ class HumanboundClient:
                 "refresh_token": refresh_token,
             },
             timeout=DEFAULT_TIMEOUT,
+            allow_redirects=False,
         )
 
         if response.status_code != 200:
@@ -1546,6 +1564,7 @@ class HumanboundClient:
             headers=headers,
             json={},
             timeout=LONG_TIMEOUT,
+            allow_redirects=False,
         )
         return self._handle_response(response)
 
