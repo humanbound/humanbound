@@ -35,9 +35,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 - **OAuth callback listeners are loopback-only and path-validated.** Login and
   browser-session logout now bind only to `127.0.0.1`; login accepts an
-  authorization response only at its registered `/callback` path. Discovery
-  persistence requests also reject redirects, preventing their credential and
-  nonce headers from being replayed to a redirected host.
+  authorization response only at its registered `/callback` path. Remaining
+  auth-bearing client calls that bypassed the shared wrappers also refuse
+  redirects (`persist_discovery`, token exchange, refresh, logout, and API
+  session exchange), closing the gap left after #97 — including API-key mode
+  where `x-api-key` would otherwise be forwarded across a hostname change.
 - **Local secret files are written atomically at `0600`** (#67, thanks
   @JChario). `credentials.json`, the provider `config.yaml`, and the telemetry
   state file could briefly exist world-readable on first write (created at the

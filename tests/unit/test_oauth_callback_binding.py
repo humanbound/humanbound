@@ -3,7 +3,7 @@
 import io
 import time
 import urllib.parse
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 from click.testing import CliRunner
@@ -50,9 +50,7 @@ def _login_with_callback(monkeypatch, callback_path: str):
         return server
 
     def serve_callback():
-        request = _FakeRequest(
-            f"GET {callback_path} HTTP/1.1\r\nHost: localhost\r\n\r\n".encode()
-        )
+        request = _FakeRequest(f"GET {callback_path} HTTP/1.1\r\nHost: localhost\r\n\r\n".encode())
         captured["handler"](request, ("127.0.0.1", 12345), server)
         captured["response"] = request.output.getvalue()
 
@@ -93,9 +91,7 @@ def test_login_accepts_code_and_state_on_callback_path(monkeypatch):
     captured = {}
 
     def callback_path():
-        state = urllib.parse.parse_qs(
-            urllib.parse.urlparse(captured["auth_url"]).query
-        )["state"][0]
+        state = urllib.parse.parse_qs(urllib.parse.urlparse(captured["auth_url"]).query)["state"][0]
         return f"/callback?code=code&state={state}"
 
     client = HumanboundClient(base_url="http://test.local")
@@ -166,4 +162,39 @@ def test_persist_discovery_disables_redirects(monkeypatch):
     monkeypatch.setattr("humanbound_cli.client.requests.post", post)
 
     assert client.persist_discovery("nonce") == {"persisted": 1}
+    assert post.call_args.kwargs["allow_redirects"] is False
+
+
+def test_auth_token_paths_disable_redirects(monkeypatch):
+    """Auth helpers that bypass get/post wrappers must still refuse redirects."""
+    client = HumanboundClient(base_url="http://test.local")
+    client._auth0_token = "auth0-token"
+    client._api_token = "api-token"
+
+    get = MagicMock(return_value=_response(data={"access_token": "api"}))
+    post = MagicMock(
+        return_value=_response(
+            data={"access_token": "auth0", "expires_in": 60, "refresh_token": "r"}
+        )
+    )
+    monkeypatch.setattr("humanbound_cli.client.requests.get", get)
+    monkeypatch.setattr("humanbound_cli.client.requests.post", post)
+    monkeypatch.setattr("humanbound_cli.client.get_auth0_domain", lambda: "auth.example")
+    monkeypatch.setattr("humanbound_cli.client.get_auth0_client_id", lambda: "client-id")
+    monkeypatch.setattr(
+        client,
+        "_load_credentials_file",
+        lambda: {"refresh_token": "refresh"},
+    )
+    monkeypatch.setattr(client, "_save_credentials", lambda *a, **k: None)
+    monkeypatch.setattr(client, "_exchange_for_api_token", lambda: None)
+
+    # Call the real exchange method once (unpatch local stub).
+    HumanboundClient._exchange_for_api_token(client)
+    assert get.call_args.kwargs["allow_redirects"] is False
+
+    client.logout(silent=True)
+    assert get.call_args.kwargs["allow_redirects"] is False
+
+    HumanboundClient._refresh_token(client)
     assert post.call_args.kwargs["allow_redirects"] is False

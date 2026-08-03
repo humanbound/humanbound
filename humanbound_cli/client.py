@@ -444,7 +444,12 @@ class HumanboundClient:
             "code_verifier": code_verifier,
         }
 
-        response = requests.post(token_url, json=token_data, timeout=DEFAULT_TIMEOUT)
+        response = requests.post(
+            token_url,
+            json=token_data,
+            timeout=DEFAULT_TIMEOUT,
+            allow_redirects=False,
+        )
         if response.status_code != 200:
             raise AuthenticationError(f"Token exchange failed: {response.text}")
 
@@ -473,6 +478,7 @@ class HumanboundClient:
                     f"{self.base_url}/logout",
                     headers={"Authorization": f"Bearer {self._api_token}"},
                     timeout=DEFAULT_TIMEOUT,
+                    allow_redirects=False,
                 )
             except (requests.ConnectionError, requests.Timeout):
                 pass
@@ -526,6 +532,7 @@ class HumanboundClient:
                 f"{self.base_url}/auth",
                 headers={"Authorization": f"Bearer {self._auth0_token}"},
                 timeout=DEFAULT_TIMEOUT,
+                allow_redirects=False,
             )
         except requests.ConnectionError:
             raise AuthenticationError(
@@ -573,6 +580,7 @@ class HumanboundClient:
                 "refresh_token": refresh_token,
             },
             timeout=DEFAULT_TIMEOUT,
+            allow_redirects=False,
         )
 
         if response.status_code != 200:
