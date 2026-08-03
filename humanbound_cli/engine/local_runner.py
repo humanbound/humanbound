@@ -26,9 +26,9 @@ logger = logging.getLogger("humanbound.engine.local")
 def _ensure_private_dir(path: Path) -> None:
     """Create ``path`` (and parents) with owner-only (0700) permissions.
 
-    Local result trees contain raw prompts, model replies, and often secrets
-    from the target endpoint. Matching credential storage, directories must not
-    inherit a world-readable umask.
+    Local result trees contain attack prompts and the agent's raw replies.
+    Matching credential storage, directories must not inherit a world-readable
+    umask.
     """
     path.mkdir(parents=True, exist_ok=True)
     try:
@@ -236,8 +236,8 @@ class _LocalRun:
             completed_at=time.strftime("%Y-%m-%dT%H:%M:%S"),
         )
 
-        # meta.json / logs.jsonl hold prompts, replies, and often endpoint
-        # secrets — write atomically at 0600 like credentials.json.
+        # meta.json / logs.jsonl hold attack prompts and agent replies —
+        # write atomically at 0600 like credentials.json.
         write_secure_file(
             results_dir / "meta.json",
             json.dumps(meta.model_dump(), indent=2, default=str),
@@ -249,7 +249,10 @@ class _LocalRun:
             log_obj = LogsAnonymous(**log) if isinstance(log, dict) else log
             public = log_obj.to_public()
             log_lines.append(json.dumps(public.model_dump(), default=str))
-        write_secure_file(results_dir / "logs.jsonl", "\n".join(log_lines) + ("\n" if log_lines else ""))
+        write_secure_file(
+            results_dir / "logs.jsonl",
+            "\n".join(log_lines) + ("\n" if log_lines else ""),
+        )
 
         logger.info(f"Results saved to {results_dir}")
 

@@ -3,8 +3,8 @@
 """Local test results must not be world-readable.
 
 Local runs write meta.json / logs.jsonl under .humanbound/results/. Those files
-contain prompts, model replies, and often endpoint credentials — they must be
-created with the same owner-only (0600 / 0700) contract as credentials.json.
+contain attack prompts and the agent's raw replies — they must be created with
+the same owner-only (0600 / 0700) contract as credentials.json.
 """
 
 import json
@@ -14,12 +14,20 @@ from pathlib import Path
 
 import pytest
 
-from humanbound_cli.engine.local_runner import _LocalRun, _ensure_private_dir
+from humanbound_cli.engine.local_runner import _ensure_private_dir, _LocalRun
 from humanbound_cli.engine.runner import TestConfig
 
 
+@pytest.fixture
+def umask_022():
+    """Pin a permissive umask so permission tests fail against the unfixed path."""
+    old = os.umask(0o022)
+    yield
+    os.umask(old)
+
+
 @pytest.mark.skipif(os.name == "nt", reason="POSIX file modes are not enforced on Windows")
-def test_ensure_private_dir_is_owner_only(tmp_path, monkeypatch):
+def test_ensure_private_dir_is_owner_only(tmp_path, monkeypatch, umask_022):
     monkeypatch.chdir(tmp_path)
     target = Path(".humanbound/results/exp-demo")
     _ensure_private_dir(target)
@@ -30,7 +38,7 @@ def test_ensure_private_dir_is_owner_only(tmp_path, monkeypatch):
 
 
 @pytest.mark.skipif(os.name == "nt", reason="POSIX file modes are not enforced on Windows")
-def test_save_results_writes_owner_only_artifacts(tmp_path, monkeypatch):
+def test_save_results_writes_owner_only_artifacts(tmp_path, monkeypatch, umask_022):
     monkeypatch.chdir(tmp_path)
     config = TestConfig(
         name="perm-test",
@@ -69,10 +77,9 @@ def test_save_results_writes_owner_only_artifacts(tmp_path, monkeypatch):
 
 
 @pytest.mark.skipif(os.name == "nt", reason="POSIX file modes are not enforced on Windows")
-def test_naive_write_text_would_be_world_readable(tmp_path, monkeypatch):
+def test_naive_write_text_would_be_world_readable(tmp_path, monkeypatch, umask_022):
     """Document the pre-fix failure mode: umask 022 makes write_text world-readable."""
     monkeypatch.chdir(tmp_path)
-    os.umask(0o022)
     leaky = Path("leaky.json")
     leaky.write_text("{}")
     mode = stat.S_IMODE(leaky.stat().st_mode)
