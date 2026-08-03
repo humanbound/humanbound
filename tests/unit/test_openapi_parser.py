@@ -245,6 +245,48 @@ def test_cyclic_allof_does_not_discard_spec(tmp_path):
     assert names == {"a", "b"}
 
 
+def test_operation_parameter_overrides_path_level_same_name_in(tmp_path):
+    """OpenAPI 3: operation-level (name, in) wins over path-level."""
+    spec = {
+        "openapi": "3.0.3",
+        "info": {"title": "Override", "version": "1.0.0"},
+        "components": {
+            "parameters": {
+                "SharedId": {
+                    "name": "id",
+                    "in": "path",
+                    "required": True,
+                    "description": "shared",
+                    "schema": {"type": "integer"},
+                }
+            }
+        },
+        "paths": {
+            "/items/{id}": {
+                "parameters": [{"$ref": "#/components/parameters/SharedId"}],
+                "get": {
+                    "parameters": [
+                        {
+                            "name": "id",
+                            "in": "path",
+                            "required": True,
+                            "description": "overridden",
+                            "schema": {"type": "string"},
+                        }
+                    ],
+                    "responses": {"200": {"description": "ok"}},
+                },
+            }
+        },
+    }
+    result = OpenAPIParser(str(_write_spec(tmp_path, spec))).parse()
+    params = result["operations"][0]["parameters"]
+    assert len(params) == 1
+    assert params[0]["name"] == "id"
+    assert params[0]["type"] == "string"
+    assert params[0]["description"] == "overridden"
+
+
 def test_allof_fanout_is_cached_not_exponential(tmp_path):
     """Sibling allOf branches that re-enter the same $ref must not explode runtime."""
     schemas = {

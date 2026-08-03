@@ -251,9 +251,11 @@ class OpenAPIParser:
         Returns:
             List of parameter definitions.
         """
-        params = []
+        params: list[dict] = []
+        seen: dict[tuple[str, str], int] = {}
 
-        # Combine path-level and operation-level parameters
+        # Path-level first, then operation-level — OpenAPI 3: same (name, in)
+        # at operation level overrides the path-level parameter.
         all_params = path_item.get("parameters", []) + operation.get("parameters", [])
 
         for param in all_params:
@@ -265,15 +267,19 @@ class OpenAPIParser:
                 # Broken or cyclic $ref — skip rather than aborting the parse.
                 continue
 
-            params.append(
-                {
-                    "name": resolved.get("name", ""),
-                    "in": resolved.get("in", ""),
-                    "required": resolved.get("required", False),
-                    "description": str(resolved.get("description", ""))[:200],
-                    "type": self._param_type(resolved),
-                }
-            )
+            entry = {
+                "name": resolved.get("name", ""),
+                "in": resolved.get("in", ""),
+                "required": resolved.get("required", False),
+                "description": str(resolved.get("description", ""))[:200],
+                "type": self._param_type(resolved),
+            }
+            key = (str(entry["name"]), str(entry["in"]))
+            if key in seen:
+                params[seen[key]] = entry
+            else:
+                seen[key] = len(params)
+                params.append(entry)
 
         # Extract request body parameters (OpenAPI 3.x)
         request_body = operation.get("requestBody", {})
