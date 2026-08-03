@@ -74,12 +74,24 @@ _HIGH_INSIGHT = [{"result": "fail", "severity": "high", "explanation": "x"}]
         (_ALL_ERRORED, None, "Finished", "any", EXIT_RUN_FAILED),  # run failure wins
         (_CLEAN, _HIGH_INSIGHT, "Failed", "high", EXIT_RUN_FAILED),  # Failed wins over fail-on
         ({"total": 5, "pass": 2, "fail": 0, "error": 3}, None, "Finished", "", EXIT_OK),  # partial
+        ({"total": 2, "pass": 1, "fail": 1, "error": 0}, None, "Failed", "", EXIT_RUN_FAILED),
     ],
 )
 def test_resolve_exit_policy(stats, insights, final_status, fail_on, expected):
     code, reason = _resolve_exit(_result(stats, insights), final_status, fail_on)
     assert code == expected
     assert (reason is None) is (code == EXIT_OK)
+
+
+def test_failed_run_message_reflects_partial_results():
+    """A Failed run that saved partial results must not claim none were produced."""
+    _, with_results = _resolve_exit(
+        _result({"total": 2, "pass": 1, "fail": 1, "error": 0}), "Failed", ""
+    )
+    assert "partial results" in with_results
+
+    _, without_results = _resolve_exit(_result({}), "Failed", "")
+    assert without_results == "Run failed — no results produced."
 
 
 # ────────────────────────────────────────────────────────────────

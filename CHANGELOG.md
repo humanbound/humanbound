@@ -9,9 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **Agentic category-worker failures no longer report a completed scan.**
-  Exceptions raised by an OWASP Agentic category worker are now surfaced through
-  the engine error callback and mark the run `Failed`; local runs preserve that
-  failure status while saving completed partial results.
+  (#107, thanks @Ayush7614). Exceptions raised by an OWASP Agentic category
+  worker are now surfaced through the engine error callback and mark the run
+  `Failed`; local runs preserve that failure status while saving completed
+  partial results. Note for CI users: runs that previously (and wrongly)
+  exited `0` on a worker crash now exit `2`, per the documented exit-code
+  contract.
+- **`hb test` no longer claims "no results produced" when a failed run saved
+  partial results** — the exit message now points to `hb logs` instead.
+- **A crash in any local orchestrator keeps completed conversations.** The
+  local runner's generic failure path now saves partial results the same way
+  an orchestrator-reported failure does, so `owasp_single_turn` and
+  `behavioral_qa` crashes no longer discard finished work.
 
 ### Security
 - **Local secret files are written atomically at `0600`** (#67, thanks

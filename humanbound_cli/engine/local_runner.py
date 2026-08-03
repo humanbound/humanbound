@@ -145,6 +145,17 @@ class _LocalRun:
             # DEBUG level so `--debug` users can still see the full stack.
             logger.error(f"Local test failed: {e}")
             logger.debug(traceback.format_exc())
+            # Save partial results best-effort — never mask the original failure.
+            if self.logs:
+                try:
+                    self.results = presenter_run(
+                        None,
+                        self.logs,
+                        test_category=self.config.test_category,
+                    )
+                    self._save_results()
+                except Exception:
+                    logger.debug("Could not save partial results", exc_info=True)
 
     def _save_results(self):
         """Write meta.json + logs.jsonl to .humanbound/results/
