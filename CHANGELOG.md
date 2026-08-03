@@ -12,6 +12,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   store insights beneath `results.insights`, but the exporter only read the
   legacy top-level key and consequently emitted an empty ruleset. The exporter
   now reads the current schema while retaining the legacy fallback (#102).
+- **Network failures now surface as a clean `APIError` everywhere** (#68,
+  thanks @JChario for the report and the original fix). The client called
+  `requests` without wrapping transport errors, so a dropped connection or
+  timeout escaped as a raw requests exception — MCP tools returned FastMCP's
+  raw "Error executing tool …" text instead of their structured
+  `{"error": …}` envelope, and the message carried urllib3 internals. The
+  client now converts transport failures to `APIError` at the source (CLI
+  commands and all MCP tools handle it uniformly), and every MCP tool
+  additionally falls back to the structured envelope for any unexpected
+  exception.
+- **`pip install humanbound[mcp]` works again.** mcp 2.0.0 (2026-07-28)
+  removed `mcp.server.fastmcp`, so a fresh install broke `hb mcp` at import;
+  the extra now pins `mcp>=1.2.0,<2`.
 - **Agentic category-worker failures no longer report a completed scan.**
   (#107, thanks @Ayush7614). Exceptions raised by an OWASP Agentic category
   worker are now surfaced through the engine error callback and mark the run

@@ -317,6 +317,39 @@ class TestHTTPMethods:
         assert headers["X-Custom"] == "val"
         assert headers["Authorization"] == "Bearer test-token"
 
+    @patch("humanbound_cli.client.requests.get")
+    def test_connection_error_becomes_api_error(self, mock_get, client):
+        """Transport failures surface as APIError so CLI commands and MCP
+        tools handle them through the HumanboundError hierarchy (#68)."""
+        mock_get.side_effect = requests.ConnectionError("Max retries exceeded")
+        with pytest.raises(APIError, match="Could not connect"):
+            client.get("projects")
+
+    @patch("humanbound_cli.client.requests.get")
+    def test_timeout_becomes_api_error(self, mock_get, client):
+        mock_get.side_effect = requests.Timeout()
+        with pytest.raises(APIError, match="timed out"):
+            client.get("projects")
+
+    @patch("humanbound_cli.client.requests.post")
+    def test_post_connection_error_becomes_api_error(self, mock_post, client):
+        mock_post.side_effect = requests.ConnectionError()
+        with pytest.raises(APIError, match="Could not connect"):
+            client.post("projects", data={})
+
+    @patch("humanbound_cli.client.requests.get")
+    def test_network_api_error_message_omits_exception_detail(self, mock_get, client):
+        """The APIError message names the exception class, not its body —
+        urllib3's error text (pool internals, retry state) stays out of what
+        MCP clients and CLI users see."""
+        mock_get.side_effect = requests.ConnectionError(
+            "HTTPSConnectionPool(host='x', port=443): Max retries exceeded"
+        )
+        with pytest.raises(APIError) as exc_info:
+            client.get("projects")
+        assert "Max retries" not in str(exc_info.value)
+        assert "ConnectionError" in str(exc_info.value)
+
 
 # ---------------------------------------------------------------------------
 # Credential Persistence

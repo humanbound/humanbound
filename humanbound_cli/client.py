@@ -762,6 +762,26 @@ class HumanboundClient:
 
         return data
 
+    def _send(self, request_fn, endpoint: str, **kwargs) -> Any:
+        """Send a request and normalize transport failures.
+
+        Network errors (connection refused, DNS, timeout) surface as APIError
+        so every caller — CLI commands and MCP tools alike — handles them
+        through the HumanboundError hierarchy instead of a raw requests
+        exception.
+        """
+        url = f"{self.base_url}/{endpoint.lstrip('/')}"
+        try:
+            response = request_fn(url, allow_redirects=False, **kwargs)
+        except requests.Timeout as e:
+            raise APIError(f"Connection to {self.base_url} timed out.") from e
+        except requests.RequestException as e:
+            raise APIError(
+                f"Could not connect to {self.base_url} ({e.__class__.__name__}). "
+                "Is the server reachable?"
+            ) from e
+        return self._handle_response(response)
+
     def get(
         self,
         endpoint: str,
@@ -788,14 +808,13 @@ class HumanboundClient:
         headers = self._get_headers(include_org, include_project)
         if extra_headers:
             headers.update(extra_headers)
-        response = requests.get(
-            f"{self.base_url}/{endpoint.lstrip('/')}",
+        return self._send(
+            requests.get,
+            endpoint,
             headers=headers,
             params=params,
             timeout=timeout,
-            allow_redirects=False,
         )
-        return self._handle_response(response)
 
     def post(
         self,
@@ -818,14 +837,13 @@ class HumanboundClient:
             Parsed JSON response.
         """
         self._ensure_authenticated()
-        response = requests.post(
-            f"{self.base_url}/{endpoint.lstrip('/')}",
+        return self._send(
+            requests.post,
+            endpoint,
             headers=self._get_headers(include_org, include_project),
             json=data,
             timeout=timeout,
-            allow_redirects=False,
         )
-        return self._handle_response(response)
 
     def put(
         self,
@@ -848,14 +866,13 @@ class HumanboundClient:
             Parsed JSON response.
         """
         self._ensure_authenticated()
-        response = requests.put(
-            f"{self.base_url}/{endpoint.lstrip('/')}",
+        return self._send(
+            requests.put,
+            endpoint,
             headers=self._get_headers(include_org, include_project),
             json=data,
             timeout=timeout,
-            allow_redirects=False,
         )
-        return self._handle_response(response)
 
     def delete(
         self,
@@ -876,13 +893,12 @@ class HumanboundClient:
             Parsed JSON response.
         """
         self._ensure_authenticated()
-        response = requests.delete(
-            f"{self.base_url}/{endpoint.lstrip('/')}",
+        return self._send(
+            requests.delete,
+            endpoint,
             headers=self._get_headers(include_org, include_project),
             timeout=timeout,
-            allow_redirects=False,
         )
-        return self._handle_response(response)
 
     # -------------------------------------------------------------------------
     # Convenience Methods

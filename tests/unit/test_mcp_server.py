@@ -35,3 +35,34 @@ class TestApiKeyTools:
         client.update_api_key.return_value = {"id": "k1"}
         mcp_server.hb_update_api_key("key-1", scope="admin")
         client.update_api_key.assert_called_once_with("key-1", {"scope": "admin"})
+
+
+class TestStructuredErrors:
+    """Any exception returns the {"error": ...} envelope, never a raw traceback (#68)."""
+
+    def test_non_humanbound_error_returns_envelope(self, client):
+        """Unexpected-shape bugs (KeyError/TypeError on backend responses) are
+        the class the per-tool fallback still guards — network errors already
+        become APIError inside the client."""
+        import json
+
+        client.project_id = "proj-1"
+        client.get.side_effect = TypeError("'NoneType' object is not subscriptable")
+
+        payload = json.loads(mcp_server.hb_get_posture())
+
+        assert payload["error"] is True
+        assert "NoneType" in payload["message"]
+
+    def test_humanbound_error_still_returns_envelope(self, client):
+        import json
+
+        from humanbound_cli.exceptions import APIError
+
+        client.project_id = "proj-1"
+        client.get.side_effect = APIError("backend said no")
+
+        payload = json.loads(mcp_server.hb_get_posture())
+
+        assert payload["error"] is True
+        assert "backend said no" in payload["message"]

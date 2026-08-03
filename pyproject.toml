@@ -71,7 +71,7 @@ firewall = [
     "torch>=2.0.0",
 ]
 mcp = [
-    "mcp>=1.2.0",
+    "mcp>=1.2.0,<2",
 ]
 pytest = [
     "pytest>=7.0.0",
