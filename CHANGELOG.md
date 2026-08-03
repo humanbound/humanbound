@@ -43,8 +43,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **Local experiment starts no longer collide within the same second.** Each
-  local run now includes a short UUID suffix and exclusively reserves its result
-  directory before the background engine thread begins.
+  local run ID now includes a short UUID suffix (`exp-{timestamp}-{uuid8}`), so
+  concurrent `hb test` processes no longer overwrite each other's `_runs` slot
+  or result directory.
 
 ## [2.8.0] — 2026-07-30
 
