@@ -237,8 +237,6 @@ class _LocalRun:
             completed_at=time.strftime("%Y-%m-%dT%H:%M:%S"),
         )
 
-        # meta.json / logs.jsonl hold attack prompts and agent replies —
-        # write atomically at 0600 like credentials.json.
         write_secure_file(
             results_dir / "meta.json",
             json.dumps(meta.model_dump(), indent=2, default=str),
