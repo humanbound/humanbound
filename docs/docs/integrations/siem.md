@@ -71,6 +71,7 @@ Verify the `X-Humanbound-Signature` header by computing HMAC-SHA256 over the raw
 ```python
 import hmac, hashlib
 
+
 def verify(body: bytes, secret: str, signature: str) -> bool:
     expected = hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()
     received = signature.removeprefix("sha256=")

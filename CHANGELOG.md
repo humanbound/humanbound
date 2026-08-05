@@ -604,9 +604,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   same wheel as `humanbound_cli/`:
   ```python
   from humanbound import (
-      Bot, LocalRunner, Insight, TestingLevel,
-      EngineCallbacks, OrchestratorModule,
-      OwaspAgentic, OwaspSingleTurn, BehavioralQA,
+      Bot,
+      LocalRunner,
+      Insight,
+      TestingLevel,
+      EngineCallbacks,
+      OrchestratorModule,
+      OwaspAgentic,
+      OwaspSingleTurn,
+      BehavioralQA,
   )
   ```
   This is the stable, semver-protected contract. `humanbound_cli.*` stays as

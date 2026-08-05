@@ -99,6 +99,7 @@ Use with [humanbound-firewall](https://github.com/humanbound/humanbound-firewall
 
 ```python
 from hb_firewall import Firewall
+
 fw = Firewall.from_config("agent.yaml", rules_path="rules.yaml")
 ```
 
