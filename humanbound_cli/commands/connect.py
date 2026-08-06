@@ -330,8 +330,9 @@ def _derive_agent_name(endpoint: str) -> str:
         path = Path(endpoint)
         raw = path.read_text() if path.is_file() else endpoint
         config = json.loads(raw)
-        ep_url = config.get("chat_completion", {}).get("endpoint", "")
-        if ep_url:
+        chat_completion = config.get("chat_completion") if isinstance(config, dict) else {}
+        ep_url = chat_completion.get("endpoint", "") if isinstance(chat_completion, dict) else ""
+        if ep_url and isinstance(ep_url, str):
             hostname = urlparse(ep_url).hostname
             if hostname:
                 # Extract first subdomain segment as agent name
@@ -597,7 +598,12 @@ def _connect_agent_platform(
             integration = vendor_integration or (_load_integration(endpoint) if endpoint else None)
             if integration:
                 local_integration = integration
-                chat_ep = integration.get("chat_completion", {}).get("endpoint", "")
+                chat_completion = (
+                    integration.get("chat_completion") if isinstance(integration, dict) else {}
+                )
+                chat_ep = (
+                    chat_completion.get("endpoint", "") if isinstance(chat_completion, dict) else ""
+                )
                 console.print(
                     f"  [green]\u2713[/green] Endpoint integration: [dim]{chat_ep or '(from config)'}[/dim]"
                 )
@@ -669,7 +675,12 @@ def _connect_agent_platform(
             # --endpoint / --vendor -> endpoint source (API probing)
             integration = vendor_integration or (_load_integration(endpoint) if endpoint else None)
             if integration:
-                chat_ep = integration.get("chat_completion", {}).get("endpoint", "")
+                chat_completion = (
+                    integration.get("chat_completion") if isinstance(integration, dict) else {}
+                )
+                chat_ep = (
+                    chat_completion.get("endpoint", "") if isinstance(chat_completion, dict) else ""
+                )
                 console.print(
                     f"  [green]\u2713[/green] Endpoint source: [dim]{chat_ep or '(from config)'}[/dim]"
                 )
@@ -838,7 +849,12 @@ def _connect_agent_local(endpoint, name, prompt, repo, openapi, context, level, 
     if endpoint:
         try:
             integration = _load_integration(endpoint)
-            chat_ep = integration.get("chat_completion", {}).get("endpoint", "")
+            chat_completion = (
+                integration.get("chat_completion") if isinstance(integration, dict) else {}
+            )
+            chat_ep = (
+                chat_completion.get("endpoint", "") if isinstance(chat_completion, dict) else ""
+            )
             console.print(
                 f"  [green]✓[/green] Endpoint source: [dim]{chat_ep or '(from config)'}[/dim]"
             )
