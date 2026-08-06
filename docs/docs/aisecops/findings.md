@@ -1,6 +1,42 @@
+---
+description: "Findings are persistent vulnerability records that track security issues across test cycles — they remember when they first appeared and which regressions reintroduced them."
+keywords:
+  - findings management
+  - finding lifecycle
+  - vulnerability tracking
+  - finding delegation
+  - regression detection
+  - regression retest
+  - hb findings retest
+  - hb findings command
+  - finding webhook events
+  - severity weighted penalties
+---
+
 # Findings
 
 Findings are persistent vulnerability records that track security issues across test cycles. Unlike per-experiment insights (which are snapshots), findings have memory — they know when they first appeared, whether they've been fixed, and whether they've come back.
+
+## Where Findings Come From
+
+Findings are derived from experiment insights in three steps:
+
+1. **Judge verdicts.** Every conversation in an experiment gets a verdict — pass or fail, with a severity score (0–100), confidence, category, and explanation.
+2. **Insights.** When the experiment finishes, failed conversations above the severity and confidence thresholds are clustered by category into **insights**: per-experiment analysis showing what failed, at what severity, and why. Insights are snapshots — they belong to one experiment and are not tracked across runs (this is what `hb test` prints as "Top Insights").
+3. **Reconciliation.** Each fail insight is then mapped to a threat class from the threat taxonomy (for behavioral QA tests, the evaluation metric plays this role) and reconciled against the project's existing findings. A new threat class creates a new **open** finding; a known threat class updates the existing finding instead — bumping its occurrence count, refreshing last-seen, raising severity if the new evidence is worse, and re-synthesizing the description.
+
+Two consequences of this design are worth calling out:
+
+- **Many insights, few findings.** An experiment can produce dozens of insights, but they deduplicate by threat class — ten failed conversations that all demonstrate the same scope violation become one finding with stronger evidence, not ten findings.
+- **Occurrence count counts test runs, not conversations.** A finding's occurrence count increases once per experiment in which its threat class reappears — it answers "how many test cycles has this survived?", not "how many conversations failed?".
+
+| | Insights | Findings |
+|---|---|---|
+| Scope | One experiment | Project, across all experiments |
+| Produced by | Local and platform testing | Platform reconciliation |
+| Deduplication | Clustered by fail category | Deduplicated by threat class |
+| Tracked over time | No — snapshot | Yes — lifecycle, occurrence count, regression detection |
+| Where to see them | `hb test` output, `hb report <experiment-id>` | `hb findings`, platform dashboard |
 
 ## Finding Lifecycle
 
@@ -17,7 +53,41 @@ The lifecycle is automatic. When monitoring runs a new test cycle:
 - Findings seen again remain **open**
 - Findings not seen transition to **stale** after 14 days
 - Stale findings that reappear transition to **regressed**
-- Users can manually mark findings as **fixed**
+- Users can manually mark findings as **fixed** — and confirm that claim with a [regression retest](#verifying-a-fix)
+
+## Verifying a Fix
+
+Marking a finding **fixed** by hand is a claim; a **regression retest** checks it. `hb findings retest <id>` replays the finding's own recorded attacks against the *current* agent and reports whether the vulnerability is really gone:
+
+| Outcome | Meaning |
+|---|---|
+| `not_reproduced` | None of the replayed attacks fired again — evidence the fix holds. |
+| `still_vulnerable` | An attack fired again. The finding is automatically flipped **fixed → regressed**. |
+| `insufficient_evidence` | The finding has no replayable attack evidence, so nothing could be tested. Never treated as a pass. |
+
+A retest runs as a normal experiment (fire-and-poll): the command returns an experiment id immediately, or `--watch` waits and prints the outcome.
+
+**How much gets replayed** is controlled by `--testing-level`, using the same `unit` / `system` / `acceptance` ladder as [`hb test`](../testing/test-command.md):
+
+- `unit` (default) — replays the finding's **representative** attacks: a curated, deduplicated sample of the distinct ways it was triggered, so a retest is a fast, focused check rather than an exhaustive replay of every recorded conversation.
+- `system` / `acceptance` — add cluster samples around those representatives for broader coverage (`--deep` and `--full` are shortcuts, mirroring `hb test`).
+
+```bash
+# Fire a retest and get the experiment id back
+hb findings retest <finding-id>
+
+# Wait for the verdict
+hb findings retest <finding-id> --watch
+
+# Broader replay
+hb findings retest <finding-id> --full
+
+# See a finding's past retests
+hb findings regressions <finding-id>
+```
+
+!!! note "On-demand check"
+    Retesting is manual — it does not run automatically as part of monitoring. Use it once you believe a finding is fixed, then mark it **fixed** after a retest comes back `not_reproduced`.
 
 ## Team Delegation
 

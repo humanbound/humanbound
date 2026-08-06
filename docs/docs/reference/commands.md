@@ -1,6 +1,17 @@
+---
+description: "Complete hb CLI reference — every command and flag, grouped by workflow — auth, projects, test, redteam, posture, logs, MCP."
+keywords:
+  - hb command reference
+  - humanbound CLI reference
+  - hb commands list
+  - humanbound CLI commands
+  - CLI cheatsheet
+  - command index
+---
+
 # Command Reference
 
-Complete reference of all available commands, organized by category.
+The complete `hb` CLI reference, organised into eight categories: global flags, authentication (login / logout / whoami / orgs), projects, experiments (test execution), results (logs / posture / coverage / findings / assessments / reports), security (guardrails / campaigns / monitor), configuration (providers / api-keys / members), and help & shell (docs / completion / --help). Each table lists every command with its purpose; use `hb <command> --help` for full flag documentation.
 
 ## Global
 
@@ -28,6 +39,10 @@ Complete reference of all available commands, organized by category.
 | `hb connect` | Connect your agent or scan a cloud platform |
 | `hb connect -l system` | Connect with deeper testing level (unit/system/acceptance) |
 | `hb connect --repo <path>` `[PREVIEW]` | Also infers the capability surface from source patterns |
+| `hb connect --no-test` | Connect and create project but skip the auto-test step |
+| `hb connect --test-category <path>` | Choose which test family the auto-test runs (default: `humanbound/adversarial/owasp_agentic`) |
+| `hb connect --scope ./scope.yaml` | Use a pre-made scope file as input; the backend analyses it and proposes additive intents before project creation |
+| `hb connect --vendor <id>` | Discover and onboard a hosted-platform agent (currently `openai`); credential from env or a hidden prompt; requires login; mutually exclusive with `--endpoint` |
 | `hb projects list` | List all projects in current org |
 | `hb projects use <id>` | Set active project for subsequent commands |
 | `hb projects show [id]` | Show project details (current or specific) |
@@ -43,7 +58,7 @@ Complete reference of all available commands, organized by category.
 |---|---|
 | `hb test` | Create and run new security test experiment |
 | `hb experiments list` | List all experiments for current project |
-| `hb experiments show <id>` | Show detailed experiment information |
+| `hb experiments show <id> [--config]` | Show detailed experiment information; `--config` prints the configuration the run used (bot integration, scope, context) as reusable JSON |
 | `hb experiments status [id] [--all]` | Check experiment status (single, watch, or all-experiments dashboard) |
 | `hb experiments wait <id>` | Block until experiment completes (CI/CD) |
 | `hb experiments terminate <id>` | Stop running experiment |
@@ -72,8 +87,11 @@ Complete reference of all available commands, organized by category.
 | `hb findings` | List persistent vulnerability findings (--page, --size, -o \<file\>) |
 | `hb findings update <id>` | Update finding status or severity |
 | `hb findings assign <id>` | Assign finding to a team member |
+| `hb findings retest <id>` | Retest a finding to verify a fix (--testing-level unit\|system\|acceptance, --deep, --full, --watch) |
+| `hb findings regressions <id>` | Show a finding's regression-retest history |
 | `hb assessments` | List past security assessments |
-| `hb assessments show <id>` | View assessment detail (posture before/after, drift, test count) |
+| `hb assessments show [id]` | View assessment detail (posture trajectory, drift, coverage, duration); defaults to the latest |
+| `hb assessments terminate [id]` | Stop a running assessment (defaults to the current/latest) |
 | `hb assessments report <id>` | Generate assessment HTML report with full test logs (-o, --no-open) |
 | `hb projects report` | Generate project HTML security report (-o, --no-open) |
 | `hb orgs report` | Generate organisation-wide HTML report (-o, --no-open) |
@@ -84,22 +102,9 @@ Complete reference of all available commands, organized by category.
 | Command | Description |
 |---|---|
 | `hb guardrails` | Export learned security rules and patterns |
-| `hb campaigns` | View current ASCAM campaign plan |
-| `hb campaigns terminate` | Stop running campaign |
+| `hb campaigns` | _Deprecated_ — use `hb assessments` |
+| `hb campaigns terminate` | _Deprecated_ — use `hb assessments terminate` |
 | `hb monitor` | Start, pause, or resume continuous monitoring |
-
-## SIEM / Sentinel
-
-| Command | Description |
-|---|---|
-| `hb sentinel` | Show Sentinel setup instructions and available commands |
-| `hb sentinel deploy --rg <name>` | Deploy infrastructure, create webhook, set signing secret, and verify -- fully end-to-end |
-| `hb sentinel deploy --rg <name> --no-connect` | Deploy infrastructure only, skip webhook setup |
-| `hb sentinel connect --url <url>` | Register webhook manually (only needed with --no-connect) |
-| `hb sentinel test` | Send a test event to verify connectivity |
-| `hb sentinel status` | Check connector health and recent deliveries |
-| `hb sentinel sync` | Replay historical events to Sentinel for backfill |
-| `hb sentinel disconnect` | Remove the Sentinel webhook and local configuration |
 
 ## Configuration
 

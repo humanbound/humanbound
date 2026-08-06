@@ -11,12 +11,21 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 
+from .. import telemetry
 from ..engine import Posture, TestConfig, TestResult, get_runner
 from ..engine.platform_runner import PlatformTestRunner
 from ..engine.runner import TestRunner
+from ..engine.schemas import severity_to_label
 from ..exceptions import APIError, NotAuthenticatedError
 
 console = Console()
+
+# Process exit codes — part of the CI contract, documented in `hb test --help`.
+# The 1 vs 2 split follows the grep/pytest convention: "the scan ran and found
+# something" is a different condition than "the scan itself could not run".
+EXIT_OK = 0  # scan completed; no --fail-on condition met
+EXIT_FINDINGS = 1  # scan completed; --fail-on condition matched
+EXIT_RUN_FAILED = 2  # scan failed: run status Failed, or no conversation completed
 
 # Local-mode fallback when no --test-category is given. Platform mode sends
 # nothing and lets the backend pick its own default; local mode has no backend
@@ -109,6 +118,19 @@ LANG_CODE_MAP = {
 }
 
 
+def _unwrap_integration(config: dict) -> dict:
+    """Accept either a bare integration block or a full experiment
+    configuration (as printed by `hb experiments show --config`) \u2014 in the
+    latter case, use its integration block."""
+    if isinstance(config, dict) and isinstance(config.get("integration"), dict):
+        console.print(
+            "  [dim]Full configuration detected \u2014 using its 'integration' block "
+            "(scope and context come from the project).[/dim]"
+        )
+        return config["integration"]
+    return config
+
+
 def _load_integration(value: str) -> dict:
     """Load integration config from JSON string or file path."""
     path = Path(value)
@@ -116,18 +138,18 @@ def _load_integration(value: str) -> dict:
         try:
             config = json.loads(path.read_text())
             console.print(f"  [green]\u2713[/green] Loaded config: [dim]{path}[/dim]")
-            return config
+            return _unwrap_integration(config)
         except json.JSONDecodeError as e:
             console.print(f"[red]Invalid JSON in {path}:[/red] {e}")
             raise SystemExit(1)
 
     try:
-        return json.loads(value.strip())
+        return _unwrap_integration(json.loads(value.strip()))
     except json.JSONDecodeError:
         console.print("[red]--endpoint must be a JSON string or path to a JSON file.[/red]")
         console.print("[dim]Example: --endpoint ./bot-config.json[/dim]")
         console.print(
-            '[dim]Example: --endpoint \'{"streaming": false, "chat_completion": {"endpoint": "...", "headers": {}, "payload": {"content": "$PROMPT"}}}\'[/dim]'
+            '[dim]Example: --endpoint \'{"streaming": null, "chat_completion": {"endpoint": "...", "headers": {}, "payload": {"content": "$PROMPT"}}}\'[/dim]'
         )
         raise SystemExit(1)
 
@@ -157,6 +179,34 @@ def _print_next(suggestions: list):
     console.print("\n[dim]Next:[/dim]")
     for cmd, desc in suggestions:
         console.print(f"  [bold]{cmd}[/bold]  {desc}")
+
+
+def _fire_test_start(test_level: str, category: str, is_local: bool) -> None:
+    telemetry.capture(
+        "test_start",
+        {"test_level": test_level, "category": category, "is_local": is_local},
+    )
+
+
+def _fire_test_complete(
+    test_level: str,
+    category: str,
+    is_local: bool,
+    outcome: str,
+    duration_ms: int,
+    finding_count: int,
+) -> None:
+    telemetry.capture(
+        "test_complete",
+        {
+            "test_level": test_level,
+            "category": category,
+            "is_local": is_local,
+            "outcome": outcome,
+            "duration_ms": duration_ms,
+            "finding_count": finding_count,
+        },
+    )
 
 
 @click.command("test")
@@ -213,7 +263,7 @@ def _print_next(suggestions: list):
     "-q",
     is_flag=True,
     default=False,
-    help="Quick scan: top 4 OWASP categories, ~5 minutes",
+    help="Shortcut for --testing-level unit (fastest scan)",
 )
 @click.option(
     "--no-auto-start",
@@ -225,7 +275,7 @@ def _print_next(suggestions: list):
 @click.option(
     "--fail-on",
     type=click.Choice(["critical", "high", "medium", "low", "any"]),
-    help="Exit with error if findings of this severity or higher are found",
+    help="Exit with error if this experiment produces insights of this severity or higher",
 )
 @click.option(
     "--context",
@@ -309,11 +359,19 @@ def test_command(
       hb test --deep                              # System-level test (~45 min)
       hb test --full                              # Acceptance-level test (~90 min)
       hb test --category humanbound/behavioral/qa # Behavioral/QA tests
+
+    \b
+    Exit codes:
+      0  scan completed; no --fail-on condition met
+      1  scan completed; the --fail-on condition matched
+      2  scan failed: run status Failed, or no conversation completed
     """
     # Resolve shorthand flags — explicit --test-category wins; --quick/--deep/
     # --full only set the level when the user didn't provide one.
     if category and test_category is None:
         test_category = category
+    # --quick/--deep/--full select a testing level (first match wins), applied
+    # only when the user didn't set --testing-level explicitly.
     if quick:
         testing_level = "unit"  # quick uses unit depth but fewer categories
     elif deep and testing_level is None:
@@ -340,61 +398,80 @@ def test_command(
 
     is_platform = isinstance(runner, PlatformTestRunner)
 
-    # Platform mode: validate auth + project
-    if is_platform:
-        client = runner.client
-        if not client.project_id:
-            console.print("[yellow]No project selected.[/yellow]")
-            console.print("Use 'hb projects use <id>' to select a project first.")
-            raise SystemExit(1)
-    elif runner is None:
-        console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
-        console.print("[dim]Local engine coming soon in the open-core release.[/dim]")
-        raise SystemExit(1)
-    elif not local:
-        # Runner fell to LocalTestRunner without the user asking for it. The only
-        # way that happens after the auth check above is "signed in but no
-        # project selected." Without this guard the user gets a misleading
-        # "No LLM provider configured" error from LocalRunner, when what they
-        # actually need is to select a project.
-        from ..client import HumanboundClient
+    # Telemetry: test_complete always fires (success, SystemExit, or unexpected exception).
+    start_time = time.monotonic()
+    outcome = "error"  # pessimistic default; flipped to "completed" on normal end
+    is_local_for_telemetry = not is_platform
+    _findings_seen = 0  # Updated once runner returns a TestResult with insights.
 
-        _c = HumanboundClient()
-        if _c.is_authenticated():
-            console.print(
-                "[yellow]You're signed in, but no project is selected for this test.[/yellow]"
-            )
-            console.print()
-            console.print("  Choose one:")
-            console.print("    [bold]hb projects list[/bold]             see your projects")
-            console.print("    [bold]hb projects use <id>[/bold]         use an existing project")
-            console.print(
-                "    [bold]hb connect --endpoint X[/bold]      create a new project "
-                "from an agent config"
-            )
-            console.print(
-                "    [bold]hb test --local ...[/bold]          run against a local LLM "
-                "(requires HB_PROVIDER + HB_API_KEY)"
-            )
-            console.print()
-            raise SystemExit(1)
-
-    # Local mode has no backend default to fall back on — fill in the gaps now.
-    if not is_platform:
-        if test_category is None:
-            test_category = LOCAL_DEFAULT_TEST_CATEGORY
-        if testing_level is None:
-            testing_level = LOCAL_DEFAULT_TESTING_LEVEL
-        if lang is None:
-            lang = LOCAL_DEFAULT_LANG
-
-    console.print(f"\n[bold]Starting security test:[/bold] {name}\n")
-    console.print(f"  Category: {test_category or '[dim](backend default)[/dim]'}")
-    console.print(f"  Level: {testing_level or '[dim](backend default)[/dim]'}")
-    console.print(f"  Language: {lang or '[dim](backend default)[/dim]'}")
-    console.print()
+    _fire_test_start(
+        test_level=testing_level,
+        category=test_category,
+        is_local=is_local_for_telemetry,
+    )
 
     try:
+        # Platform mode: validate auth + project
+        if is_platform:
+            client = runner.client
+            if not client.project_id:
+                console.print("[yellow]No project selected.[/yellow]")
+                if client.api_key:
+                    console.print(
+                        "Set the [bold]HUMANBOUND_PROJECT_ID[/bold] env var to the target project."
+                    )
+                else:
+                    console.print("Use 'hb projects use <id>' to select a project first.")
+                raise SystemExit(1)
+        elif runner is None:
+            console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
+            console.print("[dim]Local engine coming soon in the open-core release.[/dim]")
+            raise SystemExit(1)
+        elif not local:
+            # Runner fell to LocalTestRunner without the user asking for it. The only
+            # way that happens after the auth check above is "signed in but no
+            # project selected." Without this guard the user gets a misleading
+            # "No LLM provider configured" error from LocalRunner, when what they
+            # actually need is to select a project.
+            from ..client import HumanboundClient
+
+            _c = HumanboundClient()
+            if _c.is_authenticated():
+                console.print(
+                    "[yellow]You're signed in, but no project is selected for this test.[/yellow]"
+                )
+                console.print()
+                console.print("  Choose one:")
+                console.print("    [bold]hb projects list[/bold]             see your projects")
+                console.print(
+                    "    [bold]hb projects use <id>[/bold]         use an existing project"
+                )
+                console.print(
+                    "    [bold]hb connect --endpoint X[/bold]      create a new project "
+                    "from an agent config"
+                )
+                console.print(
+                    "    [bold]hb test --local ...[/bold]          run against a local LLM "
+                    "(requires HB_PROVIDER + HB_API_KEY)"
+                )
+                console.print()
+                raise SystemExit(1)
+
+        # Local mode has no backend default to fall back on — fill in the gaps now.
+        if not is_platform:
+            if test_category is None:
+                test_category = LOCAL_DEFAULT_TEST_CATEGORY
+            if testing_level is None:
+                testing_level = LOCAL_DEFAULT_TESTING_LEVEL
+            if lang is None:
+                lang = LOCAL_DEFAULT_LANG
+
+        console.print(f"\n[bold]Starting security test:[/bold] {name}\n")
+        console.print(f"  Category: {test_category or '[dim](backend default)[/dim]'}")
+        console.print(f"  Level: {testing_level or '[dim](backend default)[/dim]'}")
+        console.print(f"  Language: {lang or '[dim](backend default)[/dim]'}")
+        console.print()
+
         # Resolve provider (platform: from API, local: from env/config — handled by runner)
         if is_platform and not provider_id:
             client = runner.client
@@ -506,6 +583,7 @@ def test_command(
                     border_style="blue",
                 )
             )
+            outcome = "completed"
             return
 
         # Wait mode - poll for completion
@@ -523,8 +601,20 @@ def test_command(
         result = runner.get_result(experiment_id)
         posture = runner.get_posture(experiment_id)
 
+        # Record real finding count for telemetry. Platform's
+        # posture.finding_count is the canonical "open findings" count when
+        # available; otherwise fall back to len(result.insights).
+        try:
+            if posture.finding_count is not None:
+                _findings_seen = int(posture.finding_count)
+            else:
+                _findings_seen = len(result.insights or [])
+        except Exception:
+            _findings_seen = 0
+
         # Display results (same rendering, canonical shapes)
-        _display_results(result, posture)
+        all_errored = _all_errored(result.stats)
+        _display_results(result, posture, all_errored)
 
         # Next suggestions — vary by mode
         if is_platform:
@@ -546,23 +636,31 @@ def test_command(
                 ]
             )
 
-        # Check fail-on condition
-        if fail_on:
-            exit_code = _check_fail_on(result, fail_on)
-            if exit_code != 0:
-                console.print(f"\n[red]Failing due to --fail-on={fail_on} condition[/red]")
-                raise SystemExit(exit_code)
-
-        if final_status == "Failed":
-            raise SystemExit(1)
+        exit_code, exit_reason = _resolve_exit(result, final_status, fail_on)
+        # A --fail-on exit is still a completed scan; a run failure is not.
+        outcome = "error" if exit_code == EXIT_RUN_FAILED else "completed"
+        if exit_code != EXIT_OK:
+            console.print(f"\n[red]{exit_reason}[/red]")
+            raise SystemExit(exit_code)
 
     except NotAuthenticatedError:
+        telemetry.fire_gated_command_hit()
         console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
         console.print("[dim]Or use local mode: hb test --endpoint ./config.json --wait[/dim]")
         raise SystemExit(1)
     except APIError as e:
         console.print(f"[red]Error:[/red] {e}")
         raise SystemExit(1)
+    finally:
+        duration_ms = int((time.monotonic() - start_time) * 1000)
+        _fire_test_complete(
+            test_level=testing_level,
+            category=test_category,
+            is_local=is_local_for_telemetry,
+            outcome=outcome,
+            duration_ms=duration_ms,
+            finding_count=_findings_seen,
+        )
 
 
 def _wait_for_completion(runner: TestRunner, experiment_id: str) -> str:
@@ -742,11 +840,11 @@ def _wait_verbose(runner, experiment_id: str) -> str:
                 result_style = "[yellow]err[/yellow]"
 
             severity = log.get("severity", 0)
-            if isinstance(severity, (int, float)) and severity >= 76:
+            if isinstance(severity, int | float) and severity >= 76:
                 sev_style = f"[red bold]{severity}[/red bold]"
-            elif isinstance(severity, (int, float)) and severity >= 51:
+            elif isinstance(severity, int | float) and severity >= 51:
                 sev_style = f"[red]{severity}[/red]"
-            elif isinstance(severity, (int, float)) and severity >= 26:
+            elif isinstance(severity, int | float) and severity >= 26:
                 sev_style = f"[yellow]{severity}[/yellow]"
             else:
                 sev_style = f"[dim]{severity}[/dim]"
@@ -762,11 +860,46 @@ def _wait_verbose(runner, experiment_id: str) -> str:
     return status.status
 
 
-def _display_results(result: TestResult, posture: Posture):
-    """Display experiment results with posture grade and findings summary.
+def _all_errored(stats: dict) -> bool:
+    """True when the run produced conversations but none completed — i.e. every
+    conversation errored (0 pass, 0 fail, >0 error).
 
-    Uses canonical TestResult and Posture shapes — works identically
-    for both platform and local runners.
+    Such a run carries no security signal at all and must not be presented as a
+    pass: "Pass: 0 / Fail: 0" on a fully-errored run reads as "my agent is clean"
+    when in fact nothing was actually tested.
+    """
+    total = stats.get("total", 0) or 0
+    completed = (stats.get("pass", 0) or 0) + (stats.get("fail", 0) or 0)
+    errored = stats.get("error", 0) or 0
+    return total > 0 and completed == 0 and errored > 0
+
+
+def _resolve_exit(result: TestResult, final_status: str, fail_on: str) -> tuple[int, str | None]:
+    """Single source of truth for hb test's exit code (see `Exit codes` in --help).
+
+    Checked in severity order: a run that failed outright — or where every
+    conversation errored, i.e. nothing was actually tested — is a scan failure
+    (EXIT_RUN_FAILED) regardless of --fail-on, which only inspects insight
+    severity and sees nothing in either case.
+    """
+    if final_status == "Failed":
+        if (result.stats or {}).get("total", 0):
+            return EXIT_RUN_FAILED, "Run failed — partial results saved. See `hb logs`."
+        return EXIT_RUN_FAILED, "Run failed — no results produced."
+    if _all_errored(result.stats):
+        return EXIT_RUN_FAILED, "No conversations completed — treating this run as a failure."
+    if fail_on and _check_fail_on(result, fail_on) != 0:
+        return EXIT_FINDINGS, f"Failing due to --fail-on={fail_on} condition"
+    return EXIT_OK, None
+
+
+def _build_results_panel(
+    result: TestResult, posture: Posture, all_errored: bool
+) -> tuple[str, list[str], str]:
+    """Build the results panel as data: (title, lines, border_style).
+
+    Pure — no console access — so tests can assert on structure instead of
+    scraping rendered output.
     """
     status = result.status
     status_color = {
@@ -776,8 +909,13 @@ def _display_results(result: TestResult, posture: Posture):
     }.get(status, "white")
 
     stats = result.stats
+    errored = stats.get("error", 0) or 0
 
-    # Build results panel content
+    # A run where every conversation errored produced no security signal — don't
+    # paint it green, and don't let "Pass: 0 / Fail: 0" read as a clean pass.
+    if all_errored:
+        status_color = "red"
+
     panel_lines = [
         f"[bold]Status:[/bold] [{status_color}]{status}[/{status_color}]\n",
         "[bold]Results:[/bold]",
@@ -785,6 +923,17 @@ def _display_results(result: TestResult, posture: Posture):
         f"  [green]Pass:[/green] {stats.get('pass', 0)}",
         f"  [red]Fail:[/red] {stats.get('fail', 0)}",
     ]
+    if errored:
+        panel_lines.append(f"  [yellow]Errored:[/yellow] {errored}")
+
+    if all_errored:
+        panel_lines.append("")
+        panel_lines.append("[red bold]⚠ No conversations completed — every one errored.[/red bold]")
+        panel_lines.append(
+            "[red]This is NOT a passing result. Check the agent endpoint/config and "
+            "connectivity, then re-run.[/red]"
+        )
+        panel_lines.append("[dim]Inspect the failures with: hb logs[/dim]")
 
     # Posture grade (available from both runners)
     if posture.grade is not None:
@@ -805,7 +954,7 @@ def _display_results(result: TestResult, posture: Posture):
 
     # Open findings count (platform only — None locally)
     if posture.finding_count is not None:
-        panel_lines.append(f"[bold]Open Findings:[/bold] {posture.finding_count}")
+        panel_lines.append(f"[bold]Open Findings (project):[/bold] {posture.finding_count}")
 
     # Previous posture delta (platform only — None locally)
     if posture.previous_grade and posture.previous_grade != posture.grade:
@@ -814,17 +963,30 @@ def _display_results(result: TestResult, posture: Posture):
         )
         panel_lines.append(f"[dim]Previously: {posture.previous_grade}{prev_score_str}[/dim]")
 
-    console.print(
-        Panel("\n".join(panel_lines), title="Experiment Complete", border_style=status_color)
-    )
+    panel_title = "Experiment Complete — no results" if all_errored else "Experiment Complete"
+    return panel_title, panel_lines, status_color
+
+
+def _display_results(result: TestResult, posture: Posture, all_errored: bool) -> None:
+    """Display experiment results with posture grade and findings summary.
+
+    Uses canonical TestResult and Posture shapes — works identically
+    for both platform and local runners. Rendering only: the caller computes
+    `all_errored` (and the exit code) via `_all_errored` / `_resolve_exit`.
+    """
+    title, lines, border_style = _build_results_panel(result, posture, all_errored)
+    console.print(Panel("\n".join(lines), title=title, border_style=border_style))
 
     # Show insights if available
     insights = result.insights
     if insights:
-        console.print(f"\n[bold]Top Findings ({len(insights)} total):[/bold]")
+        console.print(f"\n[bold]Top Insights ({len(insights)} total):[/bold]")
+        console.print(
+            "[dim]Per-experiment analysis — not tracked across runs. "
+            "Tracked findings: hb findings[/dim]"
+        )
         for i, insight in enumerate(insights[:5], 1):
-            severity = insight.get("severity", "unknown")
-            severity_str = str(severity).lower() if isinstance(severity, str) else "unknown"
+            severity_str = _severity_label(insight.get("severity"))
             severity_color = {
                 "critical": "red bold",
                 "high": "red",
@@ -833,8 +995,21 @@ def _display_results(result: TestResult, posture: Posture):
             }.get(severity_str, "white")
 
             console.print(
-                f"  {i}. [{severity_color}]{severity_str.upper()}[/{severity_color}]: {insight.get('explanation', '')[:80]}..."
+                f"  {i}. [{severity_color}]{severity_str.upper()}[/{severity_color}]: {insight.get('explanation', '')}"
             )
+
+
+def _severity_label(severity) -> str:
+    """Normalize an insight severity to a label.
+
+    Platform insights carry a numeric 0-100 score (backend ``Insight.severity``);
+    local-engine insights already carry a label string.
+    """
+    if isinstance(severity, str):
+        return severity.lower()
+    if isinstance(severity, int | float):
+        return severity_to_label(severity)
+    return "unknown"
 
 
 def _check_fail_on(result: TestResult, fail_on: str) -> int:
@@ -853,7 +1028,7 @@ def _check_fail_on(result: TestResult, fail_on: str) -> int:
     fail_on_index = severity_levels.index(fail_on) if fail_on in severity_levels else -1
 
     for insight in insights:
-        severity = str(insight.get("severity", "")).lower()
+        severity = _severity_label(insight.get("severity"))
         if severity in severity_levels:
             severity_index = severity_levels.index(severity)
             if severity_index <= fail_on_index:

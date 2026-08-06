@@ -11,6 +11,7 @@ import click
 from rich.console import Console
 from rich.progress import Progress
 
+from .. import telemetry
 from ..engine import get_runner
 from ..engine.platform_runner import PlatformTestRunner
 from ..exceptions import APIError, NotAuthenticatedError
@@ -254,6 +255,7 @@ def train_command(model_path, last_n, from_date, until_date, min_samples, output
         console.print(f"\n[green]Model saved:[/green] {output} ({file_size:.0f} KB)")
 
     except NotAuthenticatedError:
+        telemetry.fire_gated_command_hit()
         console.print("[red]Not authenticated.[/red] Run: hb login")
         sys.exit(1)
     except APIError as e:

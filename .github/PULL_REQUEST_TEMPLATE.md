@@ -19,7 +19,7 @@
 - [ ] `pytest`, `ruff check`, and `ruff format --check` pass locally
 - [ ] `CHANGELOG.md` updated under `[Unreleased]`
 - [ ] Docs updated on `docs.humanbound.ai` (if the change is user-visible)
-- [ ] [CLA](https://github.com/humanbound/humanbound/blob/main/CLA.md) signed (the CLAAssistant bot will prompt you on first PR)
+- [ ] All commits are signed off (`git commit -s`) — see [DCO.md](https://github.com/humanbound/humanbound/blob/main/DCO.md)
 
 ## Linked issue(s)
 

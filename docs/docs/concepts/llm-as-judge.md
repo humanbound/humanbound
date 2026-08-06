@@ -1,3 +1,15 @@
+---
+description: "How Humanbound's judge LLM scores your agent's responses against security criteria — independent model, structured rubric, and reasoning."
+keywords:
+  - LLM-as-a-judge
+  - AI security evaluation
+  - agent response evaluation
+  - judge model
+  - categorical labeling
+  - few-shot learning framework
+  - judge provider configuration
+---
+
 # LLM-as-a-Judge
 
 At the core of every Humanbound security test is a **judge** -- an LLM that evaluates your AI agent's responses against security criteria. The judge is separate from the agent under test, using a different model and provider to ensure independent evaluation.

@@ -1,6 +1,17 @@
+---
+description: "Glossary of key terms used throughout Humanbound — orchestrator, judge, scope, posture, finding, experiment, and more."
+keywords:
+  - humanbound glossary
+  - AI security terms
+  - key terms
+  - orchestrator definition
+  - posture score definition
+  - LLM security glossary
+---
+
 # Glossary
 
-Key terms used throughout the Humanbound documentation.
+The Humanbound glossary defines the key concepts used across the documentation — orchestrators, judges, scope, posture scoring, findings, firewall tiers, and the terminology of AI red teaming. Terms are grouped into four sections (Testing & Assessment, Scoring & Posture, Defense, AISecOps & Operations) for quick scanning; other pages link here when they introduce a term for the first time.
 
 ---
 
@@ -43,10 +54,12 @@ Key terms used throughout the Humanbound documentation.
 | Term | Definition |
 |------|-----------|
 | **AI SecOps** | The AI equivalent of DevSecOps — a repeating cycle of testing, monitoring, and protecting AI systems in production. Includes vulnerability detection through automated probing, model improvement through feedback loops, and runtime protection through the firewall. The goal is continuous assurance, not one-off audits. |
+| **AI TDD** | Defining an AI agent's security boundaries inside the editor (Claude Code, Cursor) via the [Humanbound plugins](../plugins/index.md) — rules get set while you code, before anything ships. The IDE surface of AI SecOps. |
+| **Red Coworker** | The collaborative model of the Humanbound platform — the AI adversary acts as a teammate to your security and engineering team. Tests produce findings; findings get assigned to members; webhook events stream every state transition into your SIEM, ticketing system, and chat. See [Red Coworker concept](../concepts/red-coworker.md). |
 | **Continuous Monitoring** | Running automated, ongoing security assessments against AI systems on a configurable schedule. Unlike point-in-time testing where results are static, continuous monitoring tracks how security posture evolves over time and adapts testing based on what it finds. Platform feature — requires login. |
 | **Campaign** | The operational unit of continuous monitoring. A scheduled, recurring test cycle for a specific agent with accumulated intelligence, finding history, and alerting. Each cycle produces a complete assessment with posture score, findings, and coverage metrics. |
 | **Finding** | A persistent vulnerability record tracked across experiments. Findings have a lifecycle: open (detected), fixed (no longer reproduced), regressed (reappeared after being fixed), stale (not triggered in 14+ days). Platform feature — local testing produces insights, not findings. |
-| **Shift Left** | Connecting red teaming findings to continuous monitoring. Instead of a report that sits on a shelf, test findings become the baseline for ongoing security operations — the open-core CLI produces findings locally, `hb login` connects them to the platform for lifecycle tracking. |
+| **Shift Left** | Connecting red teaming results to continuous monitoring. Instead of a report that sits on a shelf, test results become the baseline for ongoing security operations — the open-core CLI produces insights locally, `hb login` connects testing to the platform where findings are tracked with a lifecycle. |
 | **Industry Mapping** | Detecting what industry a target AI operates in (finance, health, defense, etc.) and mapping it to relevant compliance frameworks (DORA, HIPAA, NIS2, ETSI). Customizes both attack scenarios and compliance recommendations to the regulatory environment. |
 
 ## Architecture & Distribution

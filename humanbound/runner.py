@@ -3,5 +3,6 @@
 """Local runner — runs the engine in-process."""
 
 from humanbound_cli.engine.local_runner import LocalTestRunner as LocalRunner  # noqa: F401
+from humanbound_cli.engine.runner import TestConfig  # noqa: F401
 
-__all__ = ["LocalRunner"]
+__all__ = ["LocalRunner", "TestConfig"]

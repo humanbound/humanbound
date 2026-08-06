@@ -10,6 +10,7 @@ from rich.console import Console
 from rich.prompt import Confirm
 from rich.table import Table
 
+from .. import telemetry
 from ..client import HumanboundClient
 from ..exceptions import APIError, NotAuthenticatedError
 
@@ -32,6 +33,7 @@ def _require_auth() -> HumanboundClient:
     client = HumanboundClient()
 
     if not client.is_authenticated():
+        telemetry.fire_gated_command_hit()
         console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
         raise SystemExit(1)
 
@@ -103,6 +105,7 @@ def webhooks_group(ctx, as_json: bool):
         console.print(f"\n[dim]{len(webhooks)} webhook(s)[/dim]")
 
     except NotAuthenticatedError:
+        telemetry.fire_gated_command_hit()
         console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
         raise SystemExit(1)
     except APIError as e:
@@ -147,6 +150,7 @@ def add(url: str, name: str, secret: str, events: str):
         console.print("[dim]Store this secret securely -- it cannot be retrieved later.[/dim]")
 
     except NotAuthenticatedError:
+        telemetry.fire_gated_command_hit()
         console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
         raise SystemExit(1)
     except APIError as e:
@@ -179,6 +183,7 @@ def remove(webhook_id: str, force: bool):
         console.print("[green]Webhook deleted.[/green]")
 
     except NotAuthenticatedError:
+        telemetry.fire_gated_command_hit()
         console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
         raise SystemExit(1)
     except APIError as e:
@@ -203,6 +208,7 @@ def test(webhook_id: str):
         console.print("[green]Test event delivered successfully.[/green]")
 
     except NotAuthenticatedError:
+        telemetry.fire_gated_command_hit()
         console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
         raise SystemExit(1)
     except APIError as e:
@@ -248,6 +254,7 @@ def sync(webhook_id: str, since: str, until: str, project_id: str, event_type: s
             console.print("[dim]Events are being delivered asynchronously.[/dim]")
 
     except NotAuthenticatedError:
+        telemetry.fire_gated_command_hit()
         console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
         raise SystemExit(1)
     except APIError as e:
@@ -317,6 +324,7 @@ def update(webhook_id: str, url: str, name: str, webhook_status: str):
         console.print(f"  Status: {active_str}")
 
     except NotAuthenticatedError:
+        telemetry.fire_gated_command_hit()
         console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
         raise SystemExit(1)
     except APIError as e:

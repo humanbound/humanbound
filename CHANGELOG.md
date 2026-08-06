@@ -7,8 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [2.1.0] — 2026-05-11
-
 ### Added
 - **`hb projects update --capabilities`** — declare an agent's
   capability surface (`tools`, `memory`, `inter_agent`, `reasoning_model`)
@@ -25,6 +23,470 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   as before. Same applies to `hb connect --level` and the equivalent
   fields on the MCP `hb_run_test` tool.
 
+### Fixed
+- **`hb guardrails` now exports rules from local test results.** Local runs
+  store insights beneath `results.insights`, but the exporter only read the
+  legacy top-level key and consequently emitted an empty ruleset. The exporter
+  now reads the current schema while retaining the legacy fallback (#102).
+- **Network failures now surface as a clean `APIError` everywhere** (#68,
+  thanks @JChario for the report and the original fix). The client called
+  `requests` without wrapping transport errors, so a dropped connection or
+  timeout escaped as a raw requests exception — MCP tools returned FastMCP's
+  raw "Error executing tool …" text instead of their structured
+  `{"error": …}` envelope, and the message carried urllib3 internals. The
+  client now converts transport failures to `APIError` at the source (CLI
+  commands and all MCP tools handle it uniformly), and every MCP tool
+  additionally falls back to the structured envelope for any unexpected
+  exception.
+- **`pip install humanbound[mcp]` works again.** mcp 2.0.0 (2026-07-28)
+  removed `mcp.server.fastmcp`, so a fresh install broke `hb mcp` at import;
+  the extra now pins `mcp>=1.2.0,<2`.
+- **Agentic category-worker failures no longer report a completed scan.**
+  (#107, thanks @Ayush7614). Exceptions raised by an OWASP Agentic category
+  worker are now surfaced through the engine error callback and mark the run
+  `Failed`; local runs preserve that failure status while saving completed
+  partial results. Note for CI users: runs that previously (and wrongly)
+  exited `0` on a worker crash now exit `2`, per the documented exit-code
+  contract.
+- **`hb test` no longer claims "no results produced" when a failed run saved
+  partial results** — the exit message now points to `hb logs` instead.
+- **A crash in any local orchestrator keeps completed conversations.** The
+  local runner's generic failure path now saves partial results the same way
+  an orchestrator-reported failure does, so `owasp_single_turn` and
+  `behavioral_qa` crashes no longer discard finished work.
+- **Agentic category failures are judged after the worker pool joins, not on
+  a per-future timeout.** The pool shutdown always waited for every started
+  worker, so the old 3-hour `future.result` timeout could only misreport a
+  slow-but-successful category as failed — never actually bound the run. A
+  worker crash also no longer prints its traceback twice on stderr; the full
+  trace still reaches the error callback and DEBUG logging.
+
+### Security
+- **OAuth callback listeners are loopback-only and path-validated.** Login and
+  browser-session logout now bind only to `127.0.0.1`; login accepts an
+  authorization response only at its registered `/callback` path. Remaining
+  auth-bearing client calls that bypassed the shared wrappers also refuse
+  redirects (`persist_discovery`, token exchange, refresh, logout, and API
+  session exchange), closing the gap left after #97 — including API-key mode
+  where `x-api-key` would otherwise be forwarded across a hostname change.
+- **Local test result artifacts are written atomically at `0600`** under
+  `.humanbound/results/` directories hardened to `0700`. `logs.jsonl` retains
+  every attack prompt and the agent's raw replies (including disclosures the
+  agent wasn't supposed to make); they previously inherited the process umask
+  (commonly world-readable on first write). They now use the same secure writer
+  as `credentials.json`.
+- **Local secret files are written atomically at `0600`** (#67, thanks
+  @JChario). `credentials.json`, the provider `config.yaml`, and the telemetry
+  state file could briefly exist world-readable on first write (created at the
+  process umask before `chmod`); they are now written via an atomic temp-file +
+  `os.replace` helper and are never world-readable. The OAuth login callback
+  error page also escapes the reflected `error_description` to prevent a
+  reflected-XSS in that page.
+
+### Fixed
+- **Local experiment starts no longer collide within the same second.** Each
+  local run ID now includes a short UUID suffix (`exp-{timestamp}-{uuid8}`), so
+  concurrent `hb test` processes no longer overwrite each other's `_runs` slot
+  or result directory.
+- **OpenAPI extraction now resolves `$ref` parameters and request body
+  schemas.** The parser previously skipped every `$ref` parameter and only read
+  inline `properties`, so component-based specs produced incomplete parameter
+  lists on the extractor. Local JSON Pointer resolution (with cycle-safe
+  `allOf` walking and depth guards) now follows `#/components/...` and Swagger 2
+  `#/parameters/...` refs. This is groundwork for consumers of `parameters` /
+  `responses`; `hb connect` today still reads only description/method/path/
+  summary from the parse result.
+
+## [2.8.0] — 2026-07-30
+
+### Added
+- **Official Docker image** — `ghcr.io/humanbound/humanbound`, published to
+  GitHub Container Registry on every release (multi-arch `linux/amd64` +
+  `linux/arm64`; tags `:X.Y.Z`, `:X.Y`, `:X`, `:latest`). Runs the CLI with no
+  Python install: mount your project at `/workspace`, run `hb` commands as
+  usual, and results persist to the host through the mount. Ships the
+  `[engine]` extra for local-mode testing. Built from source in CI with
+  provenance attestation and SBOM; PRs touching the Docker files get an
+  automatic build + smoke test. See the new
+  [Docker integration docs](https://docs.humanbound.ai/integrations/docker/).
+- **Headless authentication with user API keys.** Set `HUMANBOUND_API_KEY` (an
+  `hb_…` key from `hb api-keys create`) and the CLI authenticates via the
+  `x-api-key` header — no browser login. `HUMANBOUND_PROJECT_ID` and optionally
+  `HUMANBOUND_ORG_ID` select the target for CI, Docker, and automation. Key
+  mode always tests on the platform and surfaces auth failures as clean errors
+  — no silent local fallback, no interactive re-login. See the new
+  [API keys](https://docs.humanbound.ai/management/api-keys/) and
+  [CI/CD](https://docs.humanbound.ai/integrations/cicd/) docs.
+
+### Changed
+- **`hb api-keys create` defaults to least privilege.** `--scopes` is now
+  `--scope` (`read` | `write` | `admin`, cumulative), the default dropped from
+  `admin` to `read`, and new `--org`, `--projects`, and `--expires` options
+  bound a key to explicit organisations/projects and an expiry timestamp.
+  `list`/`update` follow the backend's `scope`/`is_active` field names, and the
+  MCP `hb_create_api_key` / `hb_update_api_key` tools use the same contract.
+
+### Fixed
+- **Interrupting a local run no longer discards completed conversations**
+  (#75, reported by @guillaume-flambard). Local runs buffered finished
+  conversations and delivered them to the results writer only in batches, and
+  the batch was dropped once the run was cancelled — so `Ctrl+C` could leave
+  `hb posture` and `hb logs` with nothing despite a long run. Local runs now
+  flush every conversation as it is judged and still deliver whatever finished
+  when a run is interrupted, so completed work always reaches disk. Batched
+  (platform) log delivery is unchanged.
+- **`--quick` help now matches its behavior** (#72). The flag advertised "top 4
+  OWASP categories, ~5 minutes" but only selected the `unit` testing level —
+  already the default — with no category filtering anywhere, so every scan ran
+  all categories. The help now reads "Shortcut for --testing-level unit"; as a
+  bonus, an explicit `--testing-level` combined with `--quick` (e.g.
+  `-l system --quick`) is no longer downgraded to `unit`.
+- **Empty string values in a bot config no longer crash the run** (#64). An
+  empty `headers` or `payload` value (e.g. an optional header left blank) hit an
+  unguarded `item[0]` first-character check in the placeholder parser and raised
+  a raw `IndexError: string index out of range`. Empty strings are not
+  placeholders, so they now pass through unchanged like any other literal value.
+
+### Security
+- **LLM provider API calls no longer follow HTTP redirects**, so credential
+  headers can't be re-sent to a redirected host.
+- **Platform API calls no longer follow HTTP redirects either.** The headless
+  key travels in a custom `x-api-key` header, which `requests` — unlike
+  `Authorization` — does not strip on a cross-host redirect, so a redirecting
+  or compromised endpoint could re-send the key to another host. A redirect now
+  surfaces as an explicit error, matching the engine's reject-redirect
+  behavior.
+
+### Documentation
+- **Clarify that the Ollama "air-gap" provider requires the `[engine]` extra**
+  (#52). The README and docs showed the Ollama path under a plain
+  `pip install humanbound`, but the provider imports the `openai` SDK that ships
+  only in `[engine]`, so `HB_PROVIDER=ollama` failed with
+  `ModuleNotFoundError: No module named 'openai'` on a core install. The install
+  snippets now use `humanbound[engine]` for the air-gap path.
+
+## [2.7.0] — 2026-07-22
+
+### Added
+- **Telemetry: one-time opt-out event.** Disabling telemetry — via
+  `hb telemetry disable`, `DO_NOT_TRACK=1`, or `HB_TELEMETRY_DISABLED=1` —
+  now sends a single, final `telemetry_disabled` event (at most once per
+  machine, ever) so opt-outs can be counted. Env-var opt-outs are sent under
+  a fresh one-shot random ID with geolocation and person profiles disabled;
+  CI, dev installs, and non-TTY runs never send it. This is a deliberate,
+  documented deviation from the `DO_NOT_TRACK` convention — see
+  `PRIVACY.md` ("How to disable").
+- **Telemetry: IP-based geolocation.** CLI and docs-site analytics now derive an
+  approximate location (country, region, city, and coarse coordinates) from the
+  request IP via PostHog GeoIP enrichment; the raw IP is discarded after
+  enrichment and never stored. Docs-site geolocation is gated on Analytics
+  consent; the CLI follows the existing opt-out model and applies to pre- and
+  post-login events.
+- **Telemetry: account email on logged-in CLI events.** After `hb login`, the
+  account email is attached as a PostHog person property to measure CLI→Platform
+  conversion. Anonymous (pre-login) events never carry an email.
+- **Finding regression retest.** `hb findings retest <id>` replays a finding's
+  own recorded attacks against the current agent to check whether it is
+  actually fixed, reporting `still_vulnerable`, `not_reproduced`, or
+  `insufficient_evidence`. Fire-and-return by default (prints the experiment
+  id); `--watch` polls to completion and shows the outcome, and
+  `--testing-level unit|system|acceptance` (with `--deep`/`--full` shortcuts,
+  matching `hb test`) controls replay breadth.
+  `hb findings regressions <id>` lists a finding's retest history. Exposed to
+  agents via the `hb_retest_finding` and `hb_list_finding_regressions` MCP
+  tools.
+- `NOTICE` file per Apache-2.0 section 4(d).
+
+### Changed
+- `PRIVACY.md` documents the IP-derived approximate location and email person
+  property, corrects the analytics retention period to **1 year**, and adds an
+  honest note that `hb logout` does not re-anonymize prior events.
+- **Contribution policy: CLA replaced by DCO.** External contributions no
+  longer require signing the Humanbound Contributor License Agreement.
+  Contributions are now accepted under the Developer Certificate of Origin
+  v1.1 (see `DCO.md`) — sign commits with `git commit -s`. Contributors keep
+  their copyright; contributions are licensed inbound = outbound under
+  Apache-2.0. `CLA.md` is removed and a `dco.yml` workflow now checks
+  `Signed-off-by` trailers on every pull request.
+- `CONTRIBUTING.md` gains an explicit third-party license policy: vendored
+  code must be permissively licensed (Apache-2.0/MIT/BSD/ISC); GPL, AGPL,
+  SSPL, and BSL code cannot be accepted.
+- **Docs: CI/CD integration page** rewritten to lead with the `humanbound/actions`
+  GitHub Action (local-mode Quickstart, SARIF/Security-tab guidance) plus a
+  working GitLab/CLI example, replacing the prior platform-mode-only examples
+  that could not run.
+- **`hb test` exit codes are now an explicit contract**, documented in
+  `hb test --help`: `0` scan completed with no `--fail-on` match, `1` scan
+  completed and the `--fail-on` condition matched, `2` the scan itself failed
+  (run status `Failed`, or no conversation completed). Previously a `Failed`
+  run exited `1` with no message; it now exits `2` with a reason line, and a
+  scan failure takes precedence over `--fail-on`.
+
+### Fixed
+- **`HB_PROVIDER=anthropic` is now accepted** (#53). The engine only recognized
+  the internal name `claude`, while the README advertises the "Anthropic"
+  provider and the SDK package is `anthropic`. Provider names are now
+  normalized (trimmed, lowercased) and `anthropic` maps to `claude`; the
+  "Unsupported LLM provider" error also lists the available aliases.
+- **Bot configs without `chat_completion.headers`/`payload` no longer crash
+  every conversation** (#51). Both keys are optional and default to `{}` across
+  all three transports (non-streaming, WebSocket, SSE); an omitted payload uses
+  the documented OpenAI-style `messages` fallback. A missing
+  `chat_completion.endpoint` now fails with a clear config error instead of a
+  raw `KeyError`.
+- **A run where every conversation errored is no longer reported as passing**
+  (#51). Instead of a green `Finished / Pass: 0 / Fail: 0` panel and exit `0`,
+  `hb test` now shows an `Errored: N` count with an explicit "NOT a passing
+  result" warning and exits `2` — an all-error run reading as "safe" was the
+  dangerous failure mode for a security scanner.
+- **Dead Discord invite replaced** (#55). `CONTRIBUTING.md`, the community and
+  plugins docs pages, and the new-issue chooser linked `discord.gg/gQyXjVBF`,
+  which no longer resolves; all references now use the live permanent invite
+  `discord.gg/WgTMpmSFtN`, matching README and the PyPI project link.
+- **`pytest` no longer aborts at collection on a plain install** (#54). The
+  three docs-hook test modules import `mkdocs`, which only ships in the `[dev]`
+  extra; after `pip install -e .` the whole suite died with 3 collection errors
+  before a single test ran. They now `pytest.importorskip("mkdocs")` — a plain
+  install reports them as skipped, and they run normally under `[dev]`/CI.
+- Telemetry is now auto-disabled on **editable / source-checkout installs**
+  (`pip install -e .`); previously only `HUMANBOUND_DEV=1` disabled development
+  runs.
+
+### Security
+- **Credential leak on redirect (CWE-522).** A malicious or compromised target
+  endpoint could cause the engine to disclose the operator's agent auth
+  credential by returning an HTTP/WebSocket redirect. Fixed by refusing redirects
+  on all target-agent and telemetry transports; upgrading is recommended.
+  Endpoints that legitimately relied on a redirect must now be configured with
+  their final URL.
+
+## [2.6.0] — 2026-07-09
+
+### Removed
+- **`humanbound-cli` transitional stub retired.** All 29 `humanbound-cli`
+  releases on PyPI were yanked on 2026-07-09 (past the 2026-06-20 window
+  announced in 2.0.0), with the yank reason pointing users to
+  `pip install humanbound`. Pinned installs (`humanbound-cli==1.2.2`) still
+  work with a warning; unpinned installs now fail with the redirect message.
+
+### Added
+- **`TestConfig` is now part of the public SDK namespace**
+  (`from humanbound import TestConfig`). It was the only missing piece for
+  driving a full test run through the stable API: construct a `TestConfig`,
+  pass it to `LocalRunner.start()`, poll `get_status()`, and read
+  `get_posture()` / `get_result()` — no `humanbound_cli.*` imports needed.
+- Package metadata: `Programming Language :: Python :: 3.13` and
+  `Topic :: Scientific/Engineering :: Artificial Intelligence` classifiers, and a
+  `Discord` entry in `[project.urls]` so PyPI shows the community link in the sidebar.
+
+### Fixed
+- **`import humanbound` crashed on a core-only install** (`pip install
+  humanbound` without extras) with `ModuleNotFoundError: No module named
+  'httpx'` — `httpx` was used at module level by the engine's bot adapter but
+  only declared in the `[engine]` extra. `httpx` (and `certifi`, previously
+  present only transitively) are now core dependencies. Affected at least
+  2.2.0–2.5.0.
+
+### Changed
+- **README refresh** (new positioning + PyPI rendering fixes): leads with
+  adversarial agent testing and the test-to-guardrail loop, adds real
+  `bot-config.json` / `scope.yaml` examples and a runnable SDK example, and
+  replaces the stale "What's shipping in 2.0" section with release highlights.
+  All repo-relative links are now absolute GitHub URLs (they returned 404 on
+  pypi.org) and the logo no longer relies on the `<picture>` block that PyPI's
+  HTML sanitizer strips.
+- Package summary now reads "Open-source adversarial testing engine, SDK, and
+  CLI for AI agents."
+
+## [2.5.0] — 2026-07-06
+
+### Changed
+- **`thread_init` is now optional in agent configs.** Stateless agents that need no session
+  step can omit `thread_init` — or leave its endpoint empty, or set it to `null`. `hb test`
+  and the local engine skip session creation when it isn't configured, mirroring the
+  already-optional `thread_auth`; only `chat_completion` is required. Configs that do provide
+  a `thread_init` endpoint are unchanged and still validated.
+
+## [2.4.0] — 2026-07-03
+
+### Added
+- **`hb connect --vendor <id>`** discovers hosted-platform agents (currently `openai`) from a
+  vendor credential and onboards the one you pick — the credential is read from the vendor's
+  env var (e.g. `OPENAI_API_KEY`) or a hidden prompt, never from the command line. The picked
+  agent becomes the project's integration. Requires being logged in.
+
+### Changed
+- The offline local engine (`hb test --local`) now fails fast with a clear error when given a
+  hosted-platform connector config, instead of an opaque per-conversation failure. Connectors
+  work via `hb connect` (SaaS); the offline engine remains classic HTTP/SSE/WebSocket only.
+
+### Fixed
+- `humanbound.__version__` now reads the installed package metadata instead of a hardcoded
+  string that had been stuck at `2.0.1` since that release.
+
+### Documentation
+- Documented that `hb connect --endpoint` also accepts a hosted-platform connector block
+  (`{ "connector": { "provider": "openai_assistants", "config": { … } } }`), not only the
+  classic HTTP shape.
+
+## [2.3.0] — 2026-06-29
+
+### Added
+- **`hb assessments terminate [id]`** stops a running assessment (defaults to
+  the current/latest), and **`hb assessments show`** now defaults to the latest
+  assessment when no id is given. `hb assessments` is now the single command for
+  viewing and managing assessments.
+
+### Deprecated
+- **`hb campaigns`** is deprecated in favor of `hb assessments` (they are the
+  same records). It is hidden from help and prints a deprecation notice; it
+  still works.
+
+## [2.2.1] — 2026-06-19
+
+### Changed
+- **`hb assessments` list is more informative:** added Posture (grade + score)
+  and Drift columns, renamed the findings column to "New Findings" (explicitly
+  the new findings detected in the run), renamed "Scope" to "Domain" (the field
+  the API actually returns, previously shown blank), and render Started/
+  Completed as dates instead of raw epoch numbers.
+- **`hb assessments show` card is richer** instead of mirroring the list row:
+  it now shows the posture trajectory (before → after) with a trend read,
+  drift, coverage breadth (test groups + levels), the domain, and a
+  human-readable run duration.
+
+### Fixed
+- **`hb campaigns` no longer errors and `hb campaigns terminate` now finds a
+  running campaign.** The command read response fields that didn't match the
+  campaign API response; it now aligns with the actual response shape so the
+  plan renders and terminate locates the campaign.
+
+## [2.2.0] — 2026-06-12
+
+### Added
+- **`hb experiments show <id> --config`** prints the configuration the
+  experiment ran with (bot integration, scope, context) as reusable JSON.
+- **`hb test --endpoint` accepts a full experiment configuration.** When the
+  JSON contains an `integration` block (as printed by `--config`), the loader
+  unwraps it automatically, so `hb experiments show <id> --config > bot-config.json`
+  followed by `hb test --endpoint ./bot-config.json` works directly.
+- "Where Findings Come From" docs section: how judge verdicts become insights
+  and how insights reconcile into findings, with an insights-vs-findings table.
+
+### Changed
+- **Per-experiment analysis is now consistently called "insights"** (per the
+  glossary), never "findings": `hb test` prints "Top Insights" with a
+  not-tracked-across-runs clarifier, `hb experiments show` reports
+  "Top Insights (showing 3 of N)" with an `hb report` pointer instead of
+  "N findings" silently sliced to 3, and the HTML report section is "Insights".
+- Insight explanations print in full instead of being truncated at 80 characters.
+- The open-findings line in `hb test` output is labeled "Open Findings (project)"
+  to make clear it is project-level lifecycle state, not this run's results.
+
+### Fixed
+- **Platform-mode insights no longer render severity as `UNKNOWN`.** The
+  platform sends numeric 0-100 severity scores; the CLI now normalizes them
+  to labels using the canonical boundaries (>=75 critical, >=50 high,
+  >=25 medium, >=1 low, 0 info). The local presenter shares the same helper,
+  eliminating off-by-one drift at the 75/50/25 boundaries.
+- **`hb test --fail-on critical|high|medium|low` now actually trips in
+  platform mode.** Numeric severities never matched the string comparison, so
+  the CI gate silently passed regardless of findings; only `--fail-on any`
+  worked. Severities are normalized before the comparison.
+
+## [2.1.0] — 2026-06-09
+
+### Added
+- **Server-Sent Events (SSE) as a third chat-completion transport.** Set
+  `"streaming": "sse"` in the agent config; the engine reads `data:`-line
+  frames until `{"type":"end"}` or connection close.
+- **Permissive content extraction.** The engine now walks the response JSON
+  recursively for any known content key — customers can send native vendor
+  shapes (OpenAI, Anthropic, RAG-style) without wrapping their bot's
+  response. Extended set of recognized keys: `content`, `text`, `response`,
+  `resp`, `answer`, `ans`, `message`, `reply`, `output`.
+
+### Changed
+- **Breaking: `streaming` in agent config is now an enum.** Use `null`
+  (REST, default), `"websocket"`, or `"sse"`. Configs with the legacy
+  boolean form (`"streaming": true` / `false`) are no longer accepted by
+  the engine — migrate `false` to `null` (or omit the field) and `true`
+  to `"websocket"`.
+
+### Fixed
+- **WebSocket streaming filter** previously always returned `False` due to a
+  dict-vs-list comparison bug, causing the engine to rely on the fallback
+  extractor for every chunk.
+
+## [2.0.5] — 2026-06-05
+
+### Fixed
+- **`humanbound_cli.engine.llm.openai` no longer requires the optional OpenAI SDK
+  just to import.** The `from openai import OpenAI` is deferred into `LLMStreamer`
+  (its only consumer); the requests-based `LLMPinger` never needed it, so routing
+  to the OpenAI pinger works without the `[engine]` extra installed.
+- **`hb test` defers `test_category` / `testing_level` / `lang` to the backend when
+  a caller leaves them unset.** `TestConfig` now defaults these to `None`, the
+  platform runner omits unset keys from the request (so the backend applies its
+  defaults), and local mode coalesces them to local defaults. Normal `hb test`
+  usage — which always resolves concrete values — is unchanged.
+
+### Added
+- Presenter posture output now includes a `domain` field (`security` / `quality`,
+  derived from the test category).
+- **Three new flags on `hb connect`:**
+  - **`--no-test`** skips the auto-test step after project creation. The
+    project is still created and the risk dashboard still renders; the
+    "Next" hints surface the `hb test` command to run later.
+  - **`--test-category`** chooses which test family the auto-test step
+    launches (default: `humanbound/adversarial/owasp_agentic`). Mirrors the
+    same flag on `hb test` — pass the full category path (e.g.
+    `humanbound/adversarial/owasp_single_turn`). Ignored when `--no-test`
+    is set (warn-and-continue).
+  - **`--scope ./scope.yaml`** loads a pre-made scope file (YAML or JSON)
+    as input. Sent to `POST /scan` as a `text` source only — no agent
+    probing. The backend analyzer returns its own scope; the CLI diffs it
+    against your file and prompts to accept additive `permitted` /
+    `restricted` intents before project creation. `--yes` auto-accepts.
+    `--prompt`/`--repo`/`--openapi` are ignored when `--scope` is set;
+    `--endpoint` is still honoured for `default_integration` but never
+    sent as a scan source.
+
+## [2.0.4] — 2026-06-02
+
+### Added
+- **Anonymous usage telemetry in the `hb` CLI (PostHog).** Measures the
+  install → first test → login → platform usage funnel. Seven events
+  (`install`, `init`, `test_start`, `test_complete`, `posture_view`,
+  `findings_view`, `gated_command_hit`) with technical properties only —
+  version, OS, command, durations, counts. **No** prompts, findings text,
+  file paths, API URLs, hostnames, usernames, or env-var values are sent.
+  Telemetry is **on by default** with a first-run notice on stderr;
+  disable with `hb telemetry disable`, `HB_TELEMETRY_DISABLED=1`, or the
+  community-standard `DO_NOT_TRACK=1`. Auto-disabled in CI, editable dev
+  installs, and non-TTY contexts. Identity is an anonymous machine UUID
+  (`~/.humanbound/telemetry.json`, mode 0600); after `hb login` it is
+  aliased to the user's opaque Auth0 `sub` — email is never sent. Data
+  goes to PostHog EU Cloud (Frankfurt), 24-month retention. See
+  `PRIVACY.md` for the full disclosure (#27).
+- **Schema.org JSON-LD on every docs page.** New MkDocs hook
+  (`docs/hooks/schema.py`) emits Organization (referencing the marketing
+  site's canonical `@id` for cross-domain entity continuity), WebSite,
+  BreadcrumbList, TechArticle, and FAQPage (when a page declares `faq:`
+  in frontmatter). Rendered via the existing `extrahead` template
+  override, no plugin dependencies. `dateModified` is read from per-file
+  git history (CI now uses `fetch-depth: 0` to make this work). Improves
+  extractability by AI agents (ChatGPT, Perplexity, Claude) for
+  Agent-Led Growth (#28).
+
+### Removed
+- **`hb sentinel` and `hb upload-logs` commands.** Both were deprecated
+  and are superseded by `hb webhooks` and `hb logs upload` respectively.
+  The command modules and their registrations are gone (#22).
+- **The cloud-platform path in `hb connect` and its Microsoft connector.**
+  The unreachable platform branch and `humanbound_cli/connectors/microsoft.py`
+  were removed; `hb connect` now exposes only agent flags. The now-unused
+  `msal` dependency is dropped (#22).
 ## [2.0.3] — 2026-05-11
 
 ### Changed
@@ -157,9 +619,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   same wheel as `humanbound_cli/`:
   ```python
   from humanbound import (
-      Bot, LocalRunner, Insight, TestingLevel,
-      EngineCallbacks, OrchestratorModule,
-      OwaspAgentic, OwaspSingleTurn, BehavioralQA,
+      Bot,
+      LocalRunner,
+      Insight,
+      TestingLevel,
+      EngineCallbacks,
+      OrchestratorModule,
+      OwaspAgentic,
+      OwaspSingleTurn,
+      BehavioralQA,
   )
   ```
   This is the stable, semver-protected contract. `humanbound_cli.*` stays as
@@ -194,5 +662,11 @@ Last release as `humanbound-cli`. See the
 [old release](https://pypi.org/project/humanbound-cli/1.1.0/) on PyPI for
 notes — that history is preserved there and is not re-documented here.
 
-[Unreleased]: https://github.com/humanbound/humanbound/compare/v2.0.0...HEAD
+[Unreleased]: https://github.com/humanbound/humanbound/compare/v2.8.0...HEAD
+[2.8.0]: https://github.com/humanbound/humanbound/releases/tag/v2.8.0
+[2.7.0]: https://github.com/humanbound/humanbound/releases/tag/v2.7.0
+[2.6.0]: https://github.com/humanbound/humanbound/releases/tag/v2.6.0
+[2.5.0]: https://github.com/humanbound/humanbound/releases/tag/v2.5.0
+[2.4.0]: https://github.com/humanbound/humanbound/releases/tag/v2.4.0
+[2.3.0]: https://github.com/humanbound/humanbound/releases/tag/v2.3.0
 [2.0.0]: https://github.com/humanbound/humanbound/releases/tag/v2.0.0

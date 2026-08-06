@@ -8,8 +8,10 @@ import re
 import ssl
 import time
 import traceback
+from urllib.parse import urlparse
 
 import certifi
+import httpx
 import requests
 
 logger = logging.getLogger("humanbound.engine.bot")
@@ -23,7 +25,20 @@ def _log_error(title="", description=None, tag="", hook=""):
 MIN_URL_LENGTH = 80  # truncate url after this character
 REQUESTS_TIMEOUT = 500
 
-DEFAULT_AI_RESPONSE_KEYS = ["content", "text", "response", "resp", "answer", "ans"]
+DEFAULT_AI_RESPONSE_KEYS = [
+    "content",
+    "text",
+    "response",
+    "resp",
+    "answer",
+    "ans",
+    "message",
+    "reply",
+    "output",
+]
+
+# Browser-like UA — WAFs 302-challenge burst traffic from the python-httpx UA.
+SSE_DEFAULT_USER_AGENT = "Mozilla/5.0 (compatible; Humanbound-AI-Test/1.0)"
 
 ssl_context = ssl.create_default_context()
 ssl_context.load_verify_locations(certifi.where())
@@ -37,6 +52,20 @@ def truncate(match):
     if len(url) > MIN_URL_LENGTH:
         return url[:MIN_URL_LENGTH] + "..."
     return url
+
+
+def _raise_if_redirect(resp):
+    """Reject a redirect instead of following it: requests/httpx only strip
+    Authorization on a cross-origin redirect, so a custom-named auth header
+    (see __prepare_headers) would otherwise be re-sent to the new host."""
+    if not resp.is_redirect:
+        return
+    location = resp.headers.get("location", "")
+    host = urlparse(location).hostname or location or "unknown"
+    raise Exception(
+        f"{resp.status_code}/Endpoint returned a redirect to '{host}'. Redirects are "
+        "not followed for security reasons; set your config endpoint to the final URL."
+    )
 
 
 #
@@ -59,43 +88,54 @@ class ResponseExtractor:
 #
 class Bot(ResponseExtractor):
     def __init__(self, bot_config, e_id):
+        if "connector" in bot_config:
+            raise ValueError(
+                "Connector configs are not supported by the offline engine. "
+                "Use 'hb connect' (requires login) to test hosted-platform agents."
+            )
         self.bot_config = bot_config
         self.e_id = e_id
 
-    #
-    # Utility functions
-    #
-
-    # Utility functions to handle the ai agent's response from the chunked websocket message
-    # or the http api call -> extract the actual response from the chunk
-    # IMPORTANT: Handle also conversational UI elements (e.g. quick replies, buttons, etc.)
-    # => convert them to text that guides the conversation so as the test/atatck agent
-    # can understand and use them in the next prompt (LLM response genetrator)
-
-    # for streaming responses, identify if the chunck holds a response delta (for streaming cases)
-    def __is_ai_response_chunk(self, chunk):
-        if "type" not in chunk:
-            return False
-        if chunk["type"] != "chunk":
-            return False
-        if chunk not in DEFAULT_AI_RESPONSE_KEYS:
-            return False
-        return True
-
-    # extract the AI agent's response from the API response
-    def __extract_ai_response(self, chunk):
-        if isinstance(chunk, dict):
-            # Basic extraction logic -> check for the various common response formats
+    # Recursively find the first known content key whose value is a string.
+    def __find_content(self, obj):
+        if isinstance(obj, dict):
             for key in DEFAULT_AI_RESPONSE_KEYS:
-                if key in chunk and isinstance(chunk[key], str):
-                    return chunk[key]
+                if isinstance(obj.get(key), str):
+                    return obj[key]
+            for v in obj.values():
+                found = self.__find_content(v)
+                if found is not None:
+                    return found
+        elif isinstance(obj, list):
+            for v in obj:
+                found = self.__find_content(v)
+                if found is not None:
+                    return found
+        return None
 
-            # Try custom extraction for non-standard formats
-            custom = self.extract_custom_response(chunk)
-            if custom:
-                return custom
+    def __is_ai_response_chunk(self, chunk):
+        return isinstance(chunk, dict) and self.__find_content(chunk) is not None
 
+    def __extract_ai_response(self, chunk):
+        if not isinstance(chunk, dict):
+            return str(chunk)
+        found = self.__find_content(chunk)
+        if found is not None:
+            return found
+        custom = self.extract_custom_response(chunk)
+        if custom:
+            return custom
         return str(chunk)
+
+    # Shared by __listen (WS) and __stream_sse (SSE). {"type":"end"} stops the stream.
+    def __process_chunk(self, chunk, buffer):
+        if not isinstance(chunk, dict):
+            return buffer, False, None
+        if chunk.get("type") == "end":
+            return buffer, True, None
+        if self.__is_ai_response_chunk(chunk):
+            return buffer + self.__extract_ai_response(chunk), False, None
+        return buffer, False, None
 
     # extract metadata from a single turn's response (for per-turn telemetry mode)
     def __extract_turn_metadata(self, response):
@@ -194,11 +234,11 @@ class Bot(ResponseExtractor):
                         )
                 return conversation_map_to_openai, False
 
-            if item[0] == "$":
+            if item.startswith("$"):
                 key = item[1:]
                 return (base_payload[key] if len(key) and key in base_payload else None), False
 
-            if item[0] == "\\":
+            if item.startswith("\\"):
                 return item[1:], False
 
         # fallback - return the item as is (probably a string without any placeholders or other base type)
@@ -336,10 +376,23 @@ class Bot(ResponseExtractor):
         payload = self.__prepare_payload(payload1, base_payload, u_prompt, conversation)
         t_start = time.time()
 
-        resp = requests.post(endpoint, headers=headers, json=payload, timeout=REQUESTS_TIMEOUT)
+        resp = requests.post(
+            endpoint,
+            headers=headers,
+            json=payload,
+            timeout=REQUESTS_TIMEOUT,
+            allow_redirects=False,
+        )
         if resp.status_code == 405:
             t_start = time.time()
-            resp = requests.get(endpoint, headers=headers, params=payload, timeout=REQUESTS_TIMEOUT)
+            resp = requests.get(
+                endpoint,
+                headers=headers,
+                params=payload,
+                timeout=REQUESTS_TIMEOUT,
+                allow_redirects=False,
+            )
+        _raise_if_redirect(resp)
         if resp.status_code != 200 and resp.status_code != 201:
             raise Exception(
                 f"{resp.status_code}/{resp.text} - {url_pattern.sub(truncate, endpoint)}"
@@ -352,17 +405,34 @@ class Bot(ResponseExtractor):
         except:
             return resp.text, time.time() - t_start, endpoint
 
+    # resolve the chat_completion request config - single source of truth for all
+    # three transports (__chat / __stream / __stream_sse):
+    #   - `endpoint` is required and validated here with a clear message
+    #   - `headers` / `payload` are optional and default to {} (#51)
+    #   - headers/payload are deep-copied so per-request placeholder substitution
+    #     never mutates the shared bot config
+    def __chat_completion_request(self):
+        cfg = self.bot_config.get("chat_completion") or {}
+        if not cfg.get("endpoint"):
+            raise Exception("400/'chat_completion.endpoint' is required in the bot config.")
+        return (
+            cfg["endpoint"],
+            copy.deepcopy(cfg.get("headers", {})),
+            copy.deepcopy(cfg.get("payload", {})),
+        )
+
     #
     # Handle chat completion requests (streaming and non-streaming)
     #
     def __chat(self, base_payload, u_prompt, conversation):
         try:
             # a. ping
+            endpoint, headers, payload = self.__chat_completion_request()
             messages, exec_t, _ = self.__make_api_call(
                 base_payload,
-                self.bot_config["chat_completion"]["endpoint"],
-                copy.deepcopy(self.bot_config["chat_completion"]["headers"]),
-                copy.deepcopy(self.bot_config["chat_completion"]["payload"]),
+                endpoint,
+                headers,
+                payload,
                 u_prompt,
                 conversation,
             )
@@ -404,75 +474,63 @@ class Bot(ResponseExtractor):
                 f"502/Testing AI Agent error - Cannot generate completion. - {url_pattern.sub(truncate, str(e))}."
             )
 
-    # streaming case
+    # WebSocket streaming.
     async def __listen(self, socket):
-        # Listens for a message and returns the buffer (complete message) once done
-        # handle timeout
         async def read_complete_message():
             buffer, t_start = "", time.time()
             while True:
                 raw_data = await socket.recv()
-
-                # if chunk NOT in the expected json format break - message is completed
                 try:
                     chunk = json.loads(raw_data)
-                except:
+                except Exception:
                     break
-
-                if not isinstance(chunk, dict) or "type" not in chunk:
-                    continue
-
-                if chunk["type"] == "end":
+                buffer, stop, _ = self.__process_chunk(chunk, buffer)
+                if stop:
                     break
-
-                if not self.__is_ai_response_chunk(chunk):
-                    continue
-
-                # all ok - append content data (ai agent resonse stream - deltas)
-                buffer += self.__extract_ai_response(chunk)
-
             return buffer, time.time() - t_start
 
         try:
             return await asyncio.wait_for(read_complete_message(), REQUESTS_TIMEOUT)
-        except:
+        except Exception:
             await asyncio.wait_for(socket.close(), REQUESTS_TIMEOUT)
             raise
 
     async def __stream(self, base_payload, u_prompt, conversation=None):
         try:
-            endpoint = self.__prepare_endpoint(
-                self.bot_config["chat_completion"]["endpoint"], base_payload
-            )
-            headers = self.__prepare_headers(
-                copy.deepcopy(self.bot_config["chat_completion"]["headers"]),
-                base_payload,
-            )
-            payload = self.__prepare_payload(
-                copy.deepcopy(self.bot_config["chat_completion"]["payload"]),
-                base_payload,
-                u_prompt,
-                conversation,
-            )
+            endpoint, headers, payload = self.__chat_completion_request()
+            endpoint = self.__prepare_endpoint(endpoint, base_payload)
+            headers = self.__prepare_headers(headers, base_payload)
+            payload = self.__prepare_payload(payload, base_payload, u_prompt, conversation)
 
             try:
-                from websockets.asyncio.client import connect
+                import websockets.asyncio.client as ws_client
+                from websockets.exceptions import SecurityError
             except ImportError as e:
                 raise ImportError(
                     "Streaming bots require the [engine] extra. "
                     "Install with: pip install humanbound[engine]"
                 ) from e
 
-            async with connect(
-                endpoint,
-                open_timeout=REQUESTS_TIMEOUT,
-                ping_timeout=REQUESTS_TIMEOUT,
-                close_timeout=REQUESTS_TIMEOUT,
-                ssl=ssl_context,
-                additional_headers=headers,
-            ) as websocket:
-                await websocket.send(json.dumps(payload, ensure_ascii=False))
-                message, exec_t = await self.__listen(websocket)
+            # websockets strips no auth header on redirect and has no per-call
+            # toggle; cap the module budget so only the initial handshake is sent.
+            ws_client.MAX_REDIRECTS = 1
+
+            try:
+                async with ws_client.connect(
+                    endpoint,
+                    open_timeout=REQUESTS_TIMEOUT,
+                    ping_timeout=REQUESTS_TIMEOUT,
+                    close_timeout=REQUESTS_TIMEOUT,
+                    ssl=ssl_context,
+                    additional_headers=headers,
+                ) as websocket:
+                    await websocket.send(json.dumps(payload, ensure_ascii=False))
+                    message, exec_t = await self.__listen(websocket)
+            except SecurityError as e:
+                raise Exception(
+                    "3xx/WebSocket endpoint attempted a redirect, which is not followed "
+                    "for security reasons; set your config endpoint to the final URL."
+                ) from e
 
             # NOTE: Streaming mode doesn't support per-turn metadata extraction
             # since chunks are processed incrementally and final response object isn't available
@@ -500,34 +558,98 @@ class Bot(ResponseExtractor):
                 f"502/Testing AI Agent error - Cannot stream completion. - {url_pattern.sub(truncate, str(e))}."
             )
 
+    # SSE streaming. Same chunk contract as WS; per-turn telemetry not supported.
+    async def __stream_sse(self, base_payload, u_prompt, conversation=None):
+        try:
+            endpoint, headers, payload = self.__chat_completion_request()
+            endpoint = self.__prepare_endpoint(endpoint, base_payload)
+            headers = self.__prepare_headers(headers, base_payload)
+            headers.setdefault("user-agent", SSE_DEFAULT_USER_AGENT)
+            payload = self.__prepare_payload(payload, base_payload, u_prompt, conversation)
+
+            buffer, t_start = "", time.time()
+            async with httpx.AsyncClient(
+                timeout=REQUESTS_TIMEOUT,
+                verify=ssl_context,
+                follow_redirects=False,
+            ) as client:
+                async with client.stream(
+                    "POST",
+                    endpoint,
+                    headers=headers,
+                    json=payload,
+                ) as resp:
+                    _raise_if_redirect(resp)
+                    resp.raise_for_status()
+                    async for line in resp.aiter_lines():
+                        if not line.startswith("data:"):
+                            continue
+                        data = line[len("data:") :].strip()
+                        if not data:
+                            continue
+                        try:
+                            chunk = json.loads(data)
+                        except json.JSONDecodeError:
+                            continue
+                        buffer, stop, _ = self.__process_chunk(chunk, buffer)
+                        if stop:
+                            break
+
+            return buffer, time.time() - t_start, None
+
+        except (asyncio.TimeoutError, TimeoutError, httpx.TimeoutException):
+            raise Exception(
+                f"408/Testing AI Agent Error – Unable to stream completion. The request timed out after {REQUESTS_TIMEOUT} seconds."
+            )
+        except (AttributeError, ValueError) as e:
+            _log_error(
+                title=e.__class__.__name__,
+                description={
+                    "where": "ClientBot :: SSE Chat",
+                    "e": url_pattern.sub(truncate, str(e)),
+                    "trace": str(traceback.format_exc()),
+                },
+                tag="Exception",
+                hook="ENGINEERING",
+            )
+            raise Exception("500/Testing AI Agent error [internal] - Cannot generate completion.")
+        except Exception as e:
+            raise Exception(
+                f"502/Testing AI Agent error - Cannot stream completion. - {url_pattern.sub(truncate, str(e))}."
+            )
+
     #
     # Public interface for thread initialization and chat completion
     #
 
     # STEP 1: Session start
     # - execute any required auth calls to get access tokens (will be used in init call and chat completion calls if needed)
-    # - start the thread/session with the bot
+    # - optionally start the thread/session; skipped when thread_init is not configured
     def init(self):
         try:
-            # 1.1 - execute any required auth calls to get access tokens (if related endpoint is defined)
-            endpoint = self.bot_config["thread_auth"]["endpoint"]
-            if endpoint != "":
-                base_payload, _, endpoint = self.__make_api_call(
+            # 1.1 - optional auth call; skipped when thread_auth is null/missing/empty-endpoint
+            auth = self.bot_config.get("thread_auth") or {}
+            if auth.get("endpoint", ""):
+                base_payload, _, _ = self.__make_api_call(
                     {},
-                    endpoint,
-                    copy.deepcopy(self.bot_config["thread_auth"]["headers"]),
-                    copy.deepcopy(self.bot_config["thread_auth"]["payload"]),
+                    auth["endpoint"],
+                    copy.deepcopy(auth.get("headers", {})),
+                    copy.deepcopy(auth.get("payload", {})),
                 )
                 time.sleep(1)  # small delay to avoid race conditions
             else:
                 base_payload = {}
 
-            # 2.2 - start the thread/session with the bot
-            temp_payload, _, endpoint = self.__make_api_call(
+            # 2.2 - optional thread/session start; skipped when thread_init is null/missing/empty-endpoint
+            init_cfg = self.bot_config.get("thread_init") or {}
+            if not init_cfg.get("endpoint", ""):
+                return base_payload
+
+            temp_payload, _, _ = self.__make_api_call(
                 base_payload,
-                self.bot_config["thread_init"]["endpoint"],
-                copy.deepcopy(self.bot_config["thread_init"]["headers"]),
-                copy.deepcopy(self.bot_config["thread_init"]["payload"]),
+                init_cfg["endpoint"],
+                copy.deepcopy(init_cfg.get("headers", {})),
+                copy.deepcopy(init_cfg.get("payload", {})),
             )
 
             # append the session start payload to the base payload
@@ -542,15 +664,14 @@ class Bot(ResponseExtractor):
             )
 
     # STEP 2: Chat completion
-    # send the user prompt to the bot and get the response (streaming or non-streaming)
-    # Conduct the converation
+    # Conduct the conversation
     async def ping(self, base_payload, u_prompt, conversation=None):
-        a_resp = (
-            await self.__stream(base_payload, u_prompt, conversation)
-            if self.bot_config["streaming"]
-            else self.__chat(base_payload, u_prompt, conversation)
-        )
-        return a_resp
+        mode = self.bot_config.get("streaming")
+        if mode == "sse":
+            return await self.__stream_sse(base_payload, u_prompt, conversation)
+        if mode == "websocket":
+            return await self.__stream(base_payload, u_prompt, conversation)
+        return self.__chat(base_payload, u_prompt, conversation)
 
 
 #
@@ -634,10 +755,23 @@ class Telemetry:
         method = self.config.get("method", "GET").upper()
 
         if method == "POST":
-            resp = requests.post(endpoint, headers=headers, json=payload, timeout=REQUESTS_TIMEOUT)
+            resp = requests.post(
+                endpoint,
+                headers=headers,
+                json=payload,
+                timeout=REQUESTS_TIMEOUT,
+                allow_redirects=False,
+            )
         else:  # GET
-            resp = requests.get(endpoint, headers=headers, params=payload, timeout=REQUESTS_TIMEOUT)
+            resp = requests.get(
+                endpoint,
+                headers=headers,
+                params=payload,
+                timeout=REQUESTS_TIMEOUT,
+                allow_redirects=False,
+            )
 
+        _raise_if_redirect(resp)
         if resp.status_code != 200 and resp.status_code != 201:
             raise Exception(
                 f"{resp.status_code}/{resp.text} - {url_pattern.sub(truncate, endpoint)}"

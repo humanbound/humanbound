@@ -10,36 +10,45 @@ from rich.panel import Panel
 from rich.prompt import Confirm
 from rich.table import Table
 
+from .. import telemetry
 from ..client import HumanboundClient
 from ..exceptions import APIError, NotAuthenticatedError
 
 console = Console()
 
-PHASE_STYLES = {
-    "reconnaissance": "[cyan]Reconnaissance[/cyan]",
-    "red_teaming": "[red]Red Teaming[/red]",
-    "monitoring": "[green]Monitoring[/green]",
+# Keys match the backend CampaignPhase enum values carried in `activity`.
+ACTIVITY_STYLES = {
+    "assess": "[cyan]Assess[/cyan]",
+    "investigate": "[yellow]Investigate[/yellow]",
+    "monitor": "[green]Monitor[/green]",
 }
 
 
-@click.group("campaigns", invoke_without_command=True)
+@click.group("campaigns", invoke_without_command=True, hidden=True)
 @click.option("--json", "as_json", is_flag=True, help="Output as JSON")
 @click.pass_context
 def campaigns_group(ctx, as_json):
-    """View and manage ASCAM campaigns.
+    """[Deprecated] Use 'hb assessments' instead.
 
-    \b
-    Examples:
-      hb campaigns                   # Show current campaign plan
-      hb campaigns --json            # JSON output
-      hb campaigns terminate         # Terminate a running campaign
+    Campaigns and assessments are the same thing; this alias is kept for
+    backward compatibility.
     """
+    # Deprecation notice on stderr (skipped in --json mode to keep machine
+    # output clean). Shown for `hb campaigns` and its subcommands.
+    if not as_json:
+        click.secho(
+            "'hb campaigns' is deprecated — use 'hb assessments' instead.",
+            fg="yellow",
+            err=True,
+        )
+
     if ctx.invoked_subcommand is not None:
         return
 
     client = HumanboundClient()
 
     if not client.is_authenticated():
+        telemetry.fire_gated_command_hit()
         console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
         raise SystemExit(1)
 
@@ -68,14 +77,18 @@ def campaigns_group(ctx, as_json):
 
 
 def _display_campaign(response: dict):
-    """Display campaign plan details."""
+    """Display campaign plan details.
+
+    Mirrors the campaign plan API response:
+    {id, activity, status, plan (dict), test_count, synthesized_strategies (int count)}.
+    """
     campaign = response.get("campaign", response)
 
-    phase = str(campaign.get("phase", campaign.get("current_phase", ""))).lower()
+    activity = str(campaign.get("activity", "") or "").lower()
     status = campaign.get("status", "")
     campaign_id = campaign.get("id", "")
 
-    phase_display = PHASE_STYLES.get(phase, phase)
+    activity_display = ACTIVITY_STYLES.get(activity, activity or "—")
     status_color = (
         "green"
         if status in ("completed", "active")
@@ -84,7 +97,7 @@ def _display_campaign(response: dict):
 
     console.print(
         Panel(
-            f"Phase: {phase_display}\n"
+            f"Activity: {activity_display}\n"
             f"Status: [{status_color}]{status}[/{status_color}]\n"
             f"[dim]ID: {campaign_id}[/dim]",
             title="Campaign Plan",
@@ -93,40 +106,36 @@ def _display_campaign(response: dict):
         )
     )
 
-    # Experiments in plan
-    experiments = campaign.get("experiments", campaign.get("plan", []))
-    if experiments:
-        console.print("\n[bold]Planned Experiments:[/bold]\n")
+    # Discovery plan — backend returns `plan` as a dict (discovery_plan), not a
+    # list of experiments. Render its top-level entries.
+    plan = campaign.get("plan", {})
+    if isinstance(plan, dict) and plan:
+        console.print("\n[bold]Discovery Plan:[/bold]\n")
 
         table = Table(show_header=True, header_style="bold")
-        table.add_column("Category", width=25)
-        table.add_column("Tests", justify="right", width=8)
-        table.add_column("Strategy", width=20)
-        table.add_column("Status", width=12)
+        table.add_column("Area", width=28)
+        table.add_column("Detail", overflow="fold")
 
-        for exp in experiments:
-            cat = exp.get("test_category", exp.get("category", ""))
-            if "/" in cat:
-                cat = cat.split("/")[-1]
-            tests = exp.get("test_count", exp.get("size", ""))
-            strategy = exp.get("strategy", "")
-            exp_status = exp.get("status", "pending")
-
-            status_style = {
-                "completed": "[green]completed[/green]",
-                "running": "[yellow]running[/yellow]",
-                "failed": "[red]failed[/red]",
-                "pending": "[dim]pending[/dim]",
-            }.get(str(exp_status).lower(), str(exp_status))
-
-            table.add_row(cat, str(tests), strategy, status_style)
+        for key, value in plan.items():
+            detail = (
+                json.dumps(value, default=str) if isinstance(value, list | dict) else str(value)
+            )
+            if len(detail) > 200:
+                detail = detail[:200] + "…"
+            table.add_row(str(key), detail)
 
         console.print(table)
 
     # Summary stats
-    total_tests = campaign.get("total_tests", campaign.get("total_size", 0))
-    if total_tests:
-        console.print(f"\n[dim]Total tests planned: {total_tests}[/dim]")
+    test_count = campaign.get("test_count", 0)
+    if test_count:
+        console.print(f"\n[dim]Total tests planned: {test_count}[/dim]")
+
+    # API returns a count (int); tolerate the legacy list shape during rollout.
+    raw = campaign.get("synthesized_strategies")
+    count = raw if isinstance(raw, int) else len(raw or [])
+    if count:
+        console.print(f"[dim]Synthesized strategies: {count}[/dim]")
 
 
 @campaigns_group.command("terminate")
@@ -136,6 +145,7 @@ def terminate_campaign(force: bool):
     client = HumanboundClient()
 
     if not client.is_authenticated():
+        telemetry.fire_gated_command_hit()
         console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
         raise SystemExit(1)
 

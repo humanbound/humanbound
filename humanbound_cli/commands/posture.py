@@ -7,12 +7,20 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
+from .. import telemetry
 from ..client import HumanboundClient
 from ..engine import get_runner
 from ..engine.platform_runner import PlatformTestRunner
 from ..exceptions import APIError, NotAuthenticatedError
 
 console = Console()
+
+
+def _fire_posture_view(is_local: bool, mode: str, has_coverage: bool) -> None:
+    telemetry.capture(
+        "posture_view",
+        {"is_local": is_local, "mode": mode, "has_coverage": has_coverage},
+    )
 
 
 @click.command("posture")
@@ -55,6 +63,7 @@ def posture_command(project: str, as_json: bool, trends: bool, org: bool, covera
             console.print("  hb login")
             raise SystemExit(0)
         _local_posture(as_json)
+        _fire_posture_view(is_local=True, mode="current", has_coverage=coverage)
         return
 
     # Platform mode
@@ -76,11 +85,14 @@ def posture_command(project: str, as_json: bool, trends: bool, org: bool, covera
                 import json
 
                 print(json.dumps(response, indent=2, default=str))
+                _fire_posture_view(is_local=False, mode="org", has_coverage=coverage)
                 return
 
             _display_org_posture(response)
+            _fire_posture_view(is_local=False, mode="org", has_coverage=coverage)
             return
         except NotAuthenticatedError:
+            telemetry.fire_gated_command_hit()
             console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
             raise SystemExit(1)
         except APIError as e:
@@ -103,9 +115,11 @@ def posture_command(project: str, as_json: bool, trends: bool, org: bool, covera
                 import json
 
                 print(json.dumps(response, indent=2, default=str))
+                _fire_posture_view(is_local=False, mode="trends", has_coverage=coverage)
                 return
 
             _display_trends(response)
+            _fire_posture_view(is_local=False, mode="trends", has_coverage=coverage)
             return
 
         # Get posture from API
@@ -116,6 +130,7 @@ def posture_command(project: str, as_json: bool, trends: bool, org: bool, covera
             import json
 
             print(json.dumps(response, indent=2, default=str))
+            _fire_posture_view(is_local=False, mode="current", has_coverage=coverage)
             return
 
         _display_posture(response)
@@ -129,8 +144,10 @@ def posture_command(project: str, as_json: bool, trends: bool, org: bool, covera
                 console.print("[dim]Coverage data not available.[/dim]")
 
         _print_next(org=False, has_coverage=coverage)
+        _fire_posture_view(is_local=False, mode="current", has_coverage=coverage)
 
     except NotAuthenticatedError:
+        telemetry.fire_gated_command_hit()
         console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
         raise SystemExit(1)
     except APIError as e:

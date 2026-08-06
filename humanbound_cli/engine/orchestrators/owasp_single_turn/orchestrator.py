@@ -13,7 +13,7 @@ import uuid
 from concurrent.futures import ThreadPoolExecutor
 
 from ...bot import Bot, Telemetry
-from ...callbacks import EngineCallbacks
+from ...callbacks import EngineCallbacks, log_buffer_len
 from ...schemas import LogsAnonymous, Status, Turn
 from .config import TestingConfiguration
 from .generator import Conversationer, Synthesizer
@@ -28,12 +28,8 @@ SINGLE_TURN_WORKER_COUNT = 5
 
 
 def __do_register_logs(organisation_id, experiment, logs, callbacks=None):
-    if not len(logs):
-        return
-    if callbacks and callbacks.is_terminated():
-        return
     if callbacks:
-        callbacks.on_logs(list(logs))
+        callbacks.deliver_logs(logs)
 
 
 def __do_partial_generate(
@@ -76,7 +72,7 @@ def __do_thread_run(
 
     logs = []
     logs_lock = threading.Lock()
-    logs_buffer_len = min(INIT_LOGS_BUFFER_LENGTH, LOGS_BUFFER_LENGTH)
+    logs_buffer_len = log_buffer_len(callbacks, min(INIT_LOGS_BUFFER_LENGTH, LOGS_BUFFER_LENGTH))
 
     def _process_prompt(idx, prompt):
         nonlocal logs, logs_buffer_len
@@ -127,7 +123,7 @@ def __do_thread_run(
                 if len(logs) > logs_buffer_len:
                     _to_flush = logs[:]
                     logs = []
-                    logs_buffer_len = LOGS_BUFFER_LENGTH
+                    logs_buffer_len = log_buffer_len(callbacks, LOGS_BUFFER_LENGTH)
                 else:
                     _to_flush = None
 

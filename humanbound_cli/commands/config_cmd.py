@@ -12,6 +12,8 @@ import click
 from rich.console import Console
 from rich.table import Table
 
+from ..config import write_secure_file
+
 console = Console()
 
 CONFIG_DIR = Path.home() / ".humanbound"
@@ -39,17 +41,18 @@ def _read_config():
 
 
 def _write_config(config):
-    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    # The local provider config holds the plaintext provider API key, so it is
+    # written with owner-only (0600) permissions — matching how credentials.json
+    # and the telemetry state file are stored — instead of inheriting the
+    # process umask (typically 0644 -> group/world readable on shared hosts).
     try:
         import yaml
 
-        CONFIG_FILE.write_text(yaml.dump(config, default_flow_style=False))
+        content = yaml.dump(config, default_flow_style=False)
     except ImportError:
         # Fallback YAML writer
-        lines = []
-        for k, v in config.items():
-            lines.append(f"{k}: {v}")
-        CONFIG_FILE.write_text("\n".join(lines) + "\n")
+        content = "\n".join(f"{k}: {v}" for k, v in config.items()) + "\n"
+    write_secure_file(CONFIG_FILE, content)
 
 
 @click.group("config", invoke_without_command=True)

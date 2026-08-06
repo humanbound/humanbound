@@ -11,7 +11,7 @@ The authoritative, continuously-updated roadmap lives at
 
 - **Package rename** to `humanbound`, with transitional `humanbound-cli` stub
 - **Public SDK surface** (`from humanbound import ...`) — stable contract
-- **OSS hygiene**: CLA enforcement, CI matrix, Trusted Publishing + sigstore
+- **OSS hygiene**: DCO sign-off enforcement, CI matrix, Trusted Publishing + sigstore
 
 ## Next — target 2.1
 

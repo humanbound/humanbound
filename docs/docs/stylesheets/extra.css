@@ -329,3 +329,28 @@ body,
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+
+/* ============================================================
+   Cookie consent — non-blocking banner
+   ============================================================ */
+.md-consent__overlay {
+  display: none !important;
+}
+
+/* Lay the action buttons out in a single row, all equal width, so the longer
+   "Manage settings" label doesn't render a wider button than Accept / Reject. */
+.md-consent__controls {
+  display: flex !important;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.md-consent__controls .md-button {
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  width: auto !important;
+  margin-top: 0 !important;
+  padding: 0.5em 0.75em !important;
+  text-align: center;
+  white-space: nowrap;
+}

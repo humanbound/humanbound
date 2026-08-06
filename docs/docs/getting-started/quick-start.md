@@ -1,6 +1,28 @@
+---
+description: "From install to your first adversarial test in minutes — local or platform mode, with a posture score at the end."
+keywords:
+  - humanbound quick start
+  - first adversarial test
+  - hb test command
+  - local mode testing
+  - platform mode testing
+  - posture score
+  - bot-config.json
+  - CI/CD security testing
+faq:
+  - q: How do I run tests without creating an account?
+    a: Use local mode — configure an LLM provider via environment variables or `hb config set`, prepare a `bot-config.json` describing your agent, then run `hb test --endpoint ./bot-config.json --wait`. No login required.
+  - q: How do I view my test results?
+    a: Run `hb posture` for a security score (0–100, A–F), `hb logs` for conversation logs, `hb logs --verdict fail` to filter failures, or `hb report -o report.html` for a full HTML report.
+  - q: What does the --fail-on flag do?
+    a: "`--fail-on` causes `hb test` to exit with a non-zero status code when findings of the specified severity (critical, high, medium, low, or any) are found, making it suitable for CI/CD quality gates."
+  - q: How do I run tests in CI/CD?
+    a: Install humanbound with `pip install humanbound`, then run `hb test --endpoint ./bot-config.json --repo . --wait --fail-on high`, passing your provider credentials as environment variables such as `HB_PROVIDER` and `HB_API_KEY`.
+---
+
 # Quick Start
 
-Get from installation to your first security test in minutes.
+This guide walks through your first Humanbound security test end-to-end, in both local mode (no account, your own LLM provider) and platform mode (with login, persistent findings, and continuous monitoring). The local path covers configuring a provider, writing a `bot-config.json` for your agent, running `hb test`, and viewing the resulting posture score; the platform path covers `hb login`, `hb connect`, and `hb monitor enable`.
 
 ## Local Testing (No Account Required)
 
@@ -26,7 +48,7 @@ Create a `bot-config.json` describing how to talk to your agent:
 
 ```json
 {
-  "streaming": false,
+  "streaming": null,
   "thread_auth": {"endpoint": "", "headers": {}, "payload": {}},
   "thread_init": {
     "endpoint": "https://your-bot.com/sessions",
@@ -148,6 +170,9 @@ hb login
 
 ```bash
 hb connect --endpoint ./bot-config.json
+
+# Or discover a hosted-platform agent (currently OpenAI Assistants)
+hb connect --vendor openai
 ```
 
 This probes your agent, extracts scope, creates a project, and runs a first test.
@@ -191,3 +216,5 @@ hb report -o report.html  # Full report
 ```bash
 hb monitor enable --schedule daily    # Requires Pro
 ```
+
+<!-- faq -->

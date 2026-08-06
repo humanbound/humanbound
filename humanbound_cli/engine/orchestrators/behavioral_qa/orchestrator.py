@@ -13,7 +13,7 @@ import uuid
 from concurrent.futures import ThreadPoolExecutor
 
 from ...bot import Bot, Telemetry
-from ...callbacks import EngineCallbacks
+from ...callbacks import EngineCallbacks, log_buffer_len
 from ...schemas import LogsAnonymous, Status, Turn
 from .config import TestingConfiguration
 from .generator import Conversationer, Synthesizer
@@ -27,12 +27,8 @@ LOGS_BUFFER_LENGTH = 20
 
 
 def __do_register_logs(organisation_id, experiment, logs, callbacks=None):
-    if not len(logs):
-        return
-    if callbacks and callbacks.is_terminated():
-        return
     if callbacks:
-        callbacks.on_logs(list(logs))
+        callbacks.deliver_logs(logs)
 
 
 def __do_partial_generate(
@@ -74,7 +70,9 @@ def __do_thread_run(
             clientbot,
         )
         judge = Judge(model_provider, experiment["configuration"]["scope"], test_sub_category)
-        logs_buffer_len = min(INIT_LOGS_BUFFER_LENGTH, LOGS_BUFFER_LENGTH)
+        logs_buffer_len = log_buffer_len(
+            callbacks, min(INIT_LOGS_BUFFER_LENGTH, LOGS_BUFFER_LENGTH)
+        )
 
         telemetry_client = None
         if telemetry_config:
@@ -135,7 +133,7 @@ def __do_thread_run(
                     )
                     if len(logs) > logs_buffer_len:
                         __do_register_logs(organisation_id, experiment, logs, callbacks=callbacks)
-                        logs_buffer_len = LOGS_BUFFER_LENGTH
+                        logs_buffer_len = log_buffer_len(callbacks, LOGS_BUFFER_LENGTH)
                         logs = []
 
                     time.sleep(2)

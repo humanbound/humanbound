@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "humanbound"
-version = "2.1.0"
-description = "Humanbound — open-source AI agent red-team engine, SDK, and CLI."
+version = "2.8.0"
+description = "Open-source adversarial testing engine, SDK, and CLI for AI agents."
 readme = "README.md"
 license = "Apache-2.0"
 requires-python = ">=3.10"
@@ -35,8 +35,10 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Environment :: Console",
     "Framework :: Pytest",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Security",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Software Development :: Testing",
@@ -47,11 +49,13 @@ dependencies = [
     "click>=8.1.0",
     "rich>=13.0.0",
     "requests>=2.32.0",
+    "httpx>=0.27",
+    "certifi",
     "pyyaml>=6.0.0",
     "pydantic>=2.0",
-    "msal>=1.31.0",
     "pyperclip>=1.8.0",
     "pathspec>=0.12.0",
+    "posthog>=3.0",
 ]
 
 [project.optional-dependencies]
@@ -60,6 +64,7 @@ engine = [
     "anthropic>=0.20.0",
     "google-generativeai>=0.3.0",
     "websockets>=12.0",
+    "httpx>=0.27",
 ]
 firewall = [
     "humanbound-firewall>=0.2",
@@ -67,7 +72,7 @@ firewall = [
     "torch>=2.0.0",
 ]
 mcp = [
-    "mcp>=1.2.0",
+    "mcp>=1.2.0,<2",
 ]
 pytest = [
     "pytest>=7.0.0",
@@ -76,11 +81,12 @@ dev = [
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
     "pytest-timeout>=2.3",
-    "ruff>=0.6",
+    "ruff==0.16.1",
     "mypy>=1.11",
     "build>=1.2",
     "twine>=5.0",
     "pre-commit>=3.8",
+    "mkdocs>=1.6",
 ]
 
 [project.scripts]
@@ -96,6 +102,7 @@ Repository = "https://github.com/humanbound/humanbound"
 Issues = "https://github.com/humanbound/humanbound/issues"
 Changelog = "https://github.com/humanbound/humanbound/blob/main/CHANGELOG.md"
 Community = "https://docs.humanbound.ai/community/"
+Discord = "https://discord.gg/WgTMpmSFtN"
 
 [tool.setuptools.packages.find]
 include = ["humanbound*", "humanbound_cli*"]
@@ -118,7 +125,9 @@ timeout = 60
 # tests/unit/test_*.py does `from conftest import ...` directly, so its
 # directory must be on sys.path. (Adding an __init__.py there would also
 # work but would change test discovery semantics.)
-pythonpath = ["tests/unit"]
+# docs/hooks is on the path so the docs-hook tests (test_docs_hooks_*.py)
+# can import `schema`, `llms_txt`, and `lint` as top-level modules.
+pythonpath = ["tests/unit", "docs/hooks"]
 
 [tool.ruff]
 line-length = 100

@@ -1,0 +1,26 @@
+# Build context hygiene — shared by all docker/Dockerfile* variants.
+.git
+.github
+.venv
+venv
+tests
+docs
+assets
+dist
+build
+*.egg-info
+__pycache__
+**/__pycache__
+.mypy_cache
+.pytest_cache
+.ruff_cache
+.humanbound
+docker
+*.md
+!README.md
+.pypirc
+relay
+.claude
+.superpowers
+.env
+*.env

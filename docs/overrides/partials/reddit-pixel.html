@@ -1,0 +1,22 @@
+{% if config.extra.reddit and config.extra.reddit.pixel_id %}
+<script>
+  // Reddit advertising pixel — loads only with ADVERTISING consent (separate
+  // from the analytics category that gates PostHog). Reddit's rdt has no
+  // consent-mode API, so we withhold the script entirely until consent.
+  // Material reloads the page on any consent change, so reading the stored
+  // choice once here is enough (no live listener needed).
+  var consent = (typeof __md_get === "function") ? __md_get("__consent") : null;
+  var advertisingConsent = !!(consent && consent.advertising);
+
+  if (advertisingConsent) {
+    // Reddit Pixel bootstrap. Note: we do NOT fire PageVisit here — it's fired
+    // from document$ below so Material's instant navigation (XHR page swaps)
+    // counts every page exactly once, with no duplicate on the initial load.
+    !function(w,d){if(!w.rdt){var p=w.rdt=function(){p.sendEvent?p.sendEvent.apply(p,arguments):p.callQueue.push(arguments)};p.callQueue=[];var t=d.createElement("script");t.src="https://www.redditstatic.com/ads/pixel.js",t.async=!0;var s=d.getElementsByTagName("script")[0];s.parentNode.insertBefore(t,s)}}(window,document);
+    rdt('init', {{ config.extra.reddit.pixel_id | tojson }});
+
+    // document$ emits on initial load and on every navigation.instant swap.
+    document$.subscribe(function () { rdt('track', 'PageVisit'); });
+  }
+</script>
+{% endif %}

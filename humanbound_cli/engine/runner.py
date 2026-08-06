@@ -15,9 +15,12 @@ from dataclasses import dataclass, field
 class TestConfig:
     """Canonical test configuration — identical shape for both runners."""
 
-    test_category: str | None = None  # backend applies its default if None
-    testing_level: str | None = None  # unit | system | acceptance — backend defaults if None
-    lang: str | None = None  # backend defaults to english if None
+    # Default to None so a caller that doesn't set these defers to the backend's
+    # defaults (the runner omits unset keys from the request). In local mode
+    # `hb test` fills in concrete fallbacks since there is no backend to defer to.
+    test_category: str | None = None
+    testing_level: str | None = None  # unit | system | acceptance
+    lang: str | None = None
     name: str = ""
     description: str = ""
     provider_id: str = ""

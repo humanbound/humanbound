@@ -1,3 +1,18 @@
+---
+title: Humanbound
+description: "Open-source AI agent security testing — automated adversarial probes, LLM-as-a-Judge evaluation, runtime firewall, and posture scoring."
+keywords:
+  - humanbound
+  - AI agent security testing
+  - LLM security platform
+  - adversarial AI testing
+  - OWASP LLM testing
+  - prompt injection testing
+  - AI security posture
+  - humanbound CLI
+lint_skip: [first_paragraph]
+---
+
 # <span class="hero-title">Humanbound</span>
 
 **Find vulnerabilities in your AI agents before attackers do.**
@@ -113,7 +128,7 @@ Create a JSON file that tells Humanbound how to talk to your agent. The `$PROMPT
 
 ```json
 {
-  "streaming": false,
+  "streaming": null,
   "thread_auth": {
     "endpoint": "https://your-bot.com/oauth/token",
     "headers": {},
@@ -144,11 +159,11 @@ Create a JSON file that tells Humanbound how to talk to your agent. The `$PROMPT
 |---|---|---|
 | `chat_completion` | Yes | The endpoint your agent listens on for chat messages. Use `$PROMPT` in the payload where user input goes. |
 | `thread_auth` | No | OAuth/token endpoint called before testing begins. The response payload (`access_token`, `refresh_token`, etc.) is captured and injected into subsequent requests. |
-| `thread_init` | Yes | Session/thread creation endpoint. Called once per conversation to initialize a thread before sending chat messages. |
-| `streaming` | No | Set `true` if your agent uses WebSocket/SSE streaming. |
+| `thread_init` | No | Session/thread creation endpoint, called once per conversation to initialize a thread before sending chat messages. Omit for stateless agents that need no session. |
+| `streaming` | No | Transport: `null` (REST, default), `"websocket"`, or `"sse"`. |
 
 !!! info "Minimal config"
-    `chat_completion` and `thread_init` are required. Skip `thread_auth` if your agent uses simple API key auth and doesn't need OAuth.
+    `chat_completion` is the only required section. Skip `thread_init` for stateless agents that need no session, and `thread_auth` if your agent uses simple API key auth and doesn't need OAuth.
 
 Then point Humanbound at it:
 

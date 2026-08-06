@@ -25,6 +25,11 @@ class PlatformTestRunner(TestRunner):
             "description": config.description,
             "auto_start": config.auto_start,
         }
+        # Omit category/level/lang when unset so the backend applies its defaults.
+        for key in ("test_category", "testing_level", "lang"):
+            value = getattr(config, key)
+            if value is not None:
+                experiment_data[key] = value
 
         # Omit category/level/lang when not set — backend applies its own default.
         if config.test_category:

@@ -4,6 +4,7 @@
 
 import base64
 import hashlib
+import html
 import http.server
 import json
 import os
@@ -22,10 +23,14 @@ from .config import (
     DEFAULT_TIMEOUT,
     LONG_TIMEOUT,
     TOKEN_FILE,
+    get_api_key,
     get_auth0_audience,
     get_auth0_client_id,
     get_auth0_domain,
     get_base_url,
+    get_organisation_id,
+    get_project_id,
+    write_secure_file,
 )
 from .exceptions import (
     APIError,
@@ -35,6 +40,7 @@ from .exceptions import (
     NotFoundError,
     RateLimitError,
     SessionExpiredError,
+    ValidationError,
 )
 
 # HTML templates for OAuth callback pages
@@ -289,6 +295,8 @@ LOGOUT_HTML = """<!DOCTYPE html>
 </body>
 </html>"""
 
+LOOPBACK_HOST = "127.0.0.1"
+
 
 class HumanboundClient:
     """API client for Humanbound platform with OAuth authentication."""
@@ -309,8 +317,13 @@ class HumanboundClient:
         self._email: str | None = None
         self._default_organisation_id: str | None = None
 
-        # Try to load existing credentials
-        self._load_credentials()
+        # Key mode: org/project come from env, never the credentials file.
+        self._api_key: str | None = get_api_key()
+        if self._api_key:
+            self._organisation_id = get_organisation_id()
+            self._project_id = get_project_id()
+        else:
+            self._load_credentials()
 
     # -------------------------------------------------------------------------
     # Authentication
@@ -366,6 +379,14 @@ class HumanboundClient:
         class CallbackHandler(http.server.BaseHTTPRequestHandler):
             def do_GET(self):
                 parsed = urllib.parse.urlparse(self.path)
+                if parsed.path != "/callback":
+                    auth_result["error"] = "Unexpected OAuth callback path"
+                    self.send_response(404)
+                    self.send_header("Content-type", "text/html")
+                    self.end_headers()
+                    self.wfile.write(b"Not Found")
+                    return
+
                 params = urllib.parse.parse_qs(parsed.query)
 
                 if "code" in params and params.get("state", [None])[0] == state:
@@ -379,7 +400,12 @@ class HumanboundClient:
                     self.send_response(400)
                     self.send_header("Content-type", "text/html")
                     self.end_headers()
-                    error_html = ERROR_HTML.replace("{{ERROR}}", str(auth_result["error"]))
+                    # error_description is an attacker-influenceable query
+                    # parameter on the OAuth redirect; escape it before
+                    # interpolating into the page to prevent reflected XSS.
+                    error_html = ERROR_HTML.replace(
+                        "{{ERROR}}", html.escape(str(auth_result["error"]))
+                    )
                     self.wfile.write(error_html.encode())
 
             def log_message(self, format, *args):
@@ -387,7 +413,7 @@ class HumanboundClient:
 
         # Allow port reuse to avoid "Address already in use" errors
         socketserver.TCPServer.allow_reuse_address = True
-        server = socketserver.TCPServer(("", callback_port), CallbackHandler)
+        server = socketserver.TCPServer((LOOPBACK_HOST, callback_port), CallbackHandler)
         server.timeout = 120  # 2 minute timeout
 
         try:
@@ -418,7 +444,12 @@ class HumanboundClient:
             "code_verifier": code_verifier,
         }
 
-        response = requests.post(token_url, json=token_data, timeout=DEFAULT_TIMEOUT)
+        response = requests.post(
+            token_url,
+            json=token_data,
+            timeout=DEFAULT_TIMEOUT,
+            allow_redirects=False,
+        )
         if response.status_code != 200:
             raise AuthenticationError(f"Token exchange failed: {response.text}")
 
@@ -447,6 +478,7 @@ class HumanboundClient:
                     f"{self.base_url}/logout",
                     headers={"Authorization": f"Bearer {self._api_token}"},
                     timeout=DEFAULT_TIMEOUT,
+                    allow_redirects=False,
                 )
             except (requests.ConnectionError, requests.Timeout):
                 pass
@@ -460,6 +492,13 @@ class HumanboundClient:
         if TOKEN_FILE.exists():
             TOKEN_FILE.unlink()
 
+        # A temp stranded by a crash mid-write can carry a refresh token past logout.
+        for stale in TOKEN_FILE.parent.glob(f".{TOKEN_FILE.name}.*.tmp"):
+            try:
+                stale.unlink()
+            except OSError:
+                pass
+
         if not silent:
             print("Logged out successfully.")
 
@@ -469,6 +508,10 @@ class HumanboundClient:
         Returns:
             True if authenticated and token is not expired.
         """
+        # Key mode is stateless — the key itself is the credential.
+        if self._api_key:
+            return True
+
         if not self._api_token:
             return False
 
@@ -489,6 +532,7 @@ class HumanboundClient:
                 f"{self.base_url}/auth",
                 headers={"Authorization": f"Bearer {self._auth0_token}"},
                 timeout=DEFAULT_TIMEOUT,
+                allow_redirects=False,
             )
         except requests.ConnectionError:
             raise AuthenticationError(
@@ -536,6 +580,7 @@ class HumanboundClient:
                 "refresh_token": refresh_token,
             },
             timeout=DEFAULT_TIMEOUT,
+            allow_redirects=False,
         )
 
         if response.status_code != 200:
@@ -578,10 +623,11 @@ class HumanboundClient:
         return {}
 
     def _save_credentials(self, refresh_token: str | None = None) -> None:
-        """Save credentials to disk."""
-        CONFIG_DIR.mkdir(parents=True, exist_ok=True)
-        TOKEN_FILE.chmod(0o600) if TOKEN_FILE.exists() else None
+        """Save credentials to disk with owner-only (0600) permissions.
 
+        Written atomically so the file never exists on disk in a world-readable
+        state, even on first creation (see ``write_secure_file``).
+        """
         credentials = {
             "api_token": self._api_token,
             "expires_at": self._token_expires_at,
@@ -594,8 +640,7 @@ class HumanboundClient:
             "default_organisation_id": self._default_organisation_id,
         }
 
-        TOKEN_FILE.write_text(json.dumps(credentials))
-        TOKEN_FILE.chmod(0o600)
+        write_secure_file(TOKEN_FILE, json.dumps(credentials))
 
     # -------------------------------------------------------------------------
     # Context Management
@@ -631,6 +676,11 @@ class HumanboundClient:
         return self._project_id
 
     @property
+    def api_key(self) -> str | None:
+        """The headless user API key (HUMANBOUND_API_KEY), if auth is key-based."""
+        return self._api_key
+
+    @property
     def username(self) -> str | None:
         """Get current username."""
         return self._username
@@ -664,10 +714,13 @@ class HumanboundClient:
         Returns:
             Headers dictionary.
         """
-        headers = {
-            "Authorization": f"Bearer {self._api_token}",
-            "Content-Type": "application/json",
-        }
+        if self._api_key:
+            headers = {"x-api-key": self._api_key, "Content-Type": "application/json"}
+        else:
+            headers = {
+                "Authorization": f"Bearer {self._api_token}",
+                "Content-Type": "application/json",
+            }
 
         if include_org and self._organisation_id:
             headers["organisation_id"] = self._organisation_id
@@ -697,14 +750,26 @@ class HumanboundClient:
         except ValueError:
             data = {"message": response.text}
 
+        if 300 <= response.status_code < 400:
+            # Never followed — a redirect would replay credential headers cross-host.
+            raise APIError(
+                f"Unexpected redirect (HTTP {response.status_code})",
+                response.status_code,
+                data,
+            )
+
         if response.status_code >= 400:
             message = data.get("message", "Unknown error")
 
             if response.status_code == 404:
                 raise NotFoundError(message, response.status_code, data)
-            elif response.status_code == 401 and "revoked" in message.lower():
-                raise SessionExpiredError(message, response.status_code, data)
-            elif response.status_code == 401 and "expired" in message.lower():
+            elif (
+                response.status_code == 401
+                and not self._api_key
+                and ("revoked" in message.lower() or "expired" in message.lower())
+            ):
+                # Session-mode only: a headless key can't be refreshed, so key-mode
+                # 401s skip this and surface as ForbiddenError instead of re-login.
                 raise SessionExpiredError(message, response.status_code, data)
             elif response.status_code in (401, 403):
                 raise ForbiddenError(message, response.status_code, data)
@@ -714,6 +779,26 @@ class HumanboundClient:
                 raise APIError(message, response.status_code, data)
 
         return data
+
+    def _send(self, request_fn, endpoint: str, **kwargs) -> Any:
+        """Send a request and normalize transport failures.
+
+        Network errors (connection refused, DNS, timeout) surface as APIError
+        so every caller — CLI commands and MCP tools alike — handles them
+        through the HumanboundError hierarchy instead of a raw requests
+        exception.
+        """
+        url = f"{self.base_url}/{endpoint.lstrip('/')}"
+        try:
+            response = request_fn(url, allow_redirects=False, **kwargs)
+        except requests.Timeout as e:
+            raise APIError(f"Connection to {self.base_url} timed out.") from e
+        except requests.RequestException as e:
+            raise APIError(
+                f"Could not connect to {self.base_url} ({e.__class__.__name__}). "
+                "Is the server reachable?"
+            ) from e
+        return self._handle_response(response)
 
     def get(
         self,
@@ -741,13 +826,13 @@ class HumanboundClient:
         headers = self._get_headers(include_org, include_project)
         if extra_headers:
             headers.update(extra_headers)
-        response = requests.get(
-            f"{self.base_url}/{endpoint.lstrip('/')}",
+        return self._send(
+            requests.get,
+            endpoint,
             headers=headers,
             params=params,
             timeout=timeout,
         )
-        return self._handle_response(response)
 
     def post(
         self,
@@ -770,13 +855,13 @@ class HumanboundClient:
             Parsed JSON response.
         """
         self._ensure_authenticated()
-        response = requests.post(
-            f"{self.base_url}/{endpoint.lstrip('/')}",
+        return self._send(
+            requests.post,
+            endpoint,
             headers=self._get_headers(include_org, include_project),
             json=data,
             timeout=timeout,
         )
-        return self._handle_response(response)
 
     def put(
         self,
@@ -799,13 +884,13 @@ class HumanboundClient:
             Parsed JSON response.
         """
         self._ensure_authenticated()
-        response = requests.put(
-            f"{self.base_url}/{endpoint.lstrip('/')}",
+        return self._send(
+            requests.put,
+            endpoint,
             headers=self._get_headers(include_org, include_project),
             json=data,
             timeout=timeout,
         )
-        return self._handle_response(response)
 
     def delete(
         self,
@@ -826,12 +911,12 @@ class HumanboundClient:
             Parsed JSON response.
         """
         self._ensure_authenticated()
-        response = requests.delete(
-            f"{self.base_url}/{endpoint.lstrip('/')}",
+        return self._send(
+            requests.delete,
+            endpoint,
             headers=self._get_headers(include_org, include_project),
             timeout=timeout,
         )
-        return self._handle_response(response)
 
     # -------------------------------------------------------------------------
     # Convenience Methods
@@ -1053,6 +1138,48 @@ class HumanboundClient:
         """Update a finding."""
         return self.put(f"projects/{project_id}/findings/{finding_id}", data=data)
 
+    def retest_finding(self, finding_id: str, testing_level: str = "unit") -> dict:
+        """Trigger a regression retest for a finding.
+
+        Replays the finding's own recorded attacks against the current agent to
+        verify whether it is actually fixed. Fire-and-poll: returns immediately
+        with the new experiment id; poll ``get_experiment_status`` and read the
+        outcome from the experiment ``results.regression`` on completion.
+
+        The route is top-level (``findings/{id}/retest``): the backend resolves
+        the project from the finding and authorizes on the organisation header,
+        so no project header is sent.
+
+        Args:
+            finding_id: Finding UUID.
+            testing_level: Replay breadth — 'unit' (representatives only),
+                'system' (+cluster samples), or 'acceptance' (+more).
+
+        Returns:
+            ``{"experiment_id": ..., "status": "running"}``.
+        """
+        return self.post(
+            f"findings/{finding_id}/retest",
+            data={"testing_level": testing_level},
+            include_project=False,
+        )
+
+    def list_finding_regressions(self, finding_id: str) -> list:
+        """List a finding's regression-retest history (newest first).
+
+        Top-level route (``findings/{id}/regressions``), org-scoped like
+        ``retest_finding``.
+
+        Args:
+            finding_id: Finding UUID.
+
+        Returns:
+            List of ``{experiment_id, outcome, partial, testing_level,
+            created_at}``; empty when the finding has never been retested.
+        """
+        response = self.get(f"findings/{finding_id}/regressions", include_project=False)
+        return response if isinstance(response, list) else response.get("data", response)
+
     # -------------------------------------------------------------------------
     # Experiment Extensions
     # -------------------------------------------------------------------------
@@ -1089,9 +1216,28 @@ class HumanboundClient:
         """List API keys."""
         return self.get("api-keys", params={"page": page, "limit": limit}, include_org=False)
 
-    def create_api_key(self, name: str, scopes: str = "admin") -> dict:
-        """Create a new API key."""
-        return self.post("api-keys", data={"name": name, "scopes": scopes}, include_org=False)
+    def create_api_key(
+        self,
+        name: str,
+        scope: str = "read",
+        organisations: list[str] | None = None,
+        projects: list[str] | None = None,
+        expires_at: int | None = None,
+    ) -> dict:
+        """Create a new user API key.
+
+        Selection/expiry are omitted when not given so the backend applies its
+        least-privilege defaults (scope=read, organisations/projects = all the
+        owner can reach, no expiry).
+        """
+        data: dict = {"name": name, "scope": scope}
+        if organisations:
+            data["organisations"] = list(organisations)
+        if projects:
+            data["projects"] = list(projects)
+        if expires_at is not None:
+            data["expires_at"] = expires_at
+        return self.post("api-keys", data=data, include_org=False)
 
     def delete_api_key(self, key_id: str) -> Any:
         """Delete an API key."""
@@ -1284,6 +1430,23 @@ class HumanboundClient:
             data["scopes"] = scopes
         return self.post("connectors", data=data)
 
+    def discover_targets(self, vendor: str, credentials: dict) -> list:
+        """Enumerate a vendor's deployed agents via ``POST /discover``.
+
+        Stateless: returns the list of discovered targets (each an agnostic
+        descriptor with a nullable ``connector`` block). Nothing is persisted.
+        This is the NEW discovery contract — not the removed Shadow-AI
+        ``trigger_discovery``/``list_connectors`` methods.
+        """
+        if not self._organisation_id:
+            raise ValidationError("No organisation selected.")
+        resp = self.post(
+            "discover",
+            data={"vendor": vendor, "credentials": credentials},
+            timeout=LONG_TIMEOUT,
+        )
+        return resp.get("targets", [])
+
     def list_connectors(self) -> list:
         """List all connectors for the current organisation."""
         if not self._organisation_id:
@@ -1405,6 +1568,7 @@ class HumanboundClient:
             headers=headers,
             json={},
             timeout=LONG_TIMEOUT,
+            allow_redirects=False,
         )
         return self._handle_response(response)
 
@@ -1416,7 +1580,3 @@ class HumanboundClient:
         if project_name:
             data["name"] = project_name
         return self.post(f"inventory/{asset_id}/onboard", data=data)
-
-
-# Import ValidationError to this module
-from .exceptions import ValidationError

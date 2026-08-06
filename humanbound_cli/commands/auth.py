@@ -6,7 +6,8 @@ import click
 from rich.console import Console
 from rich.panel import Panel
 
-from ..client import HumanboundClient
+from .. import telemetry
+from ..client import LOOPBACK_HOST, HumanboundClient
 from ..config import DEFAULT_BASE_URL
 from ..exceptions import AuthenticationError
 
@@ -43,6 +44,8 @@ def login(base_url: str, port: int, force: bool):
     try:
         console.print("Starting authentication...")
         client.login(callback_port=port)
+
+        telemetry.identify_from_credentials()
 
         # Auto-select default organisation and resolve name
         org_display = "not set"
@@ -122,7 +125,7 @@ def logout(revoke: bool, port: int):
                 pass
 
         socketserver.TCPServer.allow_reuse_address = True
-        server = socketserver.TCPServer(("", port), LogoutHandler)
+        server = socketserver.TCPServer((LOOPBACK_HOST, port), LogoutHandler)
         server.timeout = 30
 
         try:

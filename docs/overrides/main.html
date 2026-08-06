@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+  {% set desc = page.meta.description if page.meta and page.meta.description else config.site_description %}
+  <meta property="og:site_name" content="{{ config.site_name }}" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:image:alt" content="{{ desc }}" />
+  <meta name="twitter:image:alt" content="{{ desc }}" />
+  {% if page.meta and page.meta.schema_jsonld %}
+  <script type="application/ld+json">{{ page.meta.schema_jsonld | safe }}</script>
+  {% endif %}
+{% endblock %}
+
+{# PostHog runs in the scripts block (end of body) so Material's document$
+   observable and the __md_get consent helper are both already defined. #}
+{% block scripts %}
+  {{ super() }}
+  {% include "partials/posthog.html" %}
+  {% include "partials/reddit-pixel.html" %}
+{% endblock %}

@@ -17,7 +17,6 @@ import sys
 from mcp.server.fastmcp import FastMCP
 
 from .client import HumanboundClient
-from .exceptions import HumanboundError
 
 # ---------------------------------------------------------------------------
 # Logging — everything to stderr so stdout stays clean for JSON-RPC
@@ -61,8 +60,7 @@ mcp = FastMCP(
         "(hb_set_project).\n\n"
         "CLI-ONLY COMMANDS (suggest when relevant):\n"
         "  • 'hb discover' — browser-based shadow AI discovery (no connector needed)\n"
-        "  • 'hb connect --vendor microsoft' — browser-based platform discovery\n"
-        "  • 'hb sentinel setup' — configure continuous monitoring sentinel"
+        "  • 'hb connect --vendor microsoft' — browser-based platform discovery"
     ),
 )
 
@@ -111,7 +109,7 @@ def hb_whoami() -> str:
                 "base_url": client.base_url,
             }
         )
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -121,7 +119,7 @@ def hb_list_organisations() -> str:
     try:
         client = _get_client()
         return _ok(client.list_organisations())
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -142,7 +140,7 @@ def hb_set_organisation(organisation_id: str) -> str:
         return _ok(
             {"organisation_id": organisation_id, "message": "Organisation set successfully."}
         )
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -161,7 +159,7 @@ def hb_set_project(project_id: str) -> str:
         client = _get_client()
         client.set_project(project_id)
         return _ok({"project_id": project_id, "message": "Project set successfully."})
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -181,7 +179,7 @@ def hb_list_projects(page: int = 1, size: int = 50) -> str:
     try:
         client = _get_client()
         return _ok(client.list_projects(page=page, size=size))
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -195,7 +193,7 @@ def hb_get_project(project_id: str) -> str:
     try:
         client = _get_client()
         return _ok(client.get(f"projects/{project_id}", include_project=True))
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -218,7 +216,7 @@ def hb_update_project(
         if description is not None:
             data["description"] = description
         return _ok(client.update_project(project_id, data))
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -233,7 +231,7 @@ def hb_delete_project(project_id: str) -> str:
         client = _get_client()
         client.delete_project(project_id)
         return _ok({"message": f"Project {project_id} deleted."})
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -255,7 +253,7 @@ def hb_create_project(name: str, description: str | None = None) -> str:
         if description is not None:
             data["description"] = description
         return _ok(client.post("projects", data=data, include_project=False))
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -275,7 +273,7 @@ def hb_list_experiments(page: int = 1, size: int = 50) -> str:
     try:
         client = _get_client()
         return _ok(client.list_experiments(page=page, size=size))
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -289,7 +287,7 @@ def hb_get_experiment(experiment_id: str) -> str:
     try:
         client = _get_client()
         return _ok(client.get_experiment(experiment_id))
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -309,7 +307,7 @@ def hb_get_experiment_status(experiment_id: str) -> str:
     try:
         client = _get_client()
         return _ok(client.get_experiment_status(experiment_id))
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -331,7 +329,7 @@ def hb_get_experiment_logs(
     try:
         client = _get_client()
         return _ok(client.get_experiment_logs(experiment_id, page=page, size=size, result=result))
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -345,7 +343,7 @@ def hb_terminate_experiment(experiment_id: str) -> str:
     try:
         client = _get_client()
         return _ok(client.terminate_experiment(experiment_id))
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -360,7 +358,7 @@ def hb_delete_experiment(experiment_id: str) -> str:
         client = _get_client()
         client.delete_experiment(experiment_id)
         return _ok({"message": f"Experiment {experiment_id} deleted."})
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -458,7 +456,7 @@ def hb_run_test(
 
         result = client.post("experiments", data=data, include_project=True)
         return _ok(result)
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -501,7 +499,7 @@ def hb_get_project_logs(
                 last=last,
             )
         )
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -516,7 +514,7 @@ def hb_list_providers() -> str:
     try:
         client = _get_client()
         return _ok(client.list_providers())
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -545,7 +543,7 @@ def hb_add_provider(
         if endpoint:
             integration["endpoint"] = endpoint
         return _ok(client.add_provider(name, integration, is_default=is_default))
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -581,7 +579,7 @@ def hb_update_provider(
         if is_default is not None:
             data["is_default"] = is_default
         return _ok(client.update_provider(provider_id, data))
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -596,7 +594,7 @@ def hb_remove_provider(provider_id: str) -> str:
         client = _get_client()
         client.remove_provider(provider_id)
         return _ok({"message": f"Provider {provider_id} removed."})
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -630,7 +628,7 @@ def hb_list_findings(
         return _ok(
             client.list_findings(pid, status=status, severity=severity, page=page, size=size)
         )
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -664,7 +662,50 @@ def hb_update_finding(
         if notes is not None:
             data["notes"] = notes
         return _ok(client.update_finding(pid, finding_id, data))
-    except HumanboundError as e:
+    except Exception as e:
+        return _err(e)
+
+
+@mcp.tool()
+def hb_retest_finding(finding_id: str, testing_level: str = "unit") -> str:
+    """Retest a finding to verify whether it is actually fixed.
+
+    Replays the finding's OWN recorded attacks against the current agent and
+    reports an outcome: 'still_vulnerable', 'not_reproduced', or
+    'insufficient_evidence'.
+
+    Fire-and-poll: this returns immediately with the new experiment id.
+    Workflow: poll hb_get_experiment_status every 15-30 seconds until the
+    status is no longer 'Running', then call hb_get_experiment and read the
+    outcome from results.regression.
+
+    Args:
+        finding_id: Finding UUID.
+        testing_level: Replay breadth (same ladder as hb_run_test) — 'unit'
+            (representatives only), 'system' (+cluster samples), or
+            'acceptance' (+more).
+    """
+    try:
+        client = _get_client()
+        return _ok(client.retest_finding(finding_id, testing_level=testing_level))
+    except Exception as e:
+        return _err(e)
+
+
+@mcp.tool()
+def hb_list_finding_regressions(finding_id: str) -> str:
+    """List a finding's regression-retest history (newest first).
+
+    Each entry is a past retest: {experiment_id, outcome, partial,
+    testing_level, created_at}. Empty when the finding has never been retested.
+
+    Args:
+        finding_id: Finding UUID.
+    """
+    try:
+        client = _get_client()
+        return _ok(client.list_finding_regressions(finding_id))
+    except Exception as e:
         return _err(e)
 
 
@@ -691,7 +732,7 @@ def hb_get_coverage(project_id: str | None = None, include_gaps: bool = False) -
         if not pid:
             return _err(ValueError("No project selected. Use hb_set_project first."))
         return _ok(client.get_coverage(pid, include_gaps=include_gaps))
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -719,7 +760,7 @@ def hb_get_posture(project_id: str | None = None) -> str:
         if not pid:
             return _err(ValueError("No project selected. Use hb_set_project first."))
         return _ok(client.get(f"projects/{pid}/posture", include_project=True))
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -736,7 +777,7 @@ def hb_get_posture_trends(project_id: str | None = None) -> str:
         if not pid:
             return _err(ValueError("No project selected. Use hb_set_project first."))
         return _ok(client.get_posture_trends(pid))
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -754,7 +795,7 @@ def hb_get_shadow_posture() -> str:
     try:
         client = _get_client()
         return _ok(client.get_shadow_posture())
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -795,7 +836,7 @@ def hb_export_guardrails(
             include_project=True,
         )
         return _ok(result)
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -840,7 +881,7 @@ def hb_create_connector(
                 display_name=display_name,
             )
         )
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -850,7 +891,7 @@ def hb_list_connectors() -> str:
     try:
         client = _get_client()
         return _ok(client.list_connectors())
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -864,7 +905,7 @@ def hb_get_connector(connector_id: str) -> str:
     try:
         client = _get_client()
         return _ok(client.get_connector(connector_id))
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -893,7 +934,7 @@ def hb_update_connector(
         if client_secret is not None:
             data["credentials"] = {"client_secret": client_secret}
         return _ok(client.update_connector(connector_id, data))
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -908,7 +949,7 @@ def hb_delete_connector(connector_id: str) -> str:
         client = _get_client()
         client.delete_connector(connector_id)
         return _ok({"message": f"Connector {connector_id} deleted."})
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -922,7 +963,7 @@ def hb_test_connector(connector_id: str) -> str:
     try:
         client = _get_client()
         return _ok(client.test_connector(connector_id))
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -943,7 +984,7 @@ def hb_trigger_discovery(connector_id: str) -> str:
     try:
         client = _get_client()
         return _ok(client.trigger_discovery(connector_id))
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -987,7 +1028,7 @@ def hb_list_inventory(
                 size=size,
             )
         )
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -1001,7 +1042,7 @@ def hb_get_inventory_asset(asset_id: str) -> str:
     try:
         client = _get_client()
         return _ok(client.get_inventory_asset(asset_id))
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -1042,7 +1083,7 @@ def hb_update_inventory_asset(
         if has_risk_assessment is not None:
             data["has_risk_assessment"] = has_risk_assessment
         return _ok(client.update_inventory_asset(asset_id, data))
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -1056,7 +1097,7 @@ def hb_archive_inventory_asset(asset_id: str) -> str:
     try:
         client = _get_client()
         return _ok(client.archive_inventory_asset(asset_id))
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -1076,7 +1117,7 @@ def hb_onboard_inventory_asset(asset_id: str, project_name: str | None = None) -
     try:
         client = _get_client()
         return _ok(client.onboard_inventory_asset(asset_id, project_name=project_name))
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -1096,43 +1137,43 @@ def hb_list_api_keys(page: int = 1, limit: int = 50) -> str:
     try:
         client = _get_client()
         return _ok(client.list_api_keys(page=page, limit=limit))
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
 @mcp.tool()
-def hb_create_api_key(name: str, scopes: str = "admin") -> str:
+def hb_create_api_key(name: str, scope: str = "read") -> str:
     """Create a new API key.
 
     Args:
         name: Key name/label.
-        scopes: Comma-separated scopes (default 'admin').
+        scope: Permission scope 'read', 'write', or 'admin' (cumulative; default 'read').
     """
     try:
         client = _get_client()
-        return _ok(client.create_api_key(name, scopes=scopes))
-    except HumanboundError as e:
+        return _ok(client.create_api_key(name, scope=scope))
+    except Exception as e:
         return _err(e)
 
 
 @mcp.tool()
-def hb_update_api_key(key_id: str, name: str | None = None, scopes: str | None = None) -> str:
+def hb_update_api_key(key_id: str, name: str | None = None, scope: str | None = None) -> str:
     """Update an API key.
 
     Args:
         key_id: API key UUID.
         name: New name.
-        scopes: New scopes.
+        scope: New permission scope 'read', 'write', or 'admin' (cumulative).
     """
     try:
         client = _get_client()
         data = {}
         if name is not None:
             data["name"] = name
-        if scopes is not None:
-            data["scopes"] = scopes
+        if scope is not None:
+            data["scope"] = scope
         return _ok(client.update_api_key(key_id, data))
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -1147,7 +1188,7 @@ def hb_delete_api_key(key_id: str) -> str:
         client = _get_client()
         client.delete_api_key(key_id)
         return _ok({"message": f"API key {key_id} deleted."})
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -1162,7 +1203,7 @@ def hb_list_members() -> str:
     try:
         client = _get_client()
         return _ok(client.list_members())
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -1177,7 +1218,7 @@ def hb_invite_member(email: str, access_level: str = "member") -> str:
     try:
         client = _get_client()
         return _ok(client.invite_member(email, access_level))
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -1192,7 +1233,7 @@ def hb_remove_member(member_id: str) -> str:
         client = _get_client()
         client.remove_member(member_id)
         return _ok({"message": f"Member {member_id} removed."})
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -1220,7 +1261,7 @@ def hb_create_webhook(
         client = _get_client()
         types_list = [t.strip() for t in event_types.split(",")] if event_types else []
         return _ok(client.create_webhook(url=url, secret=secret, name=name, event_types=types_list))
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -1235,7 +1276,7 @@ def hb_delete_webhook(webhook_id: str) -> str:
         client = _get_client()
         client.delete_webhook(webhook_id)
         return _ok({"message": f"Webhook {webhook_id} deleted."})
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -1249,7 +1290,7 @@ def hb_get_webhook(webhook_id: str) -> str:
     try:
         client = _get_client()
         return _ok(client.get_webhook(webhook_id))
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -1265,7 +1306,7 @@ def hb_list_webhook_deliveries(webhook_id: str, page: int = 1, size: int = 25) -
     try:
         client = _get_client()
         return _ok(client.list_webhook_deliveries(webhook_id, page=page, size=size))
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -1279,7 +1320,7 @@ def hb_test_webhook(webhook_id: str) -> str:
     try:
         client = _get_client()
         return _ok(client.test_webhook(webhook_id))
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -1311,7 +1352,7 @@ def hb_replay_webhook(
                 event_type=event_type,
             )
         )
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -1338,7 +1379,7 @@ def hb_get_campaign(project_id: str | None = None) -> str:
         if not pid:
             return _err(ValueError("No project selected. Use hb_set_project first."))
         return _ok(client.get_campaign(pid))
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -1358,7 +1399,7 @@ def hb_terminate_campaign(campaign_id: str, project_id: str | None = None) -> st
         if not pid:
             return _err(ValueError("No project selected. Use hb_set_project first."))
         return _ok(client.terminate_campaign(pid, campaign_id))
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -1392,7 +1433,7 @@ def hb_connect(
 
     Args:
         endpoint_config: JSON string with the agent's chat-completion config.
-            Example: {"streaming": false, "chat_completion": {"endpoint": "https://...",
+            Example: {"streaming": null, "chat_completion": {"endpoint": "https://...",
             "headers": {"Authorization": "Bearer ..."}, "payload": {"content": "$PROMPT"}}}
         name: Project name (auto-derived from endpoint hostname if omitted).
         prompt_text: Optional system prompt text to include as an additional
@@ -1526,7 +1567,7 @@ def hb_connect(
 
         return _ok(result)
 
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -1564,7 +1605,7 @@ def hb_upload_conversations(
         return _ok(client.upload_conversations(pid, parsed, tag=tag, lang=lang))
     except json.JSONDecodeError as e:
         return _err(ValueError(f"Invalid JSON in conversations: {e}"))
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -1712,7 +1753,7 @@ def hb_redteam_analyze(experiment_id: str) -> str:
                 timeout=120,
             )
         )
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -1747,7 +1788,7 @@ def hb_redteam_start(
                 include_project=True,
             )
         )
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -1774,7 +1815,7 @@ def hb_redteam_execute(experiment_id: str, session_id: str, burst_turns: int = 5
                 timeout=120,
             )
         )
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -1800,7 +1841,7 @@ def hb_redteam_direct(experiment_id: str, session_id: str, input: str) -> str:
                 include_project=True,
             )
         )
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -1826,7 +1867,7 @@ def hb_redteam_judge(experiment_id: str, session_id: str) -> str:
                 timeout=60,
             )
         )
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 
@@ -1849,7 +1890,7 @@ def hb_redteam_complete(experiment_id: str) -> str:
                 include_project=True,
             )
         )
-    except HumanboundError as e:
+    except Exception as e:
         return _err(e)
 
 

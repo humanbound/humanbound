@@ -2,6 +2,10 @@ site_name: Humanbound
 site_url: https://docs.humanbound.ai
 site_description: Humanbound documentation — AI security testing, continuous monitoring, and defense for LLM agents.
 repo_url: https://github.com/humanbound/humanbound
+strict: true
+
+copyright: >-
+  <a href="#__consent">Change cookie settings</a>
 
 plugins:
   - search
@@ -9,6 +13,15 @@ plugins:
       cards_layout_options:
         background_color: "#0a0a0a"
         color: "#ffffff"
+        font_family: DM Sans
+        logo: docs/images/social_logo.png
+
+hooks:
+  - hooks/schema.py
+  - hooks/llms_txt.py
+  - hooks/lint.py
+  - hooks/faq_render.py
+  - hooks/glossary_autolink.py
 
 theme:
   name: material
@@ -47,12 +60,13 @@ nav:
     - Output & Export: local-engine/output-formats.md
   - 💡 Concepts:
     - LLM-as-a-Judge: concepts/llm-as-judge.md
+    - Red Coworker: concepts/red-coworker.md
     - Security Posture: concepts/security-posture.md
   - 🔬 Methodology:
     - Adversarial Engine: methodology/adversarial-engine.md
   - 🧪 Testing:
     - Test Command: testing/test-command.md
-    - Red Coworker [Preview]: testing/red-coworker.md
+    - Collaborative Redteam [Preview]: testing/collaborative-redteam.md
     - Log Upload: testing/log-upload.md
     - Assessments: testing/assessments.md
     - Reports: testing/reports.md
@@ -72,10 +86,14 @@ nav:
     - API Keys: management/api-keys.md
     - Team & Collaboration: management/collaboration.md
   - 🔌 Integrations:
+    - Agent Discovery: integrations/discovery.md
     - Telemetry (Whitebox): integrations/telemetry.md
     - CI/CD: integrations/cicd.md
+    - Docker: integrations/docker.md
     - SIEM: integrations/siem.md
     - MCP Server: integrations/mcp.md
+  - 🧩 Plugins [Preview]:
+    - Overview: plugins/index.md
   - 📦 Deployment: deployment.md
   - 🔐 Authentication: authentication.md
   - 📖 Reference:
@@ -85,6 +103,7 @@ nav:
   - 🤝 Community: community.md
 
 markdown_extensions:
+  - meta
   - admonition
   - pymdownx.details
   - pymdownx.superfences
@@ -99,6 +118,27 @@ markdown_extensions:
   - tables
   - attr_list
   - md_in_html
+
+extra:
+  consent:
+    title: Cookie consent
+    description: >-
+      We use optional cookies: analytics to improve these docs, and advertising
+      (the Reddit Pixel). Nothing is stored on your device unless you accept —
+      use "Manage" to choose per category.
+      <a href="https://github.com/humanbound/humanbound/blob/main/PRIVACY.md#docs-site-analytics" target="_blank" rel="noopener">Privacy policy</a>.
+    cookies:
+      analytics: Analytics
+      advertising: Advertising
+    actions:
+      - accept
+      - manage
+      - reject
+  posthog:
+    api_key: "phc_yKExP2tUyiPGg3kY3tongw36iGLTYaH7D2DfRCHpZg9r"
+    host: "https://eu.i.posthog.com"
+  reddit:
+    pixel_id: "a2_j9tpj603h22k"
 
 extra_css:
   - stylesheets/extra.css

@@ -1,6 +1,19 @@
+---
+description: "Orchestrators generate attacks, run conversations, and evaluate responses — Humanbound ships three built-in engines and lets you author your own."
+keywords:
+  - test orchestrator
+  - OWASP agentic testing
+  - OWASP single-turn
+  - behavioral QA testing
+  - custom orchestrator
+  - orchestrator SDK
+  - test levels
+  - custom bot integration
+---
+
 # Orchestrators
 
-Orchestrators are the test engines that generate attacks, run conversations, and evaluate responses. Humanbound ships with three built-in orchestrators. You can also build your own.
+An orchestrator is the test engine that generates attack prompts, drives the conversation against your agent, and evaluates responses. Humanbound ships three built-in orchestrators — OWASP Agentic (multi-turn adversarial, the default), OWASP Single-Turn (high-volume single-prompt attacks), and Behavioral QA (intent boundary and response quality testing) — each supporting three test levels (unit, system, acceptance). The sections below cover built-in selection, test depth, and the SDK for authoring custom orchestrators.
 
 ## Built-In Orchestrators
 
@@ -59,11 +72,12 @@ def orchestrator_generate(model_provider: dict, experiment: dict) -> dict:
     Returns dict mapping category → list of opening prompts.
     """
 
+
 def orchestrator_run(
-    organisation_id, model_provider, experiment, prompts, few_shots_model,
-    callbacks=None
+    organisation_id, model_provider, experiment, prompts, few_shots_model, callbacks=None
 ) -> None:
     """Execute the test. Emit logs via callbacks.on_logs()."""
+
 
 def compute_quota(testing_level: str, dataset_len: int) -> int:
     """Estimate total conversation count."""
@@ -74,10 +88,10 @@ def compute_quota(testing_level: str, dataset_len: int) -> int:
 Your orchestrator imports from the engine SDK:
 
 ```python
-from humanbound_cli.engine.bot import Bot, Telemetry      # HTTP/WebSocket bot client
-from humanbound_cli.engine.llm import get_llm_pinger       # LLM provider factory
-from humanbound_cli.engine.schemas import LogsAnonymous    # log format
-from humanbound_cli.engine.callbacks import EngineCallbacks # I/O abstraction
+from humanbound_cli.engine.bot import Bot, Telemetry  # HTTP/WebSocket bot client
+from humanbound_cli.engine.llm import get_llm_pinger  # LLM provider factory
+from humanbound_cli.engine.schemas import LogsAnonymous  # log format
+from humanbound_cli.engine.callbacks import EngineCallbacks  # I/O abstraction
 ```
 
 ### Callbacks
@@ -95,6 +109,7 @@ The `Bot` class handles standard response formats (`content`, `text`, `response`
 
 ```python
 from humanbound_cli.engine.bot import Bot
+
 
 class MyBot(Bot):
     def extract_custom_response(self, chunk):
