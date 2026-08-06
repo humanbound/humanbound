@@ -67,7 +67,7 @@
   <meta property="og:image:alt" content="Run security tests locally with no login or network calls — full isolation with your own LLM provider, or offline mode with ollama." />
   <meta name="twitter:image:alt" content="Run security tests locally with no login or network calls — full isolation with your own LLM provider, or offline mode with ollama." />
   
-  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/local-engine/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Overview","item":"https://docs.humanbound.ai/local-engine/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/local-engine/#article","headline":"Overview","description":"Run security tests locally with no login or network calls \u2014 full isolation with your own LLM provider, or offline mode with ollama.","url":"https://docs.humanbound.ai/local-engine/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-07-23T15:28:25+03:00","keywords":"local engine, local security testing, offline testing isolation, humanbound local mode, no-login testing, ollama isolation, local vs platform"}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/local-engine/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Overview","item":"https://docs.humanbound.ai/local-engine/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/local-engine/#article","headline":"Overview","description":"Run security tests locally with no login or network calls \u2014 full isolation with your own LLM provider, or offline mode with ollama.","url":"https://docs.humanbound.ai/local-engine/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-08-06T16:02:41+03:00","keywords":"local engine, local security testing, offline testing isolation, humanbound local mode, no-login testing, ollama isolation, local vs platform"}]}</script>
   
 
   
@@ -543,6 +543,17 @@
     <span class="md-ellipsis">
       
         How It Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architecture
       
     </span>
   </a>
@@ -2270,6 +2281,14 @@
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>  ✓ Posture: 64/100 (Grade C)
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>  ✓ Results saved to .humanbound/results/
 </code></pre></div>
+<h2 id="architecture">Architecture</h2>
+<p><img alt="Humanbound CLI engine architecture" src="../images/architecture.png" /></p>
+<p>Every entry point — <code>hb</code> commands and the MCP server — goes through a single
+<code>TestRunner</code> abstraction. The <code>PlatformTestRunner</code> forwards to the Humanbound
+backend; the <code>LocalTestRunner</code> drives the in-process engine — scope discovery,
+orchestrators (OWASP agentic / single-turn / behavioral QA), bot, LLM
+provider, judge, and presenter — against your own LLM provider, writing
+results under <code>.humanbound/results/</code>.</p>
 <h2 id="what-you-get-locally">What You Get Locally</h2>
 <table>
 <thead>

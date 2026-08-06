@@ -67,7 +67,7 @@
   <meta property="og:image:alt" content="hb test reference — orchestrators, testing levels, languages, providers, and every flag that shapes an adversarial run." />
   <meta name="twitter:image:alt" content="hb test reference — orchestrators, testing levels, languages, providers, and every flag that shapes an adversarial run." />
   
-  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/testing/test-command/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Test Command","item":"https://docs.humanbound.ai/testing/test-command/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/testing/test-command/#article","headline":"Test Command","description":"hb test reference \u2014 orchestrators, testing levels, languages, providers, and every flag that shapes an adversarial run.","url":"https://docs.humanbound.ai/testing/test-command/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-06-12T14:12:41+03:00","keywords":"hb test reference, test command flags, testing levels, test category, --fail-on flag, experiment configuration, test command CLI, adversarial test execution"}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/testing/test-command/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Test Command","item":"https://docs.humanbound.ai/testing/test-command/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/testing/test-command/#article","headline":"Test Command","description":"hb test reference \u2014 orchestrators, testing levels, languages, providers, and every flag that shapes an adversarial run.","url":"https://docs.humanbound.ai/testing/test-command/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-08-06T16:02:41+03:00","keywords":"hb test reference, test command flags, testing levels, test category, --fail-on flag, experiment configuration, test command CLI, adversarial test execution"}]}</script>
   
 
   
@@ -2184,28 +2184,29 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>hb test [OPTIONS]
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>Test Configuration:
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>  -t, --test-category     Test to run (default: humanbound/adversarial/owasp_agentic)
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>  -t, --test-category     Test to run. Omit to let the platform pick the default.
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>  --category              Shorthand alias for --test-category
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>  -l, --testing-level     Depth: unit | system | acceptance
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>  -l, --testing-level     Depth: unit | system | acceptance. Omit to use the default.
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>  --deep                  Shortcut for --testing-level system
 <a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>  --full                  Shortcut for --testing-level acceptance
 <a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>  -n, --name              Experiment name (auto-generated if omitted)
 <a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>  -d, --description       Experiment description
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>  --lang                  Language (default: english). Accepts codes: en, de, es
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>  -c, --context           Extra context for the judge (string or .txt file path)
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>  --provider-id           Provider to use (default: first available)
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>Behavior:
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>  --no-auto-start         Create without starting (manual mode)
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>  -w, --wait              Wait for completion
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>  --fail-on SEVERITY      Exit non-zero if the experiment produces
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>                          insights &gt;= severity
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>                          Values: critical, high, medium, low, any
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>Endpoint Override (optional):
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>  -e, --endpoint          Agent integration config -- JSON string or file path.
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>                          Same shape as &#39;hb connect --endpoint&#39;.
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>                          Overrides the project&#39;s default integration.
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>  --lang                  Language. Accepts codes (en, de, es) or full names.
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>                          Omit to use the default.
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>  -c, --context           Extra context for the judge (string or .txt file path)
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>  --provider-id           Provider to use (default: first available)
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>Behavior:
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>  --no-auto-start         Create without starting (manual mode)
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>  -w, --wait              Wait for completion
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>  --fail-on SEVERITY      Exit non-zero if the experiment produces
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>                          insights &gt;= severity
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>                          Values: critical, high, medium, low, any
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>Endpoint Override (optional):
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>  -e, --endpoint          Agent integration config -- JSON string or file path.
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>                          Same shape as &#39;hb connect --endpoint&#39;.
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>                          Overrides the project&#39;s default integration.
 </code></pre></div>
 <div class="admonition info">
 <p class="admonition-title">Note</p>

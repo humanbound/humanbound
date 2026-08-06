@@ -67,7 +67,7 @@
   <meta property="og:image:alt" content="From install to your first adversarial test in minutes — local or platform mode, with a posture score at the end." />
   <meta name="twitter:image:alt" content="From install to your first adversarial test in minutes — local or platform mode, with a posture score at the end." />
   
-  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/getting-started/quick-start/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Quick Start","item":"https://docs.humanbound.ai/getting-started/quick-start/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/getting-started/quick-start/#article","headline":"Quick Start","description":"From install to your first adversarial test in minutes \u2014 local or platform mode, with a posture score at the end.","url":"https://docs.humanbound.ai/getting-started/quick-start/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-07-03T11:01:08+03:00","keywords":"humanbound quick start, first adversarial test, hb test command, local mode testing, platform mode testing, posture score, bot-config.json, CI/CD security testing"},{"@type":"FAQPage","@id":"https://docs.humanbound.ai/getting-started/quick-start/#faq","isPartOf":{"@id":"https://docs.humanbound.ai/getting-started/quick-start/#article"},"mainEntity":[{"@type":"Question","name":"How do I run tests without creating an account?","acceptedAnswer":{"@type":"Answer","text":"Use local mode \u2014 configure an LLM provider via environment variables or `hb config set`, prepare a `bot-config.json` describing your agent, then run `hb test --endpoint ./bot-config.json --wait`. No login required."}},{"@type":"Question","name":"How do I view my test results?","acceptedAnswer":{"@type":"Answer","text":"Run `hb posture` for a security score (0\u2013100, A\u2013F), `hb logs` for conversation logs, `hb logs --verdict fail` to filter failures, or `hb report -o report.html` for a full HTML report."}},{"@type":"Question","name":"What does the --fail-on flag do?","acceptedAnswer":{"@type":"Answer","text":"`--fail-on` causes `hb test` to exit with a non-zero status code when findings of the specified severity (critical, high, medium, low, or any) are found, making it suitable for CI/CD quality gates."}},{"@type":"Question","name":"How do I run tests in CI/CD?","acceptedAnswer":{"@type":"Answer","text":"Install humanbound with `pip install humanbound`, then run `hb test --endpoint ./bot-config.json --repo . --wait --fail-on high`, passing your provider credentials as environment variables such as `HB_PROVIDER` and `HB_API_KEY`."}}]}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/getting-started/quick-start/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Quick Start","item":"https://docs.humanbound.ai/getting-started/quick-start/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/getting-started/quick-start/#article","headline":"Quick Start","description":"From install to your first adversarial test in minutes \u2014 local or platform mode, with a posture score at the end.","url":"https://docs.humanbound.ai/getting-started/quick-start/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-08-06T16:02:41+03:00","keywords":"humanbound quick start, first adversarial test, hb test command, local mode testing, platform mode testing, posture score, bot-config.json, CI/CD security testing"},{"@type":"FAQPage","@id":"https://docs.humanbound.ai/getting-started/quick-start/#faq","isPartOf":{"@id":"https://docs.humanbound.ai/getting-started/quick-start/#article"},"mainEntity":[{"@type":"Question","name":"How do I run tests without creating an account?","acceptedAnswer":{"@type":"Answer","text":"Use local mode \u2014 configure an LLM provider via environment variables or `hb config set`, prepare a `bot-config.json` describing your agent, then run `hb test --endpoint ./bot-config.json --wait`. No login required."}},{"@type":"Question","name":"How do I view my test results?","acceptedAnswer":{"@type":"Answer","text":"Run `hb posture` for a security score (0\u2013100, A\u2013F), `hb logs` for conversation logs, `hb logs --verdict fail` to filter failures, or `hb report -o report.html` for a full HTML report."}},{"@type":"Question","name":"What does the --fail-on flag do?","acceptedAnswer":{"@type":"Answer","text":"`--fail-on` causes `hb test` to exit with a non-zero status code when findings of the specified severity (critical, high, medium, low, or any) are found, making it suitable for CI/CD quality gates."}},{"@type":"Question","name":"How do I run tests in CI/CD?","acceptedAnswer":{"@type":"Answer","text":"Install humanbound with `pip install humanbound`, then run `hb test --endpoint ./bot-config.json --repo . --wait --fail-on high`, passing your provider credentials as environment variables such as `HB_PROVIDER` and `HB_API_KEY`."}}]}]}</script>
   
 
   
@@ -2501,11 +2501,11 @@
 </tr>
 <tr>
 <td><code>-t, --test-category</code></td>
-<td>Test type: <code>owasp_agentic</code> (default), <code>owasp_single_turn</code>, <code>behavioral</code></td>
+<td>Test type, e.g. <code>owasp_single_turn</code>, <code>behavioral</code>. Omit to use the default.</td>
 </tr>
 <tr>
 <td><code>-l, --testing-level</code></td>
-<td>Depth: <code>unit</code> (~20 min), <code>system</code> (~45 min), <code>acceptance</code> (~90 min)</td>
+<td>Depth: <code>unit</code> (~20 min), <code>system</code> (~45 min), <code>acceptance</code> (~90 min). Omit to use the default.</td>
 </tr>
 <tr>
 <td><code>--deep</code></td>
@@ -2521,7 +2521,7 @@
 </tr>
 <tr>
 <td><code>--lang</code></td>
-<td>Test language (default: english)</td>
+<td>Test language. Accepts codes (en, de, es) or full names. Omit to use the default.</td>
 </tr>
 <tr>
 <td><code>--context</code></td>
@@ -2591,27 +2591,26 @@
 <td>System prompt file</td>
 </tr>
 <tr>
-<td><code>-r, --repo</code></td>
-<td>Repository path</td>
+<td><code>-r, --repo</code> <code>[PREVIEW]</code></td>
+<td>Repository path (also infers capability surface from source patterns)</td>
 </tr>
 <tr>
 <td><code>-o, --openapi</code></td>
 <td>OpenAPI spec file</td>
 </tr>
-<tr>
-<td><code>-c, --context</code></td>
-<td>Extra context for the judge</td>
-</tr>
-<tr>
-<td><code>-n, --name</code></td>
-<td>Project name</td>
-</tr>
-<tr>
-<td><code>-y, --yes</code></td>
-<td>Skip confirmations</td>
-</tr>
 </tbody>
 </table>
+<div class="admonition note">
+<p class="admonition-title">Preview: <code>--repo</code> capability inference</p>
+<p>Pointing <code>hb connect</code> at a repository now also scans source files to infer the
+project's capability surface (<code>tools</code>, <code>memory</code>, <code>inter_agent</code>, <code>reasoning_model</code>)
+and folds it into <code>scope.capabilities</code>. Detected signals are shown for review
+before they're written. The pattern catalog is best-effort and may miss
+less-common frameworks; please report gaps.</p>
+</div>
+<p>| <code>-c, --context</code> | Extra context for the judge |
+| <code>-n, --name</code> | Project name |
+| <code>-y, --yes</code> | Skip confirmations |</p>
 <h3 id="step-3-run-tests">Step 3: Run Tests</h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># Uses project&#39;s saved integration (no --endpoint needed)</span>
 <a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>hb<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--wait

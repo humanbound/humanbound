@@ -67,7 +67,7 @@
   <meta property="og:image:alt" content="Projects represent AI agents under test — each carries scope, capability declarations, configuration, and the history of every experiment that ran against it." />
   <meta name="twitter:image:alt" content="Projects represent AI agents under test — each carries scope, capability declarations, configuration, and the history of every experiment that ran against it." />
   
-  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/management/projects/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Projects","item":"https://docs.humanbound.ai/management/projects/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/management/projects/#article","headline":"Projects","description":"Projects represent AI agents under test \u2014 each carries scope, capability declarations, configuration, and the history of every experiment that ran against it.","url":"https://docs.humanbound.ai/management/projects/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-06-02T10:20:06+03:00","keywords":"projects, hb projects command, AI agent projects, project status, active project, project management, project report"}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/management/projects/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Projects","item":"https://docs.humanbound.ai/management/projects/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/management/projects/#article","headline":"Projects","description":"Projects represent AI agents under test \u2014 each carries scope, capability declarations, configuration, and the history of every experiment that ran against it.","url":"https://docs.humanbound.ai/management/projects/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-08-06T16:02:41+03:00","keywords":"projects, hb projects command, AI agent projects, project status, active project, project management, project report"}]}</script>
   
 
   
@@ -1567,6 +1567,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Update Project">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#-capabilities-flag" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        --capabilities flag
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -2317,7 +2334,24 @@
 <a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
 <a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1"># Update specific project</span>
 <a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>hb<span class="w"> </span>projects<span class="w"> </span>update<span class="w"> </span>&lt;id&gt;<span class="w"> </span>--description<span class="w"> </span><span class="s2">&quot;Updated description&quot;</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="c1"># Set the agent&#39;s capability surface</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>hb<span class="w"> </span>projects<span class="w"> </span>update<span class="w"> </span>--capabilities<span class="w"> </span><span class="nv">tools</span><span class="o">=</span>on,memory<span class="o">=</span>off
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>hb<span class="w"> </span>projects<span class="w"> </span>update<span class="w"> </span>--capabilities<span class="w"> </span><span class="nv">all</span><span class="o">=</span>off,tools<span class="o">=</span>on,reasoning_model<span class="o">=</span>on
 </code></pre></div>
+<h3 id="-capabilities-flag"><code>--capabilities</code> flag</h3>
+<p>Declares which agentic features the project uses, so the platform can target the
+right test categories. Accepts comma-separated <code>key=value</code> pairs.</p>
+<ul>
+<li><strong>Keys:</strong> <code>tools</code>, <code>memory</code>, <code>inter_agent</code>, <code>reasoning_model</code>, plus the shorthand
+  <code>all</code> which sets every key in one step.</li>
+<li><strong>Values:</strong> <code>on</code> / <code>off</code>, <code>true</code> / <code>false</code>, <code>1</code> / <code>0</code>, <code>yes</code> / <code>no</code> (case-insensitive).
+  Bare keys (e.g. <code>tools</code>) imply <code>on</code>.</li>
+<li><strong>Order matters:</strong> pairs apply left-to-right, so <code>all=off,tools=on</code> resets the set
+  and then enables <code>tools</code>.</li>
+</ul>
+<p>Updating capabilities archives the project's existing datasets (so the test coverage
+plan is regenerated). A confirm prompt is shown unless <code>--yes</code> / <code>-y</code> is passed.</p>
 <h2 id="delete-project">Delete Project</h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Delete with confirmation</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>hb<span class="w"> </span>projects<span class="w"> </span>delete<span class="w"> </span>&lt;id&gt;

@@ -67,7 +67,7 @@
   <meta property="og:image:alt" content="Complete hb CLI reference — every command and flag, grouped by workflow — auth, projects, test, redteam, posture, logs, MCP." />
   <meta name="twitter:image:alt" content="Complete hb CLI reference — every command and flag, grouped by workflow — auth, projects, test, redteam, posture, logs, MCP." />
   
-  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/reference/commands/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Commands","item":"https://docs.humanbound.ai/reference/commands/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/reference/commands/#article","headline":"Commands","description":"Complete hb CLI reference \u2014 every command and flag, grouped by workflow \u2014 auth, projects, test, redteam, posture, logs, MCP.","url":"https://docs.humanbound.ai/reference/commands/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-07-20T11:47:21+03:00","keywords":"hb command reference, humanbound CLI reference, hb commands list, humanbound CLI commands, CLI cheatsheet, command index"}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/reference/commands/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Commands","item":"https://docs.humanbound.ai/reference/commands/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/reference/commands/#article","headline":"Commands","description":"Complete hb CLI reference \u2014 every command and flag, grouped by workflow \u2014 auth, projects, test, redteam, posture, logs, MCP.","url":"https://docs.humanbound.ai/reference/commands/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-08-06T16:02:41+03:00","keywords":"hb command reference, humanbound CLI reference, hb commands list, humanbound CLI commands, CLI cheatsheet, command index"}]}</script>
   
 
   
@@ -2382,6 +2382,10 @@
 <td>Connect with deeper testing level (unit/system/acceptance)</td>
 </tr>
 <tr>
+<td><code>hb connect --repo &lt;path&gt;</code> <code>[PREVIEW]</code></td>
+<td>Also infers the capability surface from source patterns</td>
+</tr>
+<tr>
 <td><code>hb connect --no-test</code></td>
 <td>Connect and create project but skip the auto-test step</td>
 </tr>
@@ -2391,7 +2395,7 @@
 </tr>
 <tr>
 <td><code>hb connect --scope ./scope.yaml</code></td>
-<td>Use a pre-made scope file as input; the backend analyses it and proposes additive intents before project creation</td>
+<td>Use a pre-made scope file as input; the backend analyses it and proposes additive intents before project creation. A <code>capabilities:</code> block in the file is applied to the project</td>
 </tr>
 <tr>
 <td><code>hb connect --vendor &lt;id&gt;</code></td>
@@ -2423,7 +2427,7 @@
 </tr>
 <tr>
 <td><code>hb projects update</code></td>
-<td>Update project name or description</td>
+<td>Update project name, description, or capability surface (<code>--capabilities</code>)</td>
 </tr>
 <tr>
 <td><code>hb projects delete &lt;id&gt;</code></td>
