@@ -16,8 +16,8 @@ class TestConfig:
     """Canonical test configuration — identical shape for both runners."""
 
     # Default to None so a caller that doesn't set these defers to the backend's
-    # defaults (the runner omits unset keys from the request). The `hb test`
-    # command always resolves concrete values, so normal usage is unaffected.
+    # defaults (the runner omits unset keys from the request). In local mode
+    # `hb test` fills in concrete fallbacks since there is no backend to defer to.
     test_category: str | None = None
     testing_level: str | None = None  # unit | system | acceptance
     lang: str | None = None

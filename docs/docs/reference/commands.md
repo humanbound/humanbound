@@ -38,9 +38,10 @@ The complete `hb` CLI reference, organised into eight categories: global flags, 
 |---|---|
 | `hb connect` | Connect your agent or scan a cloud platform |
 | `hb connect -l system` | Connect with deeper testing level (unit/system/acceptance) |
+| `hb connect --repo <path>` `[PREVIEW]` | Also infers the capability surface from source patterns |
 | `hb connect --no-test` | Connect and create project but skip the auto-test step |
 | `hb connect --test-category <path>` | Choose which test family the auto-test runs (default: `humanbound/adversarial/owasp_agentic`) |
-| `hb connect --scope ./scope.yaml` | Use a pre-made scope file as input; the backend analyses it and proposes additive intents before project creation |
+| `hb connect --scope ./scope.yaml` | Use a pre-made scope file as input; the backend analyses it and proposes additive intents before project creation. A `capabilities:` block in the file is applied to the project |
 | `hb connect --vendor <id>` | Discover and onboard a hosted-platform agent (currently `openai`); credential from env or a hidden prompt; requires login; mutually exclusive with `--endpoint` |
 | `hb projects list` | List all projects in current org |
 | `hb projects use <id>` | Set active project for subsequent commands |
@@ -48,7 +49,7 @@ The complete `hb` CLI reference, organised into eight categories: global flags, 
 | `hb projects current` | Show active project information |
 | `hb projects status` | Show project activity (running experiments, posture, monitoring) |
 | `hb projects status -w` | Watch project activity, poll every 3 minutes until idle |
-| `hb projects update` | Update project name or description |
+| `hb projects update` | Update project name, description, or capability surface (`--capabilities`) |
 | `hb projects delete <id>` | Delete project and all associated data |
 
 ## Experiments

@@ -1,0 +1,218 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1800 1520" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#546E7A"/>
+    </marker>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1976D2"/>
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2E7D32"/>
+    </marker>
+  </defs>
+
+  <rect width="1800" height="1520" fill="#FAFAFA"/>
+
+  <!-- ===== Title ===== -->
+  <text x="900" y="42" font-size="28" font-weight="700" fill="#212121" text-anchor="middle">Humanbound CLI — Engine Architecture</text>
+  <text x="900" y="68" font-size="14" fill="#616161" text-anchor="middle">humanbound_cli/engine — modules, pipelines, and external boundaries</text>
+
+  <!-- ===== Layer 1: Entry Points ===== -->
+  <rect x="40" y="90" width="1720" height="140" rx="12" fill="#E3F2FD" stroke="#90CAF9"/>
+  <text x="60" y="116" font-size="12" font-weight="700" fill="#1565C0" letter-spacing="2">ENTRY POINTS</text>
+
+  <rect x="220" y="135" width="640" height="80" rx="10" fill="#FFFFFF" stroke="#1976D2" stroke-width="1.5"/>
+  <text x="240" y="160" font-size="14" font-weight="700" fill="#1976D2">CLI Commands</text>
+  <text x="240" y="178" font-size="11" fill="#37474F">humanbound_cli/commands/</text>
+  <text x="240" y="200" font-size="12" fill="#212121">test · redteam · connect · posture · findings · upload_logs · scan · …</text>
+
+  <rect x="940" y="135" width="640" height="80" rx="10" fill="#FFFFFF" stroke="#1976D2" stroke-width="1.5"/>
+  <text x="960" y="160" font-size="14" font-weight="700" fill="#1976D2">MCP Server (FastMCP)</text>
+  <text x="960" y="178" font-size="11" fill="#37474F">humanbound_cli/mcp_server.py</text>
+  <text x="960" y="200" font-size="12" fill="#212121">hb_run_test · hb_get_posture · hb_redteam_* · hb_list_findings · …</text>
+
+  <path d="M 540 215 L 540 250" stroke="#546E7A" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+  <path d="M 1260 215 L 1260 250" stroke="#546E7A" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+
+  <!-- ===== Layer 2: Runner Abstraction ===== -->
+  <rect x="40" y="250" width="1720" height="140" rx="12" fill="#F3E5F5" stroke="#CE93D8"/>
+  <text x="60" y="276" font-size="12" font-weight="700" fill="#6A1B9A" letter-spacing="2">RUNNER ABSTRACTION</text>
+
+  <rect x="500" y="295" width="800" height="80" rx="10" fill="#FFFFFF" stroke="#7B1FA2" stroke-width="1.5"/>
+  <text x="900" y="320" font-size="14" font-weight="700" fill="#7B1FA2" text-anchor="middle">engine/runner.py · get_runner()</text>
+  <text x="900" y="340" font-size="12" fill="#37474F" text-anchor="middle">TestRunner (ABC) — unified interface for all execution modes</text>
+  <text x="900" y="360" font-size="11" fill="#616161" text-anchor="middle">TestConfig · TestStatus · TestResult · Posture · PaginatedLogs</text>
+
+  <path d="M 700 375 L 540 410" stroke="#546E7A" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+  <text x="430" y="402" font-size="11" fill="#7B1FA2" font-style="italic">authenticated</text>
+  <path d="M 1100 375 L 1260 410" stroke="#546E7A" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+  <text x="1290" y="402" font-size="11" fill="#7B1FA2" font-style="italic">--local / unauth</text>
+
+  <!-- ===== Layer 3: Execution ===== -->
+  <rect x="40" y="410" width="1720" height="120" rx="12" fill="#E8F5E9" stroke="#A5D6A7"/>
+  <text x="60" y="436" font-size="12" font-weight="700" fill="#2E7D32" letter-spacing="2">EXECUTION</text>
+
+  <rect x="280" y="450" width="520" height="70" rx="10" fill="#FFFFFF" stroke="#388E3C" stroke-width="1.5"/>
+  <text x="540" y="475" font-size="14" font-weight="700" fill="#388E3C" text-anchor="middle">PlatformTestRunner</text>
+  <text x="540" y="492" font-size="11" fill="#37474F" text-anchor="middle">engine/platform_runner.py</text>
+  <text x="540" y="510" font-size="12" fill="#212121" text-anchor="middle">thin adapter → HumanboundClient (HTTP)</text>
+
+  <rect x="1000" y="450" width="520" height="70" rx="10" fill="#FFFFFF" stroke="#388E3C" stroke-width="1.5"/>
+  <text x="1260" y="475" font-size="14" font-weight="700" fill="#388E3C" text-anchor="middle">LocalTestRunner</text>
+  <text x="1260" y="492" font-size="11" fill="#37474F" text-anchor="middle">engine/local_runner.py</text>
+  <text x="1260" y="510" font-size="12" fill="#212121" text-anchor="middle">spawns _LocalRun background thread</text>
+
+  <!-- Platform path: route along left gutter, around engine internals, into Backend API -->
+  <path d="M 540 520 L 540 545 L 110 545 L 110 1060 L 200 1085" stroke="#1976D2" stroke-width="2.2" fill="none" marker-end="url(#arrow-blue)"/>
+  <text x="60" y="800" font-size="11" font-weight="700" fill="#1976D2" letter-spacing="1" transform="rotate(-90 60 800)">PLATFORM PATH (bypasses engine internals)</text>
+
+  <!-- Local path: into engine internals layer -->
+  <path d="M 1260 520 L 1260 555" stroke="#2E7D32" stroke-width="2.2" fill="none" marker-end="url(#arrow-green)"/>
+
+  <!-- ===== Layer 4: Engine Internals ===== -->
+  <rect x="220" y="550" width="1540" height="450" rx="12" fill="#FFF8E1" stroke="#FFD54F"/>
+  <text x="240" y="576" font-size="12" font-weight="700" fill="#E65100" letter-spacing="2">ENGINE INTERNALS</text>
+  <text x="380" y="576" font-size="11" fill="#8D6E63" font-style="italic">— in-process execution path used by LocalTestRunner</text>
+
+  <!-- Top row: scope / compliance / capabilities / schemas -->
+  <rect x="240" y="600" width="355" height="80" rx="8" fill="#FFFFFF" stroke="#F57C00"/>
+  <text x="260" y="624" font-size="14" font-weight="700" fill="#F57C00">scope.py</text>
+  <text x="260" y="642" font-size="11" fill="#37474F">resolve() — file → repo → prompt → LLM</text>
+  <text x="260" y="662" font-size="11" fill="#212121">overall_business_scope · permitted · restricted</text>
+
+  <rect x="610" y="600" width="355" height="80" rx="8" fill="#FFFFFF" stroke="#F57C00"/>
+  <text x="630" y="624" font-size="14" font-weight="700" fill="#F57C00">compliance.py</text>
+  <text x="630" y="642" font-size="11" fill="#37474F">detect_domain() — banking · health · …</text>
+  <text x="630" y="662" font-size="11" fill="#212121">overlays restricted intents + citations</text>
+
+  <rect x="980" y="600" width="355" height="80" rx="8" fill="#FFFFFF" stroke="#F57C00"/>
+  <text x="1000" y="624" font-size="14" font-weight="700" fill="#F57C00">capabilities_writer.py</text>
+  <text x="1000" y="642" font-size="11" fill="#37474F">extract agent tools / capabilities</text>
+  <text x="1000" y="662" font-size="11" fill="#212121">enriches scope and templates</text>
+
+  <rect x="1350" y="600" width="355" height="80" rx="8" fill="#FFFFFF" stroke="#F57C00"/>
+  <text x="1370" y="624" font-size="14" font-weight="700" fill="#F57C00">schemas.py</text>
+  <text x="1370" y="642" font-size="11" fill="#37474F">Turn · LogEntry · LogsAnonymous</text>
+  <text x="1370" y="662" font-size="11" fill="#212121">internal → public via to_public()</text>
+
+  <!-- Orchestrators block (left side, spans cols 1+2) -->
+  <rect x="240" y="700" width="725" height="195" rx="10" fill="#FFFFFF" stroke="#F57C00" stroke-width="1.6"/>
+  <text x="260" y="724" font-size="14" font-weight="700" fill="#F57C00">orchestrators/  ·  base.py</text>
+  <text x="260" y="742" font-size="11" fill="#37474F">OrchestratorModule (ABC)</text>
+  <text x="260" y="762" font-size="12" fill="#212121">orchestrator_generate() · orchestrator_run() · compute_quota()</text>
+
+  <rect x="260" y="780" width="220" height="100" rx="6" fill="#FFF3E0" stroke="#FFB74D"/>
+  <text x="370" y="800" font-size="12" font-weight="700" fill="#E65100" text-anchor="middle">owasp_agentic/</text>
+  <text x="370" y="820" font-size="10" fill="#37474F" text-anchor="middle">multi-turn LLM01 … LLM10</text>
+  <text x="370" y="836" font-size="10" fill="#37474F" text-anchor="middle">attack arcs (crescendo, …)</text>
+  <text x="370" y="864" font-size="10" fill="#616161" text-anchor="middle">config · generator · judge</text>
+
+  <rect x="492" y="780" width="220" height="100" rx="6" fill="#FFF3E0" stroke="#FFB74D"/>
+  <text x="602" y="800" font-size="12" font-weight="700" fill="#E65100" text-anchor="middle">owasp_single_turn/</text>
+  <text x="602" y="820" font-size="10" fill="#37474F" text-anchor="middle">one-shot prompt attacks</text>
+  <text x="602" y="864" font-size="10" fill="#616161" text-anchor="middle">config · generator · judge</text>
+
+  <rect x="724" y="780" width="220" height="100" rx="6" fill="#FFF3E0" stroke="#FFB74D"/>
+  <text x="834" y="800" font-size="12" font-weight="700" fill="#E65100" text-anchor="middle">behavioral_qa/</text>
+  <text x="834" y="820" font-size="10" fill="#37474F" text-anchor="middle">scope / intent compliance</text>
+  <text x="834" y="864" font-size="10" fill="#616161" text-anchor="middle">config · generator · judge</text>
+
+  <!-- Right column: bot / callbacks / llm / presenter -->
+  <rect x="980" y="700" width="355" height="90" rx="8" fill="#FFFFFF" stroke="#F57C00"/>
+  <text x="1000" y="724" font-size="14" font-weight="700" fill="#F57C00">bot.py</text>
+  <text x="1000" y="742" font-size="11" fill="#37474F">Bot · ResponseExtractor</text>
+  <text x="1000" y="762" font-size="11" fill="#212121">HTTP / WebSocket to target agent</text>
+  <text x="1000" y="780" font-size="11" fill="#616161">collects per-turn telemetry</text>
+
+  <rect x="1350" y="700" width="355" height="90" rx="8" fill="#FFFFFF" stroke="#F57C00"/>
+  <text x="1370" y="724" font-size="14" font-weight="700" fill="#F57C00">callbacks.py</text>
+  <text x="1370" y="742" font-size="11" fill="#37474F">EngineCallbacks — decouples engine I/O</text>
+  <text x="1370" y="762" font-size="11" fill="#212121">on_logs · is_terminated · on_turn · on_verdict</text>
+  <text x="1370" y="780" font-size="11" fill="#616161">get_strategies() — FSLF (platform only)</text>
+
+  <rect x="980" y="805" width="355" height="90" rx="8" fill="#FFFFFF" stroke="#F57C00"/>
+  <text x="1000" y="829" font-size="14" font-weight="700" fill="#F57C00">llm/  ·  get_llm_pinger()</text>
+  <text x="1000" y="847" font-size="11" fill="#37474F">openai · claude · gemini · grok · azure · ollama</text>
+  <text x="1000" y="867" font-size="11" fill="#212121">unified ping(system, user, max_tokens, temp)</text>
+  <text x="1000" y="885" font-size="11" fill="#616161">used for attack generation + judging</text>
+
+  <rect x="1350" y="805" width="355" height="90" rx="8" fill="#FFFFFF" stroke="#F57C00"/>
+  <text x="1370" y="829" font-size="14" font-weight="700" fill="#F57C00">presenter.py</text>
+  <text x="1370" y="847" font-size="11" fill="#37474F">stats · insights · posture (ASR-first)</text>
+  <text x="1370" y="867" font-size="11" fill="#212121">score → grade (A–F)</text>
+  <text x="1370" y="885" font-size="11" fill="#616161">post-processes logs.jsonl</text>
+
+  <!-- Engine internal data flow (subtle arrows) -->
+  <path d="M 420 680 L 420 700" stroke="#90A4AE" stroke-width="1.4" fill="none" marker-end="url(#arrow)"/>
+  <path d="M 790 680 L 790 700" stroke="#90A4AE" stroke-width="1.4" fill="none" marker-end="url(#arrow)"/>
+  <text x="500" y="697" font-size="9" fill="#8D6E63" font-style="italic">scope feeds orchestrators</text>
+
+  <path d="M 965 745 L 980 745" stroke="#90A4AE" stroke-width="1.4" fill="none" marker-end="url(#arrow)"/>
+  <path d="M 965 850 L 980 850" stroke="#90A4AE" stroke-width="1.4" fill="none" marker-end="url(#arrow)"/>
+  <text x="950" y="900" font-size="9" fill="#8D6E63" font-style="italic">orchestrators ↔ bot · llm · callbacks · presenter</text>
+
+  <!-- Bottom-of-engine note -->
+  <text x="990" y="940" font-size="11" fill="#8D6E63" font-style="italic" text-anchor="middle">
+    logs streamed via callbacks → presenter → meta.json + logs.jsonl
+  </text>
+
+  <!-- Engine → External arrows -->
+  <path d="M 1160 895 L 1160 1060" stroke="#2E7D32" stroke-width="2" fill="none" marker-end="url(#arrow-green)" stroke-dasharray="4,3"/>
+  <text x="1170" y="985" font-size="10" fill="#2E7D32">LLM calls</text>
+
+  <path d="M 1160 790 L 800 1060" stroke="#546E7A" stroke-width="1.6" fill="none" marker-end="url(#arrow)" stroke-dasharray="4,3"/>
+  <text x="980" y="980" font-size="10" fill="#546E7A">target agent</text>
+
+  <path d="M 1530 895 L 1575 1060" stroke="#2E7D32" stroke-width="2" fill="none" marker-end="url(#arrow-green)" stroke-dasharray="4,3"/>
+  <text x="1545" y="985" font-size="10" fill="#2E7D32">results to disk</text>
+
+  <!-- ===== Layer 5: External Boundaries ===== -->
+  <rect x="40" y="1020" width="1720" height="160" rx="12" fill="#ECEFF1" stroke="#B0BEC5"/>
+  <text x="60" y="1046" font-size="12" font-weight="700" fill="#37474F" letter-spacing="2">EXTERNAL BOUNDARIES</text>
+
+  <rect x="80" y="1065" width="500" height="100" rx="10" fill="#FFFFFF" stroke="#455A64"/>
+  <text x="100" y="1090" font-size="14" font-weight="700" fill="#455A64">Humanbound Backend API  (HTTPS)</text>
+  <text x="100" y="1108" font-size="11" fill="#37474F">via humanbound_cli/client.py · HumanboundClient</text>
+  <text x="100" y="1128" font-size="11" fill="#212121">/experiments · /scan · /posture · /findings · /analyse/persist</text>
+  <text x="100" y="1148" font-size="11" fill="#616161">Auth0 OAuth2 (PKCE) · Bearer token from ~/.humanbound/credentials.json</text>
+
+  <rect x="610" y="1065" width="380" height="100" rx="10" fill="#FFFFFF" stroke="#455A64"/>
+  <text x="630" y="1090" font-size="14" font-weight="700" fill="#455A64">Target Agent</text>
+  <text x="630" y="1108" font-size="11" fill="#37474F">HTTP / WebSocket</text>
+  <text x="630" y="1128" font-size="11" fill="#212121">configurable endpoint + ResponseExtractor</text>
+  <text x="630" y="1148" font-size="11" fill="#616161">conversation telemetry collected per turn</text>
+
+  <rect x="1020" y="1065" width="380" height="100" rx="10" fill="#FFFFFF" stroke="#455A64"/>
+  <text x="1040" y="1090" font-size="14" font-weight="700" fill="#455A64">LLM Provider APIs</text>
+  <text x="1040" y="1108" font-size="11" fill="#37474F">attack generation + judging</text>
+  <text x="1040" y="1128" font-size="11" fill="#212121">OpenAI · Anthropic · Gemini · xAI · Azure · Ollama</text>
+  <text x="1040" y="1148" font-size="11" fill="#616161">provider/model configured via ~/.humanbound/config.yaml</text>
+
+  <rect x="1430" y="1065" width="290" height="100" rx="10" fill="#FFFFFF" stroke="#455A64"/>
+  <text x="1450" y="1090" font-size="14" font-weight="700" fill="#455A64">Local Disk</text>
+  <text x="1450" y="1108" font-size="11" fill="#37474F">.humanbound/results/exp-{ts}/</text>
+  <text x="1450" y="1128" font-size="11" fill="#212121">meta.json · logs.jsonl</text>
+  <text x="1450" y="1148" font-size="11" fill="#616161">~/.humanbound/credentials.json · config.yaml</text>
+
+  <!-- ===== Pipelines ===== -->
+  <rect x="40" y="1200" width="1720" height="300" rx="12" fill="#FFFFFF" stroke="#CFD8DC"/>
+  <text x="60" y="1226" font-size="12" font-weight="700" fill="#37474F" letter-spacing="2">PIPELINES</text>
+
+  <text x="80" y="1262" font-size="14" font-weight="700" fill="#1976D2">①  PLATFORM TEST</text>
+  <text x="290" y="1262" font-size="12" fill="#212121">hb test  →  PlatformRunner.start  →  POST /experiments  →  poll get_status  →  get_result  →  render insights / posture</text>
+
+  <text x="80" y="1300" font-size="14" font-weight="700" fill="#2E7D32">②  LOCAL TEST</text>
+  <text x="290" y="1300" font-size="12" fill="#212121">hb test --local  →  LocalRunner.start  →  _LocalRun thread:</text>
+  <text x="320" y="1318" font-size="12" fill="#37474F">resolve provider  →  scope.resolve  →  load orchestrator module  →  generate attack templates</text>
+  <text x="320" y="1336" font-size="12" fill="#37474F">→  Conversationer ↔ Bot ↔ LLM (multi-turn)  →  Judge  →  presenter  →  .humanbound/results/</text>
+
+  <text x="80" y="1374" font-size="14" font-weight="700" fill="#E65100">③  COLLAB RED-TEAM</text>
+  <text x="290" y="1374" font-size="12" fill="#212121">hb redteam analyze  →  start  →  direct  →  judge  →  complete    (interactive checkpoints; backend-driven)</text>
+  <text x="320" y="1392" font-size="12" fill="#37474F">arc-aware coordination on backend (crescendo · frame_establishment · direct_assault); FSLF strategies persisted between sessions</text>
+
+  <text x="80" y="1430" font-size="14" font-weight="700" fill="#6A1B9A">④  MCP TOOLS</text>
+  <text x="290" y="1430" font-size="12" fill="#212121">Claude Code / IDE  →  FastMCP tool  →  HumanboundClient  →  Backend API     (stdio JSON-RPC ; logs to stderr)</text>
+
+  <text x="80" y="1468" font-size="14" font-weight="700" fill="#C62828">⑤  CONNECT / ONBOARD</text>
+  <text x="290" y="1468" font-size="12" fill="#212121">hb connect --endpoint ./config.json  →  POST /scan  →  create project  →  auto-start first owasp_agentic test  →  experiment_id</text>
+</svg>

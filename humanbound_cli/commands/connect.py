@@ -362,8 +362,9 @@ def _derive_agent_name(endpoint: str) -> str:
     "--level",
     "-l",
     type=click.Choice(["unit", "system", "acceptance"]),
-    default="unit",
-    help="Testing depth: unit (quick), system (deep), acceptance (full)",
+    default=None,
+    help="Testing depth: unit (quick), system (deep), acceptance (full). "
+    "If omitted, the backend applies its default.",
 )
 @click.option("--yes", "-y", is_flag=True, help="Skip confirmations")
 @click.option("--timeout", "-t", type=int, default=SCAN_TIMEOUT, help="Request timeout in seconds")
@@ -715,6 +716,35 @@ def _connect_agent_platform(
 
         _display_scope(scope)
 
+        # ---- capability scan (additive; per spec §6.1) ----
+        if repo:
+            from ..extractors.capabilities import scan_capabilities
+            from ..extractors.capabilities.display import (
+                print_detected_capabilities,
+                prompt_empty_scan_choice,
+            )
+
+            scan_result = scan_capabilities(Path(repo))
+            print_detected_capabilities(scan_result, console)
+
+            if any(scan_result.capabilities.values()):
+                scope["capabilities"] = scan_result.capabilities
+            else:
+                if yes:
+                    pass
+                else:
+                    explicit = prompt_empty_scan_choice(console=console)
+                    if explicit is not None:
+                        scope["capabilities"] = explicit
+
+        # ---- capabilities from the --scope file (explicit beats inferred) ----
+        if user_scope and user_scope.get("capabilities"):
+            from ..extractors.capabilities.display import print_declared_capabilities
+
+            file_caps = user_scope["capabilities"]
+            scope["capabilities"] = {**scope.get("capabilities", {}), **file_caps}
+            print_declared_capabilities(file_caps, console, Path(scope_path).name)
+
         sources_meta = response.get("sources_metadata", {})
         if sources_meta:
             failed = [k for k, v in sources_meta.items() if v.get("status") == "failed"]
@@ -723,6 +753,25 @@ def _connect_agent_platform(
                 for k in failed:
                     err = sources_meta[k].get("error", "unknown")
                     console.print(f"  [dim]{k}: {err}[/dim]")
+
+        # -- If an active project already exists AND a repo scan was run,
+        #    route updates through write_capabilities instead of creating a new project --
+        existing_project_id = getattr(client, "project_id", None)
+        if existing_project_id and repo:
+            if "capabilities" in scope:
+                from ..engine.capabilities_writer import write_capabilities
+
+                console.print()
+                write_capabilities(
+                    client,
+                    existing_project_id,
+                    scope["capabilities"],
+                    yes=yes,
+                    console=console,
+                )
+            else:
+                console.print("[dim]No capabilities to update for existing project.[/dim]")
+            return
 
         # -- Create project (auto-confirm) -------------------------------------
         if not yes:
@@ -891,6 +940,28 @@ def _connect_agent_local(endpoint, name, prompt, repo, openapi, context, level, 
     console.print()
     _display_scope(scope)
 
+    # ---- capability scan (additive; per spec §6.1) ----
+    if repo:
+        from ..extractors.capabilities import scan_capabilities
+        from ..extractors.capabilities.display import (
+            print_detected_capabilities,
+            prompt_empty_scan_choice,
+        )
+
+        scan_result = scan_capabilities(Path(repo))
+        print_detected_capabilities(scan_result, console)
+
+        if any(scan_result.capabilities.values()):
+            scope["capabilities"] = scan_result.capabilities
+        else:
+            if yes:
+                # --yes accepts the default [1]: leave capabilities unset
+                pass
+            else:
+                explicit = prompt_empty_scan_choice(console=console)
+                if explicit is not None:
+                    scope["capabilities"] = explicit
+
     output_path = Path.cwd() / "scope.yaml"
     try:
         _write_scope_yaml(scope, output_path)
@@ -961,12 +1032,34 @@ def _load_scope_file(path: str) -> dict:
     if not isinstance(more_info, str):
         raise ValueError("--scope: 'more_info' must be a string when present")
 
-    return {
+    result = {
         "business_scope": business_scope,
         "permitted": permitted,
         "restricted": restricted,
         "more_info": more_info,
     }
+
+    capabilities = data.get("capabilities")
+    if capabilities is not None:
+        from ..extractors.capabilities import CAPABILITY_KEYS
+
+        if not isinstance(capabilities, dict):
+            raise ValueError("--scope: 'capabilities' must be a mapping when present")
+        unknown = sorted(set(capabilities) - set(CAPABILITY_KEYS))
+        if unknown:
+            raise ValueError(
+                f"--scope: unknown capability key(s): {', '.join(unknown)}. "
+                f"Valid: {', '.join(CAPABILITY_KEYS)}"
+            )
+        non_bool = sorted(k for k, v in capabilities.items() if not isinstance(v, bool))
+        if non_bool:
+            raise ValueError(
+                f"--scope: capability value(s) for {', '.join(non_bool)} must be "
+                "booleans (true/false)"
+            )
+        result["capabilities"] = dict(capabilities)
+
+    return result
 
 
 def _serialize_scope_to_text(scope: dict) -> str:
@@ -1075,6 +1168,8 @@ def _write_scope_yaml(scope: dict, path: Path):
         "restricted": intents.get("restricted", []),
         "more_info": scope.get("more_info", ""),
     }
+    if "capabilities" in scope:
+        document["capabilities"] = scope["capabilities"]
     path.write_text(yaml.safe_dump(document, sort_keys=False, default_flow_style=False))
 
 
@@ -1268,8 +1363,8 @@ def _auto_test(
     project_id,
     default_integration,
     context=None,
-    level="unit",
-    test_category=DEFAULT_TEST_CATEGORY,
+    level=None,
+    test_category=None,
 ):
     """Run first test automatically and show results inline."""
     if not default_integration:
@@ -1305,16 +1400,20 @@ def _auto_test(
                 raise SystemExit(1)
             configuration["context"] = ctx_value
 
-        # Create experiment with auto_start
+        # Create experiment with auto_start. test_category and testing_level
+        # are only sent when the caller specified them; otherwise the backend
+        # applies its defaults.
         experiment_data = {
             "name": f"connect-{time.strftime('%Y%m%d-%H%M%S')}",
             "description": "Initial assessment from hb connect",
-            "test_category": test_category,
-            "testing_level": level,
             "provider_id": provider_id,
             "auto_start": True,
             "configuration": configuration,
         }
+        if test_category:
+            experiment_data["test_category"] = test_category
+        if level:
+            experiment_data["testing_level"] = level
 
         with console.status("[dim]Creating experiment...[/dim]"):
             response = client.post("experiments", data=experiment_data, include_project=True)
