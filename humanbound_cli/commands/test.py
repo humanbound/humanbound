@@ -372,7 +372,7 @@ def test_command(
         test_category = category
     # --quick/--deep/--full select a testing level (first match wins), applied
     # only when the user didn't set --testing-level explicitly.
-    if quick:
+    if quick and testing_level is None:
         testing_level = "unit"  # quick uses unit depth but fewer categories
     elif deep and testing_level is None:
         testing_level = "system"
