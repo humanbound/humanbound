@@ -208,7 +208,8 @@ def from_probe(integration, llm_pinger):
 
                 response, _, _ = asyncio.run(bot.ping(payload, probe))
                 responses.append(f"Q: {probe}\nA: {response}")
-            except Exception:
+            except Exception as e:
+                logger.debug(f"Failed to probe bot with '{probe}': {e}")
                 continue
 
         if not responses:
