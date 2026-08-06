@@ -8,7 +8,10 @@ from humanbound_cli.extractors.capabilities import (
     CapabilityEvidence,
     CapabilityScanResult,
 )
-from humanbound_cli.extractors.capabilities.display import print_detected_capabilities
+from humanbound_cli.extractors.capabilities.display import (
+    print_declared_capabilities,
+    print_detected_capabilities,
+)
 
 
 def test_display_shows_check_for_true_and_cross_for_false():
@@ -29,6 +32,17 @@ def test_display_shows_check_for_true_and_cross_for_false():
     assert "✗ memory" in out
     assert "@mcp.tool decorator" in out
     assert "agent.py:1" in out
+
+
+def test_declared_display_shows_check_cross_and_source():
+    console = Console(record=True, width=120)
+    print_declared_capabilities({"tools": True, "memory": False}, console, "scope.yml")
+    out = console.export_text()
+    assert "✓ tools" in out
+    assert "✗ memory" in out
+    assert "scope.yml" in out
+    # Undeclared keys are omitted, not shown as off.
+    assert "inter_agent" not in out
 
 
 def test_display_summarises_extra_evidence_with_plus_n_more():

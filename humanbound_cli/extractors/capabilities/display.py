@@ -16,12 +16,14 @@ _MAX_EVIDENCE_PER_CAPABILITY = 3
 
 
 def print_detected_capabilities(result: CapabilityScanResult, console) -> None:
-    """Print the capability detection block to the console."""
+    """Print the capability detection panel to the console."""
+    from rich.panel import Panel
+
     by_cap = defaultdict(list)
     for ev in result.evidence:
         by_cap[ev.capability].append(ev)
 
-    console.print("\n[bold]Detected capabilities:[/bold]")
+    parts = []
     for cap in CAPABILITY_KEYS:
         present = result.capabilities.get(cap, False)
         marker = "[green]✓[/green]" if present else "[dim]✗[/dim]"
@@ -29,18 +31,42 @@ def print_detected_capabilities(result: CapabilityScanResult, console) -> None:
         hits = by_cap.get(cap, [])
 
         if not hits:
-            console.print(f"  {label} [dim](no signals)[/dim]")
+            parts.append(f"{label} [dim](no signals)[/dim]")
             continue
 
         for i, ev in enumerate(hits[:_MAX_EVIDENCE_PER_CAPABILITY]):
-            prefix = label if i == 0 else " " * len(f"  ✓ {cap:<16}")
-            console.print(f"  {prefix} [dim]←[/dim] {ev.signal} [dim]at {ev.file}:{ev.line}[/dim]")
+            prefix = label if i == 0 else " " * len(f"✓ {cap:<16}")
+            parts.append(f"{prefix} [dim]←[/dim] {ev.signal} [dim]at {ev.file}:{ev.line}[/dim]")
 
         extra = len(hits) - _MAX_EVIDENCE_PER_CAPABILITY
         if extra > 0:
-            indent = " " * len(f"  ✓ {cap:<16}")
-            console.print(f"  {indent}    [dim](+{extra} more)[/dim]")
-    console.print("")
+            indent = " " * len(f"✓ {cap:<16}")
+            parts.append(f"{indent}   [dim](+{extra} more)[/dim]")
+
+    console.print(Panel("\n".join(parts), title="Detected capabilities", border_style="blue"))
+
+
+def print_declared_capabilities(capabilities: dict[str, bool], console, source: str) -> None:
+    """Print explicitly declared capability values in the detected-panel style.
+
+    Only keys present in `capabilities` are shown — a declaration may be partial.
+    """
+    from rich.panel import Panel
+
+    parts = []
+    for cap in CAPABILITY_KEYS:
+        if cap not in capabilities:
+            continue
+        marker = "[green]✓[/green]" if capabilities[cap] else "[dim]✗[/dim]"
+        parts.append(f"{marker} {cap}")
+
+    console.print(
+        Panel(
+            "\n".join(parts),
+            title=f"Capabilities (from {source})",
+            border_style="blue",
+        )
+    )
 
 
 def prompt_empty_scan_choice(

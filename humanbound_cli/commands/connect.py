@@ -739,12 +739,11 @@ def _connect_agent_platform(
 
         # ---- capabilities from the --scope file (explicit beats inferred) ----
         if user_scope and user_scope.get("capabilities"):
+            from ..extractors.capabilities.display import print_declared_capabilities
+
             file_caps = user_scope["capabilities"]
             scope["capabilities"] = {**scope.get("capabilities", {}), **file_caps}
-            rendered = ", ".join(
-                f"{key}={'on' if value else 'off'}" for key, value in sorted(file_caps.items())
-            )
-            console.print(f"  [green]✓[/green] Capabilities from scope file: {rendered}")
+            print_declared_capabilities(file_caps, console, Path(scope_path).name)
 
         sources_meta = response.get("sources_metadata", {})
         if sources_meta:
