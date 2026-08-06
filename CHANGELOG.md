@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`hb connect --repo` capability scan** — when scanning an agent
   repository, the CLI now infers the same capability surface from
   source-code patterns and offers to write it to the project scope.
+- **`hb connect --scope` honours a `capabilities:` block.** A scope file
+  may declare the capability surface explicitly; it is validated and
+  written to the created project. When combined with `--repo`, explicit
+  file values win over scanned ones per key.
 
 ### Changed
 - **`hb test --test-category`, `--testing-level`, and `--lang` are now

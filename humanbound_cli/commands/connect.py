@@ -737,6 +737,15 @@ def _connect_agent_platform(
                     if explicit is not None:
                         scope["capabilities"] = explicit
 
+        # ---- capabilities from the --scope file (explicit beats inferred) ----
+        if user_scope and user_scope.get("capabilities"):
+            file_caps = user_scope["capabilities"]
+            scope["capabilities"] = {**scope.get("capabilities", {}), **file_caps}
+            rendered = ", ".join(
+                f"{key}={'on' if value else 'off'}" for key, value in sorted(file_caps.items())
+            )
+            console.print(f"  [green]✓[/green] Capabilities from scope file: {rendered}")
+
         sources_meta = response.get("sources_metadata", {})
         if sources_meta:
             failed = [k for k, v in sources_meta.items() if v.get("status") == "failed"]
@@ -1024,12 +1033,34 @@ def _load_scope_file(path: str) -> dict:
     if not isinstance(more_info, str):
         raise ValueError("--scope: 'more_info' must be a string when present")
 
-    return {
+    result = {
         "business_scope": business_scope,
         "permitted": permitted,
         "restricted": restricted,
         "more_info": more_info,
     }
+
+    capabilities = data.get("capabilities")
+    if capabilities is not None:
+        from ..extractors.capabilities import CAPABILITY_KEYS
+
+        if not isinstance(capabilities, dict):
+            raise ValueError("--scope: 'capabilities' must be a mapping when present")
+        unknown = sorted(set(capabilities) - set(CAPABILITY_KEYS))
+        if unknown:
+            raise ValueError(
+                f"--scope: unknown capability key(s): {', '.join(unknown)}. "
+                f"Valid: {', '.join(CAPABILITY_KEYS)}"
+            )
+        non_bool = sorted(k for k, v in capabilities.items() if not isinstance(v, bool))
+        if non_bool:
+            raise ValueError(
+                f"--scope: capability value(s) for {', '.join(non_bool)} must be "
+                "booleans (true/false)"
+            )
+        result["capabilities"] = dict(capabilities)
+
+    return result
 
 
 def _serialize_scope_to_text(scope: dict) -> str:
