@@ -110,13 +110,22 @@ def from_scope_file(path):
         data = json.loads(content)
 
     # Normalize to expected shape
+    if not isinstance(data, dict):
+        return {
+            "overall_business_scope": "",
+            "intents": {"permitted": [], "restricted": []},
+            "more_info": "",
+        }
+    intents_data = data.get("intents")
+    if not isinstance(intents_data, dict):
+        intents_data = {}
     return {
         "overall_business_scope": data.get(
             "business_scope", data.get("overall_business_scope", "")
         ),
         "intents": {
-            "permitted": data.get("permitted", data.get("intents", {}).get("permitted", [])),
-            "restricted": data.get("restricted", data.get("intents", {}).get("restricted", [])),
+            "permitted": data.get("permitted", intents_data.get("permitted", [])),
+            "restricted": data.get("restricted", intents_data.get("restricted", [])),
         },
         "more_info": data.get("more_info", data.get("risk_context", "")),
     }
