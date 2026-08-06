@@ -6,7 +6,11 @@ This is a thin adapter. No new logic — just translates between the TestRunner
 canonical shapes and the existing API responses. The platform backend is unchanged.
 """
 
+import logging
+
 from .runner import PaginatedLogs, Posture, TestConfig, TestResult, TestRunner, TestStatus
+
+logger = logging.getLogger("humanbound.engine.platform_runner")
 
 
 class PlatformTestRunner(TestRunner):
@@ -56,7 +60,8 @@ class PlatformTestRunner(TestRunner):
             exp = self.client.get_experiment(experiment_id)
             stats = exp.get("results", {}).get("stats", {})
             log_count = stats.get("total", 0)
-        except Exception:
+        except Exception as e:
+            logger.debug(f"Failed to fetch experiment stats for {experiment_id}: {e}")
             log_count = 0
 
         return TestStatus(
@@ -140,8 +145,8 @@ class PlatformTestRunner(TestRunner):
                 prev = data_points[-2]
                 posture.previous_grade = prev.get("grade")
                 posture.previous_score = prev.get("score")
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Failed to fetch posture trends for project {project_id}: {e}")
 
         return posture
 
