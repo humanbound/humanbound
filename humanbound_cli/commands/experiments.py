@@ -2,6 +2,7 @@
 # Copyright (c) 2024-2026 Humanbound
 """Experiment commands."""
 
+import logging
 import time
 
 import click
@@ -16,6 +17,7 @@ from ..client import HumanboundClient
 from ..exceptions import APIError, NotAuthenticatedError
 
 console = Console()
+logger = logging.getLogger("humanbound.commands.experiments")
 
 
 @click.group("experiments", invoke_without_command=True)
@@ -387,8 +389,9 @@ def _show_failure_details(client: HumanboundClient, experiment_id: str):
                 explanation = insight.get("explanation", "")
                 if explanation:
                     console.print(f"  {explanation}")
-    except Exception:
-        pass  # Don't fail the status display if we can't fetch details
+    except Exception as e:
+        logger.debug(f"Failed to fetch experiment details: {e}")
+        # Don't fail the status display if we can't fetch details
 
 
 @experiments_group.command("wait")

@@ -3,6 +3,7 @@
 """Test command for running security experiments."""
 
 import json
+import logging
 import time
 from pathlib import Path
 
@@ -19,6 +20,7 @@ from ..engine.schemas import severity_to_label
 from ..exceptions import APIError, NotAuthenticatedError
 
 console = Console()
+logger = logging.getLogger("humanbound.commands.test")
 
 # Process exit codes — part of the CI contract, documented in `hb test --help`.
 # The 1 vs 2 split follows the grep/pytest convention: "the scan ran and found
@@ -389,8 +391,9 @@ def test_command(
     # --- Runner selection (login + project is the switch) ---
     try:
         runner = get_runner(force_local=local)
-    except Exception:
+    except Exception as e:
         # Fallback: try platform if get_runner fails
+        logger.debug(f"Failed to get local runner, trying platform: {e}")
         runner = None
 
     is_platform = isinstance(runner, PlatformTestRunner)
@@ -484,7 +487,8 @@ def test_command(
                 project = client.get(f"projects/{client.project_id}", include_project=True)
                 default_integ = project.get("default_integration") or {}
                 has_telemetry = bool(default_integ.get("telemetry"))
-            except Exception:
+            except Exception as e:
+                logger.debug(f"Failed to check telemetry status: {e}")
                 has_telemetry = False
         else:
             has_telemetry = False
@@ -597,7 +601,8 @@ def test_command(
                 _findings_seen = int(posture.finding_count)
             else:
                 _findings_seen = len(result.insights or [])
-        except Exception:
+        except Exception as e:
+            logger.debug(f"Failed to count findings: {e}")
             _findings_seen = 0
 
         # Display results (same rendering, canonical shapes)
