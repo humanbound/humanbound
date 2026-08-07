@@ -50,7 +50,7 @@ def _read_state() -> dict:
 
 def _write_state(state: dict) -> None:
     """Persist the state dict atomically with owner-only (0600) permissions."""
-    config.write_secure_file(_state_file(), json.dumps(state) + "\n")
+    config.write_secure_config_file(_state_file(), json.dumps(state) + "\n")
 
 
 def _is_editable_install() -> bool:

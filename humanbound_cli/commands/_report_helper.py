@@ -7,6 +7,8 @@ from pathlib import Path
 
 from rich.console import Console
 
+from ..config import write_secure_file
+
 console = Console()
 
 
@@ -60,7 +62,7 @@ def download_and_open(
         html = json.dumps(response, indent=2, default=str)
 
     filepath = Path(output or default_filename)
-    filepath.write_text(html)
+    write_secure_file(filepath, html)
     console.print(f"[green]Report saved:[/green] {filepath}")
 
     if not no_open:
