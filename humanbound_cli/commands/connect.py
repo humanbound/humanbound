@@ -3,6 +3,7 @@
 """Connect command — unified entry point for agent and platform onboarding."""
 
 import json
+import logging
 import random
 import threading
 import time
@@ -19,6 +20,7 @@ from ..exceptions import APIError, NotAuthenticatedError
 from .test import _load_integration, _resolve_context
 
 console = Console()
+logger = logging.getLogger("humanbound.commands.connect")
 
 SCAN_TIMEOUT = 180
 DEFAULT_TEST_CATEGORY = "humanbound/adversarial/owasp_agentic"
@@ -337,8 +339,8 @@ def _derive_agent_name(endpoint: str) -> str:
                 # Extract first subdomain segment as agent name
                 agent = hostname.split(".")[0]
                 return f"{agent}.{suffix}"
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"Failed to extract agent name from endpoint: {e}")
     return f"agent.{suffix}"
 
 
