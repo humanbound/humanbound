@@ -4,9 +4,12 @@
 
 import fnmatch
 import json
+import logging
 import re
 from pathlib import Path
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 
 class RepoScanner:
@@ -176,8 +179,8 @@ class RepoScanner:
             elif suffix in (".yaml", ".yml"):
                 tools = self._extract_tools_from_yaml(content)
 
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Failed to extract tools from {tool_file.relative_to(self.repo_path)}: {e}")
 
         return tools
 
@@ -254,37 +257,33 @@ class RepoScanner:
         """
         tools = []
 
-        try:
-            data = json.loads(content)
+        data = json.loads(content)
 
-            # Handle array of tools
-            if isinstance(data, list):
-                for item in data:
-                    if isinstance(item, dict) and "name" in item:
-                        tools.append(
-                            {
-                                "name": item.get("name"),
-                                "description": item.get("description", "")[:500],
-                                "parameters": item.get("parameters", {}),
-                            }
-                        )
+        # Handle array of tools
+        if isinstance(data, list):
+            for item in data:
+                if isinstance(item, dict) and "name" in item:
+                    tools.append(
+                        {
+                            "name": item.get("name"),
+                            "description": item.get("description", "")[:500],
+                            "parameters": item.get("parameters", {}),
+                        }
+                    )
 
-            # Handle object with tools/functions key
-            elif isinstance(data, dict):
-                tool_list = data.get("tools") or data.get("functions") or []
-                for item in tool_list:
-                    if isinstance(item, dict):
-                        func = item.get("function", item)
-                        tools.append(
-                            {
-                                "name": func.get("name"),
-                                "description": func.get("description", "")[:500],
-                                "parameters": func.get("parameters", {}),
-                            }
-                        )
-
-        except json.JSONDecodeError:
-            pass
+        # Handle object with tools/functions key
+        elif isinstance(data, dict):
+            tool_list = data.get("tools") or data.get("functions") or []
+            for item in tool_list:
+                if isinstance(item, dict):
+                    func = item.get("function", item)
+                    tools.append(
+                        {
+                            "name": func.get("name"),
+                            "description": func.get("description", "")[:500],
+                            "parameters": func.get("parameters", {}),
+                        }
+                    )
 
         return tools
 
@@ -301,26 +300,23 @@ class RepoScanner:
 
         try:
             import yaml
-
-            data = yaml.safe_load(content)
-
-            if isinstance(data, dict):
-                # Look for tools under various keys
-                tool_list = data.get("tools") or data.get("functions") or data.get("actions") or []
-
-                for item in tool_list:
-                    if isinstance(item, dict) and "name" in item:
-                        tools.append(
-                            {
-                                "name": item.get("name"),
-                                "description": item.get("description", "")[:500],
-                            }
-                        )
-
         except ImportError:
             # PyYAML not installed, skip YAML parsing
-            pass
-        except Exception:
-            pass
+            return []
+
+        data = yaml.safe_load(content)
+
+        if isinstance(data, dict):
+            # Look for tools under various keys
+            tool_list = data.get("tools") or data.get("functions") or data.get("actions") or []
+
+            for item in tool_list:
+                if isinstance(item, dict) and "name" in item:
+                    tools.append(
+                        {
+                            "name": item.get("name"),
+                            "description": item.get("description", "")[:500],
+                        }
+                    )
 
         return tools

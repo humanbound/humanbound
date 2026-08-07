@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   fields on the MCP `hb_run_test` tool.
 
 ### Fixed
+- **`RepoScanner` now logs tool parsing errors instead of silently swallowing them.** Previously, malformed JSON or YAML tool files would be silently ignored, causing agents to appear to have no tools.
 - **`hb guardrails` now exports rules from local test results.** Local runs
   store insights beneath `results.insights`, but the exporter only read the
   legacy top-level key and consequently emitted an empty ruleset. The exporter
