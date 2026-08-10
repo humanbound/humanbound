@@ -30,7 +30,7 @@ from .config import (
     get_base_url,
     get_organisation_id,
     get_project_id,
-    write_secure_file,
+    write_secure_config_file,
 )
 from .exceptions import (
     APIError,
@@ -640,7 +640,7 @@ class HumanboundClient:
             "default_organisation_id": self._default_organisation_id,
         }
 
-        write_secure_file(TOKEN_FILE, json.dumps(credentials))
+        write_secure_config_file(TOKEN_FILE, json.dumps(credentials))
 
     # -------------------------------------------------------------------------
     # Context Management

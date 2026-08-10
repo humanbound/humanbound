@@ -11,6 +11,7 @@ from rich.table import Table
 
 from .. import telemetry
 from ..client import HumanboundClient
+from ..config import write_secure_file
 from ..exceptions import APIError, NotAuthenticatedError
 
 console = Console()
@@ -106,7 +107,7 @@ def findings_group(ctx, status, severity, page, size, as_json, output):
         if output:
             from pathlib import Path
 
-            Path(output).write_text(json.dumps(response, indent=2, default=str))
+            write_secure_file(output, json.dumps(response, indent=2, default=str))
             console.print(f"[green]Findings saved to:[/green] {output}")
             _fire_findings_view(filter_applied=filter_applied)
             return

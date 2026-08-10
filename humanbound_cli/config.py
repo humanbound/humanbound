@@ -40,21 +40,11 @@ def write_secure_file(path, content: str) -> None:
     instead; behaviour there is unchanged.
     """
     path = Path(path)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    try:
-        path.parent.chmod(0o700)
-    except (OSError, NotImplementedError):
-        pass
 
     try:
         fd, tmp = tempfile.mkstemp(dir=str(path.parent), prefix=f".{path.name}.", suffix=".tmp")
-    except PermissionError as e:
-        # mkstemp needs write on the parent dir (e.g. a root-owned ~/.humanbound).
-        raise PermissionError(
-            f"Could not write {path} securely: its directory {path.parent} is not "
-            f"writable by the current user (e.g. created by a previous root/`sudo` run). "
-            f"Fix ownership with: sudo chown -R $(id -un) {path.parent}"
-        ) from e
+    except FileNotFoundError as e:
+        raise FileNotFoundError(f"Output directory does not exist: {path.parent}") from e
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as handle:
             handle.write(content)
@@ -69,6 +59,31 @@ def write_secure_file(path, content: str) -> None:
         except OSError:
             pass
         raise
+
+
+def write_secure_config_file(path, content: str) -> None:
+    """Atomically write ``content`` to ``path`` with owner-only permissions.
+
+    This wrapper also creates the parent directory if it does not exist and
+    attempts to set its permissions to 0700. It provides a helpful error
+    message if the directory is unwritable (e.g., due to previous sudo runs).
+    """
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        path.parent.chmod(0o700)
+    except (OSError, NotImplementedError):
+        pass
+
+    try:
+        write_secure_file(path, content)
+    except PermissionError as e:
+        # mkstemp needs write on the parent dir (e.g. a root-owned ~/.humanbound).
+        raise PermissionError(
+            f"Could not write {path} securely: its directory {path.parent} is not "
+            f"writable by the current user (e.g. created by a previous root/`sudo` run). "
+            f"Fix ownership with: sudo chown -R $(id -un) {path.parent}"
+        ) from e
 
 
 def get_base_url() -> str:

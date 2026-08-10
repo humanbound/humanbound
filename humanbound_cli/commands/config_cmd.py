@@ -12,7 +12,7 @@ import click
 from rich.console import Console
 from rich.table import Table
 
-from ..config import write_secure_file
+from ..config import write_secure_config_file
 
 console = Console()
 
@@ -52,7 +52,7 @@ def _write_config(config):
     except ImportError:
         # Fallback YAML writer
         content = "\n".join(f"{k}: {v}" for k, v in config.items()) + "\n"
-    write_secure_file(CONFIG_FILE, content)
+    write_secure_config_file(CONFIG_FILE, content)
 
 
 @click.group("config", invoke_without_command=True)

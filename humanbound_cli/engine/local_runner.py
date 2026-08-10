@@ -15,7 +15,7 @@ import traceback
 import uuid
 from pathlib import Path
 
-from humanbound_cli.config import write_secure_file
+from humanbound_cli.config import write_secure_config_file
 
 from .callbacks import EngineCallbacks
 from .presenter import run as presenter_run
@@ -237,7 +237,7 @@ class _LocalRun:
             completed_at=time.strftime("%Y-%m-%dT%H:%M:%S"),
         )
 
-        write_secure_file(
+        write_secure_config_file(
             results_dir / "meta.json",
             json.dumps(meta.model_dump(), indent=2, default=str),
         )
@@ -248,7 +248,7 @@ class _LocalRun:
             log_obj = LogsAnonymous(**log) if isinstance(log, dict) else log
             public = log_obj.to_public()
             log_lines.append(json.dumps(public.model_dump(), default=str))
-        write_secure_file(
+        write_secure_config_file(
             results_dir / "logs.jsonl",
             "\n".join(log_lines) + ("\n" if log_lines else ""),
         )

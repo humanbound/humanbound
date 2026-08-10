@@ -12,12 +12,24 @@ import stat
 
 import pytest
 
-from humanbound_cli.config import write_secure_file
+from humanbound_cli.config import write_secure_config_file, write_secure_file
 
 
 def test_write_secure_file_writes_content(tmp_path):
-    target = tmp_path / "nested" / "credentials.json"
+    target = tmp_path / "credentials.json"
     write_secure_file(target, '{"api_token": "secret"}')
+    assert target.read_text() == '{"api_token": "secret"}'
+
+
+def test_write_secure_file_raises_if_parent_missing(tmp_path):
+    target = tmp_path / "nested" / "credentials.json"
+    with pytest.raises(OSError):
+        write_secure_file(target, '{"api_token": "secret"}')
+
+
+def test_write_secure_config_file_creates_parent(tmp_path):
+    target = tmp_path / "nested" / "credentials.json"
+    write_secure_config_file(target, '{"api_token": "secret"}')
     assert target.read_text() == '{"api_token": "secret"}'
 
 
@@ -33,16 +45,25 @@ def test_write_secure_file_overwrites_and_leaves_no_temp(tmp_path):
 @pytest.mark.skipif(os.name == "nt", reason="POSIX file modes are not enforced on Windows")
 def test_write_secure_file_is_owner_only(tmp_path):
     target = tmp_path / "credentials.json"
+    original_mode = target.parent.stat().st_mode
     write_secure_file(target, "x")
+    assert stat.S_IMODE(target.stat().st_mode) == 0o600
+    assert stat.S_IMODE(target.parent.stat().st_mode) == stat.S_IMODE(original_mode)
+
+
+@pytest.mark.skipif(os.name == "nt", reason="POSIX file modes are not enforced on Windows")
+def test_write_secure_config_file_is_owner_only(tmp_path):
+    target = tmp_path / "credentials.json"
+    write_secure_config_file(target, "x")
     assert stat.S_IMODE(target.stat().st_mode) == 0o600
     assert stat.S_IMODE(target.parent.stat().st_mode) == 0o700
 
 
-def test_write_secure_file_reports_unwritable_dir_clearly(tmp_path, monkeypatch):
+def test_write_secure_config_file_reports_unwritable_dir_clearly(tmp_path, monkeypatch):
     # Simulate a foreign-owned parent dir (needs root to reproduce for real).
     def _deny(*args, **kwargs):
         raise PermissionError(13, "Permission denied")
 
-    monkeypatch.setattr("humanbound_cli.config.tempfile.mkstemp", _deny)
+    monkeypatch.setattr("humanbound_cli.config.write_secure_file", _deny)
     with pytest.raises(PermissionError, match="not writable by the current user"):
-        write_secure_file(tmp_path / "credentials.json", "x")
+        write_secure_config_file(tmp_path / "credentials.json", "x")

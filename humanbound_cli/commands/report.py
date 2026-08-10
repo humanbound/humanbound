@@ -9,6 +9,7 @@ import click
 from rich.console import Console
 
 from .. import telemetry
+from ..config import write_secure_file
 from ..engine import get_runner
 from ..engine.platform_runner import PlatformTestRunner
 from ..exceptions import APIError, NotAuthenticatedError
@@ -114,7 +115,7 @@ def report_command(org: bool, assessment_id: str, output: str, as_json: bool):
 
             content = json.dumps(response, indent=2, default=str)
 
-        Path(filepath).write_text(content)
+        write_secure_file(filepath, content)
         console.print(f"[green]Report saved to:[/green] {filepath}")
 
     except NotAuthenticatedError:
@@ -189,5 +190,5 @@ def _local_report(output: str, as_json: bool):
         content = generate_html_report(experiment, logs)
         filepath = output or f"report-{exp_dir.name}.html"
 
-    Path(filepath).write_text(content)
+    write_secure_file(filepath, content)
     console.print(f"[green]Report saved to:[/green] {filepath}")
