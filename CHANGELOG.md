@@ -7,7 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **`hb projects update --capabilities`** — declare an agent's
+  capability surface (`tools`, `memory`, `inter_agent`, `reasoning_model`)
+  via `key=value` pairs. Accepts `on/off`, `true/false`, `1/0`, `yes/no`,
+  with `all=on/off` shorthand for setting the full set in one step.
+- **`hb connect --repo` capability scan** — when scanning an agent
+  repository, the CLI now infers the same capability surface from
+  source-code patterns and offers to write it to the project scope.
+- **`hb connect --scope` honours a `capabilities:` block.** A scope file
+  may declare the capability surface explicitly; it is validated and
+  written to the created project. When combined with `--repo`, explicit
+  file values win over scanned ones per key.
+
+### Changed
+- **`hb test --test-category`, `--testing-level`, and `--lang` are now
+  optional with no built-in fallback.** Omit any of them and the platform
+  picks the default for that run. Specifying any flag still works exactly
+  as before. Same applies to `hb connect --level` and the equivalent
+  fields on the MCP `hb_run_test` tool.
+
 ### Fixed
+- **CLI export commands write sensitive test artifacts securely.** Previously, `hb logs`, `hb guardrails`, `hb findings`, and `hb report` exported files with global read permissions. They now correctly use `0600` owner-only permissions. (Note: exporting onto a symlink now replaces the symlink, and re-exporting resets the file mode to `0600`.)
 - **`hb guardrails` now exports rules from local test results.** Local runs
   store insights beneath `results.insights`, but the exporter only read the
   legacy top-level key and consequently emitted an empty ruleset. The exporter
@@ -471,7 +492,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   The unreachable platform branch and `humanbound_cli/connectors/microsoft.py`
   were removed; `hb connect` now exposes only agent flags. The now-unused
   `msal` dependency is dropped (#22).
-
 ## [2.0.3] — 2026-05-11
 
 ### Changed
@@ -604,9 +624,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   same wheel as `humanbound_cli/`:
   ```python
   from humanbound import (
-      Bot, LocalRunner, Insight, TestingLevel,
-      EngineCallbacks, OrchestratorModule,
-      OwaspAgentic, OwaspSingleTurn, BehavioralQA,
+      Bot,
+      LocalRunner,
+      Insight,
+      TestingLevel,
+      EngineCallbacks,
+      OrchestratorModule,
+      OwaspAgentic,
+      OwaspSingleTurn,
+      BehavioralQA,
   )
   ```
   This is the stable, semver-protected contract. `humanbound_cli.*` stays as

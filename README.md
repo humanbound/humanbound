@@ -190,6 +190,18 @@ The CLI and SDK share the same implementation, so they cannot drift. Authoring
 custom orchestrators and wiring `EngineCallbacks` is covered in the
 [docs](https://docs.humanbound.ai/).
 
+## Architecture
+
+<p align="center">
+  <img src="assets/architecture.png" alt="Humanbound CLI engine architecture" width="100%"/>
+</p>
+
+The CLI funnels every entry point — `hb` commands and the MCP server — through a
+single `TestRunner` abstraction. A `PlatformTestRunner` forwards to the
+Humanbound backend; a `LocalTestRunner` drives the in-process engine
+(scope discovery, orchestrators, bot, judge, presenter) against your own LLM
+provider, with results written under `.humanbound/results/`.
+
 ## Stability contract
 
 | Import path | Stability |

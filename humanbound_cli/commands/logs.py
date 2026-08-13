@@ -12,6 +12,7 @@ from rich.table import Table
 
 from .. import telemetry
 from ..client import HumanboundClient
+from ..config import write_secure_file
 from ..engine import get_runner
 from ..engine.platform_runner import PlatformTestRunner
 from ..exceptions import APIError, NotAuthenticatedError
@@ -149,7 +150,7 @@ def logs_group(
 
                 json_str = _json.dumps(response, indent=2, default=str)
                 if output:
-                    Path(output).write_text(json_str)
+                    write_secure_file(output, json_str)
                     console_err.print(f"[green]JSON exported to:[/green] {output}")
                 else:
                     print(json_str)
@@ -414,7 +415,7 @@ def _project_export_json(
     json_output = json.dumps(export_data, indent=2, default=str)
 
     if output:
-        Path(output).write_text(json_output)
+        write_secure_file(output, json_output)
         console.print(f"[green]JSON exported to:[/green] {output}")
     else:
         print(json_output)
@@ -463,7 +464,7 @@ def _project_export_html(
         report_html = generate_html_report(pseudo_experiment, all_logs)
 
     filename = output or f"project_{client.project_id[:8]}_logs.html"
-    Path(filename).write_text(report_html)
+    write_secure_file(filename, report_html)
     console.print(f"[green]HTML report exported to:[/green] {filename}")
 
 
@@ -627,7 +628,7 @@ def _export_json(
     json_output = json.dumps(export_data, indent=2, default=str)
 
     if output:
-        Path(output).write_text(json_output)
+        write_secure_file(output, json_output)
         console.print(f"[green]JSON exported to:[/green] {output}")
     else:
         print(json_output)
@@ -653,7 +654,7 @@ def _export_html(client: HumanboundClient, experiment_id: str, output: str):
         report_html = generate_html_report(experiment, all_logs)
 
     filename = output or f"experiment_{experiment_id[:8]}_report.html"
-    Path(filename).write_text(report_html)
+    write_secure_file(filename, report_html)
     console.print(f"[green]HTML report exported to:[/green] {filename}")
 
 
@@ -705,7 +706,7 @@ def _local_logs(experiment_id, output_format, output, verdict, page, size):
     if output_format == "json":
         json_output = _json.dumps({"logs": page_logs, "total": len(logs)}, indent=2, default=str)
         if output:
-            Path(output).write_text(json_output)
+            write_secure_file(output, json_output)
             console_err.print(f"[green]JSON exported to:[/green] {output}")
         else:
             print(json_output)
@@ -733,7 +734,7 @@ def _local_logs(experiment_id, output_format, output, verdict, page, size):
         report_html = generate_html_report(experiment, logs)
 
         filename = output or f"logs_{exp_name}.html"
-        Path(filename).write_text(report_html)
+        write_secure_file(filename, report_html)
         console_err.print(f"[green]HTML report exported to:[/green] {filename}")
     else:
         _show_logs_table(page_logs, verdict or "all")

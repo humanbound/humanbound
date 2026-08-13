@@ -388,6 +388,54 @@ class TestLoadScopeFile:
         with pytest.raises(FileNotFoundError):
             _load_scope_file(str(tmp_path / "does_not_exist.yaml"))
 
+    def test_capabilities_block_passes_through(self, tmp_path):
+        from humanbound_cli.commands.connect import _load_scope_file
+
+        p = tmp_path / "scope.yaml"
+        p.write_text(
+            "business_scope: 'X'\npermitted: [a]\nrestricted: [b]\n"
+            "capabilities:\n  tools: true\n  memory: false\n"
+        )
+        scope = _load_scope_file(str(p))
+        assert scope["capabilities"] == {"tools": True, "memory": False}
+
+    def test_capabilities_absent_key_omitted(self, tmp_path):
+        from humanbound_cli.commands.connect import _load_scope_file
+
+        p = tmp_path / "scope.yaml"
+        p.write_text("business_scope: 'X'\npermitted: [a]\nrestricted: [b]\n")
+        assert "capabilities" not in _load_scope_file(str(p))
+
+    def test_capabilities_unknown_key_raises(self, tmp_path):
+        from humanbound_cli.commands.connect import _load_scope_file
+
+        p = tmp_path / "scope.yaml"
+        p.write_text(
+            "business_scope: 'X'\npermitted: [a]\nrestricted: [b]\ncapabilities:\n  bogus: true\n"
+        )
+        with pytest.raises(ValueError, match="bogus"):
+            _load_scope_file(str(p))
+
+    def test_capabilities_non_bool_value_raises(self, tmp_path):
+        from humanbound_cli.commands.connect import _load_scope_file
+
+        p = tmp_path / "scope.yaml"
+        p.write_text(
+            "business_scope: 'X'\npermitted: [a]\nrestricted: [b]\ncapabilities:\n  tools: maybe\n"
+        )
+        with pytest.raises(ValueError, match="tools"):
+            _load_scope_file(str(p))
+
+    def test_capabilities_non_mapping_raises(self, tmp_path):
+        from humanbound_cli.commands.connect import _load_scope_file
+
+        p = tmp_path / "scope.yaml"
+        p.write_text(
+            "business_scope: 'X'\npermitted: [a]\nrestricted: [b]\ncapabilities: [tools]\n"
+        )
+        with pytest.raises(ValueError, match="capabilities"):
+            _load_scope_file(str(p))
+
 
 # ---------------------------------------------------------------------------
 # Helper: _serialize_scope_to_text
