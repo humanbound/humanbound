@@ -96,7 +96,9 @@ The connect → test → gate loop a pipeline needs:
 | `hb findings` | `read` | |
 | `hb posture` | `read` | Also `--org` |
 | `hb report` | `read` | Project, `--org`, and `--assessment <id>` reports |
-| `hb assessments list\|show` | `read` | Find the assessment id for `hb report --assessment` |
+| `hb assessments` / `hb assessments show` | `read` | Find the assessment id for `hb report --assessment` |
+| `hb assessments create` / `clone` | `write` | Custom assessments run headlessly — pair `--yes` with `--json`, add `--wait` to block in CI |
+| `hb assessments terminate` | `write` | `--force` to skip the prompt |
 | `hb providers` | `read` | List only |
 
 Anything not listed still requires `hb login`. Notably:

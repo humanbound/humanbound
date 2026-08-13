@@ -4,16 +4,19 @@
 
 import datetime as _dt
 import json
+import time
 
 import click
 from rich.console import Console
 from rich.panel import Panel
+from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.prompt import Confirm
 from rich.table import Table
 
 from .. import telemetry
 from ..client import HumanboundClient
 from ..exceptions import APIError, NotAuthenticatedError
+from .test import TESTING_LEVELS
 
 console = Console()
 
@@ -22,7 +25,19 @@ STATUS_STYLES = {
     "running": "[yellow]running[/yellow]",
     "failed": "[red]failed[/red]",
     "pending": "[dim]pending[/dim]",
+    "broken": "[red]broken[/red]",
 }
+
+# Keys match the backend CampaignPhase enum values carried in `activity`.
+ACTIVITY_STYLES = {
+    "assess": "[cyan]assess[/cyan]",
+    "investigate": "[yellow]investigate[/yellow]",
+    "monitor": "[green]monitor[/green]",
+    "custom": "[cyan]custom[/cyan]",
+}
+
+# Lowercase — NOT experiments' TERMINAL_STATUSES ("Finished"/"Failed").
+RUN_TERMINAL_STATUSES = ("completed", "failed", "broken")
 
 GRADE_STYLES = {
     "A": "[green bold]A[/green bold]",
@@ -57,7 +72,8 @@ def assessments_group(ctx, page, size, as_json):
     """View past security assessments.
 
     Assessments are snapshots of your project's security state produced
-    by ASCAM activities (assess, investigate, monitor).
+    by ASCAM activities (assess, investigate, monitor) or by
+    'hb assessments create -t <category>' (custom, user-composed runs).
 
     \b
     Examples:
@@ -96,7 +112,10 @@ def assessments_group(ctx, page, size, as_json):
 
         if not assessments:
             console.print("[yellow]No assessments found.[/yellow]")
-            console.print("[dim]Run 'hb test' or 'hb monitor' to create assessments.[/dim]")
+            console.print(
+                "[dim]Run 'hb test' or 'hb monitor', or "
+                "'hb assessments create -t <category>' for a custom run.[/dim]"
+            )
             return
 
         table = Table(title="Assessments")
@@ -218,7 +237,7 @@ def _display_assessment(data: dict):
     a human-readable run duration.
     """
     status = str(data.get("status", "")).lower()
-    activity = str(data.get("activity", "") or "")
+    activity = str(data.get("activity", "") or "").lower()
     domain = ", ".join(data.get("domain") or []) or "—"
 
     # Posture trajectory. Snapshot dicts are {posture: score, grade}.
@@ -246,6 +265,14 @@ def _display_assessment(data: dict):
 
     drift = data.get("drift_score")
     drift_display = f"{drift:+.2f}" if isinstance(drift, (int, float)) else "—"
+
+    # New findings this run surfaced (as opposed to ones it merely re-confirmed).
+    _nf = data.get("findings_discovered")
+    new_findings = (
+        f"[bold yellow]{_nf} new[/bold yellow]"
+        if isinstance(_nf, int) and _nf > 0
+        else ("0 new" if isinstance(_nf, int) else "—")
+    )
 
     # Coverage breadth from the discovery plan (count + testing levels).
     entries = (data.get("discovery_plan") or {}).get("entries") or []
@@ -281,9 +308,12 @@ def _display_assessment(data: dict):
 
     lines = [
         f"Status:   {STATUS_STYLES.get(status, status)}",
-        f"Activity: {activity or '—'}",
+        f"Activity: {ACTIVITY_STYLES.get(activity, activity) or '—'}",
         f"Domain:   [bold]{domain}[/bold]",
         f"Tests:    {data.get('test_count', '—')}",
+        # The only outcome line a custom assessment has — its posture and drift
+        # are always "—" because the tier is windowless.
+        f"Findings: {new_findings}",
         "",
         f"Posture:  {gb} {sb} → {ga} {sa}   {trend}".rstrip(),
         f"Drift:    {drift_display}",
@@ -376,6 +406,299 @@ def terminate_assessment(assessment_id: str, force: bool):
     except APIError as e:
         console.print(f"[red]Error:[/red] {e}")
         raise SystemExit(1)
+
+
+@assessments_group.command("create")
+@click.option(
+    "--test-category",
+    "-t",
+    "test_categories",
+    multiple=True,
+    required=True,
+    help="Test category to run (e.g. humanbound/adversarial/autonomous_red_team, "
+    "humanbound/behavioral/qa). Repeat the flag or comma-separate to run several.",
+)
+@click.option(
+    "--testing-level",
+    "-l",
+    type=click.Choice(TESTING_LEVELS, case_sensitive=False),
+    default=None,
+    help="Testing depth level. If omitted, the backend applies its default.",
+)
+@click.option("--wait", is_flag=True, help="Poll until the assessment completes")
+@click.option("--yes", "-y", is_flag=True, help="Skip confirmation")
+@click.option(
+    "--json",
+    "as_json",
+    is_flag=True,
+    help="Output as JSON (with --wait, prints the final status instead of the start response)",
+)
+def create_assessment(
+    test_categories: tuple, testing_level: str, wait: bool, yes: bool, as_json: bool
+):
+    """Create and run a custom assessment from your own test categories.
+
+    With --wait, exits 0 if the assessment reaches "completed", 1 if it
+    ends "failed" or "broken".
+
+    \b
+    Examples:
+      hb assessments create -t humanbound/adversarial/owasp_agentic
+      hb assessments create -t humanbound/adversarial/owasp_agentic -t humanbound/behavioral/qa
+      hb assessments create -t humanbound/adversarial/owasp_agentic,humanbound/behavioral/qa
+      hb assessments create -t humanbound/behavioral/qa -l unit --wait
+      hb assessments create -t humanbound/behavioral/qa --yes --json
+    """
+    # --json without --yes would open an interactive prompt, hanging
+    # scripts and interleaving prompt text with JSON stdout. Checked before
+    # category parsing so a malformed value can't leak a rich-text error
+    # into JSON stdout.
+    if as_json and not yes:
+        print(json.dumps({"error": "create requires --yes in --json mode"}))
+        raise SystemExit(1)
+
+    # Repeated flags and comma-separated values both work; dedupe, keep order.
+    test_ids = list(
+        dict.fromkeys(c.strip() for value in test_categories for c in value.split(",") if c.strip())
+    )
+    if not test_ids:
+        console.print(
+            "[red]Error:[/red] --test-category must contain at least one non-empty category"
+        )
+        raise SystemExit(1)
+
+    level = testing_level.lower() if testing_level else None
+
+    client = HumanboundClient()
+
+    if not client.is_authenticated():
+        telemetry.fire_gated_command_hit()
+        console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
+        raise SystemExit(1)
+
+    project_id = client.project_id
+    if not project_id:
+        console.print("[yellow]No project selected.[/yellow]")
+        console.print("Use 'hb projects use <id>' to select a project first.")
+        raise SystemExit(1)
+
+    try:
+        if not yes:
+            if not Confirm.ask(
+                f"Create and run assessment with {len(test_ids)} test "
+                f"{'category' if len(test_ids) == 1 else 'categories'} "
+                f"(testing level: {level or 'default'})?"
+            ):
+                console.print("[dim]Cancelled.[/dim]")
+                return
+
+        _submit_assessment(client, project_id, test_ids, level, wait, as_json)
+
+    except NotAuthenticatedError:
+        console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
+        raise SystemExit(1)
+    except APIError as e:
+        console.print(f"[red]Error:[/red] {e}")
+        raise SystemExit(1)
+
+
+@assessments_group.command("clone")
+@click.argument("assessment_id")
+@click.option("--wait", is_flag=True, help="Poll until the assessment completes")
+@click.option("--yes", "-y", is_flag=True, help="Skip confirmation")
+@click.option(
+    "--json",
+    "as_json",
+    is_flag=True,
+    help="Output as JSON (with --wait, prints the final status instead of the start response)",
+)
+def clone_assessment(assessment_id: str, wait: bool, yes: bool, as_json: bool):
+    """Clone a custom assessment and run it again.
+
+    Only custom assessments (created via 'hb assessments create') can be
+    cloned — the tests and testing level are taken from the source
+    assessment's discovery plan.
+
+    \b
+    Examples:
+      hb assessments clone <id>
+      hb assessments clone <id> --wait
+      hb assessments clone <id> --yes --json
+    """
+    # --json without --yes would open an interactive prompt, hanging
+    # scripts and interleaving prompt text with JSON stdout. Checked before
+    # any client work (even the fetch) so scripts fail fast and predictably.
+    if as_json and not yes:
+        print(json.dumps({"error": "clone requires --yes in --json mode"}))
+        raise SystemExit(1)
+
+    client = HumanboundClient()
+
+    if not client.is_authenticated():
+        telemetry.fire_gated_command_hit()
+        console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
+        raise SystemExit(1)
+
+    project_id = client.project_id
+    if not project_id:
+        console.print("[yellow]No project selected.[/yellow]")
+        console.print("Use 'hb projects use <id>' to select a project first.")
+        raise SystemExit(1)
+
+    try:
+        with console.status("Fetching assessment..."):
+            detail = client.get_assessment(project_id, assessment_id)
+
+        activity = str(detail.get("activity", "") or "").lower()
+        if activity != "custom":
+            console.print("[red]Only custom assessments can be cloned.[/red]")
+            raise SystemExit(1)
+
+        entries = (detail.get("discovery_plan") or {}).get("entries") or []
+        if not entries:
+            console.print("[red]Error:[/red] Source assessment has no test entries to clone.")
+            raise SystemExit(1)
+
+        tests = []
+        for e in entries:
+            orchestrator = e.get("orchestrator") if isinstance(e, dict) else None
+            if not orchestrator:
+                console.print("[red]Assessment plan is malformed; cannot clone.[/red]")
+                raise SystemExit(1)
+            tests.append(orchestrator)
+
+        # Preserve first-seen order so the mixed-levels error is deterministic.
+        levels_seen = []
+        for e in entries:
+            lv = e.get("level")
+            if lv not in levels_seen:
+                levels_seen.append(lv)
+        if len(levels_seen) > 1:
+            listed = ", ".join(str(lv) for lv in levels_seen)
+            console.print(
+                f"[red]Error:[/red] Source assessment has mixed testing levels "
+                f"({listed}); clone requires a single level."
+            )
+            raise SystemExit(1)
+        level = levels_seen[0]
+
+        if not yes:
+            if not Confirm.ask(
+                f"Clone assessment {assessment_id[:8]} and run {len(tests)} test "
+                f"{'category' if len(tests) == 1 else 'categories'} "
+                f"(testing level: {level or 'default'})?"
+            ):
+                console.print("[dim]Cancelled.[/dim]")
+                return
+
+        _submit_assessment(client, project_id, tests, level, wait, as_json)
+
+    except NotAuthenticatedError:
+        console.print("[red]Not authenticated.[/red] Run 'hb login' first.")
+        raise SystemExit(1)
+    except APIError as e:
+        console.print(f"[red]Error:[/red] {e}")
+        raise SystemExit(1)
+
+
+def _submit_assessment(
+    client: HumanboundClient,
+    project_id: str,
+    tests: list,
+    level: str | None,
+    wait: bool,
+    as_json: bool,
+):
+    """Submit a custom assessment and handle the --wait/--json output tail.
+
+    Shared by `create` and `clone` — both fetch/validate their own inputs,
+    then delegate the actual submit + result presentation here. With
+    --wait, exits 0 on "completed", 1 otherwise.
+    """
+    with console.status("Starting assessment..."):
+        response = client.create_assessment(project_id, tests, level=level)
+
+    assessment_id = (response or {}).get("assessment_id", "")
+
+    if wait:
+        detail = _wait_for_assessment(client, project_id, assessment_id, quiet=as_json)
+        if as_json:
+            print(json.dumps(detail, indent=2, default=str))
+        else:
+            _print_run_summary(detail)
+        status = str(detail.get("status", "")).lower()
+        raise SystemExit(0 if status == "completed" else 1)
+
+    if as_json:
+        print(json.dumps(response, indent=2, default=str))
+        return
+
+    console.print("[green]Assessment started.[/green]")
+    console.print(f"[dim]ID: {assessment_id}[/dim]")
+    console.print("\n[dim]Next:[/dim]")
+    console.print(f"  [bold]hb assessments show {assessment_id}[/bold]  Check progress")
+    console.print("  [bold]hb findings[/bold]                     View findings")
+
+
+def _wait_for_assessment(
+    client: HumanboundClient,
+    project_id: str,
+    assessment_id: str,
+    interval: int = 10,
+    quiet: bool = False,
+) -> dict:
+    """Poll assessment detail every `interval`s until a terminal status.
+
+    ``quiet`` skips the spinner (used with --json, which must print nothing
+    but the final response).
+    """
+    if quiet:
+        while True:
+            detail = client.get_assessment(project_id, assessment_id)
+            if str(detail.get("status", "")).lower() in RUN_TERMINAL_STATUSES:
+                return detail
+            time.sleep(interval)
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+    ) as progress:
+        task = progress.add_task("Waiting for assessment...", total=None)
+        while True:
+            detail = client.get_assessment(project_id, assessment_id)
+            status = str(detail.get("status", "")).lower()
+            progress.update(task, description=f"Status: {status}")
+            if status in RUN_TERMINAL_STATUSES:
+                return detail
+            time.sleep(interval)
+
+
+def _print_run_summary(data: dict):
+    """One-line summary printed after --wait reaches a terminal status."""
+    status = str(data.get("status", "")).lower()
+    tests = data.get("test_count", "—")
+
+    before = data.get("posture_before") or {}
+    after = data.get("posture_after") or {}
+    score_before = before.get("posture")
+    score_after = after.get("posture")
+    posture = "—"
+    if isinstance(score_before, (int, float)) and isinstance(score_after, (int, float)):
+        posture = f"{score_before:.0f} → {score_after:.0f}"
+
+    console.print(
+        f"\nStatus: {STATUS_STYLES.get(status, status)}   Tests: {tests}   Posture: {posture}"
+    )
+
+    if status == "completed":
+        console.print("[green]Assessment completed.[/green]")
+    else:
+        console.print(f"[red]Assessment ended with status: {status}[/red]")
+
+    console.print("\n[dim]Next:[/dim]")
+    console.print(f"  [bold]hb assessments show {data.get('id', '')}[/bold]  View full detail")
+    console.print("  [bold]hb findings[/bold]                     View findings")
 
 
 @assessments_group.command("report")

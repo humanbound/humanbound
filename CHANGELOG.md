@@ -8,6 +8,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **`hb assessments create -t <category>`** — create and run a custom
+  assessment from your own test categories, e.g.
+  `humanbound/adversarial/owasp_agentic`. Repeat `-t`/`--test-category`
+  or comma-separate to run several; flags match `hb test`
+  (`--testing-level`/`-l`, default `unit`; `--wait` to block until it
+  reaches a terminal status; `--json`, `--yes`/`-y`).
+  **`hb assessments clone <id>`** re-runs a past custom assessment with
+  the same tests and level. Two custom assessments covering different
+  domains run concurrently; a second one in the same domain is rejected,
+  as is any assessment started while a generated (ASCAM or `hb test`)
+  run is active.
+- **`hb assessments show`** now reports the findings a run surfaced.
+  Custom assessments are windowless — they never measure a posture
+  window, so posture and drift render as `—` and this line is their only
+  outcome.
+- **MCP: `hb_create_assessment` / `hb_get_assessment`** — create a custom
+  assessment and poll it to completion from an agent.
 - **`hb projects update --capabilities`** — declare an agent's
   capability surface (`tools`, `memory`, `inter_agent`, `reasoning_model`)
   via `key=value` pairs. Accepts `on/off`, `true/false`, `1/0`, `yes/no`,

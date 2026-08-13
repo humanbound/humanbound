@@ -289,6 +289,23 @@ class TestFlags:
         assert _started_config(r).context == long_context
 
 
+class TestExitCodeContract:
+    @patch(RUNNER_PATCH)
+    def test_exit_code_contract_unchanged_without_flag(self, mock_get_runner):
+        """No-op proof: identical to test_basic_invocation — plain `hb test`
+        must still run immediate mode and hit the normal exit-code contract."""
+        client = _make_client()
+        r = platform_runner(client, experiment_id="exp-new")
+        mock_get_runner.return_value = r
+
+        result = runner.invoke(cli, ["test"])
+
+        assert_exit_ok(result)
+        r.start.assert_called_once()
+        assert "exp-new" in result.output
+        assert "staged" not in result.output.lower()
+
+
 # ─────────────────────────────────────────────────────────────────────────
 # Output
 # ─────────────────────────────────────────────────────────────────────────
