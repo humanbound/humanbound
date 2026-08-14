@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.9.0] — 2026-08-14
+
 ### Added
 - **`hb assessments create -t <category>`** — create and run a custom
   assessment from your own test categories, e.g.
@@ -82,6 +84,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   slow-but-successful category as failed — never actually bound the run. A
   worker crash also no longer prints its traceback twice on stderr; the full
   trace still reaches the error callback and DEBUG logging.
+- **Local experiment starts no longer collide within the same second.** Each
+  local run ID now includes a short UUID suffix (`exp-{timestamp}-{uuid8}`), so
+  concurrent `hb test` processes no longer overwrite each other's `_runs` slot
+  or result directory.
+- **OpenAPI extraction now resolves `$ref` parameters and request body
+  schemas.** The parser previously skipped every `$ref` parameter and only read
+  inline `properties`, so component-based specs produced incomplete parameter
+  lists on the extractor. Local JSON Pointer resolution (with cycle-safe
+  `allOf` walking and depth guards) now follows `#/components/...` and Swagger 2
+  `#/parameters/...` refs. This is groundwork for consumers of `parameters` /
+  `responses`; `hb connect` today still reads only description/method/path/
+  summary from the parse result.
 
 ### Security
 - **OAuth callback listeners are loopback-only and path-validated.** Login and
@@ -104,20 +118,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `os.replace` helper and are never world-readable. The OAuth login callback
   error page also escapes the reflected `error_description` to prevent a
   reflected-XSS in that page.
-
-### Fixed
-- **Local experiment starts no longer collide within the same second.** Each
-  local run ID now includes a short UUID suffix (`exp-{timestamp}-{uuid8}`), so
-  concurrent `hb test` processes no longer overwrite each other's `_runs` slot
-  or result directory.
-- **OpenAPI extraction now resolves `$ref` parameters and request body
-  schemas.** The parser previously skipped every `$ref` parameter and only read
-  inline `properties`, so component-based specs produced incomplete parameter
-  lists on the extractor. Local JSON Pointer resolution (with cycle-safe
-  `allOf` walking and depth guards) now follows `#/components/...` and Swagger 2
-  `#/parameters/...` refs. This is groundwork for consumers of `parameters` /
-  `responses`; `hb connect` today still reads only description/method/path/
-  summary from the parse result.
 
 ## [2.8.0] — 2026-07-30
 
@@ -684,7 +684,8 @@ Last release as `humanbound-cli`. See the
 [old release](https://pypi.org/project/humanbound-cli/1.1.0/) on PyPI for
 notes — that history is preserved there and is not re-documented here.
 
-[Unreleased]: https://github.com/humanbound/humanbound/compare/v2.8.0...HEAD
+[Unreleased]: https://github.com/humanbound/humanbound/compare/v2.9.0...HEAD
+[2.9.0]: https://github.com/humanbound/humanbound/releases/tag/v2.9.0
 [2.8.0]: https://github.com/humanbound/humanbound/releases/tag/v2.8.0
 [2.7.0]: https://github.com/humanbound/humanbound/releases/tag/v2.7.0
 [2.6.0]: https://github.com/humanbound/humanbound/releases/tag/v2.6.0
