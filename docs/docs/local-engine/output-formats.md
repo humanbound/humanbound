@@ -13,14 +13,14 @@ keywords:
 
 # Output & Export
 
-After `hb test` finishes locally, results are written to `.humanbound/results/exp-{timestamp}/` as `meta.json` (experiment metadata + posture + insights) and `logs.jsonl` (one conversation per line). The `hb posture`, `hb logs`, and `hb report` commands read this data — viewing the posture score, filtering conversations by verdict, or producing branded HTML reports. Findings can also be exported as guardrail rules (`hb guardrails`) and used to train a Tier 2 firewall classifier.
+After `hb test` finishes locally, results are written to `.humanbound/results/exp-{timestamp}-{uuid8}/` as `meta.json` (experiment metadata + posture + insights) and `logs.jsonl` (one conversation per line). The `hb posture`, `hb logs`, and `hb report` commands read this data — viewing the posture score, filtering conversations by verdict, or producing branded HTML reports. Findings can also be exported as guardrail rules (`hb guardrails`) and used to train a Tier 2 firewall classifier.
 
 ## Results Location
 
-Results are saved to `.humanbound/results/exp-{timestamp}/` in your working directory:
+Results are saved to `.humanbound/results/exp-{timestamp}-{uuid8}/` in your working directory (the random suffix keeps concurrent runs from colliding):
 
 ```
-.humanbound/results/exp-20260419-135646/
+.humanbound/results/exp-20260419-135646-3f9c2a1b/
     meta.json       # experiment metadata + posture + insights
     logs.jsonl      # conversation logs (one per line)
 ```
@@ -139,7 +139,7 @@ Each log entry contains 10 public fields:
 
 ```json
 {
-  "id": "exp-20260419-135646",
+  "id": "exp-20260419-135646-3f9c2a1b",
   "name": "cli-owasp_agentic-20260419",
   "status": "Finished",
   "test_category": "humanbound/adversarial/owasp_agentic",
