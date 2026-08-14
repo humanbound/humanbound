@@ -222,6 +222,78 @@ class FindingsResponse(BaseModel):
 
 
 # ──────────────────────────────────────────────────────────────────────────
+# Assessments
+# ──────────────────────────────────────────────────────────────────────────
+
+
+class AssessmentCreateResponse(BaseModel):
+    """POST /projects/{id}/assessments — 202 {"assessment_id", "status": "running"}."""
+
+    __upstream_source__ = "Assessment.AssessmentCreateResponse"
+    model_config = ConfigDict(extra="allow")
+
+    assessment_id: str = ""
+    status: str = "running"
+
+
+class AssessmentListItem(BaseModel):
+    """Single assessment entry in GET .../assessments list view."""
+
+    __upstream_source__ = "Assessment.AssessmentListItem"
+    model_config = ConfigDict(extra="allow")
+
+    id: str = ""
+    domain: list[str] = []
+    status: str = ""
+    activity: str = ""
+    test_count: int = 0
+    posture_before: dict[str, Any] | None = None
+    posture_after: dict[str, Any] | None = None
+    drift_score: float | None = None
+    started_at: float | None = None
+    completed_at: float | None = None
+    findings_discovered: int = 0
+    discovery_plan: dict[str, Any] | None = None
+    trigger_source: str = "manual"
+    owner_id: str | None = None
+
+
+class PaginationResponseAssessments(BaseModel):
+    """Paginated response for GET /projects/{id}/assessments."""
+
+    __upstream_source__ = "Assessment.PaginationResponseAssessments"
+    model_config = ConfigDict(extra="allow")
+
+    data: list[AssessmentListItem] = []
+    total: int = 0
+    page: int = 1
+    size: int = 50
+    has_next_page: bool = False
+
+
+class AssessmentDetailResponse(BaseModel):
+    """GET /projects/{id}/assessments/{aid} — single assessment detail."""
+
+    __upstream_source__ = "Assessment.AssessmentDetailResponse"
+    model_config = ConfigDict(extra="allow")
+
+    id: str = ""
+    domain: list[str] = []
+    status: str = ""
+    activity: str = ""
+    test_count: int = 0
+    posture_before: dict[str, Any] | None = None
+    posture_after: dict[str, Any] | None = None
+    drift_score: float | None = None
+    started_at: float | None = None
+    completed_at: float | None = None
+    discovery_plan: dict[str, Any] | None = None
+    trigger_source: str = "manual"
+    owner_id: str | None = None
+    findings_discovered: int = 0
+
+
+# ──────────────────────────────────────────────────────────────────────────
 # Projects
 # ──────────────────────────────────────────────────────────────────────────
 
@@ -359,6 +431,9 @@ ENDPOINT_CONTRACTS = {
     "GET /organisations/{id}/posture": OrgPostureResponse,
     "GET /projects/{id}/posture/trends": PostureTrendsResponse,
     "GET /projects/{id}/findings": FindingsResponse,
+    "GET /projects/{id}/assessments": PaginationResponseAssessments,
+    "POST /projects/{id}/assessments": AssessmentCreateResponse,
+    "GET /projects/{id}/assessments/{aid}": AssessmentDetailResponse,
     "GET /projects/{id}/logs/...": PaginationResponseLogs,
     "GET /experiments": PaginationResponseExperiments,
     "GET /projects": PaginationResponseProjects,
@@ -392,6 +467,11 @@ __all__ = [
     # Findings
     "FindingResponse",
     "FindingsResponse",
+    # Assessments
+    "AssessmentCreateResponse",
+    "AssessmentListItem",
+    "PaginationResponseAssessments",
+    "AssessmentDetailResponse",
     # Projects / experiments
     "ProjectsResponse",
     "ExperimentsResponse",

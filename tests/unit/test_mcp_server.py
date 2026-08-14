@@ -37,6 +37,30 @@ class TestApiKeyTools:
         client.update_api_key.assert_called_once_with("key-1", {"scope": "admin"})
 
 
+class TestGetAssessment:
+    """hb_get_assessment — the poll target hb_create_assessment's docstring points to."""
+
+    def test_delegates_to_client(self, client):
+        import json
+
+        client.project_id = "proj-1"
+        client.get_assessment.return_value = {"id": "asmnt-1", "status": "completed"}
+
+        result = mcp_server.hb_get_assessment("asmnt-1")
+
+        data = json.loads(result)
+        assert data["status"] == "completed"
+        client.get_assessment.assert_called_once_with("proj-1", "asmnt-1")
+
+    def test_requires_project(self, client):
+        import json
+
+        client.project_id = None
+        result = mcp_server.hb_get_assessment("asmnt-1")
+        data = json.loads(result)
+        assert data["error"] is True
+
+
 class TestStructuredErrors:
     """Any exception returns the {"error": ...} envelope, never a raw traceback (#68)."""
 
