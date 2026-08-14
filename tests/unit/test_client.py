@@ -510,6 +510,39 @@ class TestConvenienceMethods:
         assert params["last"] == 5
 
 
+class TestAssessmentMethods:
+    @patch("humanbound_cli.client.requests.post")
+    def test_create_assessment_posts_tests_and_level(self, mock_post, client):
+        mock_post.return_value = _mock_response(
+            202, {"assessment_id": "asmnt-1", "status": "running"}
+        )
+        result = client.create_assessment("proj-456", ["owasp_agentic"], level="system")
+        assert result == {"assessment_id": "asmnt-1", "status": "running"}
+        call = mock_post.call_args
+        call_url = call.args[0] if call.args else call.kwargs.get("url", "")
+        assert call_url.endswith("projects/proj-456/assessments")
+        assert call.kwargs.get("json") == {"tests": ["owasp_agentic"], "level": "system"}
+        assert call.kwargs.get("headers", {}).get("project_id") == "proj-456"
+
+    @patch("humanbound_cli.client.requests.post")
+    def test_create_assessment_omits_level_when_none(self, mock_post, client):
+        mock_post.return_value = _mock_response(
+            202, {"assessment_id": "asmnt-1", "status": "running"}
+        )
+        client.create_assessment("proj-456", ["owasp_agentic"])
+        call = mock_post.call_args
+        assert call.kwargs.get("json") == {"tests": ["owasp_agentic"]}
+
+    @patch("humanbound_cli.client.requests.get")
+    def test_get_assessment(self, mock_get, client):
+        mock_get.return_value = _mock_response(200, {"id": "asmnt-1", "status": "completed"})
+        result = client.get_assessment("proj-456", "asmnt-1")
+        assert result == {"id": "asmnt-1", "status": "completed"}
+        call = mock_get.call_args
+        call_url = call.args[0] if call.args else call.kwargs.get("url", "")
+        assert call_url.endswith("projects/proj-456/assessments/asmnt-1")
+
+
 # ---------------------------------------------------------------------------
 # Token Refresh
 # ---------------------------------------------------------------------------

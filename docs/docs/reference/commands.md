@@ -90,8 +90,10 @@ The complete `hb` CLI reference, organised into eight categories: global flags, 
 | `hb findings retest <id>` | Retest a finding to verify a fix (--testing-level unit\|system\|acceptance, --deep, --full, --watch) |
 | `hb findings regressions <id>` | Show a finding's regression-retest history |
 | `hb assessments` | List past security assessments |
-| `hb assessments show [id]` | View assessment detail (posture trajectory, drift, coverage, duration); defaults to the latest |
-| `hb assessments terminate [id]` | Stop a running assessment (defaults to the current/latest) |
+| `hb assessments create -t <category>` | Create and run a custom assessment from your own test categories, e.g. `humanbound/adversarial/owasp_agentic` — repeat `-t`/`--test-category` or comma-separate for several (`--testing-level`/`-l`, `--wait`, `--json`, `--yes`/`-y`); with `--wait`, exits 0 on completed, 1 on failed/broken |
+| `hb assessments clone <id>` | Re-run a custom assessment with the same tests and level (`--wait`, `--json`, `--yes`/`-y`); custom assessments only |
+| `hb assessments show [id]` | View assessment detail (findings surfaced, posture trajectory, drift, coverage, duration); defaults to the latest. Custom assessments are windowless — posture and drift show `—` |
+| `hb assessments terminate [id]` | Stop a running assessment (defaults to the current/latest) (`--force` skips confirmation) |
 | `hb assessments report <id>` | Generate assessment HTML report with full test logs (-o, --no-open) |
 | `hb projects report` | Generate project HTML security report (-o, --no-open) |
 | `hb orgs report` | Generate organisation-wide HTML report (-o, --no-open) |
