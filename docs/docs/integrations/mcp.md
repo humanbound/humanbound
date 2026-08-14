@@ -76,6 +76,8 @@ If your client launches with a minimal `PATH` and can't find `hb`, replace `"hb"
 | `get_experiments` | Recent experiments with status, results, and configuration |
 | `get_logs` | Conversation logs and verdicts from a specific experiment |
 | `get_campaigns` | Current ASCAM campaign status and phase information |
+| `hb_create_assessment` | Create and run a custom assessment from a list of test categories; returns as soon as it starts |
+| `hb_get_assessment` | Fetch one assessment — poll this after `hb_create_assessment` until status is `completed`, `failed`, or `broken` |
 
 ## Example Queries
 

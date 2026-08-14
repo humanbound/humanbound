@@ -1357,7 +1357,7 @@ def hb_replay_webhook(
 
 
 # =========================================================================
-# CAMPAIGN TOOLS
+# ASSESSMENT TOOLS
 # =========================================================================
 
 
@@ -1399,6 +1399,55 @@ def hb_terminate_campaign(campaign_id: str, project_id: str | None = None) -> st
         if not pid:
             return _err(ValueError("No project selected. Use hb_set_project first."))
         return _ok(client.terminate_campaign(pid, campaign_id))
+    except Exception as e:
+        return _err(e)
+
+
+@mcp.tool()
+def hb_create_assessment(
+    test_categories: list[str],
+    testing_level: str | None = None,
+    project_id: str | None = None,
+) -> str:
+    """Create and run a custom assessment from a list of test categories.
+
+    Fire-and-poll: returns as soon as the assessment starts running. Poll
+    hb_get_assessment for completion (status reaches "completed", "failed",
+    or "broken").
+
+    Args:
+        test_categories: Full test-category paths, e.g.
+            ["humanbound/adversarial/owasp_agentic", "humanbound/behavioral/qa"].
+        testing_level: unit | system | acceptance (backend defaults to "unit").
+        project_id: Project UUID (uses current project if omitted).
+    """
+    try:
+        client = _get_client()
+        pid = project_id or client.project_id
+        if not pid:
+            return _err(ValueError("No project selected. Use hb_set_project first."))
+        return _ok(client.create_assessment(pid, test_categories, level=testing_level))
+    except Exception as e:
+        return _err(e)
+
+
+@mcp.tool()
+def hb_get_assessment(assessment_id: str, project_id: str | None = None) -> str:
+    """Get a single assessment by ID.
+
+    Use this to poll a running assessment for completion — check the
+    "status" field for "completed", "failed", or "broken".
+
+    Args:
+        assessment_id: Assessment UUID.
+        project_id: Project UUID (uses current project if omitted).
+    """
+    try:
+        client = _get_client()
+        pid = project_id or client.project_id
+        if not pid:
+            return _err(ValueError("No project selected. Use hb_set_project first."))
+        return _ok(client.get_assessment(pid, assessment_id))
     except Exception as e:
         return _err(e)
 

@@ -1295,6 +1295,22 @@ class HumanboundClient:
         )
 
     # -------------------------------------------------------------------------
+    # Assessment Methods
+    # -------------------------------------------------------------------------
+
+    def create_assessment(self, project_id: str, tests: list, level: str | None = None) -> dict:
+        """POST projects/{id}/assessments -> 202 {"assessment_id", "status": "running"}.
+        Fire-and-poll: poll get_assessment() until status in completed/failed/broken."""
+        data = {"tests": tests}
+        if level:
+            data["level"] = level
+        return self.post(f"projects/{project_id}/assessments", data=data, include_project=True)
+
+    def get_assessment(self, project_id: str, assessment_id: str) -> dict:
+        """Get a single assessment by ID."""
+        return self.get(f"projects/{project_id}/assessments/{assessment_id}")
+
+    # -------------------------------------------------------------------------
     # Upload Conversations Methods
     # -------------------------------------------------------------------------
 
