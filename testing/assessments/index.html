@@ -67,7 +67,7 @@
   <meta property="og:image:alt" content="Assessments are point-in-time snapshots of a project's security state — posture, findings, and coverage produced by every ASCAM activity." />
   <meta name="twitter:image:alt" content="Assessments are point-in-time snapshots of a project's security state — posture, findings, and coverage produced by every ASCAM activity." />
   
-  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/testing/assessments/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Assessments","item":"https://docs.humanbound.ai/testing/assessments/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/testing/assessments/#article","headline":"Assessments","description":"Assessments are point-in-time snapshots of a project's security state \u2014 posture, findings, and coverage produced by every ASCAM activity.","url":"https://docs.humanbound.ai/testing/assessments/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-06-02T10:20:06+03:00","keywords":"assessments, ASCAM assessments, assessment snapshot, hb assessments command, assessment history, assessment report"}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/testing/assessments/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Assessments","item":"https://docs.humanbound.ai/testing/assessments/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/testing/assessments/#article","headline":"Assessments","description":"Assessments are point-in-time snapshots of a project's security state \u2014 posture, findings, and coverage produced by every ASCAM activity.","url":"https://docs.humanbound.ai/testing/assessments/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-08-14T16:11:52+03:00","keywords":"assessments, ASCAM assessments, assessment snapshot, hb assessments command, assessment history, assessment report"}]}</script>
   
 
   
@@ -1073,6 +1073,28 @@
     <span class="md-ellipsis">
       
         View Assessment Details
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#create-a-custom-assessment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Create a Custom Assessment
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#clone-a-custom-assessment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Clone a Custom Assessment
       
     </span>
   </a>
@@ -2250,26 +2272,67 @@
 
 
 <h1 id="assessments">Assessments</h1>
-<p>Assessments are snapshots of a project's security state at a point in time. Each ASCAM activity (assess, investigate, monitor) produces an assessment that captures posture, findings, and coverage at that moment.</p>
+<p>Assessments are snapshots of a project's security state at a point in time. Each ASCAM activity (assess, investigate, monitor) produces an assessment automatically, capturing posture, findings, and coverage at that moment. You can also compose your own: pick a list of tests and create-and-run a custom assessment from them directly, no separate staging step required.</p>
 <h2 id="list-assessments">List Assessments</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>hb<span class="w"> </span>assessments<span class="w"> </span>list
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>hb<span class="w"> </span>assessments
 </code></pre></div>
 <h2 id="view-assessment-details">View Assessment Details</h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>hb<span class="w"> </span>assessments<span class="w"> </span>show<span class="w"> </span>&lt;assessment-id&gt;
 </code></pre></div>
-<h2 id="generate-assessment-report">Generate Assessment Report</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Generate HTML report (opens in browser by default)</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>hb<span class="w"> </span>assessments<span class="w"> </span>report<span class="w"> </span>&lt;assessment-id&gt;
+<h2 id="create-a-custom-assessment">Create a Custom Assessment</h2>
+<p>Run an assessment from your own choice of tests instead of waiting for the next ASCAM cycle:</p>
+<p><code>-t/--test-category</code> takes full test-category paths — the same values <code>hb test</code>
+accepts. Repeat the flag or comma-separate to run several. A category the
+backend doesn't recognise is rejected with a <code>400</code> before anything runs.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Create and run in one step</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>hb<span class="w"> </span>assessments<span class="w"> </span>create<span class="w"> </span>-t<span class="w"> </span>humanbound/adversarial/owasp_agentic
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1"># Save to file</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>hb<span class="w"> </span>assessments<span class="w"> </span>report<span class="w"> </span>&lt;assessment-id&gt;<span class="w"> </span>-o<span class="w"> </span>report.html
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1"># Several categories at once (a security one and a quality one)</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>hb<span class="w"> </span>assessments<span class="w"> </span>create<span class="w"> </span>-t<span class="w"> </span>humanbound/adversarial/owasp_agentic<span class="w"> </span>-t<span class="w"> </span>humanbound/behavioral/qa
 <a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="c1"># Save without opening browser</span>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>hb<span class="w"> </span>assessments<span class="w"> </span>report<span class="w"> </span>&lt;assessment-id&gt;<span class="w"> </span>-o<span class="w"> </span>report.html<span class="w"> </span>--no-open
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="c1"># Pin a testing depth (defaults to unit)</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>hb<span class="w"> </span>assessments<span class="w"> </span>create<span class="w"> </span>-t<span class="w"> </span>humanbound/adversarial/owasp_agentic<span class="w"> </span>--testing-level<span class="w"> </span>unit
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="c1"># Block until the assessment reaches a terminal status</span>
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>hb<span class="w"> </span>assessments<span class="w"> </span>create<span class="w"> </span>-t<span class="w"> </span>humanbound/adversarial/owasp_agentic<span class="w"> </span>--wait
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="c1"># Skip the confirmation prompt (required alongside --json)</span>
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>hb<span class="w"> </span>assessments<span class="w"> </span>create<span class="w"> </span>-t<span class="w"> </span>humanbound/adversarial/owasp_agentic<span class="w"> </span>--yes<span class="w"> </span>--json
+</code></pre></div>
+<p>Findings land in the same place as any other assessment: <code>hb findings</code> and the
+UI. Custom assessments are <strong>windowless</strong>, though — they run exactly the tests
+you chose and never measure a posture window, so <code>hb assessments show</code> reports
+<code>—</code> for posture and drift. The <code>Findings:</code> line is their outcome. The findings
+they surface still count toward the project's posture.</p>
+<p>Only one assessment per domain runs at a time. A second custom assessment in the
+same domain — or any assessment while a generated (ASCAM or <code>hb test</code>) run is
+active — is rejected with a message naming the conflicting run, and the command
+exits <code>1</code>.</p>
+<p><code>--wait</code> polls until the assessment reaches a terminal status — <code>completed</code>, <code>failed</code>, or <code>broken</code> — and exits <code>0</code> for <code>completed</code>, <code>1</code> otherwise.</p>
+<h2 id="clone-a-custom-assessment">Clone a Custom Assessment</h2>
+<p>Re-run a past custom assessment with the same tests and testing level:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>hb<span class="w"> </span>assessments<span class="w"> </span>clone<span class="w"> </span>&lt;assessment-id&gt;
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="c1"># Block until it reaches a terminal status</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>hb<span class="w"> </span>assessments<span class="w"> </span>clone<span class="w"> </span>&lt;assessment-id&gt;<span class="w"> </span>--wait
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="c1"># Skip the confirmation prompt (required alongside --json)</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>hb<span class="w"> </span>assessments<span class="w"> </span>clone<span class="w"> </span>&lt;assessment-id&gt;<span class="w"> </span>--yes<span class="w"> </span>--json
+</code></pre></div>
+<p><code>clone</code> only works on custom assessments (those created via <code>hb assessments create</code>) — the tests and level are read from the source assessment's discovery plan.</p>
+<h2 id="generate-assessment-report">Generate Assessment Report</h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Generate HTML report (opens in browser by default)</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>hb<span class="w"> </span>assessments<span class="w"> </span>report<span class="w"> </span>&lt;assessment-id&gt;
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c1"># Save to file</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>hb<span class="w"> </span>assessments<span class="w"> </span>report<span class="w"> </span>&lt;assessment-id&gt;<span class="w"> </span>-o<span class="w"> </span>report.html
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="c1"># Save without opening browser</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>hb<span class="w"> </span>assessments<span class="w"> </span>report<span class="w"> </span>&lt;assessment-id&gt;<span class="w"> </span>-o<span class="w"> </span>report.html<span class="w"> </span>--no-open
 </code></pre></div>
 <div class="admonition info">
 <p class="admonition-title">Note</p>
-<p>Assessments are created automatically by ASCAM activities. Use <code>hb assessments list</code> to see history and <code>hb assessments report &lt;id&gt;</code> to generate a detailed report for any past assessment.</p>
+<p>Assessments come from two sources: ASCAM activities create them automatically, or you compose your own with <code>hb assessments create</code> (and re-run one later with <code>hb assessments clone</code>). Use <code>hb assessments</code> to see history and <code>hb assessments report &lt;id&gt;</code> to generate a detailed report for any past assessment.</p>
 </div>
 
 

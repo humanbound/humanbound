@@ -67,7 +67,7 @@
   <meta property="og:image:alt" content="Drive Humanbound from Claude Code, Cursor, Windsurf, or Copilot via the built-in MCP server — ask about posture, findings, and runs in your IDE." />
   <meta name="twitter:image:alt" content="Drive Humanbound from Claude Code, Cursor, Windsurf, or Copilot via the built-in MCP server — ask about posture, findings, and runs in your IDE." />
   
-  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/integrations/mcp/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"MCP Server","item":"https://docs.humanbound.ai/integrations/mcp/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/integrations/mcp/#article","headline":"MCP Server","description":"Drive Humanbound from Claude Code, Cursor, Windsurf, or Copilot via the built-in MCP server \u2014 ask about posture, findings, and runs in your IDE.","url":"https://docs.humanbound.ai/integrations/mcp/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-07-20T11:47:21+03:00","keywords":"MCP server, Model Context Protocol, Claude Code integration, Cursor integration, IDE security testing, hb mcp command, MCP tools, AI coding assistant integration"}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/integrations/mcp/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"MCP Server","item":"https://docs.humanbound.ai/integrations/mcp/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/integrations/mcp/#article","headline":"MCP Server","description":"Drive Humanbound from Claude Code, Cursor, Windsurf, or Copilot via the built-in MCP server \u2014 ask about posture, findings, and runs in your IDE.","url":"https://docs.humanbound.ai/integrations/mcp/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-08-14T16:11:52+03:00","keywords":"MCP server, Model Context Protocol, Claude Code integration, Cursor integration, IDE security testing, hb mcp command, MCP tools, AI coding assistant integration"}]}</script>
   
 
   
@@ -2370,6 +2370,14 @@
 <tr>
 <td><code>get_campaigns</code></td>
 <td>Current ASCAM campaign status and phase information</td>
+</tr>
+<tr>
+<td><code>hb_create_assessment</code></td>
+<td>Create and run a custom assessment from a list of test categories; returns as soon as it starts</td>
+</tr>
+<tr>
+<td><code>hb_get_assessment</code></td>
+<td>Fetch one assessment — poll this after <code>hb_create_assessment</code> until status is <code>completed</code>, <code>failed</code>, or <code>broken</code></td>
 </tr>
 </tbody>
 </table>
