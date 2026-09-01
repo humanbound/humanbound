@@ -7,7 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **`hb mcp` now reports why the MCP import failed** (#135, thanks
+  @iayanpahwa). A missing SDK and an installed-but-incompatible SDK both
+  printed "MCP dependencies not installed", sending users to re-run an install
+  that had already succeeded. The error now carries the underlying import
+  failure, so an incompatible SDK names itself.
+- **CI installs and exercises the `[mcp]` extra.** The test job installed only
+  `[dev,engine]`, so `pytest.importorskip("mcp")` skipped the entire MCP suite
+  and an unusable extra could ship green — which is how the mcp 2.x break
+  reached a release. The job now installs `[dev,engine,mcp]` and asserts the
+  extra imports before running the suite.
+
 ### Changed
+- **Python 3.13 and 3.14 are now tested in CI.** `requires-python` has always
+  accepted them and the classifiers already advertised 3.13, but the test
+  matrix stopped at 3.12. It now covers 3.10 through 3.14, and 3.14 is declared
+  in the classifiers to match.
 - **Discord links now point at the `#start-here` invite** (#132).
   `README.md`, `CONTRIBUTING.md`, `pyproject.toml`, the new-issue chooser, and
   the community and plugins docs pages used `discord.gg/WgTMpmSFtN`, which
