@@ -2328,10 +2328,10 @@ it and create a new one.</p>
 </div>
 <h2 id="create-a-key">Create a key</h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Least privilege by default: read-only, all orgs you own</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>hb<span class="w"> </span>api-keys<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span><span class="s2">&quot;CI Key&quot;</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>hb<span class="w"> </span>api-keys<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span><span class="s2">"CI Key"</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># Scoped: read-only, one org, one project, expires at a fixed time</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>hb<span class="w"> </span>api-keys<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span><span class="s2">&quot;CI Key&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>hb<span class="w"> </span>api-keys<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span><span class="s2">"CI Key"</span><span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">  </span>--scope<span class="w"> </span><span class="nb">read</span><span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">  </span>--org<span class="w"> </span>2ab8ff03-2325-4f95-b22e-9262c09682c3<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">  </span>--projects<span class="w"> </span>68c7169a-6cb1-4f61-825f-bf1fd195ad7d<span class="w"> </span><span class="se">\</span>
@@ -2493,7 +2493,7 @@ everywhere.</p>
 <p>Shows id, name, scope, active state, and the key prefix (<code>hb_</code> + 8 characters) — never the
 secret itself.</p>
 <h2 id="update-a-key">Update a key</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>hb<span class="w"> </span>api-keys<span class="w"> </span>update<span class="w"> </span>&lt;id&gt;<span class="w"> </span>--name<span class="w"> </span><span class="s2">&quot;New Name&quot;</span><span class="w">   </span><span class="c1"># rename</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>hb<span class="w"> </span>api-keys<span class="w"> </span>update<span class="w"> </span>&lt;id&gt;<span class="w"> </span>--name<span class="w"> </span><span class="s2">"New Name"</span><span class="w">   </span><span class="c1"># rename</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>hb<span class="w"> </span>api-keys<span class="w"> </span>update<span class="w"> </span>&lt;id&gt;<span class="w"> </span>--scope<span class="w"> </span>write<span class="w">       </span><span class="c1"># change scope</span>
 <a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>hb<span class="w"> </span>api-keys<span class="w"> </span>update<span class="w"> </span>&lt;id&gt;<span class="w"> </span>--inactive<span class="w">          </span><span class="c1"># deactivate (requests → 401)</span>
 <a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>hb<span class="w"> </span>api-keys<span class="w"> </span>update<span class="w"> </span>&lt;id&gt;<span class="w"> </span>--active<span class="w">            </span><span class="c1"># reactivate</span>

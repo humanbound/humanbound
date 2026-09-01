@@ -2305,7 +2305,7 @@ newest <code>2.x.y</code> and is re-pointed with every release in that major lin
 <code>:2.7</code> and <code>:2.7.0</code> freeze to progressively narrower versions.</p>
 <h2 id="quick-start-local-mode-no-login">Quick start (local mode — no login)</h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">&quot;</span>:/workspace<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span>-v<span class="w"> </span><span class="s2">"</span><span class="nv">$PWD</span><span class="s2">"</span>:/workspace<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span>-e<span class="w"> </span><span class="nv">HB_PROVIDER</span><span class="o">=</span>openai<span class="w"> </span>-e<span class="w"> </span><span class="nv">HB_API_KEY</span><span class="o">=</span><span class="nv">$OPENAI_API_KEY</span><span class="w"> </span>-e<span class="w"> </span><span class="nv">HB_MODEL</span><span class="o">=</span>gpt-4o-mini<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span>ghcr.io/humanbound/humanbound<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">  </span><span class="nb">test</span><span class="w"> </span>--endpoint<span class="w"> </span>./endpoint.json<span class="w"> </span>--wait<span class="w"> </span>--fail-on<span class="w"> </span>high
@@ -2349,7 +2349,7 @@ check <code>--context</code> in particular, since a typo'd path won't error, it'
 send the wrong text to the judge.</p>
 <p>Results persist to <code>./.humanbound/results/exp-*/</code> on your host through the
 same mount. Reports too:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">&quot;</span>:/workspace<span class="w"> </span>ghcr.io/humanbound/humanbound<span class="w"> </span>report<span class="w"> </span>-o<span class="w"> </span>./report.html
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-v<span class="w"> </span><span class="s2">"</span><span class="nv">$PWD</span><span class="s2">"</span>:/workspace<span class="w"> </span>ghcr.io/humanbound/humanbound<span class="w"> </span>report<span class="w"> </span>-o<span class="w"> </span>./report.html
 </code></pre></div>
 <p>Inline escape hatches (no files needed): <code>--endpoint</code> accepts a JSON string
 and <code>--context</code> accepts a plain string — useful for templating from CI

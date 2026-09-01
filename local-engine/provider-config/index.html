@@ -2387,12 +2387,12 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HB_PROVIDER</span><span class="o">=</span>azureopenai
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HB_API_KEY</span><span class="o">=</span>your-azure-key
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HB_MODEL</span><span class="o">=</span>gpt-4.1
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HB_ENDPOINT</span><span class="o">=</span><span class="s2">&quot;https://your-resource.openai.azure.com/openai/deployments/your-deployment/chat/completions?api-version=2025-01-01-preview&quot;</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HB_ENDPOINT</span><span class="o">=</span><span class="s2">"https://your-resource.openai.azure.com/openai/deployments/your-deployment/chat/completions?api-version=2025-01-01-preview"</span>
 </code></pre></div>
 <h3 id="ollama-full-isolation">Ollama (Full Isolation)</h3>
 <p>For zero external network calls — everything runs locally:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Install</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;humanbound[engine]&quot;</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"humanbound[engine]"</span>
 <a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
 <a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1"># Start ollama</span>
 <a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>ollama<span class="w"> </span>serve
@@ -2414,7 +2414,7 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>hb<span class="w"> </span>login
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>hb<span class="w"> </span>connect<span class="w"> </span>--endpoint<span class="w"> </span>./config.json
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>hb<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--wait
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c1"># Uses Humanbound&#39;s LLM provider — no HB_PROVIDER or HB_API_KEY needed</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c1"># Uses Humanbound's LLM provider — no HB_PROVIDER or HB_API_KEY needed</span>
 </code></pre></div>
 <p>You can still use your own provider on the platform by adding it via <code>hb providers add</code>.</p>
 <h2 id="frequently-asked-questions">Frequently asked questions</h2>

@@ -2344,7 +2344,7 @@
 <p>Guardrails configure the firewall's Tier 3 LLM judge — they define what the agent is allowed and restricted from doing:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">hb_firewall</span><span class="w"> </span><span class="kn">import</span> <span class="n">Firewall</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">fw</span> <span class="o">=</span> <span class="n">Firewall</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="s2">&quot;agent.yaml&quot;</span><span class="p">)</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">fw</span> <span class="o">=</span> <span class="n">Firewall</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="s2">"agent.yaml"</span><span class="p">)</span>
 </code></pre></div>
 <p>The <code>agent.yaml</code> scope (permitted/restricted intents) acts as the guardrail configuration. Exported rules can supplement or override the base configuration.</p>
 <p>See <a href="../firewall/">Firewall</a> for full integration details.</p>
