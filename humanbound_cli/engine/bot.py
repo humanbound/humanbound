@@ -412,13 +412,26 @@ class Bot(ResponseExtractor):
     #   - headers/payload are deep-copied so per-request placeholder substitution
     #     never mutates the shared bot config
     def __chat_completion_request(self):
-        cfg = self.bot_config.get("chat_completion") or {}
-        if not cfg.get("endpoint"):
-            raise Exception("400/'chat_completion.endpoint' is required in the bot config.")
+        cfg = (
+            (self.bot_config.get("chat_completion") or {})
+            if isinstance(self.bot_config, dict)
+            else {}
+        )
+        if not isinstance(cfg, dict):
+            raise Exception("400/'chat_completion' must be a dictionary in the bot config.")
+        endpoint = cfg.get("endpoint")
+        if not endpoint or not isinstance(endpoint, str):
+            raise Exception(
+                "400/'chat_completion.endpoint' is required and must be a string in the bot config."
+            )
+        if not endpoint.startswith(("http://", "https://")):
+            raise Exception(
+                f"400/'chat_completion.endpoint' must be a valid URL (http:// or https://): {endpoint}"
+            )
         return (
-            cfg["endpoint"],
-            copy.deepcopy(cfg.get("headers", {})),
-            copy.deepcopy(cfg.get("payload", {})),
+            endpoint,
+            copy.deepcopy(cfg.get("headers", {})) if isinstance(cfg.get("headers"), dict) else {},
+            copy.deepcopy(cfg.get("payload", {})) if isinstance(cfg.get("payload"), dict) else {},
         )
 
     #
