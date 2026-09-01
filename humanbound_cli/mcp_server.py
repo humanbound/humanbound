@@ -1517,7 +1517,12 @@ def hb_connect(
         # -- Derive project name ------------------------------------------
         if not name:
             try:
-                ep_url = bot_config.get("chat_completion", {}).get("endpoint", "")
+                chat_completion = (
+                    bot_config.get("chat_completion") if isinstance(bot_config, dict) else {}
+                )
+                ep_url = (
+                    chat_completion.get("endpoint", "") if isinstance(chat_completion, dict) else ""
+                )
                 if ep_url:
                     from urllib.parse import urlparse
 
