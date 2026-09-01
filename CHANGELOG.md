@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Discord links now point at the `#start-here` invite** (#132).
+  `README.md`, `CONTRIBUTING.md`, `pyproject.toml`, the new-issue chooser, and
+  the community and plugins docs pages used `discord.gg/WgTMpmSFtN`, which
+  opens in `#general`. They now use `discord.gg/QFTD6tr9zu`, the invite
+  www.humanbound.ai already links to. Both codes are live and both open the
+  same server, so links already in the wild keep working.
+
 ## [2.9.0] — 2026-08-14
 
 ### Added
