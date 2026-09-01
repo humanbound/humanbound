@@ -28,8 +28,10 @@ def mcp_command():
     """
     try:
         from ..mcp_server import main
-    except ImportError:
+    except ImportError as e:
         raise click.ClickException(
-            "MCP dependencies not installed. Run: pip install humanbound[mcp]"
-        )
+            "The MCP server requires the [mcp] extra. "
+            "Install with: pip install 'humanbound[mcp]'\n"
+            f"  (import failed: {e})"
+        ) from e
     main()
