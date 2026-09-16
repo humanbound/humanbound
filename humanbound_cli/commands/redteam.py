@@ -2,6 +2,8 @@
 # Copyright (c) 2024-2026 Humanbound
 """Collaborative red team command — interactive human-AI adversarial testing."""
 
+import logging
+
 import click
 import requests as requests_lib
 from rich.console import Console
@@ -14,6 +16,7 @@ from ..client import HumanboundClient
 from ..exceptions import APIError, NotAuthenticatedError
 
 console = Console()
+logger = logging.getLogger("humanbound.commands.redteam")
 console_err = Console(stderr=True)
 
 COLLABORATIVE_TEST_CATEGORY = "humanbound/adversarial/collaborative_red_team"
@@ -548,5 +551,6 @@ def _get_project_scope(client):
     try:
         project = client.get(f"projects/{client.project_id}", include_project=True)
         return project.get("scope", {})
-    except Exception:
+    except Exception as e:
+        logger.debug(f"Failed to fetch project scope: {e}")
         return {}

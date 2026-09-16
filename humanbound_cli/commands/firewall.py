@@ -2,6 +2,7 @@
 # Copyright (c) 2024-2026 Humanbound
 """Firewall commands — train and manage Tier 2 classifiers for humanbound-firewall."""
 
+import logging
 import os
 import sys
 import time
@@ -17,6 +18,7 @@ from ..engine.platform_runner import PlatformTestRunner
 from ..exceptions import APIError, NotAuthenticatedError
 
 console = Console()
+logger = logging.getLogger("humanbound.commands.firewall")
 
 
 @click.group("firewall")
@@ -358,5 +360,6 @@ def _fetch_intents(client, project_id):
         data = client.get(f"projects/{project_id}")
         intents = data.get("scope", {}).get("intents", {})
         return intents.get("permitted", []), intents.get("restricted", [])
-    except Exception:
+    except Exception as e:
+        logger.debug(f"Failed to fetch project scope for {project_id}: {e}")
         return None, None
