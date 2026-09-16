@@ -356,7 +356,8 @@ def _fetch_logs(client, experiments):
 def _fetch_intents(client, project_id):
     try:
         data = client.get(f"projects/{project_id}")
-        intents = data.get("scope", {}).get("intents", {})
+        scope = data.get("scope") if isinstance(data, dict) else {}
+        intents = scope.get("intents", {}) if isinstance(scope, dict) else {}
         return intents.get("permitted", []), intents.get("restricted", [])
     except Exception:
         return None, None

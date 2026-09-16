@@ -188,7 +188,7 @@ def sessions_command(experiment_id):
             s.get("user_id", ""),
             s.get("status", ""),
             str(s.get("turn_count", 0)),
-            s.get("strategy", {}).get("goal", "")[:40],
+            (s.get("strategy") if isinstance(s.get("strategy"), dict) else {}).get("goal", "")[:40],
         )
 
     console.print(table)
@@ -315,7 +315,8 @@ def _interactive_loop(client, experiment_id):
                     )
 
                 active_session = result.get("session_id")
-                strategy_goal = result.get("strategy", {}).get("goal", "")
+                strategy = result.get("strategy") if isinstance(result, dict) else {}
+                strategy_goal = strategy.get("goal", "") if isinstance(strategy, dict) else ""
                 console.print("\n[green]Session started[/green]")
                 console.print(f"  Strategy: [bold]{strategy_goal}[/bold]")
 
@@ -547,6 +548,6 @@ def _get_project_scope(client):
     """Get the project scope for experiment configuration."""
     try:
         project = client.get(f"projects/{client.project_id}", include_project=True)
-        return project.get("scope", {})
+        return project.get("scope", {}) if isinstance(project, dict) else {}
     except Exception:
         return {}

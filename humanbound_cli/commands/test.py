@@ -494,8 +494,14 @@ def test_command(
             try:
                 client = runner.client
                 project = client.get(f"projects/{client.project_id}", include_project=True)
-                default_integ = project.get("default_integration") or {}
-                has_telemetry = bool(default_integ.get("telemetry"))
+                default_integ = (
+                    project.get("default_integration") if isinstance(project, dict) else {}
+                )
+                has_telemetry = (
+                    bool(default_integ.get("telemetry"))
+                    if isinstance(default_integ, dict)
+                    else False
+                )
             except Exception:
                 has_telemetry = False
         else:

@@ -847,12 +847,18 @@ class Telemetry:
                 total_tokens = 0
                 for run in raw_data["runs"]:
                     if run.get("run_type") == "tool":
+                        inputs = run.get("inputs") if isinstance(run, dict) else {}
+                        outputs = run.get("outputs") if isinstance(run, dict) else {}
                         standardized["tool_executions"].append(
                             {
                                 "turn": run.get("turn", 0),
                                 "tool_name": run.get("name", ""),
-                                "parameters": run.get("inputs", {}).get("tool_input", {}),
-                                "result": run.get("outputs", {}).get("result", ""),
+                                "parameters": inputs.get("tool_input", {})
+                                if isinstance(inputs, dict)
+                                else {},
+                                "result": outputs.get("result", "")
+                                if isinstance(outputs, dict)
+                                else "",
                                 "execution_time_ms": run.get("execution_time", 0),
                             }
                         )
@@ -1457,7 +1463,12 @@ class Telemetry:
     def auth(self):
         """Optional: Get telemetry-specific access token"""
         try:
-            endpoint = self.config.get("telemetry_auth", {}).get("endpoint", "")
+            telemetry_auth = (
+                self.config.get("telemetry_auth") if isinstance(self.config, dict) else {}
+            )
+            endpoint = (
+                telemetry_auth.get("endpoint", "") if isinstance(telemetry_auth, dict) else ""
+            )
             if endpoint == "":
                 return {}
 
