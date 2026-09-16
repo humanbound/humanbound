@@ -165,7 +165,8 @@ class Bot(ResponseExtractor):
 
             return current
 
-        except Exception:
+        except Exception as e:
+            logger.debug(f"Failed to navigate nested dict path: {e}")
             return None
 
     #
@@ -482,7 +483,8 @@ class Bot(ResponseExtractor):
                 raw_data = await socket.recv()
                 try:
                     chunk = json.loads(raw_data)
-                except Exception:
+                except Exception as e:
+                    logger.debug(f"Failed to parse SSE chunk: {e}")
                     break
                 buffer, stop, _ = self.__process_chunk(chunk, buffer)
                 if stop:
@@ -491,7 +493,8 @@ class Bot(ResponseExtractor):
 
         try:
             return await asyncio.wait_for(read_complete_message(), REQUESTS_TIMEOUT)
-        except Exception:
+        except Exception as e:
+            logger.debug(f"Error reading complete message: {e}")
             await asyncio.wait_for(socket.close(), REQUESTS_TIMEOUT)
             raise
 
@@ -906,7 +909,8 @@ class Telemetry:
                         for obs in trace_detail.get("observations", []):
                             obs["_turn"] = turn_idx
                         observations.extend(trace_detail.get("observations", []))
-                    except Exception:
+                    except Exception as e:
+                        logger.debug(f"Failed to process trace detail: {e}")
                         continue
             total_tokens = 0
             total_cost = 0
@@ -1545,8 +1549,9 @@ class Telemetry:
             # All retries exhausted — return whatever we got (may be empty)
             return standardized if raw_data else None
 
-        except Exception:
+        except Exception as e:
             # Graceful degradation — continue without telemetry
+            logger.debug(f"Failed to standardize telemetry data: {e}")
             return None
 
     @staticmethod
@@ -1589,7 +1594,8 @@ class Telemetry:
 
             return current
 
-        except Exception:
+        except Exception as e:
+            logger.debug(f"Failed to navigate nested dict path: {e}")
             return None
 
     @staticmethod
@@ -1695,8 +1701,9 @@ class Telemetry:
 
             return standardized
 
-        except Exception:
+        except Exception as e:
             # Return empty standardized structure on error
+            logger.debug(f"Failed to standardize bot response: {e}")
             return {
                 "tool_executions": [],
                 "memory_operations": [],
