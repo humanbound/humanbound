@@ -18,6 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and an unusable extra could ship green — which is how the mcp 2.x break
   reached a release. The job now installs `[dev,engine,mcp]` and asserts the
   extra imports before running the suite.
+- **Docs `llms.txt` no longer lists top-level pages under the previous
+  section.** Each one (e.g. Deployment, Community) now has its own heading.
+- **Docs site serves `llms-full.txt` and a `.md` copy of every page**, which
+  previously returned 404 (e.g. `/deployment.md`).
 
 ### Changed
 - **Python 3.13 and 3.14 are now tested in CI.** `requires-python` has always
