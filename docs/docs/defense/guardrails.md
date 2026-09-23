@@ -13,9 +13,9 @@ keywords:
 
 # Guardrails Export
 
-Guardrails are security rules extracted from your test results. They capture the attack patterns and boundary violations discovered during testing and translate them into actionable rules for runtime defense. Export with `hb guardrails` as JSON, YAML, or OpenAI moderation format, then load the rules into `humanbound-firewall` where they configure the Tier 3 LLM judge's evaluation criteria.
+Guardrails are security rules extracted from your test results. They capture the attack patterns and boundary violations discovered during testing and translate them into actionable rules for runtime defense. Export with `hb guardrails` as JSON, YAML, or OpenAI moderation format for the enforcement points that consume rule lists — gateways, moderation APIs, your own filters. The `humanbound-firewall` Tier 3 judge is configured by the policy file (`agent.yaml`), not by this export.
 
-Guardrails are the bridge between testing and protection — they carry the knowledge gained from adversarial testing into the firewall's evaluation logic.
+Guardrails are the bridge between testing and protection — they carry the knowledge gained from adversarial testing into your enforcement points.
 
 ## How It Works
 
@@ -71,15 +71,17 @@ hb guardrails --vendor openai -o openai_rules.json
 
 ## Using with humanbound-firewall
 
-Guardrails configure the firewall's Tier 3 LLM judge — they define what the agent is allowed and restricted from doing:
+The firewall's Tier 3 LLM judge reads `agent.yaml` — scope, permitted and restricted intents, few-shot examples — which defines what the agent is allowed and restricted from doing:
 
 ```python
-from hb_firewall import Firewall
+from humanbound_firewall import Firewall
 
 fw = Firewall.from_config("agent.yaml")
 ```
 
-The `agent.yaml` scope (permitted/restricted intents) acts as the guardrail configuration. Exported rules can supplement or override the base configuration.
+The `agent.yaml` scope (permitted/restricted intents) is the guardrail configuration the firewall enforces. The exported rule list is not read by the firewall today.
+
+Since `humanbound-firewall` 0.3 the firewall judges every path into the model by trust class — `request`, `ingest`, `recall` — and few-shot examples in `agent.yaml` carry the class they were learned on (`class: request | ingest`, default `request`; the recall judge takes none). The export does not carry few-shot examples yet; when it does, each example will carry the class it was found on, so that the ingest judge learns from findings made through fetched content.
 
 See [Firewall](firewall.md) for full integration details.
 

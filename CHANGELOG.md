@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Docs for `humanbound-firewall` 0.3.** The Firewall page now describes
+  the three trust classes (request, ingest, recall), `inspect()` and the
+  `Decision`, the caller-carried session, the deployment's choices, the
+  policy file's `capabilities`/`tools` block and class-tagged few-shots, with
+  the PriceWatch indirect-prompt-injection video embedded. A new
+  Defense → Frameworks → LangChain page covers the two-line adapter, every
+  attached hook, the session in the graph state, the trust-boundary
+  inventory and background judging in log mode. Every claim was checked
+  against the 0.3.0 source; the Firewall and Guardrails pages no longer say
+  the `hb guardrails` rule export configures the judge (the firewall reads
+  `agent.yaml` only), and settings the code never read are gone.
+
 ### Fixed
 - **`hb mcp` now reports why the MCP import failed** (#135, thanks
   @iayanpahwa). A missing SDK and an installed-but-incompatible SDK both
