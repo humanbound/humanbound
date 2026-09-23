@@ -2,7 +2,10 @@
 
 > Humanbound documentation — AI security testing, continuous monitoring, and defense for LLM agents.
 
+## Home
+
 - [Home](https://docs.humanbound.ai/): Open-source AI agent security testing — automated adversarial probes, LLM-as-a-Judge evaluation, runtime firewall, and posture scoring.
+
 ## Getting Started
 
 - [Installation](https://docs.humanbound.ai/getting-started/installation/): Install Humanbound — pip install, optional local engine extras, and quick paths for both account-less local mode and the full platform.
@@ -71,12 +74,23 @@
 
 - [Overview](https://docs.humanbound.ai/plugins/): Humanbound plugins for AI coding agents — adversarial security testing inside Claude Code and Cursor.
 
+## Deployment
+
 - [Deployment](https://docs.humanbound.ai/deployment/): Deployment options for Humanbound — local engine, managed platform, and air-gapped variants for organisations with specific security and compliance needs.
+
+## Authentication
+
 - [Authentication](https://docs.humanbound.ai/authentication/): Manage Humanbound authentication, organisation context, and access scopes for the CLI, MCP server, and API.
+
 ## Reference
 
 - [Commands](https://docs.humanbound.ai/reference/commands/): Complete hb CLI reference — every command and flag, grouped by workflow — auth, projects, test, redteam, posture, logs, MCP.
 - [Glossary](https://docs.humanbound.ai/reference/glossary/): Glossary of key terms used throughout Humanbound — orchestrator, judge, scope, posture, finding, experiment, and more.
 
+## Shell Completion
+
 - [Shell Completion](https://docs.humanbound.ai/shell-completion/): Enable tab completion for the hb CLI in bash, zsh, or fish — install once and get flag and command suggestions in every new shell.
+
+## Community
+
 - [Community](https://docs.humanbound.ai/community/): Join the Humanbound community for help, feedback, and updates — channels, contributing guide, and how to get in touch.

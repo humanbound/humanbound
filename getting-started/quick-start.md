@@ -1,0 +1,212 @@
+# Quick Start
+
+This guide walks through your first Humanbound security test end-to-end, in both local mode (no account, your own LLM provider) and platform mode (with login, persistent findings, and continuous monitoring). The local path covers configuring a provider, writing a `bot-config.json` for your agent, running `hb test`, and viewing the resulting posture score; the platform path covers `hb login`, `hb connect`, and `hb monitor enable`.
+
+## Local Testing (No Account Required)
+
+### Step 1: Configure Your LLM Provider
+
+```bash
+# Option A: Environment variables
+export HB_PROVIDER=openai
+export HB_API_KEY=sk-...
+
+# Option B: Config file
+hb config set provider openai
+hb config set api-key sk-...
+
+# Option C: Ollama (full isolation, no external API calls)
+export HB_PROVIDER=ollama
+export HB_MODEL=llama3.1:8b
+```
+
+### Step 2: Prepare Your Agent Config
+
+Create a `bot-config.json` describing how to talk to your agent:
+
+```json
+{
+  "streaming": null,
+  "thread_auth": {"endpoint": "", "headers": {}, "payload": {}},
+  "thread_init": {
+    "endpoint": "https://your-bot.com/sessions",
+    "headers": {"Authorization": "Bearer token"},
+    "payload": {}
+  },
+  "chat_completion": {
+    "endpoint": "https://your-bot.com/chat",
+    "headers": {"Authorization": "Bearer token"},
+    "payload": {"message": "$PROMPT"}
+  }
+}
+```
+
+See [Agent Configuration](agent-config.md) for the full specification.
+
+### Step 3: Run Your First Test
+
+```bash
+# Recommended: scan your code for scope + tools
+hb test --endpoint ./bot-config.json --repo . --wait
+
+# Or provide a scope file for precise control
+hb test --endpoint ./bot-config.json --scope ./scope.yaml --wait
+
+# Or provide your system prompt
+hb test --endpoint ./bot-config.json --prompt ./system_prompt.txt --wait
+
+# Or just point at the bot (auto-probe for scope)
+hb test --endpoint ./bot-config.json --wait
+```
+
+See [Scope Discovery](../local-engine/scope-discovery.md) for details on each method.
+
+### Step 4: View Results
+
+```bash
+hb posture                         # Security posture score (0-100, A-F)
+hb logs                            # Conversation logs table
+hb logs --verdict fail             # Only failed conversations
+hb report -o report.html           # Full HTML report
+hb logs -f html -o logs.html       # Interactive HTML log viewer
+```
+
+### Step 5: Export Defenses
+
+```bash
+hb guardrails -o rules.yaml        # Export firewall rules
+hb firewall train                   # Train a Tier 2 classifier
+```
+
+Use with [humanbound-firewall](https://github.com/humanbound/humanbound-firewall) for runtime protection.
+
+### Test Modes
+
+```bash
+# Default: threaded execution, progress spinner
+hb test --endpoint ./config.json --wait
+
+# Verbose: live progress bar + final results table
+hb test --endpoint ./config.json --wait --verbose
+
+# Debug: single-threaded, full turn-by-turn output
+hb test --endpoint ./config.json --wait --debug
+```
+
+### Test Options
+
+| Option | Description |
+|---|---|
+| `-e, --endpoint` | Agent integration config (JSON file or string) |
+| `--repo` | Repository path for scope + tools discovery |
+| `--prompt` | System prompt file for scope extraction |
+| `--scope` | Explicit scope file (YAML/JSON) |
+| `-t, --test-category` | Test type, e.g. `owasp_single_turn`, `behavioral`. Omit to use the default. |
+| `-l, --testing-level` | Depth: `unit` (~20 min), `system` (~45 min), `acceptance` (~90 min). Omit to use the default. |
+| `--deep` | Shortcut for `-l system` |
+| `--full` | Shortcut for `-l acceptance` |
+| `--qa` | Shortcut for `-t behavioral` |
+| `--lang` | Test language. Accepts codes (en, de, es) or full names. Omit to use the default. |
+| `--context` | Extra context for the judge (string or .txt file) |
+| `--wait` | Wait for completion (automatic in local mode) |
+| `--fail-on` | Exit non-zero on findings: `critical`, `high`, `medium`, `low`, `any` |
+| `--debug` | Single-threaded, full turn-by-turn output |
+| `--verbose` | Live progress bar + final results table |
+| `--local` | Force local engine (even when logged in) |
+
+### CI/CD
+
+```bash
+pip install humanbound
+hb test --endpoint ./bot-config.json --repo . --wait --fail-on high
+```
+
+```yaml
+# .github/workflows/security.yml
+- run: pip install humanbound
+- run: hb test --endpoint ./bot-config.json --repo . --wait --fail-on high
+  env:
+    HB_PROVIDER: openai
+    HB_API_KEY: ${{ secrets.OPENAI_KEY }}
+```
+
+See [CI/CD Integration](../integrations/cicd.md) for more.
+
+---
+
+## Platform Testing (With Account)
+
+For posture tracking, finding lifecycle, continuous monitoring, and team collaboration.
+
+### Step 1: Authenticate
+
+```bash
+hb login
+```
+
+### Step 2: Connect Your Agent
+
+```bash
+hb connect --endpoint ./bot-config.json
+
+# Or discover a hosted-platform agent (currently OpenAI Assistants)
+hb connect --vendor openai
+```
+
+This probes your agent, extracts scope, creates a project, and runs a first test.
+
+| Option | Description |
+|---|---|
+| `-e, --endpoint` | Agent integration config |
+| `-p, --prompt` | System prompt file |
+| `-r, --repo` `[PREVIEW]` | Repository path (also infers capability surface from source patterns) |
+| `-o, --openapi` | OpenAPI spec file |
+
+!!! note "Preview: `--repo` capability inference"
+    Pointing `hb connect` at a repository now also scans source files to infer the
+    project's capability surface (`tools`, `memory`, `inter_agent`, `reasoning_model`)
+    and folds it into `scope.capabilities`. Detected signals are shown for review
+    before they're written. The pattern catalog is best-effort and may miss
+    less-common frameworks; please report gaps.
+| `-c, --context` | Extra context for the judge |
+| `-n, --name` | Project name |
+| `-y, --yes` | Skip confirmations |
+
+### Step 3: Run Tests
+
+```bash
+# Uses project's saved integration (no --endpoint needed)
+hb test --wait
+```
+
+### Step 4: View Enhanced Results
+
+```bash
+hb posture                # Score with delta from previous scan
+hb posture --history      # Posture trends over time
+hb findings               # Finding lifecycle (open/stale/fixed/regressed)
+hb logs                   # Conversation logs
+hb report -o report.html  # Full report
+```
+
+### Step 5: Continuous Monitoring
+
+```bash
+hb monitor enable --schedule daily    # Requires Pro
+```
+
+
+## Frequently asked questions
+
+??? question "How do I run tests without creating an account?"
+    Use local mode — configure an LLM provider via environment variables or `hb config set`, prepare a `bot-config.json` describing your agent, then run `hb test --endpoint ./bot-config.json --wait`. No login required.
+
+??? question "How do I view my test results?"
+    Run `hb posture` for a security score (0–100, A–F), `hb logs` for conversation logs, `hb logs --verdict fail` to filter failures, or `hb report -o report.html` for a full HTML report.
+
+??? question "What does the --fail-on flag do?"
+    `--fail-on` causes `hb test` to exit with a non-zero status code when findings of the specified severity (critical, high, medium, low, or any) are found, making it suitable for CI/CD quality gates.
+
+??? question "How do I run tests in CI/CD?"
+    Install humanbound with `pip install humanbound`, then run `hb test --endpoint ./bot-config.json --repo . --wait --fail-on high`, passing your provider credentials as environment variables such as `HB_PROVIDER` and `HB_API_KEY`.
+
