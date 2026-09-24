@@ -65,7 +65,7 @@ The class is about authorship, not location: a ticket stored in your own Jira wa
 
 The firewall is the third component of the test–monitor–protect lifecycle. Its effectiveness depends on the quality of data flowing from the other two layers:
 
-- **From testing**: the policy file (`agent.yaml`) — scope, permitted and restricted intents, few-shot examples learned from findings — is what the Tier 3 LLM judge evaluates against. The `hb guardrails` rule export serves other enforcement points; the firewall does not read it.
+- **From testing**: the policy file (`agent.yaml`) — scope, permitted and restricted intents, and optional few-shot examples — is what the Tier 3 LLM judge evaluates against. `hb guardrails --format yaml` writes it — from your project when logged in, otherwise from the scope your latest local test ran against or a scope file; it does not add few-shot examples yet. The JSON and OpenAI rule exports serve other enforcement points.
 - **From testing + monitoring**: adversarial test logs provide training data for Tier 2 classifiers. More test cycles over time produce richer, more diverse training data — and therefore better Tier 2 accuracy.
 - **Back to monitoring**: every decision reaches your `on_decision` callback; that is where production verdicts go to a dashboard or the platform. The firewall itself uploads nothing.
 
@@ -239,7 +239,7 @@ print(result.tier)  # 1 or 2 when a local tier decided (no LLM cost); 3 when it 
 
 ## Agent Configuration (agent.yaml)
 
-The agent configuration defines your agent's scope, intents, and firewall settings. This file is used by both the firewall runtime and the LLM judge.
+The agent configuration defines your agent's scope, intents, and firewall settings. This file is used by both the firewall runtime and the LLM judge. `hb guardrails --format yaml -o agent.yaml` writes the scope, intents and capabilities for you; see [Guardrails](guardrails.md#using-with-humanbound-firewall).
 
 ```yaml
 name: "Customer Support Agent"
@@ -278,7 +278,7 @@ settings:
   tier2_min_turns: 3       # Tier 2 activates after N prior turns
 ```
 
-Defaults when `tools:` is absent: every tool is `ingest`, the human turn is `request`, and `expects` is the tool's own description. The loader does not check tool names; the LangChain adapter warns about an entry naming a tool the agent does not have when it is given the tool list (`adapt_to("langchain", tools=...)`). `few_shots` entries — examples exported from your findings — carry the class they were learned on (`class: request | ingest`, default `request`); the recall judge takes none.
+Defaults when `tools:` is absent: every tool is `ingest`, the human turn is `request`, and `expects` is the tool's own description. The loader does not check tool names; the LangChain adapter warns about an entry naming a tool the agent does not have when it is given the tool list (`adapt_to("langchain", tools=...)`). `few_shots` entries — examples learned from your findings, not yet part of the export — carry the class they were learned on (`class: request | ingest`, default `request`); the recall judge takes none.
 
 ### Configuration Properties
 

@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Export guardrails — security rules derived from your test results that capture discovered attack patterns and enforce them at runtime.">
+        <meta name="description" content="Export guardrails from your test results — rule lists for gateways and moderation APIs, or the humanbound-firewall policy file (agent.yaml).">
       
       
       
@@ -64,16 +64,16 @@
   
   <meta property="og:site_name" content="Humanbound" />
   <meta property="og:locale" content="en_US" />
-  <meta property="og:image:alt" content="Export guardrails — security rules derived from your test results that capture discovered attack patterns and enforce them at runtime." />
-  <meta name="twitter:image:alt" content="Export guardrails — security rules derived from your test results that capture discovered attack patterns and enforce them at runtime." />
+  <meta property="og:image:alt" content="Export guardrails from your test results — rule lists for gateways and moderation APIs, or the humanbound-firewall policy file (agent.yaml)." />
+  <meta name="twitter:image:alt" content="Export guardrails from your test results — rule lists for gateways and moderation APIs, or the humanbound-firewall policy file (agent.yaml)." />
   
-  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/defense/guardrails/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Guardrails","item":"https://docs.humanbound.ai/defense/guardrails/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/defense/guardrails/#article","headline":"Guardrails","description":"Export guardrails \u2014 security rules derived from your test results that capture discovered attack patterns and enforce them at runtime.","url":"https://docs.humanbound.ai/defense/guardrails/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-09-24T14:27:00+03:00","keywords":"guardrails export, hb guardrails command, security rules export, firewall training data, guardrail rule format, OpenAI moderation rules, PyRIT import, promptfoo import"}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/defense/guardrails/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Guardrails","item":"https://docs.humanbound.ai/defense/guardrails/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/defense/guardrails/#article","headline":"Guardrails","description":"Export guardrails from your test results \u2014 rule lists for gateways and moderation APIs, or the humanbound-firewall policy file (agent.yaml).","url":"https://docs.humanbound.ai/defense/guardrails/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-09-24T23:00:14+03:00","keywords":"guardrails export, hb guardrails command, security rules export, firewall training data, guardrail rule format, agent.yaml export, OpenAI moderation rules, PyRIT import, promptfoo import"}]}</script>
   
 
   
 <meta property="og:type" content="website" />
 <meta property="og:title" content="Guardrails - Humanbound" />
-<meta property="og:description" content="Export guardrails — security rules derived from your test results that capture discovered attack patterns and enforce them at runtime." />
+<meta property="og:description" content="Export guardrails from your test results — rule lists for gateways and moderation APIs, or the humanbound-firewall policy file (agent.yaml)." />
 <meta property="og:image" content="https://docs.humanbound.ai/assets/images/social/defense/guardrails.png" />
 <meta property="og:image:type" content="image/png" />
 <meta property="og:image:width" content="1200" />
@@ -81,7 +81,7 @@
 <meta property="og:url" content="https://docs.humanbound.ai/defense/guardrails/" />
 <meta property="twitter:card" content="summary_large_image" />
 <meta property="twitter:title" content="Guardrails - Humanbound" />
-<meta property="twitter:description" content="Export guardrails — security rules derived from your test results that capture discovered attack patterns and enforce them at runtime." />
+<meta property="twitter:description" content="Export guardrails from your test results — rule lists for gateways and moderation APIs, or the humanbound-firewall policy file (agent.yaml)." />
 <meta property="twitter:image" content="https://docs.humanbound.ai/assets/images/social/defense/guardrails.png" />
 </head>
   
@@ -2387,16 +2387,20 @@
 
 
 <h1 id="guardrails-export">Guardrails Export</h1>
-<p><a href="../../reference/glossary/#defense">Guardrails</a> are security rules extracted from your test results. They capture the attack patterns and boundary violations discovered during testing and translate them into actionable rules for runtime defense. Export with <code>hb guardrails</code> as JSON, YAML, or OpenAI moderation format for the enforcement points that consume rule lists — gateways, moderation APIs, your own filters. The <code>humanbound-firewall</code> Tier 3 judge is configured by the policy file (<code>agent.yaml</code>), not by this export.</p>
+<p><code>hb guardrails</code> carries what your tests found into your runtime defenses. It exports two kinds of output:</p>
+<ul>
+<li><strong>The policy file (<code>agent.yaml</code>)</strong> — business scope, permitted and restricted intents, and capabilities — which the <code>humanbound-firewall</code> Tier 3 judge evaluates against. <code>--format yaml</code> writes it: logged in, from the project's policy; locally, from the scope your test ran against.</li>
+<li><strong>Rule lists</strong> for the enforcement points that consume them — gateways, moderation APIs, your own filters: the attack patterns a local run found, as JSON, or an OpenAI <a href="../../reference/glossary/#defense">Guardrails</a> configuration (<code>--vendor openai</code>) when logged in.</li>
+</ul>
 <p>Guardrails are the bridge between testing and protection — they carry the knowledge gained from adversarial testing into your enforcement points.</p>
 <h2 id="how-it-works">How It Works</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>hb test → findings (what attacks succeeded)
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>hb test                         →  findings, and the scope the agent was tested against
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    ↓
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>hb guardrails → rules (what to block)
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    ↓
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>humanbound-firewall → runtime protection (blocking attacks)
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>hb guardrails --format yaml     →  agent.yaml                →  humanbound-firewall (Tier 3 judge)
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>hb guardrails (local run)       →  rule list (JSON)          →  gateways, moderation APIs, your filters
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>hb guardrails --vendor openai   →  OpenAI Guardrails config  →  OpenAI Guardrails (logged in)
 </code></pre></div>
-<p>Each guardrail rule includes:</p>
+<p>The policy file describes what the agent may and must not do; the firewall judges each request and each piece of ingested content against it. Logged in, the default JSON output is the same policy as <code>agent.yaml</code>, in JSON. A rule list describes the attacks that succeeded. Each rule in a local run's list includes:</p>
 <ul>
 <li><strong>Threat class</strong> — which OWASP category it addresses</li>
 <li><strong>Pattern</strong> — description of the attack technique</li>
@@ -2408,42 +2412,57 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># After running a test</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>hb<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--endpoint<span class="w"> </span>./config.json<span class="w"> </span>--scope<span class="w"> </span>./scope.json<span class="w"> </span>--wait
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="c1"># Export guardrails (reads from latest local results)</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="c1"># Export guardrail rules (reads from latest local results)</span>
 <a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>hb<span class="w"> </span>guardrails<span class="w"> </span>-o<span class="w"> </span>rules.json
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>hb<span class="w"> </span>guardrails<span class="w"> </span>--format<span class="w"> </span>yaml<span class="w"> </span>-o<span class="w"> </span>rules.yaml
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="c1"># Export the firewall policy file (agent.yaml) from the same run's scope</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>hb<span class="w"> </span>guardrails<span class="w"> </span>--format<span class="w"> </span>yaml<span class="w"> </span>-o<span class="w"> </span>agent.yaml
 </code></pre></div>
 <h3 id="from-platform-data-logged-in">From Platform Data (Logged In)</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Richer rules — accumulated from multiple test cycles</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>hb<span class="w"> </span>guardrails<span class="w"> </span>-o<span class="w"> </span>rules.json
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># The active project's policy as the firewall's agent.yaml</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>hb<span class="w"> </span>guardrails<span class="w"> </span>--format<span class="w"> </span>yaml<span class="w"> </span>-o<span class="w"> </span>agent.yaml
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1"># The same policy as JSON</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>hb<span class="w"> </span>guardrails<span class="w"> </span>-o<span class="w"> </span>policy.json
 </code></pre></div>
-<p>Platform guardrails are enriched by data from continuous monitoring — more test cycles produce more diverse attack patterns and therefore more comprehensive rules.</p>
+<p>Logged in, <code>hb guardrails</code> exports the active project's policy — business scope, permitted and restricted intents, and declared capabilities — in the <code>agent.yaml</code> layout. It comes from the latest policy recommendation you accepted on the platform, or from the project's scope when you have accepted none. The platform derives recommendations from your test cycles and monitoring, so the policy sharpens as more data comes in.</p>
 <h2 id="output-formats">Output Formats</h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># JSON (default)</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>hb<span class="w"> </span>guardrails<span class="w"> </span>-o<span class="w"> </span>guardrails.json
 <a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1"># YAML</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>hb<span class="w"> </span>guardrails<span class="w"> </span>--format<span class="w"> </span>yaml<span class="w"> </span>-o<span class="w"> </span>guardrails.yaml
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1"># YAML — the humanbound-firewall policy file (agent.yaml)</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>hb<span class="w"> </span>guardrails<span class="w"> </span>--format<span class="w"> </span>yaml<span class="w"> </span>-o<span class="w"> </span>agent.yaml
 <a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
 <a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="c1"># OpenAI moderation format</span>
 <a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>hb<span class="w"> </span>guardrails<span class="w"> </span>--vendor<span class="w"> </span>openai<span class="w"> </span>-o<span class="w"> </span>openai_rules.json
 </code></pre></div>
 <h2 id="using-with-humanbound-firewall">Using with humanbound-firewall</h2>
-<p>The firewall's Tier 3 LLM judge reads <code>agent.yaml</code> — scope, permitted and restricted intents, few-shot examples — which defines what the agent is allowed and restricted from doing:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">humanbound_firewall</span><span class="w"> </span><span class="kn">import</span> <span class="n">Firewall</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">fw</span> <span class="o">=</span> <span class="n">Firewall</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="s2">"agent.yaml"</span><span class="p">)</span>
+<p>The firewall's Tier 3 LLM judge reads <code>agent.yaml</code> — scope, permitted and restricted intents, few-shot examples — which defines what the agent is allowed and restricted from doing. Export it with <code>--format yaml</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Logged in: the active project's policy, as the platform exports it</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>hb<span class="w"> </span>guardrails<span class="w"> </span>--format<span class="w"> </span>yaml<span class="w"> </span>-o<span class="w"> </span>agent.yaml
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c1"># Not logged in: from the scope your latest local test ran against</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>hb<span class="w"> </span>guardrails<span class="w"> </span>--format<span class="w"> </span>yaml<span class="w"> </span>-o<span class="w"> </span>agent.yaml
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="c1"># Not logged in: from a scope file</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>hb<span class="w"> </span>guardrails<span class="w"> </span>--format<span class="w"> </span>yaml<span class="w"> </span>--scope<span class="w"> </span>./scope.json<span class="w"> </span>-o<span class="w"> </span>agent.yaml
 </code></pre></div>
-<p>The <code>agent.yaml</code> scope (permitted/restricted intents) is the guardrail configuration the firewall enforces. The exported rule list is not read by the firewall today.</p>
+<p>Not logged in, when the latest run has no saved scope (runs saved by an earlier release), run <code>hb test</code> again or pass <code>--scope</code>.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">humanbound_firewall</span><span class="w"> </span><span class="kn">import</span> <span class="n">Firewall</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">fw</span> <span class="o">=</span> <span class="n">Firewall</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="s2">"agent.yaml"</span><span class="p">)</span>
+</code></pre></div>
+<p>The file carries <code>scope</code> (business scope and additional info), <code>intents</code> (permitted and restricted) and <code>capabilities</code> — the <code>tools</code>, <code>memory</code>, <code>inter_agent</code> and <code>reasoning_model</code> flags that are on for your project or in your scope file. When none are declared, <code>capabilities</code> is left out and the firewall applies its default. <code>settings:</code> and <code>tools:</code> are deployment choices; add them yourself. The JSON and OpenAI rule lists are not read by the firewall.</p>
 <p>Since <code>humanbound-firewall</code> 0.3 the firewall judges every path into the model by trust class — <code>request</code>, <code>ingest</code>, <code>recall</code> — and few-shot examples in <code>agent.yaml</code> carry the class they were learned on (<code>class: request | ingest</code>, default <code>request</code>; the recall judge takes none). The export does not carry few-shot examples yet; when it does, each example will carry the class it was found on, so that the ingest judge learns from findings made through fetched content.</p>
 <p>See <a href="../firewall/">Firewall</a> for full integration details.</p>
 <h2 id="training-firewall-classifiers">Training Firewall Classifiers</h2>
 <p>Beyond rule-based guardrails, test results can train ML classifiers for the firewall's Tier 2:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Train from your test results</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>hb<span class="w"> </span>firewall<span class="w"> </span>train<span class="w"> </span>--model<span class="w"> </span>detectors/setfit_classifier.py
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="c1"># Add external red teaming results</span>
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>hb<span class="w"> </span>firewall<span class="w"> </span>train<span class="w"> </span>--model<span class="w"> </span>detectors/setfit_classifier.py<span class="w"> </span>--import<span class="w"> </span>pyrit_results.json
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>hb<span class="w"> </span>firewall<span class="w"> </span>train<span class="w"> </span>--model<span class="w"> </span>detectors/setfit_classifier.py<span class="w"> </span>--import<span class="w"> </span>results.json:promptfoo
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># Train from your test results</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>hb<span class="w"> </span>firewall<span class="w"> </span>train<span class="w"> </span>--model<span class="w"> </span>detectors/setfit_classifier.py
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="c1"># Add external red teaming results</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>hb<span class="w"> </span>firewall<span class="w"> </span>train<span class="w"> </span>--model<span class="w"> </span>detectors/setfit_classifier.py<span class="w"> </span>--import<span class="w"> </span>pyrit_results.json
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>hb<span class="w"> </span>firewall<span class="w"> </span>train<span class="w"> </span>--model<span class="w"> </span>detectors/setfit_classifier.py<span class="w"> </span>--import<span class="w"> </span>results.json:promptfoo
 </code></pre></div>
 <p><code>--model</code> is the path to the detector script to train. When you are logged in with a project selected (or use an API key), <code>hb firewall train</code> pulls that project's experiments from the platform; otherwise it reads local results from <code>.humanbound/results</code>.</p>
 <p>See <a href="../firewall/#tier-2-agent-specific-classification">Firewall — Tier 2</a> for details on classifier training.</p>

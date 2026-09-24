@@ -46,7 +46,7 @@
 
 - [Firewall](https://docs.humanbound.ai/defense/firewall/): Humanbound Firewall — runtime defenses for LLM agents that block prompt injection and policy violations before they reach the agent in production.
 - [Frameworks: LangChain](https://docs.humanbound.ai/defense/frameworks/langchain/): Guard a LangChain agent with the Humanbound Firewall in two lines — every tool result, every record, the user's turn — with the session carried in the graph state.
-- [Guardrails](https://docs.humanbound.ai/defense/guardrails/): Export guardrails — security rules derived from your test results that capture discovered attack patterns and enforce them at runtime.
+- [Guardrails](https://docs.humanbound.ai/defense/guardrails/): Export guardrails from your test results — rule lists for gateways and moderation APIs, or the humanbound-firewall policy file (agent.yaml).
 
 ## AISecOps
 
