@@ -90,15 +90,14 @@ See [Firewall](firewall.md) for full integration details.
 Beyond rule-based guardrails, test results can train ML classifiers for the firewall's Tier 2:
 
 ```bash
-# Train from local test data
-hb firewall train
+# Train from your test results
+hb firewall train --model detectors/setfit_classifier.py
 
-# Train from external red teaming results
-hb firewall train --import pyrit_results.json
-hb firewall train --import results.json:promptfoo
-
-# Train from platform data (richer, requires login)
-hb firewall train --source platform
+# Add external red teaming results
+hb firewall train --model detectors/setfit_classifier.py --import pyrit_results.json
+hb firewall train --model detectors/setfit_classifier.py --import results.json:promptfoo
 ```
+
+`--model` is the path to the detector script to train. When you are logged in with a project selected (or use an API key), `hb firewall train` pulls that project's experiments from the platform; otherwise it reads local results from `.humanbound/results`.
 
 See [Firewall — Tier 2](firewall.md#tier-2-agent-specific-classification) for details on classifier training.

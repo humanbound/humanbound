@@ -16,7 +16,7 @@ faq:
   - q: Does the firewall only check what the user types?
     a: No. Since 0.3 every path into the model is a boundary. A payload is judged by who authored it — a principal's request, outside content the agent ingested (tool output, pages, documents), or the agent's own records coming back (recall) — each with its own judge. The LangChain adapter attaches every boundary with two lines.
   - q: How is the Tier 2 classifier trained?
-    a: Tier 2 is trained from your Humanbound adversarial and QA test logs — failed adversarial conversations supply attack examples and passed QA conversations supply benign examples. Run `hb firewall train` after accumulating test data to produce a `.hbfw` model file.
+    a: Tier 2 is trained from your Humanbound adversarial and QA test logs — failed adversarial conversations supply attack examples and passed QA conversations supply benign examples. Run `hb firewall train --model <detector script>` after accumulating test data to produce a `.hbfw` model file.
 ---
 
 # Firewall
@@ -236,7 +236,7 @@ Tier 2 activates once a conversation has `tier2_min_turns` prior turns (default 
 # 1. Run adversarial tests against your agent
 hb test
 
-# 2. Train a firewall model with the SetFit classifier
+# 2. Train a firewall model with the SetFit classifier (see "Default Model: SetFit" below)
 hb firewall train --model detectors/setfit_classifier.py
 
 # 3. Use in your app
@@ -355,11 +355,19 @@ Tier 2 is where your data makes the firewall smarter. The `humanbound-firewall` 
 
 ### Default Model: SetFit
 
-humanbound-firewall ships with a SetFit-based classifier that fine-tunes a sentence transformer using contrastive learning on your adversarial + QA test data.
+The humanbound-firewall repository includes a SetFit-based classifier, [`detectors/setfit_classifier.py`](https://github.com/humanbound/humanbound-firewall/blob/v0.3.0/detectors/setfit_classifier.py), that fine-tunes a sentence transformer using contrastive learning on your adversarial + QA test data.
+
+The script is not part of the pip package, and it needs the `setfit` package, which neither `humanbound[firewall]` nor `humanbound-firewall` installs. Fetch the script into your project, install `setfit`, and pass the script's path with `--model`, which `hb firewall train` requires:
 
 ```bash
+mkdir -p detectors
+curl -o detectors/setfit_classifier.py \
+  https://raw.githubusercontent.com/humanbound/humanbound-firewall/v0.3.0/detectors/setfit_classifier.py
+pip install setfit
 hb firewall train --model detectors/setfit_classifier.py
 ```
+
+Keep the script with your app: `Firewall.from_config()` needs the same file as `detector_script=` to load the trained model. To bring your own model, start from [`detectors/example_classifier.py`](https://github.com/humanbound/humanbound-firewall/blob/v0.3.0/detectors/example_classifier.py), which documents the `AgentClassifier` interface.
 
 SetFit takes curated examples from your test logs, generates contrastive pairs (attack vs benign), and fine-tunes [all-MiniLM-L6-v2](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2) to separate them in embedding space. Training does not need a GPU; SetFit uses one when present.
 
@@ -378,7 +386,7 @@ SetFit takes curated examples from your test logs, generates contrastive pairs (
 Tier 1 (DeBERTa) catches generic single-turn injections. Tier 2 (SetFit) catches agent-specific patterns and fast-tracks legitimate requests without LLM cost. They're complementary.
 
 !!! info "Tier 2 improves with usage"
-    The model is trained on your test logs. Retrain after every test cycle (`hb firewall train --last N`): each run adds attacks and benign turns the previous model never saw. More coverage → fewer Tier 3 calls → lower cost. Production verdicts are not collected automatically; `on_decision` is where you would gather them for review.
+    The model is trained on your test logs. Retrain after every test cycle (`hb firewall train --model detectors/setfit_classifier.py --last N`): each run adds attacks and benign turns the previous model never saw. More coverage → fewer Tier 3 calls → lower cost. Production verdicts are not collected automatically; `on_decision` is where you would gather them for review.
 
 ### Training Data
 
@@ -546,7 +554,7 @@ hb firewall train --model detectors/setfit_classifier.py
 
 | Option | Description |
 |--------|-------------|
-| `--model PATH` | Path to an AgentClassifier script. Without it the CLI looks for `detectors/setfit_classifier.py` beside a source checkout of the firewall; the wheel does not ship it, so pass the path explicitly. |
+| `--model PATH` | Required. Path to an AgentClassifier script, for example the [SetFit classifier](#default-model-setfit). |
 | `--last N` | Use last N finished experiments (default: 10). |
 | `--from DATE` | Filter experiments from this date. |
 | `--until DATE` | Filter experiments until this date. |
@@ -569,13 +577,13 @@ Combine data from other red-teaming frameworks with your Humanbound test data:
 
 ```bash
 # Auto-detect format from file structure
-hb firewall train --import pyrit_results.json
+hb firewall train --model detectors/setfit_classifier.py --import pyrit_results.json
 
 # Explicit format
-hb firewall train --import results.json:promptfoo
+hb firewall train --model detectors/setfit_classifier.py --import results.json:promptfoo
 
 # Multiple sources
-hb firewall train --import pyrit.json --import promptfoo.json
+hb firewall train --model detectors/setfit_classifier.py --import pyrit.json --import promptfoo.json
 ```
 
 Supported frameworks:
@@ -664,8 +672,8 @@ EOF
 # 2. Run adversarial tests
 hb test
 
-# 3. Train the firewall
-hb firewall train -o firewall.hbfw
+# 3. Train the firewall (see "Default Model: SetFit" for the detector script)
+hb firewall train --model detectors/setfit_classifier.py -o firewall.hbfw
 
 # 4. Integrate into your app
 ```

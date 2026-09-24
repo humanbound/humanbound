@@ -96,8 +96,8 @@ hb logs -f html -o logs.html       # Interactive HTML log viewer
 ### Step 5: Export Defenses
 
 ```bash
-hb guardrails -o rules.yaml        # Export firewall rules
-hb firewall train                   # Train a Tier 2 classifier
+hb guardrails -o rules.yaml        # Export guardrail rules
+hb firewall train --model detectors/setfit_classifier.py   # Train a Tier 2 classifier
 ```
 
 Use with [humanbound-firewall](https://github.com/humanbound/humanbound-firewall) for runtime protection.

@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.9.1] — 2026-09-24
+
 ### Added
 - **Docs for `humanbound-firewall` 0.3.** The Firewall page now describes
   the three trust classes (request, ingest, recall), `inspect()` and the
@@ -21,6 +23,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `agent.yaml` only), and settings the code never read are gone.
 
 ### Fixed
+- **`hb firewall train` and `hb firewall show` work with `humanbound-firewall`
+  0.2 and later.** Both commands imported the package's old module name and
+  exited with an install hint even when the firewall was installed. The
+  `firewall` extra now requires `humanbound-firewall>=0.3`.
+- **`hb firewall show` reports an unreadable model file instead of a
+  traceback.** A corrupt archive, or one whose weights need pickle, is
+  refused with "Not a valid .hbfw file".
 - **`hb mcp` now reports why the MCP import failed** (#135, thanks
   @iayanpahwa). A missing SDK and an installed-but-incompatible SDK both
   printed "MCP dependencies not installed", sending users to re-run an install
@@ -37,6 +46,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   previously returned 404 (e.g. `/deployment.md`).
 
 ### Changed
+- **`hb firewall train` requires `--model`.** The implicit default detector
+  was only found in a source checkout of the firewall; installed from PyPI it
+  always failed. Pass the path to an `AgentClassifier` script, for example
+  `--model detectors/setfit_classifier.py`.
 - **Python 3.13 and 3.14 are now tested in CI.** `requires-python` has always
   accepted them and the classifiers already advertised 3.13, but the test
   matrix stopped at 3.12. It now covers 3.10 through 3.14, and 3.14 is declared
@@ -725,7 +738,8 @@ Last release as `humanbound-cli`. See the
 [old release](https://pypi.org/project/humanbound-cli/1.1.0/) on PyPI for
 notes — that history is preserved there and is not re-documented here.
 
-[Unreleased]: https://github.com/humanbound/humanbound/compare/v2.9.0...HEAD
+[Unreleased]: https://github.com/humanbound/humanbound/compare/v2.9.1...HEAD
+[2.9.1]: https://github.com/humanbound/humanbound/releases/tag/v2.9.1
 [2.9.0]: https://github.com/humanbound/humanbound/releases/tag/v2.9.0
 [2.8.0]: https://github.com/humanbound/humanbound/releases/tag/v2.8.0
 [2.7.0]: https://github.com/humanbound/humanbound/releases/tag/v2.7.0
