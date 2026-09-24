@@ -9,6 +9,7 @@ import click
 from rich.console import Console
 
 from .. import telemetry
+from ..agent_yaml import build_agent_yaml, dump_agent_yaml, load_scope_file
 from ..config import write_secure_file
 from ..engine import get_runner
 from ..engine.platform_runner import PlatformTestRunner
@@ -28,7 +29,8 @@ console_err = Console(stderr=True)
     "output_format",
     type=click.Choice(["json", "yaml", "openai"]),
     default="json",
-    help="Output format (json=Humanbound format, openai=OpenAI moderation format)",
+    help="Output format (json=Humanbound format, yaml=YAML; not logged in, the "
+    "humanbound-firewall agent.yaml; openai=OpenAI moderation format)",
 )
 @click.option(
     "--vendor",
@@ -46,8 +48,21 @@ console_err = Console(stderr=True)
     default=False,
     help="Include reasoning in guardrail responses",
 )
+@click.option(
+    "--scope",
+    "scope_path",
+    type=click.Path(exists=True, dir_okay=False),
+    default=None,
+    help="Not logged in, with --format yaml: build agent.yaml from this scope file "
+    "(YAML/JSON, as for hb test --scope) instead of the latest local run.",
+)
 def guardrails_command(
-    output: str, output_format: str, vendor: str, model: str, include_reasoning: bool
+    output: str,
+    output_format: str,
+    vendor: str,
+    model: str,
+    include_reasoning: bool,
+    scope_path: str,
 ):
     """Export guardrails configuration for your project.
 
@@ -61,15 +76,22 @@ def guardrails_command(
       hb guardrails                          # Export Humanbound format
       hb guardrails --vendor=openai          # Export OpenAI format
       hb guardrails -o guardrails.json       # Save to file
-      hb guardrails --format=yaml            # Output as YAML
+      hb guardrails -f yaml -o agent.yaml    # Save as YAML
+      hb guardrails -f yaml --scope scope.json -o agent.yaml   # Local: from a scope file
       hb guardrails --include-reasoning      # Include reasoning in output
     """
     runner = get_runner()
     is_platform = isinstance(runner, PlatformTestRunner)
 
     if not is_platform:
-        _local_guardrails(output, output_format, vendor)
+        if output_format == "yaml" and vendor == "humanbound":
+            _local_agent_yaml(output, scope_path)
+        else:
+            _local_guardrails(output, output_format, vendor)
         return
+
+    if scope_path:
+        console_err.print("[dim]--scope applies when not logged in; ignoring it.[/dim]")
 
     client = runner.client
 
@@ -120,6 +142,47 @@ def guardrails_command(
     except APIError as e:
         console_err.print(f"[red]Error:[/red] {e}")
         raise SystemExit(1)
+
+
+def _local_agent_yaml(output, scope_path):
+    """Build the humanbound-firewall agent.yaml from a scope file or the latest local run."""
+    try:
+        if scope_path:
+            scope, source = load_scope_file(scope_path), Path(scope_path).name
+        else:
+            scope, source = _latest_run_scope()
+    except ValueError as e:
+        console_err.print(f"[red]Error:[/red] {e}")
+        raise SystemExit(1)
+
+    if scope is None:
+        console_err.print("[yellow]No scope found for agent.yaml.[/yellow] Either:")
+        console_err.print(
+            "  run a test:        hb test --endpoint ./config.json --scope ./scope.json --wait"
+        )
+        console_err.print("  or pass the scope: hb guardrails --format yaml --scope ./scope.json")
+        raise SystemExit(1)
+
+    formatted = dump_agent_yaml(build_agent_yaml(scope), source)
+    if output:
+        write_secure_file(output, formatted)
+        console.print(f"[green]Firewall policy exported to:[/green] {output}")
+        console.print(f'[dim]Load with Firewall.from_config("{output}")[/dim]')
+    else:
+        print(formatted, end="")
+
+
+def _latest_run_scope():
+    """The scope saved by the latest local run, or (None, None) when there is none."""
+    results_dir = Path(".humanbound/results")
+    if not results_dir.exists():
+        return None, None
+    exp_dirs = sorted(results_dir.iterdir(), reverse=True)
+    meta_file = exp_dirs[0] / "meta.json" if exp_dirs else None
+    if meta_file is None or not meta_file.exists():
+        return None, None
+    scope = json.loads(meta_file.read_text()).get("scope")
+    return (scope, f"local run {exp_dirs[0].name}") if scope else (None, None)
 
 
 def _local_guardrails(output, output_format, vendor):

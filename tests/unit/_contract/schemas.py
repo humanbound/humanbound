@@ -402,24 +402,34 @@ class OrganisationResponse(BaseModel):
 # ──────────────────────────────────────────────────────────────────────────
 
 
+class GuardrailsPolicyScope(BaseModel):
+    business: str = ""
+    more_info: str = ""
+
+
+class GuardrailsPolicyIntents(BaseModel):
+    permitted: list[str] = []
+    restricted: list[str] = []
+
+
 class GuardrailsExportHumanbound(BaseModel):
-    """GET /projects/{id}/guardrails/export/humanbound — native export shape.
+    """GET /projects/{id}/guardrails/export/humanbound — the humanbound-firewall
+    policy file (``agent.yaml`` layout).
 
     The upstream endpoint declares a generic ``dict`` response type; this
-    mirror captures the actual payload shape the CLI relies on.
+    mirror captures the actual payload shape the CLI relies on. The CLI saves
+    it as returned, so with ``--format yaml`` it is the firewall's agent.yaml.
+    ``capabilities`` is absent when the project declares none.
     """
 
     __upstream_source__ = "guardrails_export.humanbound"
     model_config = ConfigDict(extra="allow")
 
-    vendor: str = "humanbound"
-    framework: str = "humanbound-policy-framework"
+    name: str = ""
     version: str = "1.0"
-    project_id: str = ""
-    source: str = "project_scope"
-    source_id: str = ""
-    generated_at: str = ""
-    scope: dict[str, Any] = {}
+    scope: GuardrailsPolicyScope
+    intents: GuardrailsPolicyIntents
+    capabilities: list[str] | None = None
 
 
 # ──────────────────────────────────────────────────────────────────────────

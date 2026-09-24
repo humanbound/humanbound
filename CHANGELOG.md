@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.10.0] — 2026-09-24
+
+### Changed
+- **`hb guardrails --format yaml` writes the `humanbound-firewall` policy
+  file (`agent.yaml`)** — `scope.business`, top-level `intents`, and
+  `capabilities` — which the firewall's Tier 3 judge evaluates against.
+  Logged in, the export is saved as the platform returns it; the platform now
+  returns this layout (it used to nest the scope and intents under keys the
+  firewall does not read, so the file loaded as an empty policy). Not logged
+  in, the YAML export used to be the `rules` list; it is now built from the
+  scope the latest local test ran against, or from `--scope ./scope.json`.
+  Local `hb test` now saves that scope in the run's `meta.json`; for a run
+  from before this release, run `hb test` again or pass `--scope`. JSON
+  output and the OpenAI vendor are unchanged.
+
+### Fixed
+- **Export examples in the README and docs.** `hb guardrails -o rules.yaml`
+  wrote JSON into a `.yaml` file (`-o` names the file, not the format); the
+  examples now use `rules.json`. The README's `hb firewall train` example
+  passes the now-required `--model`.
+
 ## [2.9.1] — 2026-09-24
 
 ### Added
@@ -738,7 +759,8 @@ Last release as `humanbound-cli`. See the
 [old release](https://pypi.org/project/humanbound-cli/1.1.0/) on PyPI for
 notes — that history is preserved there and is not re-documented here.
 
-[Unreleased]: https://github.com/humanbound/humanbound/compare/v2.9.1...HEAD
+[Unreleased]: https://github.com/humanbound/humanbound/compare/v2.10.0...HEAD
+[2.10.0]: https://github.com/humanbound/humanbound/releases/tag/v2.10.0
 [2.9.1]: https://github.com/humanbound/humanbound/releases/tag/v2.9.1
 [2.9.0]: https://github.com/humanbound/humanbound/releases/tag/v2.9.0
 [2.8.0]: https://github.com/humanbound/humanbound/releases/tag/v2.8.0

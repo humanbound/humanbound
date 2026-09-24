@@ -151,8 +151,9 @@ defenses:
 
 ```bash
 hb test --endpoint ./bot-config.json --wait   # find the failures
-hb guardrails -o rules.yaml                   # convert findings into firewall rules
-hb firewall train                             # train a Tier 2 classifier from test logs
+hb guardrails -o rules.json                   # convert findings into guardrail rules
+hb guardrails -f yaml -o agent.yaml           # the firewall's policy file
+hb firewall train --model detectors/setfit_classifier.py   # train a Tier 2 classifier
 ```
 
 Deploy the output with

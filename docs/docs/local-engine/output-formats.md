@@ -88,14 +88,14 @@ Export guardrail rules from test findings:
 # JSON format
 hb guardrails -o rules.json
 
-# YAML format
-hb guardrails --format yaml -o rules.yaml
+# humanbound-firewall policy file (agent.yaml), from the latest run's scope
+hb guardrails --format yaml -o agent.yaml
 
 # OpenAI moderation format
 hb guardrails --vendor openai -o openai_rules.json
 ```
 
-The firewall does not read the exported rule list today; it enforces the scope in `agent.yaml`. See [Guardrails](../defense/guardrails.md) for how the two relate.
+The firewall does not read the rule lists; it enforces the scope in `agent.yaml`, which `--format yaml` writes. See [Guardrails](../defense/guardrails.md#using-with-humanbound-firewall) for what the file contains.
 
 ## Firewall Training
 
