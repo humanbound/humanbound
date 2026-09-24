@@ -13,7 +13,7 @@
         <link rel="canonical" href="https://docs.humanbound.ai/defense/guardrails/">
       
       
-        <link rel="prev" href="../firewall/">
+        <link rel="prev" href="../frameworks/langchain/">
       
       
         <link rel="next" href="../../aisecops/continuous-monitoring/">
@@ -67,7 +67,7 @@
   <meta property="og:image:alt" content="Export guardrails — security rules derived from your test results that capture discovered attack patterns and enforce them at runtime." />
   <meta name="twitter:image:alt" content="Export guardrails — security rules derived from your test results that capture discovered attack patterns and enforce them at runtime." />
   
-  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/defense/guardrails/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Guardrails","item":"https://docs.humanbound.ai/defense/guardrails/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/defense/guardrails/#article","headline":"Guardrails","description":"Export guardrails \u2014 security rules derived from your test results that capture discovered attack patterns and enforce them at runtime.","url":"https://docs.humanbound.ai/defense/guardrails/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-06-02T10:20:06+03:00","keywords":"guardrails export, hb guardrails command, security rules export, firewall training data, guardrail rule format, OpenAI moderation rules, PyRIT import, promptfoo import"}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/defense/guardrails/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Guardrails","item":"https://docs.humanbound.ai/defense/guardrails/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/defense/guardrails/#article","headline":"Guardrails","description":"Export guardrails \u2014 security rules derived from your test results that capture discovered attack patterns and enforce them at runtime.","url":"https://docs.humanbound.ai/defense/guardrails/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-09-24T13:44:59+03:00","keywords":"guardrails export, hb guardrails command, security rules export, firewall training data, guardrail rule format, OpenAI moderation rules, PyRIT import, promptfoo import"}]}</script>
   
 
   
@@ -1229,6 +1229,93 @@
                 
   
   
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_8_2" id="__nav_8_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Frameworks
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Frameworks
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../frameworks/langchain/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LangChain
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
     
   
   
@@ -2300,8 +2387,8 @@
 
 
 <h1 id="guardrails-export">Guardrails Export</h1>
-<p><a href="../../reference/glossary/#defense">Guardrails</a> are security rules extracted from your test results. They capture the attack patterns and boundary violations discovered during testing and translate them into actionable rules for runtime defense. Export with <code>hb guardrails</code> as JSON, YAML, or OpenAI moderation format, then load the rules into <code>humanbound-firewall</code> where they configure the Tier 3 LLM judge's evaluation criteria.</p>
-<p>Guardrails are the bridge between testing and protection — they carry the knowledge gained from adversarial testing into the firewall's evaluation logic.</p>
+<p><a href="../../reference/glossary/#defense">Guardrails</a> are security rules extracted from your test results. They capture the attack patterns and boundary violations discovered during testing and translate them into actionable rules for runtime defense. Export with <code>hb guardrails</code> as JSON, YAML, or OpenAI moderation format for the enforcement points that consume rule lists — gateways, moderation APIs, your own filters. The <code>humanbound-firewall</code> Tier 3 judge is configured by the policy file (<code>agent.yaml</code>), not by this export.</p>
+<p>Guardrails are the bridge between testing and protection — they carry the knowledge gained from adversarial testing into your enforcement points.</p>
 <h2 id="how-it-works">How It Works</h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>hb test → findings (what attacks succeeded)
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    ↓
@@ -2341,12 +2428,13 @@
 <a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>hb<span class="w"> </span>guardrails<span class="w"> </span>--vendor<span class="w"> </span>openai<span class="w"> </span>-o<span class="w"> </span>openai_rules.json
 </code></pre></div>
 <h2 id="using-with-humanbound-firewall">Using with humanbound-firewall</h2>
-<p>Guardrails configure the firewall's Tier 3 LLM judge — they define what the agent is allowed and restricted from doing:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">hb_firewall</span><span class="w"> </span><span class="kn">import</span> <span class="n">Firewall</span>
+<p>The firewall's Tier 3 LLM judge reads <code>agent.yaml</code> — scope, permitted and restricted intents, few-shot examples — which defines what the agent is allowed and restricted from doing:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">humanbound_firewall</span><span class="w"> </span><span class="kn">import</span> <span class="n">Firewall</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">fw</span> <span class="o">=</span> <span class="n">Firewall</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="s2">"agent.yaml"</span><span class="p">)</span>
 </code></pre></div>
-<p>The <code>agent.yaml</code> scope (permitted/restricted intents) acts as the guardrail configuration. Exported rules can supplement or override the base configuration.</p>
+<p>The <code>agent.yaml</code> scope (permitted/restricted intents) is the guardrail configuration the firewall enforces. The exported rule list is not read by the firewall today.</p>
+<p>Since <code>humanbound-firewall</code> 0.3 the firewall judges every path into the model by trust class — <code>request</code>, <code>ingest</code>, <code>recall</code> — and few-shot examples in <code>agent.yaml</code> carry the class they were learned on (<code>class: request | ingest</code>, default <code>request</code>; the recall judge takes none). The export does not carry few-shot examples yet; when it does, each example will carry the class it was found on, so that the ingest judge learns from findings made through fetched content.</p>
 <p>See <a href="../firewall/">Firewall</a> for full integration details.</p>
 <h2 id="training-firewall-classifiers">Training Firewall Classifiers</h2>
 <p>Beyond rule-based guardrails, test results can train ML classifiers for the firewall's Tier 2:</p>
