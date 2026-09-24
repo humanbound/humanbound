@@ -33,6 +33,8 @@ hb --help
 |---|---|---|
 | `engine` | `pip install "humanbound[engine]"` | Local testing engine (OpenAI, Anthropic, Google SDKs, Ollama) |
 | `firewall` | `pip install "humanbound[firewall]"` | [Firewall](../reference/glossary.md#defense) training (humanbound-firewall, scikit-learn, torch) |
+
+Training with the SetFit detector also needs `pip install setfit`; see [Firewall — Default Model: SetFit](../defense/firewall.md#default-model-setfit).
 | `mcp` | `pip install "humanbound[mcp]"` | MCP server for AI coding assistants |
 
 ## Configure Provider

@@ -67,7 +67,7 @@
   <meta property="og:image:alt" content="Humanbound Firewall — runtime defenses for LLM agents that block prompt injection and policy violations before they reach the agent in production." />
   <meta name="twitter:image:alt" content="Humanbound Firewall — runtime defenses for LLM agents that block prompt injection and policy violations before they reach the agent in production." />
   
-  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/defense/firewall/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Firewall","item":"https://docs.humanbound.ai/defense/firewall/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/defense/firewall/#article","headline":"Firewall","description":"Humanbound Firewall \u2014 runtime defenses for LLM agents that block prompt injection and policy violations before they reach the agent in production.","url":"https://docs.humanbound.ai/defense/firewall/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-09-24T13:44:59+03:00","keywords":"humanbound firewall, LLM agent firewall, runtime AI defense, prompt injection blocking, Tier 2 classifier, SetFit classifier, hb firewall train, agent.yaml configuration, trust classes, indirect prompt injection, LangChain middleware"},{"@type":"FAQPage","@id":"https://docs.humanbound.ai/defense/firewall/#faq","isPartOf":{"@id":"https://docs.humanbound.ai/defense/firewall/#article"},"mainEntity":[{"@type":"Question","name":"Does the firewall only check what the user types?","acceptedAnswer":{"@type":"Answer","text":"No. Since 0.3 every path into the model is a boundary. A payload is judged by who authored it \u2014 a principal's request, outside content the agent ingested (tool output, pages, documents), or the agent's own records coming back (recall) \u2014 each with its own judge. The LangChain adapter attaches every boundary with two lines."}},{"@type":"Question","name":"How is the Tier 2 classifier trained?","acceptedAnswer":{"@type":"Answer","text":"Tier 2 is trained from your Humanbound adversarial and QA test logs \u2014 failed adversarial conversations supply attack examples and passed QA conversations supply benign examples. Run `hb firewall train` after accumulating test data to produce a `.hbfw` model file."}}]}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/defense/firewall/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Firewall","item":"https://docs.humanbound.ai/defense/firewall/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/defense/firewall/#article","headline":"Firewall","description":"Humanbound Firewall \u2014 runtime defenses for LLM agents that block prompt injection and policy violations before they reach the agent in production.","url":"https://docs.humanbound.ai/defense/firewall/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-09-24T14:27:00+03:00","keywords":"humanbound firewall, LLM agent firewall, runtime AI defense, prompt injection blocking, Tier 2 classifier, SetFit classifier, hb firewall train, agent.yaml configuration, trust classes, indirect prompt injection, LangChain middleware"},{"@type":"FAQPage","@id":"https://docs.humanbound.ai/defense/firewall/#faq","isPartOf":{"@id":"https://docs.humanbound.ai/defense/firewall/#article"},"mainEntity":[{"@type":"Question","name":"Does the firewall only check what the user types?","acceptedAnswer":{"@type":"Answer","text":"No. Since 0.3 every path into the model is a boundary. A payload is judged by who authored it \u2014 a principal's request, outside content the agent ingested (tool output, pages, documents), or the agent's own records coming back (recall) \u2014 each with its own judge. The LangChain adapter attaches every boundary with two lines."}},{"@type":"Question","name":"How is the Tier 2 classifier trained?","acceptedAnswer":{"@type":"Answer","text":"Tier 2 is trained from your Humanbound adversarial and QA test logs \u2014 failed adversarial conversations supply attack examples and passed QA conversations supply benign examples. Run `hb firewall train --model <detector script>` after accumulating test data to produce a `.hbfw` model file."}}]}]}</script>
   
 
   
@@ -2916,7 +2916,7 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># 1. Run adversarial tests against your agent</span>
 <a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>hb<span class="w"> </span><span class="nb">test</span>
 <a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
-<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="c1"># 2. Train a firewall model with the SetFit classifier</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="c1"># 2. Train a firewall model with the SetFit classifier (see "Default Model: SetFit" below)</span>
 <a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>hb<span class="w"> </span>firewall<span class="w"> </span>train<span class="w"> </span>--model<span class="w"> </span>detectors/setfit_classifier.py
 <a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>
 <a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="c1"># 3. Use in your app</span>
@@ -3064,9 +3064,15 @@
 <h2 id="tier-2-agent-specific-classification">Tier 2: Agent-Specific Classification</h2>
 <p>Tier 2 is where your data makes the firewall smarter. The <code>humanbound-firewall</code> library provides the <strong>training orchestrator</strong> — you provide the <strong>model</strong> as a Python script with an <code>AgentClassifier</code> class.</p>
 <h3 id="default-model-setfit">Default Model: SetFit</h3>
-<p>humanbound-firewall ships with a SetFit-based classifier that fine-tunes a sentence transformer using contrastive learning on your adversarial + QA test data.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>hb<span class="w"> </span>firewall<span class="w"> </span>train<span class="w"> </span>--model<span class="w"> </span>detectors/setfit_classifier.py
+<p>The humanbound-firewall repository includes a SetFit-based classifier, <a href="https://github.com/humanbound/humanbound-firewall/blob/v0.3.0/detectors/setfit_classifier.py"><code>detectors/setfit_classifier.py</code></a>, that fine-tunes a sentence transformer using contrastive learning on your adversarial + QA test data.</p>
+<p>The script is not part of the pip package, and it needs the <code>setfit</code> package, which neither <code>humanbound[firewall]</code> nor <code>humanbound-firewall</code> installs. Fetch the script into your project, install <code>setfit</code>, and pass the script's path with <code>--model</code>, which <code>hb firewall train</code> requires:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>mkdir<span class="w"> </span>-p<span class="w"> </span>detectors
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>curl<span class="w"> </span>-o<span class="w"> </span>detectors/setfit_classifier.py<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">  </span>https://raw.githubusercontent.com/humanbound/humanbound-firewall/v0.3.0/detectors/setfit_classifier.py
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>pip<span class="w"> </span>install<span class="w"> </span>setfit
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>hb<span class="w"> </span>firewall<span class="w"> </span>train<span class="w"> </span>--model<span class="w"> </span>detectors/setfit_classifier.py
 </code></pre></div>
+<p>Keep the script with your app: <code>Firewall.from_config()</code> needs the same file as <code>detector_script=</code> to load the trained model. To bring your own model, start from <a href="https://github.com/humanbound/humanbound-firewall/blob/v0.3.0/detectors/example_classifier.py"><code>detectors/example_classifier.py</code></a>, which documents the <code>AgentClassifier</code> interface.</p>
 <p>SetFit takes curated examples from your test logs, generates contrastive pairs (attack vs benign), and fine-tunes <a href="https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2">all-MiniLM-L6-v2</a> to separate them in embedding space. Training does not need a GPU; SetFit uses one when present.</p>
 <div class="admonition tip">
 <p class="admonition-title">Hugging Face token (optional, recommended)</p>
@@ -3080,7 +3086,7 @@
 <p>Tier 1 (DeBERTa) catches generic single-turn injections. Tier 2 (SetFit) catches agent-specific patterns and fast-tracks legitimate requests without LLM cost. They're complementary.</p>
 <div class="admonition info">
 <p class="admonition-title">Tier 2 improves with usage</p>
-<p>The model is trained on your test logs. Retrain after every test cycle (<code>hb firewall train --last N</code>): each run adds attacks and benign turns the previous model never saw. More coverage → fewer Tier 3 calls → lower cost. Production verdicts are not collected automatically; <code>on_decision</code> is where you would gather them for review.</p>
+<p>The model is trained on your test logs. Retrain after every test cycle (<code>hb firewall train --model detectors/setfit_classifier.py --last N</code>): each run adds attacks and benign turns the previous model never saw. More coverage → fewer Tier 3 calls → lower cost. Production verdicts are not collected automatically; <code>on_decision</code> is where you would gather them for review.</p>
 </div>
 <h3 id="training-data">Training Data</h3>
 <p>The orchestrator automatically curates training data from your Humanbound test logs:</p>
@@ -3291,7 +3297,7 @@
 <tbody>
 <tr>
 <td><code>--model PATH</code></td>
-<td>Path to an AgentClassifier script. Without it the CLI looks for <code>detectors/setfit_classifier.py</code> beside a source checkout of the firewall; the wheel does not ship it, so pass the path explicitly.</td>
+<td>Required. Path to an AgentClassifier script, for example the <a href="#default-model-setfit">SetFit classifier</a>.</td>
 </tr>
 <tr>
 <td><code>--last N</code></td>
@@ -3331,13 +3337,13 @@
 <h3 id="importing-external-logs">Importing External Logs</h3>
 <p>Combine data from other red-teaming frameworks with your Humanbound test data:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="c1"># Auto-detect format from file structure</span>
-<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>hb<span class="w"> </span>firewall<span class="w"> </span>train<span class="w"> </span>--import<span class="w"> </span>pyrit_results.json
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>hb<span class="w"> </span>firewall<span class="w"> </span>train<span class="w"> </span>--model<span class="w"> </span>detectors/setfit_classifier.py<span class="w"> </span>--import<span class="w"> </span>pyrit_results.json
 <a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>
 <a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="c1"># Explicit format</span>
-<a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a>hb<span class="w"> </span>firewall<span class="w"> </span>train<span class="w"> </span>--import<span class="w"> </span>results.json:promptfoo
+<a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a>hb<span class="w"> </span>firewall<span class="w"> </span>train<span class="w"> </span>--model<span class="w"> </span>detectors/setfit_classifier.py<span class="w"> </span>--import<span class="w"> </span>results.json:promptfoo
 <a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a>
 <a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a><span class="c1"># Multiple sources</span>
-<a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a>hb<span class="w"> </span>firewall<span class="w"> </span>train<span class="w"> </span>--import<span class="w"> </span>pyrit.json<span class="w"> </span>--import<span class="w"> </span>promptfoo.json
+<a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a>hb<span class="w"> </span>firewall<span class="w"> </span>train<span class="w"> </span>--model<span class="w"> </span>detectors/setfit_classifier.py<span class="w"> </span>--import<span class="w"> </span>pyrit.json<span class="w"> </span>--import<span class="w"> </span>promptfoo.json
 </code></pre></div>
 <p>Supported frameworks:</p>
 <table>
@@ -3419,8 +3425,8 @@
 <a id="__codelineno-23-17" name="__codelineno-23-17" href="#__codelineno-23-17"></a><span class="c1"># 2. Run adversarial tests</span>
 <a id="__codelineno-23-18" name="__codelineno-23-18" href="#__codelineno-23-18"></a>hb<span class="w"> </span><span class="nb">test</span>
 <a id="__codelineno-23-19" name="__codelineno-23-19" href="#__codelineno-23-19"></a>
-<a id="__codelineno-23-20" name="__codelineno-23-20" href="#__codelineno-23-20"></a><span class="c1"># 3. Train the firewall</span>
-<a id="__codelineno-23-21" name="__codelineno-23-21" href="#__codelineno-23-21"></a>hb<span class="w"> </span>firewall<span class="w"> </span>train<span class="w"> </span>-o<span class="w"> </span>firewall.hbfw
+<a id="__codelineno-23-20" name="__codelineno-23-20" href="#__codelineno-23-20"></a><span class="c1"># 3. Train the firewall (see "Default Model: SetFit" for the detector script)</span>
+<a id="__codelineno-23-21" name="__codelineno-23-21" href="#__codelineno-23-21"></a>hb<span class="w"> </span>firewall<span class="w"> </span>train<span class="w"> </span>--model<span class="w"> </span>detectors/setfit_classifier.py<span class="w"> </span>-o<span class="w"> </span>firewall.hbfw
 <a id="__codelineno-23-22" name="__codelineno-23-22" href="#__codelineno-23-22"></a>
 <a id="__codelineno-23-23" name="__codelineno-23-23" href="#__codelineno-23-23"></a><span class="c1"># 4. Integrate into your app</span>
 </code></pre></div>
@@ -3458,7 +3464,7 @@
 </details>
 <details class="question">
 <summary>How is the Tier 2 classifier trained?</summary>
-<p>Tier 2 is trained from your Humanbound adversarial and QA test logs — failed adversarial conversations supply attack examples and passed QA conversations supply benign examples. Run <code>hb firewall train</code> after accumulating test data to produce a <code>.hbfw</code> model file.</p>
+<p>Tier 2 is trained from your Humanbound adversarial and QA test logs — failed adversarial conversations supply attack examples and passed QA conversations supply benign examples. Run <code>hb firewall train --model &lt;detector script&gt;</code> after accumulating test data to produce a <code>.hbfw</code> model file.</p>
 </details>
 
 

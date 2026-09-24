@@ -69,7 +69,7 @@ The HTML report includes:
 
 ## Guardrails Export
 
-Export firewall rules from test findings:
+Export guardrail rules from test findings:
 
 ```bash
 # JSON format
@@ -82,13 +82,7 @@ hb guardrails --format yaml -o rules.yaml
 hb guardrails --vendor openai -o openai_rules.json
 ```
 
-Use with [humanbound-firewall](https://github.com/humanbound/humanbound-firewall):
-
-```python
-from hb_firewall import Firewall
-
-fw = Firewall.from_config("agent.yaml", rules_path="rules.yaml")
-```
+The firewall does not read the exported rule list today; it enforces the scope in `agent.yaml`. See [Guardrails](../defense/guardrails.md) for how the two relate.
 
 ## Firewall Training
 
@@ -96,12 +90,14 @@ Train a Tier 2 classifier from test results:
 
 ```bash
 # From local test data
-hb firewall train
+hb firewall train --model detectors/setfit_classifier.py
 
 # From external results (vendor-agnostic)
-hb firewall train --import pyrit_results.json
-hb firewall train --import results.json:promptfoo
+hb firewall train --model detectors/setfit_classifier.py --import pyrit_results.json
+hb firewall train --model detectors/setfit_classifier.py --import results.json:promptfoo
 ```
+
+See [Firewall — Default Model: SetFit](../defense/firewall.md#default-model-setfit) for where to get the detector script.
 
 ## Log Schema
 
