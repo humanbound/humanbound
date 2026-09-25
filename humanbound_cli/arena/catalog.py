@@ -26,6 +26,7 @@ from .manifest import ArenaManifest, ManifestError, load_manifest, parse_manifes
 from .paths import DEFAULT_INDEX_URL, arena_dir
 
 INDEX_SCHEMA_VERSION = 1
+AGENT_ID_RE = re.compile(r"^[a-z0-9][a-z0-9-]{0,62}$")
 
 
 class CatalogError(RuntimeError):
@@ -62,6 +63,8 @@ def version_key(version: str) -> tuple[int, ...]:
     for piece in version.split(".")[:3]:
         match = re.match(r"\d+", piece)
         parts.append(int(match.group()) if match else 0)
+    while len(parts) < 3:
+        parts.append(0)
     return tuple(parts)
 
 
@@ -78,19 +81,46 @@ def _read_text(location: str) -> str:
         resp = httpx.get(location, timeout=15, follow_redirects=True)
         resp.raise_for_status()
         return resp.text
-    return Path(location).read_text()
+    return Path(location).read_text(encoding="utf-8")
 
 
 def _join(base: str, relative: str) -> str:
+    if _is_url(base):
+        # Never treat `relative` as a local filesystem path when the base is remote:
+        # urljoin resolves a leading "/" against the base's origin, not the local disk.
+        return urljoin(base, relative)
     if _is_url(relative) or Path(relative).is_absolute():
         return relative
-    if _is_url(base):
-        return urljoin(base, relative)
     return str(Path(base).parent / relative)
 
 
 def _cache_file() -> Path:
     return arena_dir() / "cache" / "index.json"
+
+
+def _parse_index(text: str, loc: str) -> Index:
+    try:
+        return Index.model_validate(json.loads(text))
+    except ValueError as e:
+        reason = str(e).splitlines()[0]
+        raise CatalogError(f"the arena catalog at {loc} is invalid: {reason}") from None
+
+
+def _load_cached_index(loc: str) -> LoadedIndex | None:
+    """The cached index, but only when it was cached from this exact `loc` (a URL)."""
+    cache = _cache_file()
+    if not cache.exists():
+        return None
+    try:
+        raw = cache.read_text(encoding="utf-8")
+        cached = json.loads(raw)
+        cached_location = cached["location"]
+        if cached_location != loc:
+            return None
+        index = Index.model_validate(cached["index"])
+    except (OSError, UnicodeDecodeError, ValueError, KeyError):
+        return None
+    return LoadedIndex(index, cached_location, True)
 
 
 def load_index(location: str | None = None) -> LoadedIndex:
@@ -99,14 +129,14 @@ def load_index(location: str | None = None) -> LoadedIndex:
         loc = str(Path(loc) / "index.json")
     try:
         text = _read_text(loc)
-    except (httpx.HTTPError, OSError) as e:
-        cache = _cache_file()
-        if cache.exists():
-            cached = json.loads(cache.read_text())
-            return LoadedIndex(Index.model_validate(cached["index"]), cached["location"], True)
+    except (httpx.HTTPError, OSError, UnicodeDecodeError) as e:
+        if _is_url(loc):
+            cached = _load_cached_index(loc)
+            if cached is not None:
+                return cached
         raise CatalogError(f"cannot load the arena catalog from {loc}: {e}") from None
 
-    index = Index.model_validate(json.loads(text))
+    index = _parse_index(text, loc)
     if index.schema_version > INDEX_SCHEMA_VERSION:
         raise CatalogError("the arena catalog needs a newer hb → pip install -U humanbound")
     if (
@@ -120,7 +150,9 @@ def load_index(location: str | None = None) -> LoadedIndex:
         )
     cache = _cache_file()
     cache.parent.mkdir(parents=True, exist_ok=True)
-    cache.write_text(json.dumps({"location": loc, "index": index.model_dump(mode="json")}))
+    cache.write_text(
+        json.dumps({"location": loc, "index": index.model_dump(mode="json")}), encoding="utf-8"
+    )
     return LoadedIndex(index, loc, False)
 
 
@@ -149,8 +181,20 @@ def agent_dir(agent_id: str, version: str) -> Path:
     return arena_dir() / "agents" / agent_id / version
 
 
+def _check_compose_path(compose: str, agent_id: str) -> None:
+    if Path(compose).is_absolute() or ".." in Path(compose).parts:
+        raise CatalogError(
+            f"cannot fetch the compose file for {agent_id}: "
+            f"source.compose must be a relative path with no '..' segments, got '{compose}'"
+        )
+
+
 def fetch_manifest(entry: IndexEntry, index_loc: str) -> tuple[ArenaManifest, Path]:
-    """Download an agent's arena.yaml (and compose file) into the local cache."""
+    """Download an agent's arena.yaml (and compose file) into the local cache.
+
+    Everything is fetched before anything is written, so a failure partway through
+    never leaves a half-installed agent behind.
+    """
     manifest_loc = _join(index_loc, entry.manifest_url)
     try:
         text = _read_text(manifest_loc)
@@ -165,20 +209,30 @@ def fetch_manifest(entry: IndexEntry, index_loc: str) -> tuple[ArenaManifest, Pa
             f"catalog/manifest mismatch: the index lists {entry.id}:{entry.version} but its "
             f"manifest says {manifest.id}:{manifest.version}"
         )
-    target = agent_dir(manifest.id, manifest.version)
-    target.mkdir(parents=True, exist_ok=True)
-    (target / "arena.yaml").write_text(text)
+
+    compose_text = None
     if manifest.source.compose:
+        _check_compose_path(manifest.source.compose, entry.id)
         try:
             compose_text = _read_text(_join(manifest_loc, manifest.source.compose))
         except (httpx.HTTPError, OSError) as e:
             raise CatalogError(f"cannot fetch the compose file for {entry.id}: {e}") from None
-        (target / "docker-compose.yml").write_text(compose_text)
+
+    target = agent_dir(manifest.id, manifest.version)
+    target.mkdir(parents=True, exist_ok=True)
+    if compose_text is not None:
+        (target / "docker-compose.yml").write_text(compose_text, encoding="utf-8")
+    else:
+        # This version is now image-based: drop any docker-compose.yml from a stale install.
+        (target / "docker-compose.yml").unlink(missing_ok=True)
+    (target / "arena.yaml").write_text(text, encoding="utf-8")
     return manifest, target
 
 
 def installed(agent_id: str, version: str | None = None) -> tuple[ArenaManifest, Path] | None:
     """The cached manifest for an agent (highest version unless one is given)."""
+    if not AGENT_ID_RE.match(agent_id):
+        return None
     base = arena_dir() / "agents" / agent_id
     if not base.is_dir():
         return None
@@ -195,11 +249,22 @@ def list_installed() -> list[ArenaManifest]:
     root = arena_dir() / "agents"
     if not root.is_dir():
         return []
-    found = (installed(p.name) for p in sorted(root.iterdir()) if p.is_dir())
-    return [f[0] for f in found if f is not None]
+    result = []
+    for p in sorted(root.iterdir()):
+        if not p.is_dir():
+            continue
+        try:
+            found = installed(p.name)
+        except ManifestError:
+            continue
+        if found is not None:
+            result.append(found[0])
+    return result
 
 
 def remove_installed(agent_id: str) -> bool:
+    if not AGENT_ID_RE.match(agent_id):
+        raise CatalogError(f"'{agent_id}' is not a valid arena agent id")
     base = arena_dir() / "agents" / agent_id
     if not base.exists():
         return False
