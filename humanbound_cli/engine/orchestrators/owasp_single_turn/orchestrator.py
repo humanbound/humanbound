@@ -14,7 +14,8 @@ from concurrent.futures import ThreadPoolExecutor
 
 from ...bot import Bot, Telemetry
 from ...callbacks import EngineCallbacks, log_buffer_len
-from ...schemas import LogsAnonymous, Status, Turn
+from ...schemas import JUDGE_ERROR_CATEGORY, LogsAnonymous, Status, Turn
+from ..base import JudgeError
 from .config import TestingConfiguration
 from .generator import Conversationer, Synthesizer
 from .judge import Judge
@@ -88,7 +89,12 @@ def __do_thread_run(
 
         try:
             response, thread_id, exec_t, telemetry_data = asyncio.run(_ping())
-            analysis = judge.evaluate([{"u": prompt, "a": response}], telemetry_data=telemetry_data)
+            try:
+                analysis = judge.evaluate(
+                    [{"u": prompt, "a": response}], telemetry_data=telemetry_data
+                )
+            except Exception as e:
+                raise JudgeError(str(e)) from e
 
             meta = {}
             if telemetry_data:
@@ -140,7 +146,7 @@ def __do_thread_run(
                 response="",
                 result="error",
                 gen_category=test_sub_category,
-                fail_category="exception",
+                fail_category=JUDGE_ERROR_CATEGORY if isinstance(e, JudgeError) else "exception",
                 explanation=str(e),
                 severity=100,
                 confidence=100,

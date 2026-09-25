@@ -16,6 +16,10 @@ from abc import ABC, abstractmethod
 from ..callbacks import EngineCallbacks
 
 
+class JudgeError(Exception):
+    """The judge could not produce a verdict for a conversation that did run."""
+
+
 class OrchestratorModule(ABC):
     @staticmethod
     @abstractmethod
