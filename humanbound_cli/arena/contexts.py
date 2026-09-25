@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import uuid
 from dataclasses import dataclass, field
 
@@ -14,6 +15,8 @@ class Context:
     state: dict = field(default_factory=dict)  # thread_init output
     history: list[dict] = field(default_factory=list)  # OpenAI-style turns
     started: bool = False
+    # Serialises turns on one conversation (thread_init runs once, history stays ordered).
+    lock: asyncio.Lock = field(default_factory=asyncio.Lock, repr=False, compare=False)
 
 
 class ContextStore:
