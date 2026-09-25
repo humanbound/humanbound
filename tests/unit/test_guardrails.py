@@ -8,6 +8,8 @@ import json
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import pytest
+import yaml
 from click.testing import CliRunner
 
 from humanbound_cli.exceptions import APIError
@@ -271,3 +273,192 @@ class TestFlags:
 
         data = json.loads(result.output.strip())
         assert "rules" in data
+
+
+LOCAL_SCOPE = {
+    "overall_business_scope": "Price quotes for B2B customers",
+    "intents": {
+        "permitted": ["Quote a list price"],
+        "restricted": ["Quote below the floor price"],
+    },
+    "more_info": "EUR only.",
+    "capabilities": {"tools": True, "memory": False},
+}
+
+SCOPE_FILE = """\
+business_scope: Price quotes for B2B customers
+permitted: [Quote a list price]
+restricted: [Quote below the floor price]
+capabilities: {tools: true, memory: false}
+"""
+
+
+def _write_run(name, meta):
+    run = Path(".humanbound/results") / name
+    run.mkdir(parents=True)
+    (run / "meta.json").write_text(json.dumps(meta))
+
+
+class TestLocalAgentYaml:
+    """Not logged in, --format yaml writes the humanbound-firewall agent.yaml."""
+
+    @patch(RUNNER_PATCH)
+    def test_builds_agent_yaml_from_latest_run_scope(self, mock_get_runner):
+        mock_get_runner.return_value = local_runner()
+
+        with runner.isolated_filesystem():
+            _write_run("exp-1-old", {"scope": {"overall_business_scope": "old"}})
+            _write_run("exp-2-new", {"results": {}, "scope": LOCAL_SCOPE})
+            result = runner.invoke(cli, ["guardrails", "--format", "yaml"])
+
+        assert_exit_ok(result)
+        assert "local run exp-2-new" in result.output
+        assert yaml.safe_load(result.output) == {
+            "version": "1.0",
+            "scope": {"business": "Price quotes for B2B customers", "more_info": "EUR only."},
+            "intents": {
+                "permitted": ["Quote a list price"],
+                "restricted": ["Quote below the floor price"],
+            },
+            "capabilities": ["tools"],
+        }
+
+    @patch(RUNNER_PATCH)
+    def test_scope_file_builds_agent_yaml(self, mock_get_runner, tmp_path):
+        mock_get_runner.return_value = local_runner()
+        scope = tmp_path / "scope.yaml"
+        scope.write_text(SCOPE_FILE)
+
+        result = runner.invoke(cli, ["guardrails", "-f", "yaml", "--scope", str(scope)])
+
+        assert_exit_ok(result)
+        doc = yaml.safe_load(result.output)
+        assert doc["scope"]["business"] == "Price quotes for B2B customers"
+        assert doc["intents"]["restricted"] == ["Quote below the floor price"]
+        assert doc["capabilities"] == ["tools"]
+
+    @patch(RUNNER_PATCH)
+    def test_run_without_saved_scope_asks_for_test_or_scope(self, mock_get_runner):
+        """Runs from before the scope was saved: run a test, or pass --scope."""
+        mock_get_runner.return_value = local_runner()
+
+        with runner.isolated_filesystem():
+            _write_run("exp-1", {"results": {"insights": []}})
+            result = runner.invoke(cli, ["guardrails", "--format", "yaml"])
+
+        assert_exit_error(result)
+        assert "hb test" in result.output
+        assert "--scope" in result.output
+
+    @patch(RUNNER_PATCH)
+    def test_no_local_results_asks_for_test_or_scope(self, mock_get_runner):
+        mock_get_runner.return_value = local_runner()
+
+        with runner.isolated_filesystem():
+            result = runner.invoke(cli, ["guardrails", "--format", "yaml"])
+
+        assert_exit_error(result)
+        assert "--scope" in result.output
+
+    @patch(RUNNER_PATCH)
+    def test_unknown_capability_in_scope_file_is_an_error(self, mock_get_runner, tmp_path):
+        mock_get_runner.return_value = local_runner()
+        scope = tmp_path / "scope.yaml"
+        scope.write_text(SCOPE_FILE.replace("memory: false", "vision: true"))
+
+        result = runner.invoke(cli, ["guardrails", "-f", "yaml", "--scope", str(scope)])
+
+        assert_exit_error(result)
+        assert "vision" in result.output
+
+    @patch(RUNNER_PATCH)
+    def test_unparseable_scope_file_is_an_error(self, mock_get_runner, tmp_path):
+        mock_get_runner.return_value = local_runner()
+        scope = tmp_path / "scope.yaml"
+        scope.write_text("business_scope: [unclosed")
+
+        result = runner.invoke(cli, ["guardrails", "-f", "yaml", "--scope", str(scope)])
+
+        assert_exit_error(result)
+        assert "Could not parse scope file" in result.output
+
+    @patch(RUNNER_PATCH)
+    def test_json_stays_the_rules_list(self, mock_get_runner):
+        mock_get_runner.return_value = local_runner()
+
+        with runner.isolated_filesystem():
+            _write_run("exp-1", {"results": {"insights": []}, "scope": LOCAL_SCOPE})
+            result = runner.invoke(cli, ["guardrails"])
+
+        assert_exit_ok(result)
+        assert "rules" in json.loads(result.output)
+
+    @patch(RUNNER_PATCH)
+    def test_agent_yaml_loads_in_the_firewall(self, mock_get_runner, tmp_path):
+        config = pytest.importorskip("humanbound_firewall.config")
+        mock_get_runner.return_value = local_runner()
+        scope = tmp_path / "scope.yaml"
+        scope.write_text(SCOPE_FILE)
+        out = tmp_path / "agent.yaml"
+
+        result = runner.invoke(
+            cli, ["guardrails", "-f", "yaml", "--scope", str(scope), "-o", str(out)]
+        )
+
+        assert_exit_ok(result)
+        loaded = config.load_config(out)
+        assert loaded.business_scope == "Price quotes for B2B customers"
+        assert loaded.permitted_intents == ["Quote a list price"]
+        assert loaded.restricted_intents == ["Quote below the floor price"]
+        assert loaded.capabilities == ["tools"]
+
+
+# GET projects/{id}/guardrails/export/humanbound, in the agent.yaml layout
+PLATFORM_AGENT_YAML = {
+    "name": "PriceBot",
+    "version": "1.0",
+    "scope": {"business": "Price quotes for B2B customers", "more_info": "EUR only."},
+    "intents": {
+        "permitted": ["Quote a list price"],
+        "restricted": ["Quote below the floor price"],
+    },
+    "capabilities": ["tools"],
+}
+
+
+class TestPlatformYaml:
+    """Logged in, the export is saved as the platform returns it."""
+
+    @patch(RUNNER_PATCH)
+    def test_logged_in_yaml_loads_in_the_firewall(self, mock_get_runner, tmp_path):
+        config = pytest.importorskip("humanbound_firewall.config")
+        client = _make_client()
+        client.get.return_value = PLATFORM_AGENT_YAML
+        mock_get_runner.return_value = platform_runner(client)
+        out = tmp_path / "agent.yaml"
+
+        result = runner.invoke(cli, ["guardrails", "-f", "yaml", "-o", str(out)])
+
+        assert_exit_ok(result)
+        assert yaml.safe_load(out.read_text()) == PLATFORM_AGENT_YAML
+        loaded = config.load_config(out)
+        assert loaded.name == "PriceBot"
+        assert loaded.business_scope == "Price quotes for B2B customers"
+        assert loaded.permitted_intents == ["Quote a list price"]
+        assert loaded.restricted_intents == ["Quote below the floor price"]
+        assert loaded.capabilities == ["tools"]
+
+    @patch(RUNNER_PATCH)
+    def test_logged_in_yaml_is_the_platform_export_as_is(self, mock_get_runner, tmp_path):
+        client = _make_client()
+        client.get.return_value = MOCK_GUARDRAILS
+        mock_get_runner.return_value = platform_runner(client)
+        scope = tmp_path / "scope.yaml"
+        scope.write_text(SCOPE_FILE)
+
+        result = runner.invoke(cli, ["guardrails", "-f", "yaml", "--scope", str(scope)])
+
+        assert_exit_ok(result)
+        assert "ignoring it" in result.output
+        body = result.output[result.output.index("version") :]
+        assert yaml.safe_load(body) == MOCK_GUARDRAILS

@@ -7,7 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.10.0] — 2026-09-24
+
+### Changed
+- **`hb guardrails --format yaml` writes the `humanbound-firewall` policy
+  file (`agent.yaml`)** — `scope.business`, top-level `intents`, and
+  `capabilities` — which the firewall's Tier 3 judge evaluates against.
+  Logged in, the export is saved as the platform returns it; the platform now
+  returns this layout (it used to nest the scope and intents under keys the
+  firewall does not read, so the file loaded as an empty policy). Not logged
+  in, the YAML export used to be the `rules` list; it is now built from the
+  scope the latest local test ran against, or from `--scope ./scope.json`.
+  Local `hb test` now saves that scope in the run's `meta.json`; for a run
+  from before this release, run `hb test` again or pass `--scope`. JSON
+  output and the OpenAI vendor are unchanged.
+
 ### Fixed
+- **Export examples in the README and docs.** `hb guardrails -o rules.yaml`
+  wrote JSON into a `.yaml` file (`-o` names the file, not the format); the
+  examples now use `rules.json`. The README's `hb firewall train` example
+  passes the now-required `--model`.
+
+## [2.9.1] — 2026-09-24
+
+### Added
+- **Docs for `humanbound-firewall` 0.3.** The Firewall page now describes
+  the three trust classes (request, ingest, recall), `inspect()` and the
+  `Decision`, the caller-carried session, the deployment's choices, the
+  policy file's `capabilities`/`tools` block and class-tagged few-shots, with
+  the PriceWatch indirect-prompt-injection video embedded. A new
+  Defense → Frameworks → LangChain page covers the two-line adapter, every
+  attached hook, the session in the graph state, the trust-boundary
+  inventory and background judging in log mode. Every claim was checked
+  against the 0.3.0 source; the Firewall and Guardrails pages no longer say
+  the `hb guardrails` rule export configures the judge (the firewall reads
+  `agent.yaml` only), and settings the code never read are gone.
+
+### Fixed
+- **`hb firewall train` and `hb firewall show` work with `humanbound-firewall`
+  0.2 and later.** Both commands imported the package's old module name and
+  exited with an install hint even when the firewall was installed. The
+  `firewall` extra now requires `humanbound-firewall>=0.3`.
+- **`hb firewall show` reports an unreadable model file instead of a
+  traceback.** A corrupt archive, or one whose weights need pickle, is
+  refused with "Not a valid .hbfw file".
 - **`hb mcp` now reports why the MCP import failed** (#135, thanks
   @iayanpahwa). A missing SDK and an installed-but-incompatible SDK both
   printed "MCP dependencies not installed", sending users to re-run an install
@@ -24,6 +67,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   previously returned 404 (e.g. `/deployment.md`).
 
 ### Changed
+- **`hb firewall train` requires `--model`.** The implicit default detector
+  was only found in a source checkout of the firewall; installed from PyPI it
+  always failed. Pass the path to an `AgentClassifier` script, for example
+  `--model detectors/setfit_classifier.py`.
 - **Python 3.13 and 3.14 are now tested in CI.** `requires-python` has always
   accepted them and the classifiers already advertised 3.13, but the test
   matrix stopped at 3.12. It now covers 3.10 through 3.14, and 3.14 is declared
@@ -712,7 +759,9 @@ Last release as `humanbound-cli`. See the
 [old release](https://pypi.org/project/humanbound-cli/1.1.0/) on PyPI for
 notes — that history is preserved there and is not re-documented here.
 
-[Unreleased]: https://github.com/humanbound/humanbound/compare/v2.9.0...HEAD
+[Unreleased]: https://github.com/humanbound/humanbound/compare/v2.10.0...HEAD
+[2.10.0]: https://github.com/humanbound/humanbound/releases/tag/v2.10.0
+[2.9.1]: https://github.com/humanbound/humanbound/releases/tag/v2.9.1
 [2.9.0]: https://github.com/humanbound/humanbound/releases/tag/v2.9.0
 [2.8.0]: https://github.com/humanbound/humanbound/releases/tag/v2.8.0
 [2.7.0]: https://github.com/humanbound/humanbound/releases/tag/v2.7.0

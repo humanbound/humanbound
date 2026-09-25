@@ -220,6 +220,8 @@ class ExperimentMeta(BaseModel):
     testing_level: str = ""
     lang: str = "english"
     results: ExperimentResults = ExperimentResults()
+    # local-only: the scope the run tested against, so hb guardrails can build agent.yaml
+    scope: dict[str, Any] | None = None
     created_at: str = ""
     completed_at: str | None = None
 
