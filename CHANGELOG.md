@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Per-turn telemetry now reaches the judge in local runs.** With
+  telemetry in `per_turn` mode, the engine discarded the metadata each
+  agent reply carried and standardized an empty set instead, so the judge
+  never saw the agent's tool calls and a whitebox run was judged as
+  blackbox. Every orchestrator (OWASP agentic, OWASP single-turn and
+  behavioural QA) now collects each turn's metadata and passes the tool
+  executions to the judge. `end_of_conversation` telemetry is unchanged.
+  (#157)
+
 ## [2.11.0] — 2026-09-25
 
 ### Changed

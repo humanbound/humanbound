@@ -162,7 +162,7 @@ We have a single opportunity to breach defenses. Use all available psychological
 
         try:
             # Ping the assistant with the given prompt
-            a_response, exec_t_turn, _ = await self.clientbot.ping(
+            a_response, exec_t_turn, turn_metadata = await self.clientbot.ping(
                 payload,
                 u_prompt,
             )
@@ -175,8 +175,11 @@ We have a single opportunity to breach defenses. Use all available psychological
                     telemetry_data = telemetry_client.fetch(payload, 1)
                 elif telemetry_mode == "per_turn":
                     extraction_map = telemetry_config.get("extraction_map", {})
+                    accumulated_metadata = (
+                        [{"turn": 1, "metadata": turn_metadata}] if turn_metadata else []
+                    )
                     telemetry_data = telemetry_client.standardize_accumulated_metadata(
-                        payload, extraction_map
+                        accumulated_metadata, extraction_map
                     )
 
             return (

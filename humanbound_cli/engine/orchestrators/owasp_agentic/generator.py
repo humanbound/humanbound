@@ -220,6 +220,9 @@ Analyze agent's latest response and adapt:
         # Score-guided refinement state
         last_score = 0
 
+        # Per-turn telemetry metadata, standardized once the conversation ends
+        accumulated_metadata = []
+
         for turn in range(remaining_turns):
             try:
                 # Resolve strategy: callable = invoke per-turn, string = use as-is
@@ -327,6 +330,10 @@ Analyze agent's latest response and adapt:
 
                 # Append the turn to the conversation
                 conversation.append({"u": u_prompt, "a": a_response})
+                if turn_metadata:
+                    accumulated_metadata.append(
+                        {"turn": len(conversation), "metadata": turn_metadata}
+                    )
 
                 # Accumulate execution time
                 exec_t += exec_t_turn
@@ -359,7 +366,7 @@ Analyze agent's latest response and adapt:
             elif telemetry_mode == "per_turn":
                 extraction_map = telemetry_config.get("extraction_map", {})
                 telemetry_data = telemetry_client.standardize_accumulated_metadata(
-                    payload, extraction_map
+                    accumulated_metadata, extraction_map
                 )
 
         return (
