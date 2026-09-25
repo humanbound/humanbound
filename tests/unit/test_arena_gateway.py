@@ -455,6 +455,13 @@ def test_default_allowed_hosts_are_loopback():
             assert c.get("/arena/v1/health", headers={"host": host}).status_code == 200
 
 
+def test_wildcard_allowed_hosts_accepts_any_host():
+    app = create_app(FakeRegistry([ECHO]), reset_agent=lambda m, d: None, allowed_hosts=["*"])
+    with TestClient(app) as c:
+        for host in ("testserver", "evil.example", "192.168.1.5:8321"):
+            assert c.get("/arena/v1/health", headers={"host": host}).status_code == 200
+
+
 def test_non_json_posts_are_415(client):
     r = client.post(
         "/a2a/echo",

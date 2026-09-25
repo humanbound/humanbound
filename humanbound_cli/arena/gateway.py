@@ -118,6 +118,7 @@ class LocalGuardMiddleware:
 
     def __init__(self, app: ASGIApp, allowed_hosts: list[str]):
         self.app = app
+        self.allow_any = "*" in allowed_hosts
         self.allowed = {h.lower() for h in allowed_hosts}
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
@@ -126,7 +127,7 @@ class LocalGuardMiddleware:
             return
         headers = Headers(scope=scope)
         host = _host_of(headers.get("host", "").lower())
-        if host not in self.allowed and host.strip("[]") not in self.allowed:
+        if not self.allow_any and host not in self.allowed and host.strip("[]") not in self.allowed:
             await PlainTextResponse("Invalid host header", status_code=400)(scope, receive, send)
             return
         if scope.get("method") == "POST" and not _is_json(headers.get("content-type")):
