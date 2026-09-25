@@ -242,6 +242,16 @@ def _fire_test_complete(
     "Same shape as 'hb connect --endpoint'. Overrides the project's default integration.",
 )
 @click.option(
+    "--target",
+    help="Arena target, e.g. arena://pricewatch (see 'hb arena'). Runs on the local engine.",
+)
+@click.option(
+    "--no-reset",
+    is_flag=True,
+    default=False,
+    help="Arena targets: don't recreate the agent from its image before the test",
+)
+@click.option(
     "--category",
     default=None,
     help="Shorthand alias for --test-category (e.g. humanbound/behavioral/qa)",
@@ -325,6 +335,8 @@ def test_command(
     lang: str,
     provider_id: str,
     endpoint: str,
+    target: str,
+    no_reset: bool,
     category: str,
     deep: bool,
     full: bool,
@@ -347,6 +359,7 @@ def test_command(
       hb test --endpoint ./config.json --repo . --wait
       hb test --endpoint ./config.json --prompt ./system.txt --wait
       hb test --endpoint ./config.json --scope ./scope.yaml --wait
+      hb test --target arena://pricewatch          # Arena agent (see 'hb arena')
 
     \b
     Platform mode (requires login + project):
@@ -388,6 +401,30 @@ def test_command(
         timestamp = time.strftime("%Y%m%d-%H%M%S")
         category_short = test_category.split("/")[-1] if test_category else "test"
         name = f"cli-{category_short}-{timestamp}"
+
+    # --- Arena targets: resolve before the runner is chosen (always local engine) ---
+    arena = None
+    if target:
+        from ..arena import target as arena_target
+
+        if endpoint:
+            console.print("[red]Use either --target or --endpoint, not both.[/red]")
+            raise SystemExit(EXIT_RUN_FAILED)
+        if not arena_target.is_arena_target(target):
+            console.print("[red]--target only accepts arena://<agent-id> targets.[/red]")
+            raise SystemExit(EXIT_RUN_FAILED)
+        try:
+            arena = arena_target.resolve_target(target)
+        except arena_target.TargetError as e:
+            console.print(f"[red]{e}[/red]")
+            raise SystemExit(EXIT_RUN_FAILED)
+        local = True
+        console.print(f"[dim]Arena target {target} → local engine[/dim]")
+        if not scope_path and not repo and not prompt:
+            scope_path = str(arena.scope_path)
+        if not context and arena.context:
+            context = arena.context
+        telemetry.capture("arena_test", {"agent": arena.agent_id})
 
     # --- Runner selection (login + project is the switch) ---
     try:
@@ -490,6 +527,9 @@ def test_command(
         if endpoint:
             integration = _load_integration(endpoint)
             has_telemetry = bool(integration.get("telemetry"))
+        elif arena:
+            integration = arena.bot_config
+            has_telemetry = True
         elif is_platform:
             try:
                 client = runner.client
@@ -531,6 +571,16 @@ def test_command(
             debug=debug,
             verbose=verbose,
         )
+
+        if arena and not no_reset and not no_auto_start:
+            from ..arena import target as arena_target
+
+            try:
+                with console.status(f"Resetting {arena.agent_id} to a clean state..."):
+                    arena_target.reset_via_gateway(arena.agent_id, arena.gateway)
+            except arena_target.TargetError as e:
+                console.print(f"[red]{e}[/red]")
+                raise SystemExit(EXIT_RUN_FAILED)
 
         # Start experiment via runner
         with console.status("Creating experiment..."):

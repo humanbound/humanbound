@@ -328,3 +328,80 @@ class TestOutputFormat:
 
         assert_exit_ok(result)
         assert "exp-abc123" in result.output
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# Arena targets
+# ─────────────────────────────────────────────────────────────────────────
+
+from pathlib import Path
+
+from conftest import local_runner
+
+from humanbound_cli.arena.target import ArenaTarget, TargetError
+
+ARENA_TARGET = ArenaTarget(
+    agent_id="echo",
+    gateway="http://127.0.0.1:11500",
+    bot_config={"chat_completion": {"endpoint": "http://127.0.0.1:11500/a2a/echo"}},
+    scope_path=Path("/tmp/echo-scope.yaml"),
+    context="Fixture agent",
+)
+
+
+class TestArenaTarget:
+    @patch("humanbound_cli.arena.target.reset_via_gateway")
+    @patch("humanbound_cli.arena.target.resolve_target", return_value=ARENA_TARGET)
+    @patch(RUNNER_PATCH)
+    def test_arena_target_forces_local_and_wires_config(
+        self, mock_get_runner, _resolve, mock_reset
+    ):
+        r = local_runner()
+        r.start.return_value = None  # stop right after the config is built
+        mock_get_runner.return_value = r
+
+        result = runner.invoke(cli, ["test", "--target", "arena://echo"])
+
+        mock_get_runner.assert_called_once_with(force_local=True)
+        config = _started_config(r)
+        assert config.endpoint == ARENA_TARGET.bot_config
+        assert config.scope_path == str(ARENA_TARGET.scope_path)
+        assert config.context == "Fixture agent"
+        mock_reset.assert_called_once_with("echo", "http://127.0.0.1:11500")
+        assert result.exit_code == 1  # runner.start returned None
+
+    @patch("humanbound_cli.arena.target.reset_via_gateway")
+    @patch("humanbound_cli.arena.target.resolve_target", return_value=ARENA_TARGET)
+    @patch(RUNNER_PATCH)
+    def test_no_reset_and_explicit_scope_win(self, mock_get_runner, _resolve, mock_reset, tmp_path):
+        scope = tmp_path / "scope.yaml"
+        scope.write_text("overall_business_scope: mine\n")
+        r = local_runner()
+        r.start.return_value = None
+        mock_get_runner.return_value = r
+
+        runner.invoke(
+            cli, ["test", "--target", "arena://echo", "--no-reset", "--scope", str(scope)]
+        )
+
+        mock_reset.assert_not_called()
+        assert _started_config(r).scope_path == str(scope)
+
+    @patch(
+        "humanbound_cli.arena.target.resolve_target",
+        side_effect=TargetError("echo is not running → hb arena run echo"),
+    )
+    def test_not_running_exits_2_with_hint(self, _resolve):
+        result = runner.invoke(cli, ["test", "--target", "arena://echo"])
+        assert result.exit_code == 2
+        assert "hb arena run echo" in " ".join(result.output.split())
+
+    def test_target_and_endpoint_are_exclusive(self):
+        result = runner.invoke(cli, ["test", "--target", "arena://echo", "--endpoint", "{}"])
+        assert result.exit_code == 2
+        assert "either --target or --endpoint" in " ".join(result.output.split())
+
+    def test_non_arena_target_is_rejected(self):
+        result = runner.invoke(cli, ["test", "--target", "https://agent.example"])
+        assert result.exit_code == 2
+        assert "arena://" in result.output
