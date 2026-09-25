@@ -49,6 +49,23 @@ def _ensure_private_dir(path: Path) -> None:
         pass
 
 
+def _scope_to_save(scope, scope_path):
+    """The run's scope for meta.json, with the scope file's capabilities when it declares them."""
+    if not scope:
+        return None
+    saved = dict(scope)
+    if scope_path:
+        from ..agent_yaml import load_scope_file
+
+        try:
+            capabilities = load_scope_file(scope_path).get("capabilities")
+        except ValueError:
+            capabilities = None
+        if capabilities is not None:
+            saved["capabilities"] = capabilities
+    return saved
+
+
 class _LocalRun:
     """A single local test execution running in a background thread."""
 
@@ -58,6 +75,7 @@ class _LocalRun:
         self.status = "Created"
         self.logs = []
         self.results = None
+        self.scope = None
         self.error = None
         self.thread = None
         self._terminated = threading.Event()
@@ -99,6 +117,7 @@ class _LocalRun:
                 integration=self.config.endpoint,
                 llm_pinger=llm,
             )
+            self.scope = _scope_to_save(scope, self.config.scope_path)
 
             # Build experiment dict (matches engine's expected shape)
             experiment = {
@@ -233,6 +252,7 @@ class _LocalRun:
             testing_level=self.config.testing_level or "",
             lang=self.config.lang or "english",
             results=exp_results,
+            scope=self.scope,
             created_at=self._created_at,
             completed_at=time.strftime("%Y-%m-%dT%H:%M:%S"),
         )

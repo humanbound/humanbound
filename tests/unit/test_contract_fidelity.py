@@ -75,16 +75,11 @@ CONTRACT_CASES = [
     (
         "GuardrailsExport humanbound",
         lambda: GuardrailsExportHumanbound(
-            project_id="proj-456",
-            source="project_scope",
-            source_id="proj-456",
-            generated_at="2026-04-21T10:00:00Z",
-            scope={
-                "overall_business_scope": "Retail banking customer support",
-                "intents": {"permitted": ["balance"], "restricted": ["approve_loan"]},
-                "more_info": "",
-            },
-        ).model_dump(),
+            name="Retail Support",
+            scope={"business": "Retail banking customer support", "more_info": ""},
+            intents={"permitted": ["balance"], "restricted": ["approve_loan"]},
+            capabilities=["tools"],
+        ).model_dump(exclude_none=True),
         GuardrailsExportHumanbound,
     ),
     (
