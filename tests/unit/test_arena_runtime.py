@@ -214,6 +214,26 @@ def test_compose_pull_does_not_inherit_hb_credentials(docker, tmp_path, monkeypa
     assert env is not None and "HB_API_KEY" not in env
 
 
+def test_compose_env_only_carries_allowlisted_host_vars(docker, tmp_path, monkeypatch):
+    """A compose file's ${VAR} interpolation must not be able to read arbitrary host
+    secrets: only an explicit allowlist of harmless base vars, plus the agent's own
+    declared keys, may reach the compose subprocess environment."""
+    m = _compose_manifest({"required": ["OPENAI_API_KEY"]})
+    _write_compose(tmp_path, SAFE_SERVICES)
+    docker.containers = [_inspect("echo", "0.1.0", "compose", 8080, 50000)]
+    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "aws-super-secret")
+    monkeypatch.setenv("GITHUB_TOKEN", "gh-super-secret")
+    monkeypatch.setenv("PATH", "/usr/bin")
+
+    runtime.start(m, tmp_path, {"OPENAI_API_KEY": "sk-agent-key"})
+
+    (env,) = docker.env_of("compose", "-p", "arena-echo", "-f")
+    assert env["PATH"] == "/usr/bin"
+    assert env["OPENAI_API_KEY"] == "sk-agent-key"
+    assert "AWS_SECRET_ACCESS_KEY" not in env
+    assert "GITHUB_TOKEN" not in env
+
+
 def test_reset_compose_passes_the_saved_env(docker, tmp_path, monkeypatch):
     m = _compose_manifest({"required": ["OPENAI_API_KEY"]})
     _write_compose(tmp_path, SAFE_SERVICES)
@@ -324,6 +344,16 @@ def test_safe_compose_features_are_allowed(docker, tmp_path):
     }
     _write_compose(tmp_path, services, volumes={"named": {}}, secrets={"s": {"file": "s.txt"}})
     runtime.check_compose(_compose_manifest(), tmp_path)
+
+
+def test_compose_agent_dir_with_dotenv_is_rejected(docker, tmp_path):
+    """A `.env` next to the compose file is picked up automatically by `docker compose`
+    for ${VAR} interpolation, bypassing our allowlisted subprocess env entirely."""
+    _write_compose(tmp_path, SAFE_SERVICES, volumes={"data": {}, "pg": {}})
+    (tmp_path / ".env").write_text("AWS_SECRET_ACCESS_KEY=leaked\n")
+    with pytest.raises(DockerError, match=r"\.env"):
+        runtime.check_compose(_compose_manifest(), tmp_path)
+    assert docker.called("compose") == []
 
 
 @pytest.mark.parametrize("content", [None, "services: [", "- a list", "services: {agent: 3}"])

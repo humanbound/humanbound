@@ -81,9 +81,28 @@ def _run(
     return subprocess.run(argv, capture_output=capture, text=True, env=env)
 
 
+# Base env for compose subprocesses: only vars docker/compose themselves need (shell,
+# locale, TLS, proxy, docker/compose config), never arbitrary host secrets that a
+# compose file's ${VAR} interpolation could otherwise read (e.g. AWS_*, GITHUB_TOKEN).
+_ENV_ALLOWLIST_EXACT = {
+    "PATH", "HOME", "USER", "LOGNAME", "SHELL", "LANG", "LC_ALL", "TMPDIR", "TEMP", "TMP",
+    "SYSTEMROOT", "SystemRoot", "WINDIR", "USERPROFILE", "APPDATA", "LOCALAPPDATA",
+    "PROGRAMDATA", "COMSPEC", "PATHEXT", "XDG_RUNTIME_DIR", "XDG_CONFIG_HOME",
+    "DOCKER_HOST", "DOCKER_CONTEXT", "DOCKER_CONFIG", "DOCKER_CERT_PATH",
+    "DOCKER_TLS_VERIFY", "DOCKER_API_VERSION", "DOCKER_DEFAULT_PLATFORM",
+    "HTTP_PROXY", "HTTPS_PROXY", "NO_PROXY", "http_proxy", "https_proxy", "no_proxy",
+    "SSL_CERT_FILE", "SSL_CERT_DIR",
+}  # fmt: skip
+_ENV_ALLOWLIST_PREFIXES = ("COMPOSE_", "BUILDKIT_")
+
+
+def _allowlisted(name: str) -> bool:
+    return name in _ENV_ALLOWLIST_EXACT or name.startswith(_ENV_ALLOWLIST_PREFIXES)
+
+
 def _subprocess_env(extra: dict[str, str]) -> dict[str, str]:
-    """The inherited environment minus hb's own credentials, plus `extra`."""
-    base = {k: v for k, v in os.environ.items() if not is_reserved(k)}
+    """An allowlisted base environment (never arbitrary host secrets), plus `extra`."""
+    base = {k: v for k, v in os.environ.items() if _allowlisted(k) and not is_reserved(k)}
     return {**base, **extra}
 
 
@@ -216,6 +235,12 @@ def _check_service(name: str, svc: object) -> None:
 
 def check_compose(m: ArenaManifest, agent_dir: Path) -> None:
     """Reject compose files that could publish ports or reach the host. Raises DockerError."""
+    if (agent_dir / ".env").exists():
+        raise DockerError(
+            f"refusing to run {m.id}: a .env file is present next to {COMPOSE_FILE}. "
+            "'docker compose' reads it automatically for ${VAR} interpolation, which "
+            "could leak host secrets; hb only passes the agent's declared env vars."
+        )
     path = agent_dir / COMPOSE_FILE
     try:
         doc = yaml.safe_load(path.read_text(encoding="utf-8"))
