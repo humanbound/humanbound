@@ -545,6 +545,26 @@ def test_make_api_call_allows_normal_2xx(bot):
     assert data == {"content": "hi"}
 
 
+def test_make_api_call_does_not_swallow_keyboard_interrupt(bot):
+    resp = _mock_post(status=200, text="raw")
+    resp.json.side_effect = KeyboardInterrupt
+    with patch("humanbound_cli.engine.bot.requests.post", return_value=resp):
+        with pytest.raises(KeyboardInterrupt):
+            bot._Bot__make_api_call({}, "https://agent.example/chat", {}, {"m": "x"})
+
+
+def test_telemetry_make_api_call_does_not_swallow_keyboard_interrupt():
+    tel = Telemetry(
+        {"endpoint": "https://tele.example/fetch", "headers": {}, "payload": {}, "method": "POST"},
+        e_id="e1",
+    )
+    resp = _mock_post(status=200, text="raw")
+    resp.json.side_effect = KeyboardInterrupt
+    with patch("humanbound_cli.engine.bot.requests.post", return_value=resp):
+        with pytest.raises(KeyboardInterrupt):
+            tel._Telemetry__make_api_call({}, "https://tele.example/fetch", {}, {})
+
+
 def test_telemetry_make_api_call_rejects_redirect():
     tel = Telemetry(
         {"endpoint": "https://tele.example/fetch", "headers": {}, "payload": {}, "method": "POST"},

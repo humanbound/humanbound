@@ -29,6 +29,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   transport error, and timeouts say how long the provider waited. Error text
   containing "rate" is no longer retried as a rate limit; only HTTP 429 is.
   (#73)
+- **Parsing a bot or telemetry reply no longer swallows interrupts and
+  bugs.** When a reply was not JSON, the engine fell back to its raw text
+  using a bare `except:`, which also caught Ctrl+C, `SystemExit`, and
+  unrelated errors and passed them on as the bot's reply. Only JSON decode
+  errors fall back to text now. (#120)
 
 ## [2.10.0] — 2026-09-24
 
