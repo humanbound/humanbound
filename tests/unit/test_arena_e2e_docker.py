@@ -93,3 +93,51 @@ def test_full_lifecycle(e2e_env):
 
     assert runner.invoke(cli, ["arena", "stop", "echo"]).exit_code == 0
     assert runner.invoke(cli, ["arena", "ps"]).output.strip().endswith("No arena agents running.")
+
+
+def test_hb_bot_contract_against_the_real_gateway(e2e_env, monkeypatch):
+    """The contract `hb test --target arena://echo` relies on: resolve_target's bot_config
+    drives the engine's real Bot through the real gateway and container, keeping one A2A
+    context across turns and returning hb's per-turn metadata."""
+    import asyncio
+
+    import requests
+
+    from humanbound_cli.arena import target
+    from humanbound_cli.engine import bot as bot_module
+    from humanbound_cli.engine.bot import Bot
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["arena", "run", "echo"], catch_exceptions=False)
+    assert result.exit_code == 0, result.output
+
+    resolved = target.resolve_target("arena://echo")
+    assert resolved.gateway == e2e_env
+    assert resolved.scope_path.exists()
+
+    sent, answered = [], []
+    real_post = requests.post
+
+    def spy(url, *args, **kwargs):
+        sent.append(kwargs["json"]["params"]["message"]["contextId"])
+        resp = real_post(url, *args, **kwargs)
+        answered.append(resp.json()["result"]["message"]["contextId"])
+        return resp
+
+    monkeypatch.setattr(bot_module.requests, "post", spy)
+
+    bot = Bot(resolved.bot_config, "e2e-experiment")
+    base = bot.init()
+    first, _, meta1 = asyncio.run(bot.ping(base, "one", []))
+    second, _, meta2 = asyncio.run(bot.ping(base, "two", []))
+
+    assert first == "echo: one"
+    assert second == "echo: two"
+    conversation = base["humanbound_conversation_id"]
+    assert sent == [conversation, conversation]
+    assert answered == [conversation, conversation]
+    for meta in (meta1, meta2):
+        assert meta["agent"] == "echo"
+        assert meta["version"] == "0.1.0"
+        assert meta["tool_calls"] == [{"name": "echo"}]
+        assert isinstance(meta["latency_ms"], int)

@@ -22,11 +22,10 @@ import yaml
 from pydantic import BaseModel, Field
 
 from .. import __version__
-from .manifest import ArenaManifest, ManifestError, load_manifest, parse_manifest
+from .manifest import AGENT_ID_RE, ArenaManifest, ManifestError, load_manifest, parse_manifest
 from .paths import DEFAULT_INDEX_URL, arena_dir
 
 INDEX_SCHEMA_VERSION = 1
-AGENT_ID_RE = re.compile(r"^[a-z0-9][a-z0-9-]{0,62}$")
 
 
 class CatalogError(RuntimeError):

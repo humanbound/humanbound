@@ -371,6 +371,28 @@ class TestArenaTarget:
         assert result.exit_code == 1  # runner.start returned None
 
     @patch("humanbound_cli.arena.target.reset_via_gateway")
+    @patch("humanbound_cli.arena.target.resolve_target")
+    @patch(RUNNER_PATCH)
+    def test_arena_runs_are_reported_as_blackbox(self, mock_get_runner, mock_resolve, _reset):
+        # Even though the bot_config carries a telemetry mapping, the local engine
+        # discards per-turn metadata today, so the run must not claim whitebox depth.
+        mock_resolve.return_value = ArenaTarget(
+            agent_id="echo",
+            gateway="http://127.0.0.1:11500",
+            bot_config={"telemetry": {"mode": "end_of_conversation"}},
+            scope_path=Path("/tmp/echo-scope.yaml"),
+            context="",
+        )
+        r = local_runner()
+        r.start.return_value = None
+        mock_get_runner.return_value = r
+
+        result = runner.invoke(cli, ["test", "--target", "arena://echo"])
+
+        assert "blackbox" in result.output
+        assert "whitebox" not in result.output
+
+    @patch("humanbound_cli.arena.target.reset_via_gateway")
     @patch("humanbound_cli.arena.target.resolve_target", return_value=ARENA_TARGET)
     @patch(RUNNER_PATCH)
     def test_no_reset_and_explicit_scope_win(self, mock_get_runner, _resolve, mock_reset, tmp_path):

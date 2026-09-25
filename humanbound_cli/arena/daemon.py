@@ -21,9 +21,8 @@ from pathlib import Path
 import httpx
 
 from .. import __version__
-from .paths import arena_dir, gateway_port, gateway_url
+from .paths import LOOPBACK_HOSTS, arena_dir, gateway_port, gateway_url
 
-LOOPBACK_HOSTS = {"127.0.0.1", "localhost", "::1", "[::1]"}
 LOG_MAX_BYTES = 5 * 1024 * 1024
 
 

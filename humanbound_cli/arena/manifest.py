@@ -8,6 +8,7 @@ unchanged under `agent:`, so `manifest.agent_yaml()` is itself a valid agent.yam
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import Any, Literal
 
@@ -25,6 +26,9 @@ from ..extractors.capabilities.types import CAPABILITY_KEYS
 from .keys import is_reserved, is_valid_name
 
 SCHEMA_VERSION = 1
+# The one definition of a valid agent id (manifest, catalog index, arena:// targets).
+AGENT_ID_PATTERN = r"^[a-z0-9][a-z0-9-]{0,62}$"
+AGENT_ID_RE = re.compile(AGENT_ID_PATTERN)
 
 
 class ManifestError(ValueError):
@@ -191,7 +195,7 @@ class GroundTruth(_Strict):
 
 class ArenaManifest(_Strict):
     schema_version: int = Field(ge=1, le=SCHEMA_VERSION, strict=False)
-    id: str = Field(pattern=r"^[a-z0-9][a-z0-9-]{0,62}$")
+    id: str = Field(pattern=AGENT_ID_PATTERN)
     name: str
     version: str = Field(pattern=r"^\d+\.\d+\.\d+$")
     origin: Literal["first-party", "community"]

@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import httpx
 
-from .http import AgentError
+from .http import AgentError, map_httpx_error
 
 
 class A2APassthrough:
@@ -25,14 +25,8 @@ class A2APassthrough:
             resp = await self.client.post(
                 self.url, json=body, headers=headers, timeout=self.timeout_s
             )
-        except httpx.ConnectError as e:
-            raise AgentError("agent_not_running", f"cannot reach the agent: {e}") from None
-        except httpx.TimeoutException:
-            raise AgentError(
-                "agent_timeout", f"the agent did not answer within {self.timeout_s}s"
-            ) from None
         except (httpx.HTTPError, httpx.InvalidURL) as e:
-            raise AgentError("agent_error", f"cannot reach the agent: {e}") from None
+            raise map_httpx_error(e, self.timeout_s) from None
         if not resp.is_success:
             raise AgentError(
                 "agent_error", f"the agent returned HTTP {resp.status_code}: {resp.text[:300]}"

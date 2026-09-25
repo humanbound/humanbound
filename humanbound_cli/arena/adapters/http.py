@@ -30,6 +30,15 @@ class AgentError(RuntimeError):
         self.code = code
 
 
+def map_httpx_error(e: Exception, timeout_s: float) -> AgentError:
+    """The AgentError for a failed request to an agent (connect, timeout, anything else)."""
+    if isinstance(e, httpx.ConnectError):
+        return AgentError("agent_not_running", f"cannot reach the agent: {e}")
+    if isinstance(e, httpx.TimeoutException):
+        return AgentError("agent_timeout", f"the agent did not answer within {timeout_s}s")
+    return AgentError("agent_error", f"cannot reach the agent: {e}")
+
+
 @dataclass
 class AgentReply:
     text: str
@@ -110,14 +119,8 @@ class HttpAdapter:
         body = substitute(copy.deepcopy(call.payload), values, prompt, conversation)
         try:
             resp = await self.client.post(url, json=body, headers=headers, timeout=self.timeout_s)
-        except httpx.ConnectError as e:
-            raise AgentError("agent_not_running", f"cannot reach the agent: {e}") from None
-        except httpx.TimeoutException:
-            raise AgentError(
-                "agent_timeout", f"the agent did not answer within {self.timeout_s}s"
-            ) from None
         except (httpx.HTTPError, httpx.InvalidURL) as e:
-            raise AgentError("agent_error", f"cannot reach the agent: {e}") from None
+            raise map_httpx_error(e, self.timeout_s) from None
         if not resp.is_success:
             raise AgentError(
                 "agent_error", f"the agent returned HTTP {resp.status_code}: {resp.text[:300]}"

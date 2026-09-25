@@ -478,7 +478,7 @@ def test_serve_loopback_is_quiet(arena_env, monkeypatch):
     monkeypatch.setattr(daemon, "serve", lambda host, port: served.append((host, port)))
     result = invoke("serve")
     assert "reachable from your network" not in flat(result)
-    assert served == [("127.0.0.1", None)]
+    assert served == [("127.0.0.1", 11500)]  # the resolved HB_ARENA_PORT default
 
 
 def test_serve_help_documents_hb_arena_port(arena_env):
@@ -505,3 +505,19 @@ def test_rm_removes_a_corrupt_cached_manifest(docker_ok, arena_env):
     result = invoke("rm", "echo")
     assert result.exit_code == 0, result.output
     assert not (arena_env / "agents" / "echo").exists()
+
+
+def test_malformed_hb_arena_port_fails_cleanly_everywhere(docker_ok, monkeypatch):
+    monkeypatch.setenv("HB_ARENA_PORT", "nope")
+    served = []
+    monkeypatch.setattr(daemon, "serve", lambda host, port: served.append((host, port)))
+    for args in (("serve",), ("endpoint", "echo"), ("reset", "echo")):
+        docker_ok["running"] = [RUNNING]
+        result = invoke(*args)
+        assert result.exit_code == 1, (args, result.output)
+        assert "HB_ARENA_PORT" in flat(result)
+    assert served == []
+    # stop never fails on it: nothing could have been started on a malformed port
+    result = invoke("stop", "echo")
+    assert result.exit_code == 0, result.output
+    assert docker_ok["gateway"] == []

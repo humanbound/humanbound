@@ -527,7 +527,10 @@ def test_command(
             has_telemetry = bool(integration.get("telemetry"))
         elif arena:
             integration = arena.bot_config
-            has_telemetry = True
+            # The bot_config still carries the telemetry mapping (agent/version/tool_calls
+            # per turn), but the local engine currently discards per-turn metadata, so an
+            # arena run is honestly blackbox until the engine consumes it.
+            has_telemetry = False
         elif is_platform:
             try:
                 client = runner.client

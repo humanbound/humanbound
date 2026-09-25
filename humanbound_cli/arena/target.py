@@ -17,9 +17,9 @@ import yaml
 
 from ..agent_yaml import scope_from_agent_yaml
 from . import catalog, daemon, runtime
+from .manifest import AGENT_ID_RE
 
 ARENA_SCHEME = "arena://"
-_ID_RE = re.compile(r"^[a-z0-9][a-z0-9-]{0,62}$")
 
 
 class TargetError(RuntimeError):
@@ -41,7 +41,7 @@ def is_arena_target(value: str | None) -> bool:
 
 def parse_target(value: str) -> str:
     agent_id = value[len(ARENA_SCHEME) :] if is_arena_target(value) else ""
-    if not _ID_RE.match(agent_id):
+    if not AGENT_ID_RE.match(agent_id):
         raise TargetError(f"invalid arena target {value!r}; expected arena://<agent-id>")
     return agent_id
 

@@ -31,8 +31,9 @@ from .adapters.a2a_passthrough import A2APassthrough
 from .adapters.http import AgentError, AgentReply, HttpAdapter
 from .contexts import ContextStore
 from .manifest import ArenaManifest, ManifestError
+from .paths import LOOPBACK_HOSTS
 
-DEFAULT_ALLOWED_HOSTS = ["127.0.0.1", "localhost", "[::1]", "::1"]
+DEFAULT_ALLOWED_HOSTS = list(LOOPBACK_HOSTS)
 
 
 @dataclass(frozen=True)
@@ -138,18 +139,19 @@ class LocalGuardMiddleware:
                 err = a2a.RpcError(a2a.INVALID_REQUEST, message)
                 response = JSONResponse(a2a.error_body(None, err), status_code=415)
             else:
-                response = JSONResponse(
-                    {"error": {"code": "unsupported_media_type", "message": message}},
-                    status_code=415,
-                )
+                response = _error_response("unsupported_media_type", message, 415)
             await response(scope, receive, send)
             return
         await self.app(scope, receive, send)
 
 
+def _error_response(code: str, message: str, status: int) -> JSONResponse:
+    """The gateway's non-JSON-RPC error shape: {"error": {"code", "message"}}."""
+    return JSONResponse({"error": {"code": code, "message": message}}, status_code=status)
+
+
 def _http_error(e: AgentError) -> JSONResponse:
-    status = a2a.from_agent_error(e).http_status
-    return JSONResponse({"error": {"code": e.code, "message": str(e)}}, status_code=status)
+    return _error_response(e.code, str(e), a2a.from_agent_error(e).http_status)
 
 
 def _metadata(entry: RegistryEntry, reply: AgentReply) -> dict:
@@ -280,9 +282,7 @@ def create_app(
         try:
             await run_in_threadpool(reset_agent, entry.manifest, entry.agent_dir)
         except Exception as e:  # noqa: BLE001 - any failure is reported, never a bare 500
-            return JSONResponse(
-                {"error": {"code": "reset_failed", "message": str(e)}}, status_code=500
-            )
+            return _error_response("reset_failed", str(e), 500)
         finally:
             # The old container state is gone whether or not the restart succeeded.
             contexts.drop_agent(agent_id)
@@ -362,9 +362,7 @@ def create_app(
         try:
             agent_id, prompt, history = openai_compat.parse_chat_request(await request.json())
         except ValueError as e:
-            return JSONResponse(
-                {"error": {"code": "invalid_request", "message": str(e)}}, status_code=400
-            )
+            return _error_response("invalid_request", str(e), 400)
         try:
             entry = await lookup(agent_id)
             if entry.manifest.integration.type == "a2a":

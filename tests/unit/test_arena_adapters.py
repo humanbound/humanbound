@@ -296,3 +296,21 @@ def test_call_conversation_defaults_to_none_and_works():
 
     data = run(go())
     assert data == {"reply": "ok"}
+
+
+@pytest.mark.parametrize(
+    "exc, code",
+    [
+        (httpx.ConnectError("refused"), "agent_not_running"),
+        (httpx.ReadTimeout("slow"), "agent_timeout"),
+        (httpx.RemoteProtocolError("bad"), "agent_error"),
+        (httpx.InvalidURL("bad url"), "agent_error"),
+    ],
+)
+def test_map_httpx_error(exc, code):
+    from humanbound_cli.arena.adapters.http import map_httpx_error
+
+    err = map_httpx_error(exc, 7)
+    assert err.code == code
+    if code == "agent_timeout":
+        assert "7s" in str(err)

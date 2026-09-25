@@ -10,6 +10,10 @@ from pathlib import Path
 from ..config import get_humanbound_dir
 
 DEFAULT_GATEWAY_PORT = 11500
+# Host names that mean "this machine": the gateway's default Host-header allowlist and
+# the binds that don't expose it to the network. Here (not in gateway.py) so the daemon
+# and CLI can use it without importing starlette.
+LOOPBACK_HOSTS = ("127.0.0.1", "localhost", "[::1]", "::1")
 DEFAULT_INDEX_URL = "https://raw.githubusercontent.com/humanbound/humanbound-arena/main/index.json"
 
 

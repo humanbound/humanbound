@@ -301,21 +301,32 @@ def _first_run_notice() -> None:
     marker.touch()
 
 
+def _gateway_port(*, strict: bool = True) -> int | None:
+    """HB_ARENA_PORT (default 11500). A malformed value fails the command; with
+    strict=False it returns None instead (nothing could have been started there)."""
+    from ..arena.paths import gateway_port
+
+    try:
+        return gateway_port()
+    except ValueError as e:
+        if not strict:
+            return None
+        _fail(str(e))
+
+
 def _gateway_url() -> str:
     from ..arena.paths import gateway_url
 
-    try:
-        return gateway_url()
-    except ValueError as e:  # a malformed HB_ARENA_PORT
-        _fail(str(e))
+    return gateway_url(_gateway_port())
 
 
 def _ensure_gateway() -> str:
     from ..arena import daemon
 
+    port = _gateway_port()
     try:
-        return daemon.ensure_running()
-    except (daemon.GatewayError, ValueError) as e:
+        return daemon.ensure_running(port)
+    except daemon.GatewayError as e:
         _fail(str(e))
 
 
@@ -340,11 +351,9 @@ def _stop_gateway_if_idle() -> None:
             return
     except runtime.DockerError:
         return
-    try:
-        if daemon.stop_gateway():
-            _ok("gateway stopped")
-    except ValueError:
-        pass  # a malformed HB_ARENA_PORT: nothing we could have started there
+    port = _gateway_port(strict=False)
+    if port is not None and daemon.stop_gateway(port):
+        _ok("gateway stopped")
 
 
 def _print_endpoints(agent_id: str, gateway: str) -> None:
@@ -364,14 +373,10 @@ def _print_endpoints(agent_id: str, gateway: str) -> None:
 def run_command(ref, env_file):
     """Pull (if needed), start an agent and serve it through the gateway."""
     from ..arena import daemon, keys, runtime
-    from ..arena.paths import gateway_port
 
     # Validate the gateway port before touching Docker or the catalog, so a bad
     # HB_ARENA_PORT fails fast instead of after a pull/start we'd have to unwind.
-    try:
-        port = gateway_port()
-    except ValueError as e:
-        _fail(str(e))
+    port = _gateway_port()
     m, agent_dir = _ensure_installed(ref, refresh=False)
     _preflight(m)
     # Community agents never see the shell environment: their manifest could name
@@ -484,8 +489,9 @@ def stop_command(agent_id, stop_all):
         except runtime.DockerError as e:
             # Docker being down doesn't mean the gateway is: stop it regardless, then
             # report the docker error.
-            with contextlib.suppress(ValueError):
-                daemon.stop_gateway()
+            port = _gateway_port(strict=False)
+            if port is not None:
+                daemon.stop_gateway(port)
             _fail(str(e))
         try:
             for a in targets:
@@ -593,24 +599,18 @@ def serve_command(host, port):
     serve on a non-default --port.
     """
     from ..arena import daemon
-    from ..arena.paths import gateway_port
+    from ..arena.paths import LOOPBACK_HOSTS
 
-    if host not in daemon.LOOPBACK_HOSTS:
+    if host not in LOOPBACK_HOSTS:
         _say(
             "Warning: arena agents are intentionally vulnerable and will be reachable "
             "from your network.",
             "yellow",
         )
-    try:
-        resolved_port = port if port is not None else gateway_port()
-    except ValueError as e:  # a malformed HB_ARENA_PORT
-        _fail(str(e))
+    resolved_port = port if port is not None else _gateway_port()
     if daemon.is_up(resolved_port):
         _fail(
             f"a gateway is already running on port {resolved_port} → "
             "hb arena stop --all or choose another --port"
         )
-    try:
-        daemon.serve(host, port)
-    except ValueError as e:  # a malformed HB_ARENA_PORT
-        _fail(str(e))
+    daemon.serve(host, resolved_port)
