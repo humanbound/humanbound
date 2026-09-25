@@ -2,6 +2,7 @@
 # Copyright (c) 2024-2026 Humanbound
 import asyncio
 import copy
+import os
 
 import httpx
 import pytest
@@ -12,6 +13,7 @@ from starlette.responses import JSONResponse
 from starlette.routing import Route
 from starlette.testclient import TestClient
 
+from humanbound_cli import __version__
 from humanbound_cli.arena import gateway
 from humanbound_cli.arena.gateway import RegistryEntry, create_app
 from humanbound_cli.arena.manifest import ManifestError, load_manifest, parse_manifest
@@ -172,7 +174,8 @@ def send(client, agent_id, text, context_id=None, rpc_id=1, headers=None):
 
 
 def test_health_and_agent_list(client):
-    assert client.get("/arena/v1/health").json()["status"] == "ok"
+    health = client.get("/arena/v1/health").json()
+    assert health == {"status": "ok", "version": __version__, "pid": os.getpid()}
     agents = {a["id"]: a for a in client.get("/arena/v1/agents").json()}
     assert agents["echo"]["a2a_url"] == "http://testserver/a2a/echo"
     assert agents["echo"]["native_url"] == "http://127.0.0.1:9999"
@@ -562,3 +565,26 @@ def test_registry_refreshes_once_under_concurrency(monkeypatch):
         t.join()
     assert len(calls) == 1
     assert all(r is not None for r in results)
+
+
+def test_pidfile_is_written_on_startup_and_removed_on_shutdown(tmp_path):
+    pidfile = tmp_path / "arena" / "gateway.pid"
+    app = create_app(FakeRegistry([]), allowed_hosts=TEST_HOSTS, pidfile=pidfile)
+    with TestClient(app):
+        assert pidfile.read_text() == str(os.getpid())
+    assert not pidfile.exists()
+
+
+def test_pidfile_of_another_gateway_is_left_alone_on_shutdown(tmp_path):
+    pidfile = tmp_path / "gateway.pid"
+    app = create_app(FakeRegistry([]), allowed_hosts=TEST_HOSTS, pidfile=pidfile)
+    with TestClient(app):
+        pidfile.write_text("999999")  # a newer gateway took over
+    assert pidfile.read_text() == "999999"
+
+
+def test_no_pidfile_by_default(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    with TestClient(create_app(FakeRegistry([]), allowed_hosts=TEST_HOSTS)):
+        pass
+    assert list(tmp_path.iterdir()) == []

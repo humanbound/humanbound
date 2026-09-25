@@ -5,6 +5,7 @@ OpenAI-compatible façade and management routes. Binds to loopback by default.""
 
 from __future__ import annotations
 
+import os
 import threading
 import time
 from collections.abc import Callable
@@ -175,16 +176,32 @@ def create_app(
     transport: httpx.AsyncBaseTransport | None = None,
     reset_agent: Callable[[ArenaManifest, Path], object] = runtime.reset,
     allowed_hosts: list[str] | None = None,
+    pidfile: Path | None = None,
 ) -> Starlette:
+    """Build the gateway app. `pidfile`, when given, is written with this process's pid on
+    startup and removed on shutdown (if it still names this process) — the gateway owns
+    its pidfile, so it only ever exists while a gateway is actually serving."""
     registry = registry or AgentRegistry()
     allowed_hosts = DEFAULT_ALLOWED_HOSTS if allowed_hosts is None else allowed_hosts
     contexts = ContextStore()
 
     @asynccontextmanager
     async def lifespan(app: Starlette):
-        async with httpx.AsyncClient(transport=transport) as client:
-            app.state.http = client
-            yield
+        pid = str(os.getpid())
+        if pidfile is not None:
+            pidfile.parent.mkdir(parents=True, exist_ok=True)
+            pidfile.write_text(pid)
+        try:
+            async with httpx.AsyncClient(transport=transport) as client:
+                app.state.http = client
+                yield
+        finally:
+            if pidfile is not None:
+                try:
+                    if pidfile.read_text().strip() == pid:
+                        pidfile.unlink()
+                except OSError:
+                    pass
 
     def docker_unavailable(e: runtime.DockerError) -> AgentError:
         return AgentError("docker_unavailable", f"Docker is not reachable: {e}")
@@ -232,7 +249,7 @@ def create_app(
     # ── management ──
 
     async def health(request: Request):
-        return JSONResponse({"status": "ok", "version": __version__})
+        return JSONResponse({"status": "ok", "version": __version__, "pid": os.getpid()})
 
     async def list_agents(request: Request):
         base = str(request.base_url).rstrip("/")
