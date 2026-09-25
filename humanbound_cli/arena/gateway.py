@@ -5,6 +5,7 @@ OpenAI-compatible façade and management routes. Binds to loopback by default.""
 
 from __future__ import annotations
 
+import threading
 import time
 from collections.abc import Callable
 from contextlib import asynccontextmanager
@@ -15,16 +16,21 @@ from typing import Any
 import httpx
 from starlette.applications import Starlette
 from starlette.concurrency import run_in_threadpool
+from starlette.datastructures import Headers
+from starlette.middleware import Middleware
 from starlette.requests import Request
-from starlette.responses import JSONResponse
+from starlette.responses import JSONResponse, PlainTextResponse
 from starlette.routing import Route
+from starlette.types import ASGIApp, Receive, Scope, Send
 
 from .. import __version__
 from . import a2a, catalog, openai_compat, runtime
 from .adapters.a2a_passthrough import A2APassthrough
 from .adapters.http import AgentError, AgentReply, HttpAdapter
 from .contexts import ContextStore
-from .manifest import ArenaManifest
+from .manifest import ArenaManifest, ManifestError
+
+DEFAULT_ALLOWED_HOSTS = ["127.0.0.1", "localhost", "[::1]", "::1"]
 
 
 @dataclass(frozen=True)
@@ -43,20 +49,38 @@ class AgentRegistry:
         self._clock = clock
         self._entries: dict[str, RegistryEntry] = {}
         self._loaded_at: float | None = None
+        self._lock = threading.Lock()
+        # Bumped by invalidate(); a refresh that overlaps one is discarded, so a listing
+        # taken before a reset finished can never be stamped as fresh.
+        self._generation = 0
 
     def _refresh(self) -> None:
+        generation = self._generation
         entries = {}
         for agent in runtime.list_running():
-            found = catalog.installed(agent.id, agent.version)
-            if found is None or agent.host_port is None:
+            if agent.host_port is None:
+                continue
+            try:
+                found = catalog.installed(agent.id, agent.version)
+            except (ManifestError, OSError):
+                continue  # one broken cached manifest must not hide the other agents
+            if found is None:
                 continue
             entries[agent.id] = RegistryEntry(agent, found[0], found[1])
+        if self._generation != generation:
+            return
         self._entries = entries
         self._loaded_at = self._clock()
 
+    def _is_fresh(self) -> bool:
+        return self._loaded_at is not None and self._clock() - self._loaded_at <= self._ttl
+
     def _ensure_fresh(self) -> None:
-        if self._loaded_at is None or self._clock() - self._loaded_at > self._ttl:
-            self._refresh()
+        if self._is_fresh():
+            return
+        with self._lock:
+            if not self._is_fresh():
+                self._refresh()
 
     def get(self, agent_id: str) -> RegistryEntry | None:
         self._ensure_fresh()
@@ -67,7 +91,57 @@ class AgentRegistry:
         return list(self._entries.values())
 
     def invalidate(self) -> None:
+        self._generation += 1
         self._loaded_at = None
+
+
+def _host_of(header: str) -> str:
+    """The host part of a Host header, IPv6-literal aware ('[::1]:8321' -> '[::1]')."""
+    if header.startswith("["):
+        end = header.find("]")
+        return header[: end + 1] if end != -1 else header
+    return header.split(":", 1)[0]
+
+
+def _is_json(content_type: str | None) -> bool:
+    return (content_type or "").split(";", 1)[0].strip().lower() == "application/json"
+
+
+class LocalGuardMiddleware:
+    """Browser-facing hardening for a loopback service.
+
+    Rejects requests whose Host is not an allowed name (DNS rebinding) and POSTs that
+    are not application/json (a cross-site page can only send those after a CORS
+    preflight, which this server never approves). Starlette's TrustedHostMiddleware
+    is not used because it mis-parses IPv6 literals such as '[::1]:8321'.
+    """
+
+    def __init__(self, app: ASGIApp, allowed_hosts: list[str]):
+        self.app = app
+        self.allowed = {h.lower() for h in allowed_hosts}
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] not in ("http", "websocket"):
+            await self.app(scope, receive, send)
+            return
+        headers = Headers(scope=scope)
+        host = _host_of(headers.get("host", "").lower())
+        if host not in self.allowed and host.strip("[]") not in self.allowed:
+            await PlainTextResponse("Invalid host header", status_code=400)(scope, receive, send)
+            return
+        if scope.get("method") == "POST" and not _is_json(headers.get("content-type")):
+            message = "Content-Type must be application/json"
+            if scope["path"].startswith("/a2a/"):
+                err = a2a.RpcError(a2a.INVALID_REQUEST, message)
+                response = JSONResponse(a2a.error_body(None, err), status_code=415)
+            else:
+                response = JSONResponse(
+                    {"error": {"code": "unsupported_media_type", "message": message}},
+                    status_code=415,
+                )
+            await response(scope, receive, send)
+            return
+        await self.app(scope, receive, send)
 
 
 def _http_error(e: AgentError) -> JSONResponse:
@@ -99,8 +173,10 @@ def create_app(
     *,
     transport: httpx.AsyncBaseTransport | None = None,
     reset_agent: Callable[[ArenaManifest, Path], object] = runtime.reset,
+    allowed_hosts: list[str] | None = None,
 ) -> Starlette:
     registry = registry or AgentRegistry()
+    allowed_hosts = DEFAULT_ALLOWED_HOSTS if allowed_hosts is None else allowed_hosts
     contexts = ContextStore()
 
     @asynccontextmanager
@@ -109,8 +185,14 @@ def create_app(
             app.state.http = client
             yield
 
+    def docker_unavailable(e: runtime.DockerError) -> AgentError:
+        return AgentError("docker_unavailable", f"Docker is not reachable: {e}")
+
     async def lookup(agent_id: str) -> RegistryEntry:
-        entry = await run_in_threadpool(registry.get, agent_id)
+        try:
+            entry = await run_in_threadpool(registry.get, agent_id)
+        except runtime.DockerError as e:
+            raise docker_unavailable(e) from None
         if entry is None:
             raise AgentError(
                 "agent_not_running", f"{agent_id} is not running → hb arena run {agent_id}"
@@ -153,7 +235,10 @@ def create_app(
 
     async def list_agents(request: Request):
         base = str(request.base_url).rstrip("/")
-        entries = await run_in_threadpool(registry.all)
+        try:
+            entries = await run_in_threadpool(registry.all)
+        except runtime.DockerError as e:
+            return _http_error(docker_unavailable(e))
         return JSONResponse(
             [
                 {
@@ -175,12 +260,14 @@ def create_app(
             return _http_error(e)
         try:
             await run_in_threadpool(reset_agent, entry.manifest, entry.agent_dir)
-        except (runtime.DockerError, runtime.HealthTimeout) as e:
+        except Exception as e:  # noqa: BLE001 - any failure is reported, never a bare 500
             return JSONResponse(
                 {"error": {"code": "reset_failed", "message": str(e)}}, status_code=500
             )
-        contexts.drop_agent(agent_id)
-        registry.invalidate()
+        finally:
+            # The old container state is gone whether or not the restart succeeded.
+            contexts.drop_agent(agent_id)
+            registry.invalidate()
         return JSONResponse({"id": agent_id, "status": "reset"})
 
     # ── A2A ──
@@ -211,7 +298,15 @@ def create_app(
             if entry.manifest.integration.type == "a2a":
                 started = time.monotonic()
                 status, data = await passthrough(request, entry).forward(body, version)
-                result = data.get("result") if isinstance(data, dict) else None
+                if not isinstance(data, dict):
+                    raise AgentError(
+                        "unextractable_response",
+                        f"malformed A2A response: {str(data)[:300]}",
+                    )
+                if data.get("error") is not None:
+                    # Forward the agent's own error, but non-200 so the turn fails loudly.
+                    return JSONResponse(data, status_code=502)
+                result = data.get("result")
                 message = result.get("message") if isinstance(result, dict) else None
                 if isinstance(message, dict):
                     meta = message.get("metadata")
@@ -276,6 +371,10 @@ def create_app(
         Route("/a2a/{agent_id}", rpc, methods=["POST"]),
         Route("/v1/chat/completions", chat_completions, methods=["POST"]),
     ]
-    app = Starlette(routes=routes, lifespan=lifespan)
+    app = Starlette(
+        routes=routes,
+        lifespan=lifespan,
+        middleware=[Middleware(LocalGuardMiddleware, allowed_hosts=allowed_hosts)],
+    )
     app.state.contexts = contexts
     return app

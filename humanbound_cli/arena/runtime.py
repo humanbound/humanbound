@@ -41,6 +41,8 @@ DOCKER_MISSING = (
 )
 DOCKER_DOWN = "Docker is installed but not running. Start Docker Desktop and retry."
 COMPOSE_MISSING = "This agent needs Docker Compose v2 ('docker compose'). Update Docker Desktop."
+# Bound on the docker calls behind list_running (the gateway polls it per request).
+LIST_TIMEOUT_S = 15.0
 
 
 class DockerError(RuntimeError):
@@ -76,9 +78,12 @@ def kind_of(m: ArenaManifest) -> str:
 
 
 def _run(
-    argv: list[str], capture: bool, env: dict[str, str] | None = None
+    argv: list[str],
+    capture: bool,
+    env: dict[str, str] | None = None,
+    timeout: float | None = None,
 ) -> subprocess.CompletedProcess:
-    return subprocess.run(argv, capture_output=capture, text=True, env=env)
+    return subprocess.run(argv, capture_output=capture, text=True, env=env, timeout=timeout)
 
 
 # Base env for compose subprocesses: only vars docker/compose themselves need (shell,
@@ -107,13 +112,26 @@ def _subprocess_env(extra: dict[str, str]) -> dict[str, str]:
 
 
 def _docker(
-    *args: str, check: bool = True, capture: bool = True, env: dict[str, str] | None = None
+    *args: str,
+    check: bool = True,
+    capture: bool = True,
+    env: dict[str, str] | None = None,
+    timeout: float | None = None,
 ) -> subprocess.CompletedProcess:
     """Run docker. With `env`, the process gets _subprocess_env(env) instead of ours."""
     try:
-        proc = _run(["docker", *args], capture, None if env is None else _subprocess_env(env))
+        proc = _run(
+            ["docker", *args],
+            capture,
+            None if env is None else _subprocess_env(env),
+            timeout=timeout,
+        )
     except FileNotFoundError:
         raise DockerError(DOCKER_MISSING) from None
+    except subprocess.TimeoutExpired:
+        raise DockerError(
+            f"'docker {' '.join(args[:2])}': docker did not respond within {timeout:g}s"
+        ) from None
     if check and proc.returncode != 0:
         detail = (proc.stderr or "").strip()[:500]
         raise DockerError(f"'docker {' '.join(args[:2])}' failed: {detail}")
@@ -317,12 +335,14 @@ def pull(m: ArenaManifest, agent_dir: Path) -> None:
 
 
 def list_running() -> list[RunningAgent]:
-    ids = _docker("ps", "-q", "--filter", f"label={LABEL_ID}").stdout.split()
+    ids = _docker(
+        "ps", "-q", "--filter", f"label={LABEL_ID}", timeout=LIST_TIMEOUT_S
+    ).stdout.split()
     if not ids:
         return []
     # A container can vanish between ps and inspect: inspect then exits 1 but still
     # prints the ones it found.
-    out = (_docker("inspect", *ids, check=False).stdout or "").strip()
+    out = (_docker("inspect", *ids, check=False, timeout=LIST_TIMEOUT_S).stdout or "").strip()
     try:
         containers = json.loads(out) if out else []
     except json.JSONDecodeError:

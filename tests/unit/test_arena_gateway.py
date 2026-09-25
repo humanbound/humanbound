@@ -14,8 +14,8 @@ from starlette.testclient import TestClient
 
 from humanbound_cli.arena import gateway
 from humanbound_cli.arena.gateway import RegistryEntry, create_app
-from humanbound_cli.arena.manifest import load_manifest, parse_manifest
-from humanbound_cli.arena.runtime import RunningAgent
+from humanbound_cli.arena.manifest import ManifestError, load_manifest, parse_manifest
+from humanbound_cli.arena.runtime import DockerError, RunningAgent
 
 ECHO = load_manifest(ARENA_FIXTURES / "catalog" / "agents" / "echo" / "arena.yaml")
 
@@ -47,6 +47,9 @@ BROKEN = _variant(
 )
 NATIVE = _variant("native", {"type": "a2a", "path": "/a2a"})
 FAILING_NATIVE = _variant("failing-native", {"type": "a2a", "path": "/a2a-error"})
+ODD_NATIVE = _variant("odd-native", {"type": "a2a", "path": "/a2a-list"})
+
+TEST_HOSTS = ["testserver", "gw"]
 
 
 async def _chat(request: Request):
@@ -98,6 +101,10 @@ async def _native_error(request):
     )
 
 
+async def _native_list(request):
+    return JSONResponse(["not", "a", "dict"])
+
+
 FAKE_AGENT = Starlette(
     routes=[
         Route("/chat", _chat, methods=["POST"]),
@@ -106,6 +113,7 @@ FAKE_AGENT = Starlette(
         Route("/broken", _broken, methods=["POST"]),
         Route("/a2a", _native, methods=["POST"]),
         Route("/a2a-error", _native_error, methods=["POST"]),
+        Route("/a2a-list", _native_list, methods=["POST"]),
     ]
 )
 
@@ -135,11 +143,12 @@ def resets():
 
 @pytest.fixture
 def client(resets):
-    registry = FakeRegistry([ECHO, THREADED, BROKEN, NATIVE, FAILING_NATIVE])
+    registry = FakeRegistry([ECHO, THREADED, BROKEN, NATIVE, FAILING_NATIVE, ODD_NATIVE])
     app = create_app(
         registry,
         transport=httpx.ASGITransport(app=FAKE_AGENT),
         reset_agent=lambda m, d: resets.append(m.id),
+        allowed_hosts=TEST_HOSTS,
     )
     with TestClient(app) as c:
         c.registry = registry
@@ -229,6 +238,7 @@ def test_concurrent_first_messages_run_thread_init_once():
         FakeRegistry([THREADED]),
         transport=httpx.ASGITransport(app=agent),
         reset_agent=lambda m, d: None,
+        allowed_hosts=TEST_HOSTS,
     )
 
     async def run():
@@ -323,7 +333,7 @@ def test_reset_recreates_and_drops_contexts(client, resets):
     assert first["result"]["message"]["parts"][0]["text"] == "t-1: hi"
     send(client, "echo", "hi", context_id="c-1")
     assert len(client.contexts) == 2
-    r = client.post("/arena/v1/agents/threaded/reset")
+    r = client.post("/arena/v1/agents/threaded/reset", json={})
     assert r.json() == {"id": "threaded", "status": "reset"}
     assert resets == ["threaded"]
     assert client.registry.invalidated == 1
@@ -357,3 +367,191 @@ def test_agent_registry_refreshes_from_docker_with_ttl(monkeypatch):
     registry.invalidate()
     registry.all()
     assert len(calls) == 3
+
+
+# ── review fixes ──
+
+
+class DockerDownRegistry(FakeRegistry):
+    def get(self, agent_id):
+        raise DockerError("Cannot connect to the Docker daemon")
+
+    def all(self):
+        raise DockerError("Cannot connect to the Docker daemon")
+
+
+@pytest.fixture
+def docker_down_client():
+    app = create_app(
+        DockerDownRegistry([]),
+        transport=httpx.ASGITransport(app=FAKE_AGENT),
+        reset_agent=lambda m, d: None,
+        allowed_hosts=TEST_HOSTS,
+    )
+    with TestClient(app) as c:
+        yield c
+
+
+def test_docker_unavailable_is_a_json_rpc_503(docker_down_client):
+    r = send(docker_down_client, "echo", "hi")
+    assert r.status_code == 503
+    body = r.json()
+    assert body["id"] == 1 and body["error"]["code"] == -32603
+    assert body["error"]["data"][0]["reason"] == "DOCKER_UNAVAILABLE"
+    assert "Docker is not reachable" in body["error"]["message"]
+
+
+def test_docker_unavailable_agent_list_is_503(docker_down_client):
+    r = docker_down_client.get("/arena/v1/agents")
+    assert r.status_code == 503
+    assert r.json()["error"]["code"] == "docker_unavailable"
+    card = docker_down_client.get("/a2a/echo/.well-known/agent-card.json")
+    assert card.status_code == 503
+
+
+def test_openai_facade_docker_unavailable_is_503(docker_down_client):
+    r = docker_down_client.post(
+        "/v1/chat/completions",
+        json={"model": "arena/echo", "messages": [{"role": "user", "content": "x"}]},
+    )
+    assert r.status_code == 503 and r.json()["error"]["code"] == "docker_unavailable"
+
+
+def test_bad_manifest_does_not_hide_other_agents(monkeypatch):
+    monkeypatch.setattr(
+        gateway.runtime,
+        "list_running",
+        lambda: [
+            RunningAgent("bad", "1.0.0", "image", 1),
+            RunningAgent("gone", "1.0.0", "image", 2),
+            RunningAgent("echo", "0.1.0", "image", 9999),
+        ],
+    )
+
+    def installed(agent_id, version=None):
+        if agent_id == "bad":
+            raise ManifestError("broken arena.yaml")
+        if agent_id == "gone":
+            raise OSError("permission denied")
+        return ECHO, ARENA_FIXTURES
+
+    monkeypatch.setattr(gateway.catalog, "installed", installed)
+    registry = gateway.AgentRegistry()
+    assert [e.manifest.id for e in registry.all()] == ["echo"]
+
+
+def test_foreign_host_is_rejected(client):
+    r = client.get("/arena/v1/health", headers={"host": "evil.example"})
+    assert r.status_code == 400
+    r = client.post("/a2a/echo", json=_rpc_body("x"), headers={"host": "evil.example:8080"})
+    assert r.status_code == 400
+
+
+def test_default_allowed_hosts_are_loopback():
+    app = create_app(FakeRegistry([ECHO]), reset_agent=lambda m, d: None)
+    with TestClient(app) as c:
+        assert c.get("/arena/v1/health").status_code == 400  # Host: testserver
+        for host in ("127.0.0.1:8321", "localhost", "[::1]:8321"):
+            assert c.get("/arena/v1/health", headers={"host": host}).status_code == 200
+
+
+def test_non_json_posts_are_415(client):
+    r = client.post(
+        "/a2a/echo",
+        content=b'{"jsonrpc": "2.0"}',
+        headers={"content-type": "text/plain", "A2A-Version": "1.0"},
+    )
+    assert r.status_code == 415
+    assert r.json()["jsonrpc"] == "2.0" and r.json()["error"]["code"] == -32600
+    r = client.post("/v1/chat/completions", content=b"{}", headers={"content-type": "text/plain"})
+    assert r.status_code == 415 and r.json()["error"]["code"] == "unsupported_media_type"
+    r = client.post("/arena/v1/agents/echo/reset")  # no content-type at all
+    assert r.status_code == 415
+    ok = client.post(
+        "/a2a/echo",
+        content=httpx.Request("POST", "/", json=_rpc_body("hi")).content,
+        headers={"content-type": "application/json; charset=utf-8", "A2A-Version": "1.0"},
+    )
+    assert ok.status_code == 200
+
+
+def test_native_a2a_error_is_forwarded_with_502(client):
+    r = send(client, "failing-native", "x")
+    assert r.status_code == 502
+    assert r.json() == {"jsonrpc": "2.0", "id": 1, "error": {"code": -32603, "message": "boom"}}
+
+
+def test_native_a2a_non_object_body_is_unextractable(client):
+    r = send(client, "odd-native", "x")
+    assert r.status_code == 502 and r.json()["error"]["code"] == -32006
+
+
+def test_reset_failure_still_drops_contexts_and_invalidates():
+    def boom(m, d):
+        raise RuntimeError("compose exploded")
+
+    registry = FakeRegistry([ECHO])
+    app = create_app(
+        registry,
+        transport=httpx.ASGITransport(app=FAKE_AGENT),
+        reset_agent=boom,
+        allowed_hosts=TEST_HOSTS,
+    )
+    with TestClient(app) as c:
+        send(c, "echo", "hi", context_id="c-1")
+        assert len(app.state.contexts) == 1
+        r = c.post("/arena/v1/agents/echo/reset", json={})
+        assert r.status_code == 500
+        assert r.json()["error"] == {"code": "reset_failed", "message": "compose exploded"}
+        assert len(app.state.contexts) == 0
+        assert registry.invalidated == 1
+
+
+def test_registry_discards_a_refresh_that_raced_an_invalidate(monkeypatch):
+    calls = []
+    registry = gateway.AgentRegistry(ttl=100.0, clock=lambda: 0.0)
+
+    def list_running():
+        calls.append(1)
+        if len(calls) == 1:
+            registry.invalidate()  # a reset lands while docker is being listed
+        return [RunningAgent("echo", "0.1.0", "image", 9999)]
+
+    monkeypatch.setattr(gateway.runtime, "list_running", list_running)
+    monkeypatch.setattr(
+        gateway.catalog, "installed", lambda agent_id, version=None: (ECHO, ARENA_FIXTURES)
+    )
+    assert registry.get("echo") is None  # stale result discarded, not stamped
+    assert registry.get("echo").manifest.id == "echo"
+    assert len(calls) == 2
+    registry.get("echo")
+    assert len(calls) == 2  # the second refresh was kept and is fresh
+
+
+def test_registry_refreshes_once_under_concurrency(monkeypatch):
+    import threading
+
+    calls = []
+    gate = threading.Event()
+
+    def list_running():
+        calls.append(1)
+        gate.wait(1)
+        return [RunningAgent("echo", "0.1.0", "image", 9999)]
+
+    monkeypatch.setattr(gateway.runtime, "list_running", list_running)
+    monkeypatch.setattr(
+        gateway.catalog, "installed", lambda agent_id, version=None: (ECHO, ARENA_FIXTURES)
+    )
+    registry = gateway.AgentRegistry(ttl=100.0)
+    results = []
+    threads = [
+        threading.Thread(target=lambda: results.append(registry.get("echo"))) for _ in range(5)
+    ]
+    for t in threads:
+        t.start()
+    gate.set()
+    for t in threads:
+        t.join()
+    assert len(calls) == 1
+    assert all(r is not None for r in results)

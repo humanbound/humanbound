@@ -37,15 +37,17 @@ class FakeDocker:
     def __init__(self):
         self.calls = []
         self.envs = []  # subprocess env per call (None = inherited)
+        self.timeouts = []  # subprocess timeout per call
         self.containers = []  # inspect dicts
         self.fail = {}  # argv prefix tuple -> returncode
         self.inspect_code = 0
         self.inspect_out = None  # override inspect stdout
 
-    def __call__(self, argv, capture, env=None):
+    def __call__(self, argv, capture, env=None, timeout=None):
         args = argv[1:]
         self.calls.append(args)
         self.envs.append(env)
+        self.timeouts.append(timeout)
         for prefix, code in self.fail.items():
             if tuple(args[: len(prefix)]) == prefix:
                 return subprocess.CompletedProcess(argv, code, "", "boom")
@@ -460,3 +462,19 @@ def test_reset_recreates_with_the_same_env(docker, tmp_path, monkeypatch):
     assert runtime.run_env_file("echo").read_text() == "ECHO_PREFIX=keep-me\n"
     assert docker.called("rm", "-f", "-v", "arena-echo")
     assert docker.called("run")
+
+
+def test_list_running_bounds_docker_calls_with_a_timeout(docker):
+    docker.containers = [_inspect("echo", "0.1.0", "image", 8080, 40001)]
+    runtime.list_running()
+    assert [c[0] for c in docker.calls] == ["ps", "inspect"]
+    assert all(t is not None and t > 0 for t in docker.timeouts)
+
+
+def test_docker_timeout_becomes_docker_error(monkeypatch):
+    def hang(argv, capture, env=None, timeout=None):
+        raise subprocess.TimeoutExpired(argv, timeout)
+
+    monkeypatch.setattr(runtime, "_run", hang)
+    with pytest.raises(DockerError, match="did not respond within 15"):
+        runtime.list_running()

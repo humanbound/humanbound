@@ -37,6 +37,7 @@ _AGENT_ERRORS = {
     "agent_error": (INTERNAL_ERROR, 502, "AGENT_ERROR"),
     "agent_timeout": (INTERNAL_ERROR, 504, "AGENT_TIMEOUT"),
     "unextractable_response": (INVALID_AGENT_RESPONSE, 502, "UNEXTRACTABLE_RESPONSE"),
+    "docker_unavailable": (INTERNAL_ERROR, 503, "DOCKER_UNAVAILABLE"),
 }
 
 
