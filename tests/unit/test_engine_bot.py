@@ -325,11 +325,21 @@ def test_extract_turn_metadata_missing_path_returns_none():
 # ────────────────────────────────────────────────────────────────
 
 
+def _strip_conversation_id(payload):
+    # init() now always seeds a fresh humanbound_conversation_id (Task 1); strip
+    # it before comparing the rest of the payload so these tests still assert
+    # on the fields under test.
+    payload = dict(payload)
+    cid = payload.pop("humanbound_conversation_id", None)
+    assert cid is not None and len(cid) == 32
+    return payload
+
+
 def test_init_stores_session_from_thread_init(bot):
     with patch("humanbound_cli.engine.bot.requests.post") as post:
         post.return_value = _mock_post(payload={"session_id": "sess-99"})
         out = bot.init()
-    assert out == {"session_id": "sess-99"}
+    assert _strip_conversation_id(out) == {"session_id": "sess-99"}
 
 
 def test_init_with_auth_step_merges_payloads(bot_config):
@@ -348,7 +358,7 @@ def test_init_with_auth_step_merges_payloads(bot_config):
             _mock_post(payload={"session_id": "sess"}),
         ]
         out = b.init()
-    assert out == {"access_token": "tok", "session_id": "sess"}
+    assert _strip_conversation_id(out) == {"access_token": "tok", "session_id": "sess"}
 
 
 def test_init_skips_thread_init_when_endpoint_empty(bot_config):
@@ -357,7 +367,7 @@ def test_init_skips_thread_init_when_endpoint_empty(bot_config):
     b = Bot(bot_config, "exp-1")
     with patch("humanbound_cli.engine.bot.requests.post") as post:
         out = b.init()
-    assert out == {}
+    assert _strip_conversation_id(out) == {}
     post.assert_not_called()
 
 
@@ -367,7 +377,7 @@ def test_init_skips_thread_init_when_null(bot_config):
     b = Bot(bot_config, "exp-1")
     with patch("humanbound_cli.engine.bot.requests.post") as post:
         out = b.init()
-    assert out == {}
+    assert _strip_conversation_id(out) == {}
     post.assert_not_called()
 
 
@@ -377,7 +387,7 @@ def test_init_skips_thread_init_when_missing(bot_config):
     b = Bot(bot_config, "exp-1")
     with patch("humanbound_cli.engine.bot.requests.post") as post:
         out = b.init()
-    assert out == {}
+    assert _strip_conversation_id(out) == {}
     post.assert_not_called()
 
 
@@ -395,7 +405,7 @@ def test_init_runs_auth_then_skips_thread_init(bot_config):
     ):
         post.return_value = _mock_post(payload={"access_token": "tok"})
         out = b.init()
-    assert out == {"access_token": "tok"}
+    assert _strip_conversation_id(out) == {"access_token": "tok"}
     assert post.call_count == 1  # auth fired, thread_init skipped
 
 
@@ -591,3 +601,48 @@ def test_stream_websocket_blocks_handshake_redirect(bot):
             asyncio.run(bot._Bot__stream({}, "hi"))
     # module-level redirect budget capped to the initial handshake
     assert wsc.MAX_REDIRECTS == 1
+
+
+# ────────────────────────────────────────────────────────────────
+# A2A support: $UUID and humanbound_conversation_id
+# ────────────────────────────────────────────────────────────────
+
+_PLAIN_CONFIG = {
+    "streaming": None,
+    "chat_completion": {"endpoint": "https://agent.example/chat", "payload": {"q": "$PROMPT"}},
+}
+
+
+def test_uuid_placeholder_is_fresh_per_occurrence():
+    bot = Bot(_PLAIN_CONFIG, "e1")
+    out, found = bot._Bot__parse_payload_item({"a": "$UUID", "b": "$UUID"}, {}, "hi", [])
+    assert found is False
+    assert len(out["a"]) == 32 and len(out["b"]) == 32
+    assert out["a"] != out["b"]
+
+
+def test_init_seeds_a_new_conversation_id_each_time():
+    first = Bot(_PLAIN_CONFIG, "e1").init()
+    second = Bot(_PLAIN_CONFIG, "e1").init()
+    assert len(first["humanbound_conversation_id"]) == 32
+    assert first["humanbound_conversation_id"] != second["humanbound_conversation_id"]
+
+
+def test_conversation_id_placeholder_is_stable_within_a_conversation():
+    bot = Bot(_PLAIN_CONFIG, "e1")
+    base = bot.init()
+    one, _ = bot._Bot__parse_payload_item({"c": "$humanbound_conversation_id"}, base, "x", [])
+    two, _ = bot._Bot__parse_payload_item({"c": "$humanbound_conversation_id"}, base, "y", [])
+    assert one["c"] == two["c"] == base["humanbound_conversation_id"]
+
+
+def test_init_keeps_thread_init_keys_alongside_conversation_id():
+    cfg = {
+        **_PLAIN_CONFIG,
+        "thread_init": {"endpoint": "https://agent.example/start", "payload": {}},
+    }
+    resp = _mock_post(payload={"thread_id": "t-9"})
+    with patch("humanbound_cli.engine.bot.requests.post", return_value=resp):
+        base = Bot(cfg, "e1").init()
+    assert base["thread_id"] == "t-9"
+    assert "humanbound_conversation_id" in base

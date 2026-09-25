@@ -8,6 +8,7 @@ import re
 import ssl
 import time
 import traceback
+import uuid
 from urllib.parse import urlparse
 
 import certifi
@@ -208,6 +209,10 @@ class Bot(ResponseExtractor):
 
         if isinstance(item, str):
             # string -> check for the various placeholders
+            if item.lower() == "$uuid":
+                # fresh per occurrence, e.g. A2A messageId
+                return uuid.uuid4().hex, False
+
             if item.lower() == "$prompt":
                 return u_prompt, True
 
@@ -639,6 +644,11 @@ class Bot(ResponseExtractor):
                 time.sleep(1)  # small delay to avoid race conditions
             else:
                 base_payload = {}
+            if not isinstance(base_payload, dict):
+                base_payload = {}
+            # one id per conversation (init runs once per conversation), usable as
+            # $humanbound_conversation_id, e.g. for A2A contextId
+            base_payload = {"humanbound_conversation_id": uuid.uuid4().hex, **base_payload}
 
             # 2.2 - optional thread/session start; skipped when thread_init is null/missing/empty-endpoint
             init_cfg = self.bot_config.get("thread_init") or {}
