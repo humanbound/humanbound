@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.11.0] — 2026-09-25
+
 ### Changed
 - **A conversation the judge cannot assess now counts against the result.**
   When the judge's verdict could not be parsed (for example, the judge model
@@ -789,7 +791,8 @@ Last release as `humanbound-cli`. See the
 [old release](https://pypi.org/project/humanbound-cli/1.1.0/) on PyPI for
 notes — that history is preserved there and is not re-documented here.
 
-[Unreleased]: https://github.com/humanbound/humanbound/compare/v2.10.0...HEAD
+[Unreleased]: https://github.com/humanbound/humanbound/compare/v2.11.0...HEAD
+[2.11.0]: https://github.com/humanbound/humanbound/releases/tag/v2.11.0
 [2.10.0]: https://github.com/humanbound/humanbound/releases/tag/v2.10.0
 [2.9.1]: https://github.com/humanbound/humanbound/releases/tag/v2.9.1
 [2.9.0]: https://github.com/humanbound/humanbound/releases/tag/v2.9.0
