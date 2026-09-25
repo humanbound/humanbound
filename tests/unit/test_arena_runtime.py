@@ -249,122 +249,35 @@ def test_reset_compose_passes_the_saved_env(docker, tmp_path, monkeypatch):
     assert up_env and up_env[0]["OPENAI_API_KEY"] == "sk-keep"
 
 
-@pytest.mark.parametrize(
-    "service, field",
-    [
-        ({"image": "x", "ports": ["8080:8080"]}, "ports"),
-        ({"image": "x", "network_mode": "host"}, "network_mode"),
-        ({"image": "x", "privileged": True}, "privileged"),
-        ({"image": "x", "cap_add": ["NET_ADMIN"]}, "cap_add"),
-        ({"image": "x", "pid": "host"}, "pid"),
-        ({"image": "x", "ipc": "host"}, "ipc"),
-        ({"image": "x", "volumes": ["/etc:/host-etc"]}, "volumes"),
-        ({"image": "x", "volumes": ["./src:/src"]}, "volumes"),
-        ({"image": "x", "volumes": ["~/.ssh:/root/.ssh:ro"]}, "volumes"),
-        ({"image": "x", "volumes": ["${HOME}:/h"]}, "volumes"),
-        ({"image": "x", "volumes": [{"type": "bind", "source": "/", "target": "/h"}]}, "volumes"),
-        ({"image": "x", "devices": ["/dev/sda:/dev/sda"]}, "devices"),
-        ({"image": "x", "userns_mode": "host"}, "userns_mode"),
-        ({"image": "x", "uts": "host"}, "uts"),
-        ({"image": "x", "security_opt": ["seccomp:unconfined"]}, "security_opt"),
-        ({"image": "x", "volumes_from": ["other"]}, "volumes_from"),
-        ({"image": "x", "env_file": ["/etc/secrets.env"]}, "env_file"),
-        ({"image": "x", "env_file": "../../.humanbound/x.env"}, "env_file"),
-        ({"image": "x", "extends": {"file": "other.yml", "service": "a"}}, "extends"),
-        ({"image": "x", "network_mode": "container:other"}, "network_mode"),
-        ({"image": "x", "network_mode": "${NM}"}, "network_mode"),
-        ({"image": "x", "pid": "host"}, "pid"),
-        ({"image": "x", "security_opt": ["no-new-privileges=false"]}, "security_opt"),
-        ({"build": ".."}, "build.context"),
-        ({"build": {"context": "/"}}, "build.context"),
-        ({"build": {"context": ".", "ssh": ["default"]}}, "build.ssh"),
-        ({"image": "x", "privileged": "${P}"}, "privileged"),
-    ],
-)
+# The rules themselves are tested in test_arena_compose_safety.py; here: runtime applies them.
 @pytest.mark.parametrize("action", ["start", "pull"])
-def test_unsafe_compose_services_are_rejected(docker, tmp_path, service, field, action):
+def test_unsafe_compose_is_refused_before_any_compose_call(docker, tmp_path, action):
     m = _compose_manifest()
-    _write_compose(tmp_path, {"agent": {"image": "a"}, "sidecar": service})
-    with pytest.raises(DockerError) as exc:
+    _write_compose(tmp_path, {"agent": {"image": "a"}, "sidecar": {"image": "x", "ports": ["1:1"]}})
+    with pytest.raises(DockerError, match="sidecar"):
         if action == "start":
             runtime.start(m, tmp_path, {})
         else:
             runtime.pull(m, tmp_path)
-    assert "sidecar" in str(exc.value) and field in str(exc.value)
     assert docker.called("compose") == []
 
 
-@pytest.mark.parametrize(
-    "top",
-    [
-        {"include": ["other.yml"]},
-        {"secrets": {"s": {"file": "/etc/shadow"}}},
-        {"configs": {"c": {"file": "~/.aws/credentials"}}},
-        {"networks": {"n": {"external": True, "name": "host"}}},
-        {"volumes": {"v": {"driver_opts": {"type": "none", "o": "bind", "device": "/"}}}},
-    ],
-)
-def test_unsafe_compose_top_level_keys_are_rejected(docker, tmp_path, top):
-    m = _compose_manifest()
-    _write_compose(tmp_path, {"agent": {"image": "a"}}, **top)
-    with pytest.raises(DockerError, match=next(iter(top))):
-        runtime.start(m, tmp_path, {})
-    assert docker.called("compose") == []
-
-
-@pytest.mark.parametrize(
-    "services, top",
-    [
-        ({"agent": {"image": "a", "volumes": "/etc:/x"}}, {}),
-        ({"agent": {"image": "a", "security_opt": "seccomp:unconfined"}}, {}),
-        ({"agent": {"image": "a"}}, {"volumes": ["v"]}),
-    ],
-)
-def test_malformed_compose_sections_are_rejected(docker, tmp_path, services, top):
-    _write_compose(tmp_path, services, **top)
-    with pytest.raises(DockerError, match="must be a"):
-        runtime.start(_compose_manifest(), tmp_path, {})
-    assert docker.called("compose") == []
-
-
-def test_compose_must_define_the_talked_to_service(docker, tmp_path):
-    _write_compose(tmp_path, {"other": {"image": "a"}})
-    with pytest.raises(DockerError, match="no service 'agent'"):
-        runtime.start(_compose_manifest(), tmp_path, {})
-
-
-def test_safe_compose_features_are_allowed(docker, tmp_path):
-    services = {
-        "agent": {
-            "build": {"context": "./agent"},
-            "network_mode": "service:db",
-            "env_file": ["agent.env"],
-            "volumes": ["/anon", "named:/data", {"type": "tmpfs", "target": "/tmp"}],
-            "security_opt": ["no-new-privileges:true"],
-        },
-        "db": {"image": "postgres:16"},
-    }
-    _write_compose(tmp_path, services, volumes={"named": {}}, secrets={"s": {"file": "s.txt"}})
-    runtime.check_compose(_compose_manifest(), tmp_path)
-
-
-def test_compose_agent_dir_with_dotenv_is_rejected(docker, tmp_path):
-    """A `.env` next to the compose file is picked up automatically by `docker compose`
-    for ${VAR} interpolation, bypassing our allowlisted subprocess env entirely."""
+def test_override_hardens_every_service_but_exposes_only_the_talked_to_one(docker, tmp_path):
+    m = _compose_manifest({"required": ["OPENAI_API_KEY"]})
     _write_compose(tmp_path, SAFE_SERVICES, volumes={"data": {}, "pg": {}})
-    (tmp_path / ".env").write_text("AWS_SECRET_ACCESS_KEY=leaked\n")
-    with pytest.raises(DockerError, match=r"\.env"):
-        runtime.check_compose(_compose_manifest(), tmp_path)
-    assert docker.called("compose") == []
+    docker.containers = [_inspect("echo", "0.1.0", "compose", 8080, 50000)]
 
+    runtime.start(m, tmp_path, {"OPENAI_API_KEY": "sk"})
 
-@pytest.mark.parametrize("content", [None, "services: [", "- a list", "services: {agent: 3}"])
-def test_missing_or_invalid_compose_file_is_rejected(docker, tmp_path, content):
-    if content is not None:
-        (tmp_path / runtime.COMPOSE_FILE).write_text(content)
-    with pytest.raises(DockerError, match=runtime.COMPOSE_FILE):
-        runtime.start(_compose_manifest(), tmp_path, {})
-    assert docker.called("compose") == []
+    services = yaml.safe_load((tmp_path / runtime.OVERRIDE_FILE).read_text())["services"]
+    assert set(services) == {"agent", "db"}
+    for svc in services.values():
+        assert svc["cap_drop"] == ["ALL"]
+        assert svc["security_opt"] == ["no-new-privileges:true"]
+    assert services["db"] == {"cap_drop": ["ALL"], "security_opt": ["no-new-privileges:true"]}
+    assert services["agent"]["ports"] == ["127.0.0.1::8080"]
+    assert services["agent"]["environment"] == ["OPENAI_API_KEY"]
+    assert runtime.LABEL_ID in services["agent"]["labels"]
 
 
 def test_list_running_parses_labels_and_ports(docker):

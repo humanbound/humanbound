@@ -25,6 +25,8 @@ from pathlib import Path
 import httpx
 import yaml
 
+# DockerError, COMPOSE_FILE and check_compose live in compose_safety; re-exported here.
+from .compose_safety import COMPOSE_FILE, DockerError, check_compose
 from .keys import is_reserved, parse_env_file, write_env_file
 from .manifest import ArenaManifest, Health
 from .paths import arena_dir
@@ -33,7 +35,6 @@ LABEL_ID = "io.humanbound.arena.id"
 LABEL_VERSION = "io.humanbound.arena.version"
 LABEL_KIND = "io.humanbound.arena.kind"
 LABEL_PORT = "io.humanbound.arena.port"
-COMPOSE_FILE = "docker-compose.yml"
 OVERRIDE_FILE = "arena.override.yml"
 
 DOCKER_MISSING = (
@@ -43,10 +44,6 @@ DOCKER_DOWN = "Docker is installed but not running. Start Docker Desktop and ret
 COMPOSE_MISSING = "This agent needs Docker Compose v2 ('docker compose'). Update Docker Desktop."
 # Bound on the docker calls behind list_running (the gateway polls it per request).
 LIST_TIMEOUT_S = 15.0
-
-
-class DockerError(RuntimeError):
-    """A docker operation failed. The message is ready to show."""
 
 
 class HealthTimeout(RuntimeError):
@@ -160,157 +157,19 @@ def image_present(image: str) -> bool:
     return _docker("image", "inspect", image, check=False).returncode == 0
 
 
-# ── compose safety: the agent's own compose file must not reach the host ──
-
-_SERVICE_FORBIDDEN = ("ports", "cap_add", "devices", "volumes_from", "privileged")
-_NAMESPACE_KEYS = ("network_mode", "pid", "ipc", "userns_mode", "uts", "cgroup")
-_VOLUME_TYPES = ("volume", "tmpfs")
-
-
-def _unsafe(where: str, field: str, why: str) -> DockerError:
-    return DockerError(
-        f"refusing to run this agent: {COMPOSE_FILE} {where} sets '{field}' ({why}). "
-        "Arena agents may not publish ports or reach the host; hb publishes the agent's "
-        "port itself, on 127.0.0.1."
-    )
-
-
-def _leaves_dir(path: object) -> bool:
-    """A file/context path that is absolute, home-relative, interpolated or climbs out."""
-    if not isinstance(path, str):
-        return True
-    return path.startswith(("/", "~", "\\")) or "$" in path or ".." in Path(path).parts
-
-
-def _bind_source(volume: object) -> str | None:
-    """Why a service volume entry is a host mount, or None when it is not."""
-    if isinstance(volume, str):
-        parts = volume.split(":")
-        if len(parts) >= 2 and parts[0].startswith(("/", ".", "~", "$")):
-            return f"bind mount of {parts[0]}"
-        return None
-    if isinstance(volume, dict):
-        vtype = volume.get("type", "volume")
-        if vtype not in _VOLUME_TYPES:
-            return f"volume type {vtype!r}"
-        return None
-    return "unrecognised volume entry"
-
-
-def _items(value: object, where: str, kind: type) -> list | dict:
-    """`value` as a list/dict (None → empty), or an 'invalid compose file' error."""
-    if value is None:
-        return kind()
-    if not isinstance(value, kind):
-        raise DockerError(f"invalid {COMPOSE_FILE}: {where} must be a {kind.__name__}")
-    return value
-
-
-def _check_service(name: str, svc: object) -> None:
-    where = f"service '{name}'"
-    if not isinstance(svc, dict):
-        raise DockerError(f"invalid {COMPOSE_FILE}: {where} must be a mapping")
-    for field in _SERVICE_FORBIDDEN:
-        if field in svc and svc[field] not in (None, False, []):
-            raise _unsafe(where, field, "not allowed")
-    for field in _NAMESPACE_KEYS:
-        value = svc.get(field)
-        if value is None:
-            continue
-        # service:<name> (same project) is fine; host, container:<any> and ${VAR} are not.
-        if (
-            not isinstance(value, str)
-            or value == "host"
-            or value.startswith("container:")
-            or "$" in value
-        ):
-            raise _unsafe(where, field, f"{value!r} shares a host or foreign namespace")
-    for opt in _items(svc.get("security_opt"), f"{where} security_opt", list):
-        text = str(opt).lower().replace("=", ":")
-        if "unconfined" in text or "disable" in text or "$" in text or text.endswith(":false"):
-            raise _unsafe(where, "security_opt", f"{opt!r} weakens isolation")
-    for volume in _items(svc.get("volumes"), f"{where} volumes", list):
-        why = _bind_source(volume)
-        if why:
-            raise _unsafe(where, "volumes", why)
-    env_files = svc.get("env_file") or []
-    for entry in [env_files] if isinstance(env_files, (str, dict)) else env_files:
-        path = entry.get("path") if isinstance(entry, dict) else entry
-        if _leaves_dir(path):
-            raise _unsafe(where, "env_file", f"{path!r} is outside the agent directory")
-    extends = svc.get("extends")
-    if isinstance(extends, dict) and "file" in extends:
-        raise _unsafe(where, "extends", "extending another file is not allowed")
-    build = svc.get("build")
-    if isinstance(build, str):
-        build = {"context": build}
-    if isinstance(build, dict):
-        if _leaves_dir(build.get("context", ".")):
-            raise _unsafe(where, "build.context", "context is outside the agent directory")
-        for field in ("ssh", "additional_contexts"):
-            if build.get(field):
-                raise _unsafe(where, f"build.{field}", "not allowed")
-
-
-def check_compose(m: ArenaManifest, agent_dir: Path) -> None:
-    """Reject compose files that could publish ports or reach the host. Raises DockerError."""
-    if (agent_dir / ".env").exists():
-        raise DockerError(
-            f"refusing to run {m.id}: a .env file is present next to {COMPOSE_FILE}. "
-            "'docker compose' reads it automatically for ${VAR} interpolation, which "
-            "could leak host secrets; hb only passes the agent's declared env vars."
-        )
-    path = agent_dir / COMPOSE_FILE
-    try:
-        doc = yaml.safe_load(path.read_text(encoding="utf-8"))
-    except (OSError, yaml.YAMLError, UnicodeDecodeError) as e:
-        raise DockerError(f"cannot read {COMPOSE_FILE} for {m.id}: {e}") from None
-    services = doc.get("services") if isinstance(doc, dict) else None
-    if not isinstance(services, dict) or not services:
-        raise DockerError(f"invalid {COMPOSE_FILE} for {m.id}: no 'services' mapping")
-    if "include" in doc:
-        raise _unsafe("top level", "include", "including other files is not allowed")
-    for name, svc in services.items():
-        _check_service(str(name), svc)
-    if m.source.service not in services:
-        raise DockerError(
-            f"invalid {COMPOSE_FILE} for {m.id}: no service '{m.source.service}' "
-            "(arena.yaml source.service)"
-        )
-    for section in ("secrets", "configs"):
-        for name, spec in _items(doc.get(section), section, dict).items():
-            if isinstance(spec, dict) and "file" in spec and _leaves_dir(spec["file"]):
-                raise _unsafe(f"{section} '{name}'", "file", "outside the agent directory")
-            if isinstance(spec, dict) and "environment" in spec:
-                raise _unsafe(f"{section} '{name}'", "environment", "not allowed")
-    for section in ("volumes", "networks"):
-        for name, spec in _items(doc.get(section), section, dict).items():
-            if not isinstance(spec, dict):
-                continue
-            if spec.get("external"):
-                raise _unsafe(f"{section} '{name}'", "external", "uses a pre-existing resource")
-            if section == "volumes" and spec.get("driver_opts"):
-                raise _unsafe(f"volumes '{name}'", "driver_opts", "may bind a host path")
-            if section == "networks" and spec.get("driver") in (
-                "host",
-                "none",
-                "macvlan",
-                "ipvlan",
-            ):
-                raise _unsafe(f"networks '{name}'", "driver", f"{spec['driver']!r}")
-
-
 def _declared(m: ArenaManifest) -> list[str]:
     return list(dict.fromkeys([*m.runtime.env.required, *m.runtime.env.optional]))
 
 
-def _write_override(m: ArenaManifest, agent_dir: Path) -> None:
-    """Label the talked-to service and publish only its port, on loopback.
+def _write_override(m: ArenaManifest, agent_dir: Path, services: list[str]) -> None:
+    """Harden every service; label the talked-to one and publish only its port, on loopback.
 
     `environment` lists names only: compose fills them from its own process env, which
     start() sets. Values never touch disk here or argv.
     """
-    service = {
+    hardening = {"cap_drop": ["ALL"], "security_opt": ["no-new-privileges:true"]}
+    doc: dict = {"services": {name: dict(hardening) for name in services}}
+    doc["services"][m.source.service] = {
         "labels": {
             LABEL_ID: m.id,
             LABEL_VERSION: m.version,
@@ -318,11 +177,9 @@ def _write_override(m: ArenaManifest, agent_dir: Path) -> None:
             LABEL_PORT: str(m.runtime.port),
         },
         "ports": [f"127.0.0.1::{m.runtime.port}"],
-        "cap_drop": ["ALL"],
-        "security_opt": ["no-new-privileges:true"],
+        **hardening,
         "environment": _declared(m),
     }
-    doc = {"services": {m.source.service: service}}
     (agent_dir / OVERRIDE_FILE).write_text(yaml.safe_dump(doc, sort_keys=False))
 
 
@@ -330,8 +187,7 @@ def pull(m: ArenaManifest, agent_dir: Path) -> None:
     if m.source.image:
         _docker("pull", m.source.image, capture=False)
         return
-    check_compose(m, agent_dir)
-    _write_override(m, agent_dir)
+    _write_override(m, agent_dir, check_compose(m, agent_dir))
     _docker(*_compose_args(m.id, agent_dir), "pull", "--ignore-buildable", capture=False, env={})
 
 
@@ -379,8 +235,7 @@ def start(m: ArenaManifest, agent_dir: Path, env: dict[str, str]) -> RunningAgen
     name = resource_name(m.id)
     declared = _declared(m)
     env = {k: v for k, v in env.items() if k in declared and not is_reserved(k)}
-    if not m.source.image:
-        check_compose(m, agent_dir)
+    services = [] if m.source.image else check_compose(m, agent_dir)
     env_file = run_env_file(m.id)
     write_env_file(env_file, env)
     if m.source.image:
@@ -401,7 +256,7 @@ def start(m: ArenaManifest, agent_dir: Path, env: dict[str, str]) -> RunningAgen
             m.source.image,
         )  # fmt: skip
     else:
-        _write_override(m, agent_dir)
+        _write_override(m, agent_dir, services)
         _docker(
             *_compose_args(m.id, agent_dir),
             "up", "-d", "--force-recreate", "--renew-anon-volumes",
