@@ -5,7 +5,8 @@ import yaml
 from click.testing import CliRunner
 from conftest import ARENA_FIXTURES
 
-from humanbound_cli.arena import catalog, runtime
+from humanbound_cli.arena import catalog, daemon, runtime
+from humanbound_cli.arena.runtime import RunningAgent
 from humanbound_cli.main import cli
 
 CATALOG = ARENA_FIXTURES / "catalog"
@@ -111,3 +112,228 @@ def test_unreachable_catalog_fails_cleanly(arena_home, monkeypatch, tmp_path):
     monkeypatch.setenv("HB_ARENA_INDEX", str(tmp_path / "missing"))
     result = invoke("info", "echo")
     assert result.exit_code == 1 and "cannot load the arena catalog" in flat(result)
+
+
+# ── lifecycle (run, ps, logs, stop, reset, rm, endpoint, serve) ──
+
+RUNNING = RunningAgent("echo", "0.1.0", "image", 49153)
+
+
+@pytest.fixture
+def docker_ok(arena_env, monkeypatch):
+    state = {"running": [], "started": [], "stopped": [], "gateway": []}
+    monkeypatch.delenv("ECHO_PREFIX", raising=False)
+    monkeypatch.setattr(runtime, "image_present", lambda image: True)
+
+    def start(m, d, env):
+        state["started"].append((m.id, env))
+        state["running"] = [RUNNING]
+        return RUNNING
+
+    monkeypatch.setattr(runtime, "start", start)
+    monkeypatch.setattr(runtime, "wait_healthy", lambda agent, health: None)
+    monkeypatch.setattr(runtime, "list_running", lambda: state["running"])
+    monkeypatch.setattr(
+        runtime, "find_running", lambda i: next((a for a in state["running"] if a.id == i), None)
+    )
+
+    def stop(agent_id, kind):
+        state["stopped"].append(agent_id)
+        state["running"] = [a for a in state["running"] if a.id != agent_id]
+
+    monkeypatch.setattr(runtime, "stop", stop)
+    monkeypatch.setattr(daemon, "ensure_running", lambda port=None: "http://127.0.0.1:11500")
+    monkeypatch.setattr(
+        daemon, "stop_gateway", lambda port=None: state["gateway"].append("stopped") or True
+    )
+    return state
+
+
+def _with_required_key(monkeypatch, tmp_path):
+    """Make `catalog.installed` return an echo manifest that requires OPENAI_API_KEY."""
+    from humanbound_cli.arena.manifest import load_manifest
+
+    data = yaml.safe_load(ECHO_YAML.read_text())
+    data["runtime"]["env"] = {"required": ["OPENAI_API_KEY"]}
+    manifest_path = tmp_path / "arena.yaml"
+    manifest_path.write_text(yaml.safe_dump(data))
+    monkeypatch.setattr(
+        catalog, "installed", lambda i, v=None: (load_manifest(manifest_path), tmp_path)
+    )
+
+
+def test_run_starts_agent_and_gateway_and_prints_endpoints(docker_ok):
+    result = invoke("run", "echo")
+    assert result.exit_code == 0, result.output
+    assert docker_ok["started"] == [("echo", {})]
+    out = flat(result)
+    assert "http://127.0.0.1:11500/a2a/echo" in out
+    assert "hb test --target arena://echo" in out
+    assert "intentionally vulnerable" in out.lower()
+    assert "no keys" in out.lower()
+
+
+def test_run_prints_key_names_never_values(docker_ok, monkeypatch, tmp_path):
+    _with_required_key(monkeypatch, tmp_path)
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-super-secret-value-123")
+    result = invoke("run", "echo")
+    assert result.exit_code == 0, result.output
+    assert "Passing keys: OPENAI_API_KEY" in flat(result)
+    assert "sk-super-secret-value-123" not in result.output
+    assert "secret" not in result.output
+    assert docker_ok["started"] == [("echo", {"OPENAI_API_KEY": "sk-super-secret-value-123"})]
+
+
+def test_run_fails_fast_on_missing_keys(docker_ok, monkeypatch, tmp_path):
+    _with_required_key(monkeypatch, tmp_path)
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    result = invoke("run", "echo")
+    assert result.exit_code == 1
+    assert "hb arena config set OPENAI_API_KEY=" in flat(result)
+    assert docker_ok["started"] == []
+
+
+def test_run_reports_health_timeout_with_logs(docker_ok, monkeypatch):
+    def unhealthy(agent, health):
+        raise runtime.HealthTimeout("echo did not become healthy within 30s")
+
+    monkeypatch.setattr(runtime, "wait_healthy", unhealthy)
+    monkeypatch.setattr(runtime, "last_logs", lambda i, k, lines=50: "Traceback: [boom]")
+    result = invoke("run", "echo")
+    assert result.exit_code == 1
+    assert "Traceback: [boom]" in flat(result)
+    assert docker_ok["stopped"] == ["echo"]
+
+
+def test_run_reports_docker_errors(docker_ok, monkeypatch):
+    def broken(m, d, env):
+        raise runtime.DockerError("echo started but port 8080 is not published")
+
+    monkeypatch.setattr(runtime, "start", broken)
+    result = invoke("run", "echo")
+    assert result.exit_code == 1 and "not published" in flat(result)
+
+
+def test_run_gateway_failure(docker_ok, monkeypatch):
+    def no_gateway(port=None):
+        raise daemon.GatewayError("port 11500 is used by another program")
+
+    monkeypatch.setattr(daemon, "ensure_running", no_gateway)
+    result = invoke("run", "echo")
+    assert result.exit_code == 1 and "used by another program" in flat(result)
+
+
+def test_ps_endpoint_and_stop_all(docker_ok):
+    assert "No arena agents running" in flat(invoke("ps"))
+    invoke("run", "echo")
+    assert "echo" in invoke("ps").output
+    endpoint = flat(invoke("endpoint", "echo"))
+    assert "/a2a/echo/.well-known/agent-card.json" in endpoint
+    assert "arena/echo" in endpoint and '"SendMessage"' in endpoint
+    result = invoke("stop", "--all")
+    assert result.exit_code == 0
+    assert docker_ok["stopped"] == ["echo"]
+    assert docker_ok["gateway"] == ["stopped"]
+
+
+def test_stop_one_keeps_gateway_while_others_run(docker_ok):
+    other = RunningAgent("other", "1.0.0", "image", 49154)
+    invoke("run", "echo")
+    docker_ok["running"].append(other)
+    assert invoke("stop", "echo").exit_code == 0
+    assert docker_ok["stopped"] == ["echo"] and docker_ok["gateway"] == []
+
+
+def test_stop_unknown_agent(docker_ok):
+    result = invoke("stop", "ghost")
+    assert result.exit_code == 1 and "not running" in flat(result)
+
+
+def test_stop_needs_an_agent_or_all(docker_ok):
+    result = invoke("stop")
+    assert result.exit_code == 1 and "--all" in flat(result)
+
+
+def test_stop_when_docker_is_down(docker_ok, monkeypatch):
+    def down():
+        raise runtime.DockerError(runtime.DOCKER_DOWN)
+
+    monkeypatch.setattr(runtime, "list_running", down)
+    monkeypatch.setattr(runtime, "find_running", lambda i: down())
+    for args in (("--all",), ("echo",)):
+        result = invoke("stop", *args)
+        assert result.exit_code == 1 and "not running" in flat(result)
+        assert "Docker" in flat(result)
+
+
+def test_logs_streams_from_runtime(docker_ok, monkeypatch):
+    invoke("run", "echo")
+    calls = []
+    monkeypatch.setattr(
+        runtime, "logs", lambda i, k, follow=False, tail=200: calls.append((i, k, follow, tail))
+    )
+    assert invoke("logs", "echo", "--tail", "5").exit_code == 0
+    assert calls == [("echo", "image", False, 5)]
+
+
+def test_reset_goes_through_the_gateway(docker_ok, monkeypatch):
+    invoke("run", "echo")
+    calls = []
+    from humanbound_cli.arena import target
+
+    monkeypatch.setattr(target, "reset_via_gateway", lambda i, g: calls.append((i, g)))
+    assert invoke("reset", "echo").exit_code == 0
+    assert calls == [("echo", "http://127.0.0.1:11500")]
+
+
+def test_reset_reports_gateway_errors(docker_ok, monkeypatch):
+    invoke("run", "echo")
+    from humanbound_cli.arena import target
+
+    def fail(i, g):
+        raise target.TargetError("could not reset echo: [boom]")
+
+    monkeypatch.setattr(target, "reset_via_gateway", fail)
+    result = invoke("reset", "echo")
+    assert result.exit_code == 1 and "could not reset echo: [boom]" in flat(result)
+
+
+def test_rm_stops_and_removes(docker_ok, monkeypatch):
+    invoke("run", "echo")
+    removed = []
+    monkeypatch.setattr(runtime, "remove_images", lambda m, d: removed.append(m.id))
+    assert invoke("rm", "echo").exit_code == 0
+    assert removed == ["echo"] and docker_ok["stopped"] == ["echo"]
+    assert catalog.installed("echo") is None
+    assert docker_ok["gateway"] == ["stopped"]
+
+
+def test_rm_unknown_or_invalid_agent(docker_ok):
+    for agent_id in ("ghost", "../etc"):
+        result = invoke("rm", agent_id)
+        assert result.exit_code == 1 and "not installed" in flat(result)
+
+
+def test_serve_warns_on_non_loopback(arena_env, monkeypatch):
+    served = []
+    monkeypatch.setattr(daemon, "serve", lambda host, port: served.append((host, port)))
+    result = invoke("serve", "--host", "0.0.0.0", "--port", "12000")
+    assert "reachable from your network" in flat(result)
+    assert served == [("0.0.0.0", 12000)]
+
+
+def test_serve_loopback_is_quiet(arena_env, monkeypatch):
+    served = []
+    monkeypatch.setattr(daemon, "serve", lambda host, port: served.append((host, port)))
+    result = invoke("serve")
+    assert "reachable from your network" not in flat(result)
+    assert served == [("127.0.0.1", None)]
+
+
+def test_rm_removes_a_corrupt_cached_manifest(docker_ok, arena_env):
+    bad = arena_env / "agents" / "echo" / "0.1.0"
+    bad.mkdir(parents=True)
+    (bad / "arena.yaml").write_text("not: [valid")
+    result = invoke("rm", "echo")
+    assert result.exit_code == 0, result.output
+    assert not (arena_env / "agents" / "echo").exists()

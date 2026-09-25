@@ -22,6 +22,7 @@ from .. import telemetry
 if TYPE_CHECKING:
     from ..arena.catalog import LoadedIndex
     from ..arena.manifest import ArenaManifest
+    from ..arena.runtime import RunningAgent
 
 console = Console()
 
@@ -246,3 +247,277 @@ def pull_command(ref):
         _fail(str(e))
     telemetry.capture("arena_pull", {"agent": m.id, "version": m.version})
     _ok(f"{m.id} {m.version} pulled")
+
+
+# ── lifecycle ──
+
+_NOTICE = (
+    "Arena agents are intentionally vulnerable. They run in Docker and are bound to "
+    "127.0.0.1 only; don't expose them to a network."
+)
+
+
+def _first_run_notice() -> None:
+    from ..arena.paths import arena_dir
+
+    marker = arena_dir() / ".notice_shown"
+    if marker.exists():
+        return
+    _say(_NOTICE, "yellow")
+    marker.parent.mkdir(parents=True, exist_ok=True)
+    marker.touch()
+
+
+def _gateway_url() -> str:
+    from ..arena.paths import gateway_url
+
+    try:
+        return gateway_url()
+    except ValueError as e:  # a malformed HB_ARENA_PORT
+        _fail(str(e))
+
+
+def _ensure_gateway() -> str:
+    from ..arena import daemon
+
+    try:
+        return daemon.ensure_running()
+    except (daemon.GatewayError, ValueError) as e:
+        _fail(str(e))
+
+
+def _running_or_fail(agent_id: str) -> RunningAgent:
+    from ..arena import runtime
+
+    try:
+        agent = runtime.find_running(agent_id)
+    except runtime.DockerError as e:
+        _fail(str(e))
+    if agent is None:
+        _fail(f"{agent_id} is not running → hb arena run {agent_id}")
+    return agent
+
+
+def _stop_gateway_if_idle() -> None:
+    """Stop the gateway once no arena agent is left running."""
+    from ..arena import daemon, runtime
+
+    try:
+        if runtime.list_running():
+            return
+    except runtime.DockerError:
+        return
+    try:
+        if daemon.stop_gateway():
+            _ok("gateway stopped")
+    except ValueError:
+        pass  # a malformed HB_ARENA_PORT: nothing we could have started there
+
+
+def _print_endpoints(agent_id: str, gateway: str) -> None:
+    _say(f"  A2A agent card  {gateway}/a2a/{agent_id}/.well-known/agent-card.json")
+    _say(f"  A2A endpoint    {gateway}/a2a/{agent_id}")
+    _say(f"  OpenAI base URL {gateway}/v1   (model: arena/{agent_id})")
+    _say(f"\n  Test it:  hb test --target arena://{agent_id}")
+
+
+@arena_group.command("run")
+@click.argument("ref")
+@click.option(
+    "--env-file",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    help="Extra KEY=VALUE file for the agent",
+)
+def run_command(ref, env_file):
+    """Pull (if needed), start an agent and serve it through the gateway."""
+    from ..arena import keys, runtime
+
+    m, agent_dir = _ensure_installed(ref, refresh=False)
+    _preflight(m)
+    env, missing = keys.resolve_env(m.runtime.env.required, m.runtime.env.optional, env_file)
+    if missing:
+        hints = "\n".join(f"  hb arena config set {k}=..." for k in missing)
+        _fail(f"{m.id} needs {', '.join(missing)}:\n{hints}")
+    # Names only: values never reach the terminal.
+    _say(f"Passing keys: {', '.join(sorted(env))}" if env else "Passing no keys", "dim")
+    _first_run_notice()
+    kind = runtime.kind_of(m)
+    try:
+        if m.source.image and not runtime.image_present(m.source.image):
+            runtime.pull(m, agent_dir)
+        with console.status(f"Starting {m.id} {m.version}..."):
+            agent = runtime.start(m, agent_dir, env)
+            runtime.wait_healthy(agent, m.runtime.health)
+    except runtime.HealthTimeout as e:
+        logs = ""
+        try:
+            logs = runtime.last_logs(m.id, kind)
+        except runtime.DockerError:
+            pass
+        try:
+            runtime.stop(m.id, kind)
+        except runtime.DockerError:
+            pass
+        if logs.strip():
+            console.print(logs, markup=False, highlight=False)
+        _fail(f"{e} → hb arena logs {m.id}")
+    except runtime.DockerError as e:
+        _fail(str(e))
+    gateway = _ensure_gateway()
+    telemetry.capture("arena_run", {"agent": m.id, "version": m.version})
+    _ok(f"{m.id} {m.version} is running\n")
+    _print_endpoints(m.id, gateway)
+
+
+@arena_group.command("ps")
+def ps_command():
+    """Show running agents."""
+    from ..arena import runtime
+
+    try:
+        agents = runtime.list_running()
+    except runtime.DockerError as e:
+        _fail(str(e))
+    if not agents:
+        _say("No arena agents running.", "dim")
+        return
+    gateway = _gateway_url()
+    table = Table(show_header=True, header_style="bold")
+    for col in ("ID", "VERSION", "A2A", "NATIVE"):
+        table.add_column(col)
+    for a in agents:
+        table.add_row(
+            *(Text(c) for c in (a.id, a.version, f"{gateway}/a2a/{a.id}", a.base_url or ""))
+        )
+    console.print(table)
+
+
+@arena_group.command("logs")
+@click.argument("agent_id")
+@click.option("-f", "--follow", is_flag=True, help="Keep streaming new log lines")
+@click.option("--tail", default=200, show_default=True, help="Lines to show from the end")
+def logs_command(agent_id, follow, tail):
+    """Show an agent's container logs."""
+    from ..arena import runtime
+
+    agent = _running_or_fail(agent_id)
+    try:
+        runtime.logs(agent.id, agent.kind, follow=follow, tail=tail)
+    except runtime.DockerError as e:
+        _fail(str(e))
+
+
+@arena_group.command("stop")
+@click.argument("agent_id", required=False)
+@click.option("--all", "stop_all", is_flag=True, help="Stop every arena agent and the gateway")
+def stop_command(agent_id, stop_all):
+    """Stop an agent (the gateway stops when nothing is left running)."""
+    from ..arena import runtime
+
+    if not agent_id and not stop_all:
+        _fail("give an agent id or --all")
+    try:
+        targets = runtime.list_running() if stop_all else [_running_or_fail(agent_id)]
+        for a in targets:
+            runtime.stop(a.id, a.kind)
+            _ok(f"{a.id} stopped")
+    except runtime.DockerError as e:
+        _fail(str(e))
+    if stop_all and not targets:
+        _say("No arena agents running.", "dim")
+    _stop_gateway_if_idle()
+
+
+@arena_group.command("reset")
+@click.argument("agent_id")
+def reset_command(agent_id):
+    """Recreate an agent from its image (clean state) and drop its conversations."""
+    from ..arena import target as arena_target
+
+    _running_or_fail(agent_id)
+    gateway = _ensure_gateway()
+    try:
+        with console.status(f"Resetting {agent_id}..."):
+            arena_target.reset_via_gateway(agent_id, gateway)
+    except arena_target.TargetError as e:
+        _fail(str(e))
+    _ok(f"{agent_id} reset")
+
+
+@arena_group.command("rm")
+@click.argument("agent_id")
+def rm_command(agent_id):
+    """Remove an agent's images and cached manifest."""
+    from ..arena import catalog, runtime
+    from ..arena.manifest import ManifestError
+    from ..arena.paths import arena_dir
+
+    try:
+        found = catalog.installed(agent_id)
+    except ManifestError:
+        found = None  # corrupt cache: still stop it and remove what's there
+    if found is None and not (
+        catalog.AGENT_ID_RE.match(agent_id) and (arena_dir() / "agents" / agent_id).is_dir()
+    ):
+        _fail(f"{agent_id} is not installed")
+    try:
+        running = runtime.find_running(agent_id)
+        if running:
+            runtime.stop(running.id, running.kind)
+        if found is not None:
+            runtime.remove_images(*found)
+    except runtime.DockerError as e:
+        _fail(str(e))
+    try:
+        catalog.remove_installed(agent_id)
+    except catalog.CatalogError as e:
+        _fail(str(e))
+    _ok(f"{agent_id} removed")
+    _stop_gateway_if_idle()
+
+
+@arena_group.command("endpoint")
+@click.argument("agent_id")
+def endpoint_command(agent_id):
+    """Print ready-to-paste ways to call a running agent."""
+    import json
+
+    from ..arena import target as arena_target
+
+    _running_or_fail(agent_id)
+    gateway = _gateway_url()
+    _print_endpoints(agent_id, gateway)
+    body = {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "SendMessage",
+        "params": {
+            "message": {"role": "ROLE_USER", "messageId": "m-1", "parts": [{"text": "Hello"}]}
+        },
+    }
+    console.print("\n[bold]curl (A2A SendMessage)[/bold]")
+    click.echo(
+        f"curl -s {gateway}/a2a/{agent_id} -H 'Content-Type: application/json' "
+        f"-H 'A2A-Version: 1.0' -d '{json.dumps(body)}'"
+    )
+    console.print("\n[bold]hb bot config[/bold] (hb test --endpoint)")
+    click.echo(json.dumps(arena_target.bot_config(agent_id, gateway), indent=2))
+
+
+@arena_group.command("serve")
+@click.option("--host", default="127.0.0.1", show_default=True)
+@click.option("--port", type=int, default=None, help="Default: HB_ARENA_PORT or 11500")
+def serve_command(host, port):
+    """Run the gateway in the foreground."""
+    from ..arena import daemon
+
+    if host not in daemon.LOOPBACK_HOSTS:
+        _say(
+            "Warning: arena agents are intentionally vulnerable and will be reachable "
+            "from your network.",
+            "yellow",
+        )
+    try:
+        daemon.serve(host, port)
+    except ValueError as e:  # a malformed HB_ARENA_PORT
+        _fail(str(e))
