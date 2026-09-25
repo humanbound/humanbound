@@ -101,6 +101,9 @@ a certain severity are found:
 | `low` | Fail on low, medium, high, or critical findings |
 | `any` | Fail on any finding (including info) |
 
+In local mode, `--fail-on` also fails the build when the judge could not assess a conversation,
+since it may hide a finding.
+
 ## GitLab CI (and other CI systems)
 
 Anywhere you can't use a GitHub Action, run the `hb` CLI directly. Install the engine extra
@@ -177,7 +180,7 @@ jobs:
     The `--fail-on` flag causes the `hb test` command to exit with a non-zero status code when vulnerabilities at or above the specified severity are found. Thresholds are `critical`, `high`, `medium`, `low`, and `any`, allowing you to configure how strict your security gate is.
 
 ??? question "What exit codes does hb test return?"
-    `0` — the scan completed and no `--fail-on` condition matched. `1` — the scan completed and the `--fail-on` condition matched. `2` — the scan itself failed: the run ended with status `Failed`, or every conversation errored so nothing was actually tested. A scan failure exits `2` regardless of `--fail-on`, so a broken scan can never pass your gate.
+    `0` — the scan completed and no `--fail-on` condition matched. `1` — the scan completed and the `--fail-on` condition matched (in local mode, this includes a conversation the judge could not assess). `2` — the scan itself failed: the run ended with status `Failed`, or every conversation errored so nothing was actually tested. A scan failure exits `2` regardless of `--fail-on`, so a broken scan can never pass your gate.
 
 ??? question "What does --wait do and why should I use it in CI/CD?"
     `--wait` tells Humanbound to block until the test run completes before the command exits. Always use `--wait` in CI/CD pipelines to ensure results are available before the job finishes or artifacts are exported. (The GitHub Action passes `--wait` for you.)
