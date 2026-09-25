@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "min_hb_version": "0.0.1",
+  "generated_at": "2026-09-25T00:00:00Z",
+  "agents": [
+    {
+      "id": "echo",
+      "version": "0.1.0",
+      "name": "Echo",
+      "description": "Echoes the prompt. Test fixture for hb arena.",
+      "tags": ["fixture"],
+      "difficulty": "easy",
+      "origin": "first-party",
+      "manifest_url": "agents/echo/arena.yaml"
+    },
+    {
+      "id": "echo",
+      "version": "0.0.9",
+      "name": "Echo (old)",
+      "description": "Older version, used to test version resolution.",
+      "tags": ["fixture"],
+      "difficulty": "easy",
+      "origin": "first-party",
+      "manifest_url": "agents/echo/arena.yaml"
+    }
+  ]
+}
