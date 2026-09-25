@@ -67,10 +67,34 @@ def test_agent_block_is_a_standalone_agent_yaml_and_keeps_unknown_keys():
     assert m.agent_yaml() == VALID["agent"]
 
 
+def test_agent_yaml_omits_defaults_the_author_never_wrote():
+    agent = {
+        "scope": {"business": "Reprices a catalogue."},
+        "intents": {"permitted": ["Read pages"], "restricted": ["Leak floor price"]},
+    }
+    doc = _with(agent=agent)
+    m = parse_manifest(doc)
+    assert m.agent_yaml() == agent
+
+
+def test_agent_yaml_preserves_extra_null_valued_keys():
+    agent = copy.deepcopy(VALID["agent"])
+    agent["tools"] = None
+    doc = _with(agent=agent)
+    m = parse_manifest(doc)
+    assert m.agent_yaml() == agent
+
+
+def test_agent_block_rejects_duplicate_capability_keys():
+    with pytest.raises(ManifestError) as exc:
+        parse_manifest(_with(agent__capabilities=["tools", "tools"]))
+    assert "duplicate capability" in str(exc.value)
+
+
 @pytest.mark.parametrize(
     "changes, fragment",
     [
-        ({"id": "Bad Id"}, "id"),
+        ({"id": "Bad Id"}, "\n  id:"),
         ({"version": "1.2"}, "version"),
         ({"agent__capabilities": ["telepathy"]}, "unknown capability"),
         ({"source": {}}, "exactly one of 'image' or 'compose'"),
@@ -96,6 +120,16 @@ def test_future_schema_version_asks_for_upgrade():
         parse_manifest(_with(schema_version=SCHEMA_VERSION + 1))
 
 
+def test_future_schema_version_as_string_asks_for_upgrade():
+    with pytest.raises(ManifestError, match="newer hb"):
+        parse_manifest(_with(schema_version=str(SCHEMA_VERSION + 1)))
+
+
+def test_zero_schema_version_is_invalid():
+    with pytest.raises(ManifestError, match="schema_version"):
+        parse_manifest(_with(schema_version=0))
+
+
 def test_load_manifest_reads_yaml(tmp_path):
     import yaml
 
@@ -109,9 +143,23 @@ def test_load_manifest_reports_unreadable_file(tmp_path):
         load_manifest(tmp_path / "missing.yaml")
 
 
+def test_load_manifest_reports_undecodable_file(tmp_path):
+    f = tmp_path / "arena.yaml"
+    f.write_bytes(b"\xff\xfe\x00\x01invalid utf-8 \xff")
+    with pytest.raises(ManifestError, match="cannot read"):
+        load_manifest(f)
+
+
 def test_paths_follow_home_and_port_env(arena_home, monkeypatch):
     assert paths.arena_dir() == arena_home
     assert paths.gateway_url() == "http://127.0.0.1:11500"
     monkeypatch.setenv("HB_ARENA_PORT", "12001")
     assert paths.gateway_port() == 12001
     assert paths.gateway_url() == "http://127.0.0.1:12001"
+    assert paths.gateway_url(port=9999) == "http://127.0.0.1:9999"
+
+
+def test_gateway_port_rejects_non_numeric_env(monkeypatch):
+    monkeypatch.setenv("HB_ARENA_PORT", "not-a-port")
+    with pytest.raises(ValueError, match="HB_ARENA_PORT must be a port number, got 'not-a-port'"):
+        paths.gateway_port()

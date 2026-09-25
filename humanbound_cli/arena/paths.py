@@ -20,8 +20,13 @@ def arena_dir() -> Path:
 
 def gateway_port() -> int:
     raw = os.environ.get("HB_ARENA_PORT")
-    return int(raw) if raw else DEFAULT_GATEWAY_PORT
+    if not raw:
+        return DEFAULT_GATEWAY_PORT
+    try:
+        return int(raw)
+    except ValueError:
+        raise ValueError(f"HB_ARENA_PORT must be a port number, got '{raw}'") from None
 
 
 def gateway_url(port: int | None = None) -> str:
-    return f"http://127.0.0.1:{port or gateway_port()}"
+    return f"http://127.0.0.1:{port if port is not None else gateway_port()}"

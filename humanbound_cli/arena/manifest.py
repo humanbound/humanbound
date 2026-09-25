@@ -54,11 +54,16 @@ class AgentBlock(BaseModel):
     version: str = "1.0"
     scope: AgentScope
     intents: AgentIntents
-    capabilities: list[str] = Field(default_factory=list)
+    capabilities: list[str] | None = None
 
     @field_validator("capabilities")
     @classmethod
-    def _known_capabilities(cls, value: list[str]) -> list[str]:
+    def _known_capabilities(cls, value: list[str] | None) -> list[str] | None:
+        if value is None:
+            return value
+        duplicates = sorted({v for v in value if value.count(v) > 1})
+        if duplicates:
+            raise ValueError(f"duplicate capability key(s): {', '.join(duplicates)}")
         unknown = sorted(set(value) - set(CAPABILITY_KEYS))
         if unknown:
             raise ValueError(
@@ -93,7 +98,7 @@ class Source(_Strict):
 
 class Health(_Strict):
     path: str = "/health"
-    timeout_s: int = 60
+    timeout_s: int = Field(default=60, gt=0)
 
 
 class EnvSpec(_Strict):
@@ -105,7 +110,7 @@ class Runtime(_Strict):
     port: int = Field(ge=1, le=65535)
     health: Health = Field(default_factory=Health)
     env: EnvSpec = Field(default_factory=EnvSpec)
-    timeout_s: int = 120
+    timeout_s: int = Field(default=120, gt=0)
 
 
 class HttpCall(_Strict):
@@ -140,7 +145,7 @@ class GroundTruth(_Strict):
 
 
 class ArenaManifest(_Strict):
-    schema_version: int
+    schema_version: int = Field(ge=1, le=SCHEMA_VERSION, strict=False)
     id: str = Field(pattern=r"^[a-z0-9][a-z0-9-]{0,62}$")
     name: str
     version: str = Field(pattern=r"^\d+\.\d+\.\d+$")
@@ -163,23 +168,29 @@ class ArenaManifest(_Strict):
 
     def agent_yaml(self) -> dict:
         """The embedded agent: block as a standalone agent.yaml document."""
-        return self.agent.model_dump(mode="json", exclude_none=True)
+        return self.agent.model_dump(mode="json", exclude_unset=True)
 
 
 def parse_manifest(data: Any) -> ArenaManifest:
     if not isinstance(data, dict):
         raise ManifestError("arena.yaml must be a YAML mapping")
     version = data.get("schema_version")
-    if isinstance(version, int) and version > SCHEMA_VERSION:
-        raise ManifestError(
-            f"this agent needs a newer hb (manifest schema {version}, this hb reads "
-            f"{SCHEMA_VERSION}) → pip install -U humanbound"
-        )
+    if version is not None and not isinstance(version, bool):
+        try:
+            version_int = int(version)
+        except (TypeError, ValueError):
+            version_int = None
+        if version_int is not None and version_int > SCHEMA_VERSION:
+            raise ManifestError(
+                f"this agent needs a newer hb (manifest schema {version_int}, this hb reads "
+                f"{SCHEMA_VERSION}) → pip install -U humanbound"
+            )
     try:
         return ArenaManifest.model_validate(data)
     except ValidationError as e:
         lines = [
-            f"  {'.'.join(str(p) for p in err['loc']) or '<root>'}: {err['msg']}"
+            f"  {'.'.join(str(p) for p in err['loc']) or '<root>'}: "
+            f"{err['msg'].removeprefix('Value error, ')}"
             for err in e.errors()
         ]
         raise ManifestError("invalid arena.yaml:\n" + "\n".join(lines)) from None
@@ -188,7 +199,7 @@ def parse_manifest(data: Any) -> ArenaManifest:
 def load_manifest(path: str | Path) -> ArenaManifest:
     path = Path(path)
     try:
-        data = yaml.safe_load(path.read_text())
-    except (OSError, yaml.YAMLError) as e:
+        data = yaml.safe_load(path.read_text(encoding="utf-8"))
+    except (OSError, yaml.YAMLError, UnicodeDecodeError) as e:
         raise ManifestError(f"cannot read {path}: {e}") from None
     return parse_manifest(data)
