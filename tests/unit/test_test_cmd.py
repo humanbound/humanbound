@@ -387,6 +387,43 @@ class TestArenaTarget:
         mock_reset.assert_not_called()
         assert _started_config(r).scope_path == str(scope)
 
+    @patch("humanbound_cli.arena.target.reset_via_gateway")
+    @patch("humanbound_cli.arena.target.resolve_target")
+    @patch(RUNNER_PATCH)
+    def test_manifest_context_is_used_literally_never_as_a_path(
+        self, mock_get_runner, mock_resolve, _reset, tmp_path
+    ):
+        secret = tmp_path / "secret.txt"
+        secret.write_text("TOP SECRET FILE CONTENTS")
+        mock_resolve.return_value = ArenaTarget(
+            agent_id="echo",
+            gateway="http://127.0.0.1:11500",
+            bot_config={},
+            scope_path=Path("/tmp/echo-scope.yaml"),
+            context=str(secret),
+        )
+        r = local_runner()
+        r.start.return_value = None
+        mock_get_runner.return_value = r
+
+        runner.invoke(cli, ["test", "--target", "arena://echo"])
+
+        assert _started_config(r).context == str(secret)
+
+    @patch("humanbound_cli.arena.target.reset_via_gateway")
+    @patch("humanbound_cli.arena.target.resolve_target", return_value=ARENA_TARGET)
+    @patch(RUNNER_PATCH)
+    def test_user_context_flag_still_reads_files(self, mock_get_runner, _resolve, _reset, tmp_path):
+        ctx = tmp_path / "ctx.txt"
+        ctx.write_text("from my file")
+        r = local_runner()
+        r.start.return_value = None
+        mock_get_runner.return_value = r
+
+        runner.invoke(cli, ["test", "--target", "arena://echo", "--context", str(ctx)])
+
+        assert _started_config(r).context == "from my file"
+
     @patch(
         "humanbound_cli.arena.target.resolve_target",
         side_effect=TargetError("echo is not running → hb arena run echo"),

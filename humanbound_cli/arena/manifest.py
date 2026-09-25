@@ -202,7 +202,7 @@ class ArenaManifest(_Strict):
     source: Source
     runtime: Runtime
     integration: Integration
-    context: str = ""
+    context: str = Field(default="", max_length=1500)
     ground_truth: dict[str, GroundTruth] = Field(default_factory=dict)
 
     @model_validator(mode="after")

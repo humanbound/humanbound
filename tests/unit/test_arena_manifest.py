@@ -225,3 +225,9 @@ def test_env_names_that_merely_contain_hb_are_allowed():
 def test_health_path_must_start_with_slash(path):
     with pytest.raises(ManifestError, match="runtime.health.path"):
         parse_manifest(_with(runtime__health={"path": path}))
+
+
+def test_context_is_capped_at_1500_chars():
+    assert parse_manifest(_with(context="x" * 1500)).context == "x" * 1500
+    with pytest.raises(ManifestError, match="context"):
+        parse_manifest(_with(context="x" * 1501))

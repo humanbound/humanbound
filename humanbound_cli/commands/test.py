@@ -422,8 +422,6 @@ def test_command(
         console.print(f"[dim]Arena target {target} → local engine[/dim]")
         if not scope_path and not repo and not prompt:
             scope_path = str(arena.scope_path)
-        if not context and arena.context:
-            context = arena.context
         telemetry.capture("arena_test", {"agent": arena.agent_id})
 
     # --- Runner selection (login + project is the switch) ---
@@ -546,8 +544,14 @@ def test_command(
         else:
             console.print("  Depth: [yellow]blackbox[/yellow]")
 
-        # Context: string or path to .txt file (max 1500 chars)
-        ctx_value = _resolve_context(context) if context else ""
+        # Context: string or path to .txt file (max 1500 chars). An arena manifest's
+        # context is untrusted and always used literally — never read as a file path.
+        if context:
+            ctx_value = _resolve_context(context)
+        elif arena:
+            ctx_value = arena.context or ""
+        else:
+            ctx_value = ""
         if ctx_value and len(ctx_value) > 1500:
             console.print(
                 f"[red]Context too long ({len(ctx_value)} chars). Maximum is 1,500.[/red]"
