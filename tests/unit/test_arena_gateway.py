@@ -50,6 +50,7 @@ BROKEN = _variant(
 NATIVE = _variant("native", {"type": "a2a", "path": "/a2a"})
 FAILING_NATIVE = _variant("failing-native", {"type": "a2a", "path": "/a2a-error"})
 ODD_NATIVE = _variant("odd-native", {"type": "a2a", "path": "/a2a-list"})
+TASK_NATIVE = _variant("task-native", {"type": "a2a", "path": "/a2a-task"})
 
 TEST_HOSTS = ["testserver", "gw"]
 
@@ -103,6 +104,32 @@ async def _native_error(request):
     )
 
 
+async def _native_task(request):
+    """A native agent that answers SendMessage with a Task whose history echoes the user
+    message first (a Bot taking the first `text` would read the prompt back)."""
+    body = await request.json()
+    if body["method"] == "GetTask":
+        return JSONResponse(
+            {"jsonrpc": "2.0", "id": body["id"], "result": {"id": body["params"]["id"]}}
+        )
+    user = body["params"]["message"]
+    return JSONResponse(
+        {
+            "jsonrpc": "2.0",
+            "id": body["id"],
+            "result": {
+                "task": {
+                    "id": "t-1",
+                    "contextId": "upstream-ctx",
+                    "status": {"state": "TASK_STATE_COMPLETED"},
+                    "history": [user],
+                    "artifacts": [{"artifactId": "a", "parts": [{"text": "artifact answer"}]}],
+                }
+            },
+        }
+    )
+
+
 async def _native_list(request):
     return JSONResponse(["not", "a", "dict"])
 
@@ -116,6 +143,7 @@ FAKE_AGENT = Starlette(
         Route("/a2a", _native, methods=["POST"]),
         Route("/a2a-error", _native_error, methods=["POST"]),
         Route("/a2a-list", _native_list, methods=["POST"]),
+        Route("/a2a-task", _native_task, methods=["POST"]),
     ]
 )
 
@@ -145,7 +173,9 @@ def resets():
 
 @pytest.fixture
 def client(resets):
-    registry = FakeRegistry([ECHO, THREADED, BROKEN, NATIVE, FAILING_NATIVE, ODD_NATIVE])
+    registry = FakeRegistry(
+        [ECHO, THREADED, BROKEN, NATIVE, FAILING_NATIVE, ODD_NATIVE, TASK_NATIVE]
+    )
     app = create_app(
         registry,
         transport=httpx.ASGITransport(app=FAKE_AGENT),
@@ -259,10 +289,57 @@ def test_concurrent_first_messages_run_thread_init_once():
     assert texts == {"t-1: a", "t-1: b"}
 
 
-def test_native_a2a_agents_are_passed_through_with_latency(client):
+def test_native_a2a_message_is_normalized_with_metadata(client):
     body = send(client, "native", "hi").json()
-    assert body["result"]["message"]["parts"] == [{"text": "native"}]
-    assert "latency_ms" in body["result"]["message"]["metadata"]["humanbound"]
+    message = body["result"]["message"]
+    assert body["id"] == 1
+    assert message["role"] == "ROLE_AGENT"
+    assert message["parts"] == [{"text": "native"}]
+    assert message["contextId"] == "c"  # the upstream message's context
+    meta = message["metadata"]["humanbound"]
+    assert meta["agent"] == "native" and meta["version"] == NATIVE.version
+    assert isinstance(meta["latency_ms"], int)
+
+
+def test_native_a2a_task_becomes_a_message_with_the_artifact_text_first(client):
+    r = send(client, "task-native", "the user prompt", context_id="mine")
+    assert r.status_code == 200
+    message = r.json()["result"]["message"]
+    assert "task" not in r.json()["result"]
+    assert message["parts"][0] == {"text": "artifact answer"}
+    assert "the user prompt" not in str(message)
+    assert message["contextId"] == "upstream-ctx"
+    assert message["metadata"]["humanbound"]["agent"] == "task-native"
+    assert message["metadata"]["humanbound"]["version"] == TASK_NATIVE.version
+
+
+def test_native_a2a_context_falls_back_to_the_request_then_a_new_one(client, monkeypatch):
+    async def no_context(self, body, version):
+        return 200, {
+            "jsonrpc": "2.0",
+            "id": body["id"],
+            "result": {"message": {"role": "ROLE_AGENT", "parts": [{"text": "x"}]}},
+        }
+
+    monkeypatch.setattr(gateway.A2APassthrough, "forward", no_context)
+    r = send(client, "native", "hi", context_id="from-request")
+    assert r.json()["result"]["message"]["contextId"] == "from-request"
+    r = send(client, "native", "hi")
+    assert r.json()["result"]["message"]["contextId"]
+
+
+def test_native_a2a_only_forwards_send_message_and_get_task(client):
+    r = client.post(
+        "/a2a/task-native",
+        json={"jsonrpc": "2.0", "id": 7, "method": "GetTask", "params": {"id": "t-1"}},
+    )
+    assert r.status_code == 200 and r.json()["result"] == {"id": "t-1"}
+    for method in ("CancelTask", "SendStreamingMessage", "ListTasks"):
+        r = client.post(
+            "/a2a/task-native",
+            json={"jsonrpc": "2.0", "id": 8, "method": method, "params": {}},
+        )
+        assert r.status_code == 200 and r.json()["error"]["code"] == -32601
 
 
 def test_protocol_errors_are_json_rpc_with_http_200(client):

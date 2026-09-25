@@ -8,6 +8,7 @@ from __future__ import annotations
 import os
 import threading
 import time
+import uuid
 from collections.abc import Callable
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
@@ -288,6 +289,29 @@ def create_app(
             registry.invalidate()
         return JSONResponse({"id": agent_id, "status": "reset"})
 
+    async def native_rpc(request, entry, body, version, rpc_id, method, params):
+        """Forward to an agent that already speaks A2A. SendMessage answers are
+        normalized to a direct Message (a Task's history would otherwise put the user's
+        own prompt before the reply); GetTask is forwarded unchanged."""
+        if method not in ("SendMessage", "GetTask"):
+            raise a2a.RpcError(a2a.METHOD_NOT_FOUND, "Method not found")
+        started = time.monotonic()
+        status, data = await passthrough(request, entry).forward(body, version)
+        if not isinstance(data, dict):
+            raise AgentError("unextractable_response", f"malformed A2A response: {str(data)[:300]}")
+        if data.get("error") is not None:
+            # Forward the agent's own error, but non-200 so the turn fails loudly.
+            return JSONResponse(data, status_code=502)
+        if method == "GetTask":
+            return JSONResponse(data, status_code=status)
+        text = a2a.reply_text(data)
+        latency_ms = int((time.monotonic() - started) * 1000)
+        context_id = (
+            a2a.result_context_id(data) or a2a.request_context_id(params) or uuid.uuid4().hex
+        )
+        meta = _metadata(entry, AgentReply(text, latency_ms=latency_ms))
+        return JSONResponse(a2a.message_result(rpc_id, text, context_id, meta))
+
     # ── A2A ──
 
     async def agent_card(request: Request):
@@ -314,27 +338,7 @@ def create_app(
             rpc_id, method, params = a2a.parse_envelope(body)
             entry = await lookup(agent_id)
             if entry.manifest.integration.type == "a2a":
-                started = time.monotonic()
-                status, data = await passthrough(request, entry).forward(body, version)
-                if not isinstance(data, dict):
-                    raise AgentError(
-                        "unextractable_response",
-                        f"malformed A2A response: {str(data)[:300]}",
-                    )
-                if data.get("error") is not None:
-                    # Forward the agent's own error, but non-200 so the turn fails loudly.
-                    return JSONResponse(data, status_code=502)
-                result = data.get("result")
-                message = result.get("message") if isinstance(result, dict) else None
-                if isinstance(message, dict):
-                    meta = message.get("metadata")
-                    if not isinstance(meta, dict):
-                        meta = message["metadata"] = {}
-                    hb = meta.get("humanbound")
-                    if not isinstance(hb, dict):
-                        hb = meta["humanbound"] = {}
-                    hb["latency_ms"] = int((time.monotonic() - started) * 1000)
-                return JSONResponse(data, status_code=status)
+                return await native_rpc(request, entry, body, version, rpc_id, method, params)
             if method == "GetTask":
                 raise a2a.RpcError(
                     a2a.TASK_NOT_FOUND, "Task not found: this agent answers with direct messages"

@@ -217,6 +217,25 @@ def reply_text(body: Any) -> str:
     return text
 
 
+def result_context_id(body: Any) -> str | None:
+    """The contextId of a SendMessage response's Message or Task, if it has one."""
+    result = body.get("result") if isinstance(body, dict) else None
+    if not isinstance(result, dict):
+        return None
+    for key in ("message", "task"):
+        obj = result.get(key)
+        if isinstance(obj, dict) and isinstance(obj.get("contextId"), str) and obj["contextId"]:
+            return obj["contextId"]
+    return None
+
+
+def request_context_id(params: Any) -> str | None:
+    """params.message.contextId of a SendMessage request, leniently (no validation)."""
+    msg = params.get("message") if isinstance(params, dict) else None
+    cid = msg.get("contextId") if isinstance(msg, dict) else None
+    return cid if isinstance(cid, str) and cid else None
+
+
 def send_message_body(text: str, context_id: str | None = None) -> dict:
     message: dict = {"role": "ROLE_USER", "messageId": uuid.uuid4().hex, "parts": [{"text": text}]}
     if context_id:
