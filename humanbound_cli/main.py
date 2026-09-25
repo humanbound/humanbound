@@ -12,6 +12,7 @@ from . import telemetry as telemetry_pkg
 from .client import HumanboundClient
 from .commands import (
     api_keys,
+    arena,
     assessments,
     auth,
     campaigns,
@@ -103,6 +104,7 @@ cli.add_command(completion.completion_command)
 cli.add_command(guardrails.guardrails_command)
 cli.add_command(docs.docs_command)
 cli.add_command(config_cmd.config_group)
+cli.add_command(arena.arena_group)
 
 # MCP server (optional — requires mcp SDK)
 if mcp is not None:
