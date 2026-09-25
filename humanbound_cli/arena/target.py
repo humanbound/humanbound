@@ -1,0 +1,109 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Humanbound
+"""Resolve `arena://<id>` for `hb test`: an A2A bot config aimed at the gateway, plus
+the agent's scope (from its embedded agent.yaml) and judge context."""
+
+from __future__ import annotations
+
+import re
+from collections.abc import Callable
+from dataclasses import dataclass
+from pathlib import Path
+
+import httpx
+import yaml
+
+from ..agent_yaml import scope_from_agent_yaml
+from . import catalog, daemon, runtime
+
+ARENA_SCHEME = "arena://"
+_ID_RE = re.compile(r"^[a-z0-9][a-z0-9-]{0,62}$")
+
+
+class TargetError(RuntimeError):
+    """The arena target can't be used. The message is ready to show."""
+
+
+@dataclass
+class ArenaTarget:
+    agent_id: str
+    gateway: str
+    bot_config: dict
+    scope_path: Path
+    context: str
+
+
+def is_arena_target(value: str | None) -> bool:
+    return bool(value) and value.startswith(ARENA_SCHEME)
+
+
+def parse_target(value: str) -> str:
+    agent_id = value[len(ARENA_SCHEME) :] if is_arena_target(value) else ""
+    if not _ID_RE.match(agent_id):
+        raise TargetError(f"invalid arena target {value!r}; expected arena://<agent-id>")
+    return agent_id
+
+
+def bot_config(agent_id: str, gateway: str) -> dict:
+    """An hb bot config that speaks A2A v1.0 SendMessage to the gateway."""
+    return {
+        "streaming": None,
+        "chat_completion": {
+            "endpoint": f"{gateway}/a2a/{agent_id}",
+            "headers": {"A2A-Version": "1.0"},
+            "payload": {
+                "jsonrpc": "2.0",
+                "id": "$UUID",
+                "method": "SendMessage",
+                "params": {
+                    "message": {
+                        "role": "ROLE_USER",
+                        "messageId": "$UUID",
+                        "contextId": "$humanbound_conversation_id",
+                        "parts": [{"text": "$PROMPT"}],
+                    }
+                },
+            },
+        },
+        "telemetry": {
+            "mode": "per_turn",
+            "extraction_map": {"metadata_path": "result.message.metadata.humanbound"},
+        },
+    }
+
+
+def resolve_target(
+    value: str,
+    *,
+    list_running: Callable[[], list[runtime.RunningAgent]] = runtime.list_running,
+    installed: Callable[..., tuple | None] = catalog.installed,
+    ensure_gateway: Callable[[], str] = daemon.ensure_running,
+) -> ArenaTarget:
+    agent_id = parse_target(value)
+    running = next((a for a in list_running() if a.id == agent_id), None)
+    if running is None:
+        raise TargetError(f"{agent_id} is not running → hb arena run {agent_id}")
+    found = installed(agent_id, running.version)
+    if found is None:
+        raise TargetError(
+            f"{agent_id} is running but its manifest isn't cached → hb arena pull {agent_id}"
+        )
+    manifest, agent_dir = found
+    scope_path = Path(agent_dir) / "scope.yaml"
+    scope_path.write_text(
+        yaml.safe_dump(scope_from_agent_yaml(manifest.agent_yaml()), sort_keys=False)
+    )
+    gateway = ensure_gateway()
+    return ArenaTarget(
+        agent_id, gateway, bot_config(agent_id, gateway), scope_path, manifest.context
+    )
+
+
+def reset_via_gateway(agent_id: str, gateway: str) -> None:
+    """Recreate the agent from its image and drop its conversations (clean run)."""
+    try:
+        resp = httpx.post(f"{gateway}/arena/v1/agents/{agent_id}/reset", json={}, timeout=300)
+    except httpx.HTTPError as e:
+        raise TargetError(f"could not reset {agent_id}: {e}") from None
+    if not resp.is_success:
+        raise TargetError(f"could not reset {agent_id}: {resp.text[:300]}")
