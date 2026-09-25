@@ -130,6 +130,8 @@ Generate the next user message:
             0,
             self.BASIC_TMPL.replace("<TESTING_SCENARIO>", testing_scenario),
         )
+        # Per-turn telemetry metadata, standardized once the conversation ends
+        accumulated_metadata = []
 
         for turn in range(self.conversation_depth):
             # 1. Generate the next user message
@@ -140,10 +142,14 @@ Generate the next user message:
                 temperature=DATA_GENERATION_TEMPERATURE,
             )
             # 2. Ping the assistant with the generated user message
-            a_response, exec_t_turn, _ = await self.clientbot.ping(payload, u_prompt, conversation)
+            a_response, exec_t_turn, turn_metadata = await self.clientbot.ping(
+                payload, u_prompt, conversation
+            )
 
             # 3. Append the turn to the conversation
             conversation.append({"u": u_prompt, "a": a_response})
+            if turn_metadata:
+                accumulated_metadata.append({"turn": len(conversation), "metadata": turn_metadata})
             conversation_str += f"**User:** {u_prompt}\n**AI Agent:** {a_response}\n"
 
             # 4. Accumulate execution time
@@ -160,7 +166,7 @@ Generate the next user message:
             elif telemetry_mode == "per_turn":
                 extraction_map = telemetry_config.get("extraction_map", {})
                 telemetry_data = telemetry_client.standardize_accumulated_metadata(
-                    payload, extraction_map
+                    accumulated_metadata, extraction_map
                 )
 
         return (
