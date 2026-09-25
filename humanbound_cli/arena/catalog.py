@@ -189,11 +189,12 @@ def _check_compose_path(compose: str, agent_id: str) -> None:
         )
 
 
-def fetch_manifest(entry: IndexEntry, index_loc: str) -> tuple[ArenaManifest, Path]:
-    """Download an agent's arena.yaml (and compose file) into the local cache.
+def _fetch_and_validate_manifest(
+    entry: IndexEntry, index_loc: str
+) -> tuple[ArenaManifest, str, str]:
+    """Fetch, parse and mismatch-check an agent's arena.yaml. No disk writes.
 
-    Everything is fetched before anything is written, so a failure partway through
-    never leaves a half-installed agent behind.
+    Returns (manifest, raw manifest text, resolved manifest location).
     """
     manifest_loc = _join(index_loc, entry.manifest_url)
     try:
@@ -209,6 +210,26 @@ def fetch_manifest(entry: IndexEntry, index_loc: str) -> tuple[ArenaManifest, Pa
             f"catalog/manifest mismatch: the index lists {entry.id}:{entry.version} but its "
             f"manifest says {manifest.id}:{manifest.version}"
         )
+    return manifest, text, manifest_loc
+
+
+def read_manifest(entry: IndexEntry, index_loc: str) -> ArenaManifest:
+    """Fetch and validate an agent's arena.yaml (mismatch-checked). No disk writes.
+
+    Use this for read-only lookups (e.g. `hb arena info` on an agent that isn't
+    installed yet) where "installed" must keep meaning pulled/run, not merely browsed.
+    """
+    manifest, _, _ = _fetch_and_validate_manifest(entry, index_loc)
+    return manifest
+
+
+def fetch_manifest(entry: IndexEntry, index_loc: str) -> tuple[ArenaManifest, Path]:
+    """Download an agent's arena.yaml (and compose file) into the local cache.
+
+    Everything is fetched before anything is written, so a failure partway through
+    never leaves a half-installed agent behind.
+    """
+    manifest, text, manifest_loc = _fetch_and_validate_manifest(entry, index_loc)
 
     compose_text = None
     if manifest.source.compose:

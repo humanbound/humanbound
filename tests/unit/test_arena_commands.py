@@ -30,6 +30,12 @@ def flat(result):
     return " ".join(result.output.split())
 
 
+def test_top_level_help_mentions_arena_run_and_test_target():
+    out = cli_runner.invoke(cli, ["--help"], catch_exceptions=False).output
+    assert "hb arena run <agent>" in out
+    assert "hb test --target arena://<agent>" in out
+
+
 def test_config_set_get_unset_masks_values(arena_env):
     assert invoke("config", "set", "OPENAI_API_KEY=sk-abcdefghijklmnop").exit_code == 0
     out = invoke("config", "get").output
@@ -50,6 +56,34 @@ def test_config_set_rejects_bad_values_and_reserved_names(arena_env):
     reserved = invoke("config", "set", "HB_API_KEY=abc")
     assert reserved.exit_code == 1 and "reserved" in flat(reserved)
     assert "HB_API_KEY" not in invoke("config", "get").output
+
+
+def _write_unreadable_config(arena_env):
+    from humanbound_cli.arena import keys
+
+    keys.config_file().parent.mkdir(parents=True, exist_ok=True)
+    keys.config_file().write_bytes(b"OPENAI_API_KEY=\xff\xfe\n")
+
+
+def test_config_get_fails_cleanly_on_unreadable_env_file(arena_env):
+    _write_unreadable_config(arena_env)
+    result = invoke("config", "get")
+    assert result.exit_code == 1
+    assert "cannot read" in flat(result)
+
+
+def test_config_set_fails_cleanly_on_unreadable_env_file(arena_env):
+    _write_unreadable_config(arena_env)
+    result = invoke("config", "set", "A=1")
+    assert result.exit_code == 1
+    assert "cannot read" in flat(result)
+
+
+def test_config_unset_fails_cleanly_on_unreadable_env_file(arena_env):
+    _write_unreadable_config(arena_env)
+    result = invoke("config", "unset", "OPENAI_API_KEY")
+    assert result.exit_code == 1
+    assert "cannot read" in flat(result)
 
 
 def test_validate_ok_and_failure(arena_env, tmp_path):
@@ -83,6 +117,14 @@ def test_info_and_agent_yaml(arena_env):
     assert "[llm001]" in out
     raw = invoke("info", "echo", "--agent-yaml").output
     assert yaml.safe_load(raw)["scope"]["business"].startswith("Echo agent")
+
+
+def test_info_does_not_install_the_agent(arena_env):
+    """'installed' means pulled/run, not merely browsed with `info`."""
+    result = invoke("info", "echo")
+    assert result.exit_code == 0
+    assert catalog.installed("echo") is None
+    assert "No arena agents installed" in invoke("ls", "--installed").output
 
 
 def test_pull_caches_manifest_and_pulls_image(arena_env, monkeypatch):
@@ -193,6 +235,35 @@ def test_run_fails_fast_on_missing_keys(docker_ok, monkeypatch, tmp_path):
     assert docker_ok["started"] == []
 
 
+def test_run_env_file_values_reach_runtime_start(docker_ok, monkeypatch, tmp_path):
+    _with_required_key(monkeypatch, tmp_path)
+    env_file = tmp_path / "extra.env"
+    env_file.write_text("OPENAI_API_KEY=sk-from-file\n")
+    result = invoke("run", "echo", "--env-file", str(env_file))
+    assert result.exit_code == 0, result.output
+    assert docker_ok["started"] == [("echo", {"OPENAI_API_KEY": "sk-from-file"})]
+
+
+def test_run_fails_cleanly_on_unreadable_env_file(docker_ok, tmp_path):
+    bad = tmp_path / "bad.env"
+    bad.write_bytes(b"OPENAI_API_KEY=\xff\xfe\n")
+    result = invoke("run", "echo", "--env-file", str(bad))
+    assert result.exit_code == 1
+    assert "cannot read" in flat(result)
+    assert docker_ok["started"] == []
+
+
+def test_run_validates_port_before_preflight_pull_or_start(docker_ok, monkeypatch):
+    monkeypatch.setenv("HB_ARENA_PORT", "not-a-port")
+    preflighted = []
+    monkeypatch.setattr(runtime, "preflight", lambda m=None: preflighted.append(True))
+    result = invoke("run", "echo")
+    assert result.exit_code == 1
+    assert "HB_ARENA_PORT" in flat(result)
+    assert preflighted == []
+    assert docker_ok["started"] == []
+
+
 def test_run_reports_health_timeout_with_logs(docker_ok, monkeypatch):
     def unhealthy(agent, health):
         raise runtime.HealthTimeout("echo did not become healthy within 30s")
@@ -221,6 +292,36 @@ def test_run_gateway_failure(docker_ok, monkeypatch):
     monkeypatch.setattr(daemon, "ensure_running", no_gateway)
     result = invoke("run", "echo")
     assert result.exit_code == 1 and "used by another program" in flat(result)
+    # The container did start before the gateway failed: it must be stopped, and the
+    # user told so, rather than left running with no gateway to reach it through.
+    assert docker_ok["stopped"] == ["echo"]
+    assert "stopped" in flat(result).lower()
+
+
+def test_first_run_notice_shown_exactly_once_across_two_runs(docker_ok):
+    first = invoke("run", "echo")
+    assert "intentionally vulnerable" in flat(first).lower()
+    assert invoke("stop", "--all").exit_code == 0
+    second = invoke("run", "echo")
+    assert second.exit_code == 0, second.output
+    assert "intentionally vulnerable" not in flat(second).lower()
+
+
+def test_run_and_pull_telemetry_payloads_contain_only_agent_and_version(
+    docker_ok, monkeypatch, tmp_path
+):
+    events = []
+    monkeypatch.setattr(
+        "humanbound_cli.commands.arena.telemetry.capture",
+        lambda event, properties=None: events.append((event, properties)),
+    )
+    assert invoke("run", "echo").exit_code == 0
+    monkeypatch.setattr(runtime, "pull", lambda m, d: None)
+    assert invoke("pull", "echo").exit_code == 0
+    assert events == [
+        ("arena_run", {"agent": "echo", "version": "0.1.0"}),
+        ("arena_pull", {"agent": "echo", "version": "0.1.0"}),
+    ]
 
 
 def test_ps_endpoint_and_stop_all(docker_ok):
@@ -264,6 +365,17 @@ def test_stop_when_docker_is_down(docker_ok, monkeypatch):
         result = invoke("stop", *args)
         assert result.exit_code == 1 and "not running" in flat(result)
         assert "Docker" in flat(result)
+
+
+def test_stop_all_stops_gateway_even_when_docker_is_down(docker_ok, monkeypatch):
+    def down():
+        raise runtime.DockerError(runtime.DOCKER_DOWN)
+
+    monkeypatch.setattr(runtime, "list_running", down)
+    result = invoke("stop", "--all")
+    assert result.exit_code == 1
+    assert "Docker" in flat(result)
+    assert docker_ok["gateway"] == ["stopped"]
 
 
 def test_logs_streams_from_runtime(docker_ok, monkeypatch):
@@ -316,6 +428,7 @@ def test_rm_unknown_or_invalid_agent(docker_ok):
 
 def test_serve_warns_on_non_loopback(arena_env, monkeypatch):
     served = []
+    monkeypatch.setattr(daemon, "is_up", lambda port: False)
     monkeypatch.setattr(daemon, "serve", lambda host, port: served.append((host, port)))
     result = invoke("serve", "--host", "0.0.0.0", "--port", "12000")
     assert "reachable from your network" in flat(result)
@@ -324,10 +437,28 @@ def test_serve_warns_on_non_loopback(arena_env, monkeypatch):
 
 def test_serve_loopback_is_quiet(arena_env, monkeypatch):
     served = []
+    monkeypatch.setattr(daemon, "is_up", lambda port: False)
     monkeypatch.setattr(daemon, "serve", lambda host, port: served.append((host, port)))
     result = invoke("serve")
     assert "reachable from your network" not in flat(result)
     assert served == [("127.0.0.1", None)]
+
+
+def test_serve_help_documents_hb_arena_port(arena_env):
+    out = invoke("serve", "--help").output
+    assert "HB_ARENA_PORT" in out and "11500" in out
+
+
+def test_serve_refuses_when_a_gateway_is_already_running(arena_env, monkeypatch):
+    monkeypatch.setattr(daemon, "is_up", lambda port: True)
+    served = []
+    monkeypatch.setattr(daemon, "serve", lambda host, port: served.append((host, port)))
+    result = invoke("serve", "--port", "11500")
+    assert result.exit_code == 1
+    out = flat(result)
+    assert "already running on port 11500" in out
+    assert "hb arena stop --all" in out
+    assert served == []
 
 
 def test_rm_removes_a_corrupt_cached_manifest(docker_ok, arena_env):

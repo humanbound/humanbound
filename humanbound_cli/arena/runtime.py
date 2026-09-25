@@ -134,7 +134,8 @@ def _docker(
         ) from None
     if check and proc.returncode != 0:
         detail = (proc.stderr or "").strip()[:500]
-        raise DockerError(f"'docker {' '.join(args[:2])}' failed: {detail}")
+        prefix = f"'docker {' '.join(args[:2])}' failed"
+        raise DockerError(f"{prefix}: {detail}" if detail else f"{prefix} (see the output above)")
     return proc
 
 

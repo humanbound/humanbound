@@ -478,3 +478,13 @@ def test_docker_timeout_becomes_docker_error(monkeypatch):
     monkeypatch.setattr(runtime, "_run", hang)
     with pytest.raises(DockerError, match="did not respond within 15"):
         runtime.list_running()
+
+
+def test_docker_error_with_no_captured_output_has_no_dangling_colon(monkeypatch):
+    def uncaptured(argv, capture, env=None, timeout=None):
+        assert capture is False
+        return subprocess.CompletedProcess(argv, 1, None, None)
+
+    monkeypatch.setattr(runtime, "_run", uncaptured)
+    with pytest.raises(DockerError, match=r"failed \(see the output above\)$"):
+        runtime._docker("pull", "some/image", capture=False)

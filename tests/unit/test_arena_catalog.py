@@ -64,6 +64,25 @@ def test_fetch_manifest_rejects_index_manifest_mismatch(local_catalog):
         catalog.fetch_manifest(entry, loaded.location)
 
 
+def test_read_manifest_does_not_write_to_disk(local_catalog, arena_home):
+    loaded = catalog.load_index()
+    entry = catalog.resolve(loaded.index, "echo")
+    manifest = catalog.read_manifest(entry, loaded.location)
+    assert manifest.id == "echo"
+    assert manifest.version == "0.1.0"
+    assert catalog.installed("echo") is None
+    assert catalog.list_installed() == []
+    assert not (arena_home / "agents").exists()
+
+
+def test_read_manifest_rejects_index_manifest_mismatch(local_catalog, arena_home):
+    loaded = catalog.load_index()
+    entry = catalog.resolve(loaded.index, "echo:0.0.9")  # manifest file says 0.1.0
+    with pytest.raises(CatalogError, match="mismatch"):
+        catalog.read_manifest(entry, loaded.location)
+    assert catalog.installed("echo") is None
+
+
 def test_remove_installed(local_catalog):
     loaded = catalog.load_index()
     catalog.fetch_manifest(catalog.resolve(loaded.index, "echo"), loaded.location)

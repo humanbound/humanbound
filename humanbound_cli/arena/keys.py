@@ -36,7 +36,7 @@ def config_file() -> Path:
 
 def parse_env_file(path: Path) -> dict[str, str]:
     values: dict[str, str] = {}
-    for raw in Path(path).read_text().splitlines():
+    for raw in Path(path).read_text(encoding="utf-8").splitlines():
         line = raw.strip()
         if not line or line.startswith("#"):
             continue

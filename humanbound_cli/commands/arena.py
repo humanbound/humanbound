@@ -9,6 +9,7 @@ imported inside the commands that need them.
 
 from __future__ import annotations
 
+import contextlib
 from pathlib import Path
 from typing import TYPE_CHECKING, NoReturn
 
@@ -74,6 +75,29 @@ def _ensure_installed(ref: str, *, refresh: bool) -> tuple[ArenaManifest, Path]:
         _fail(str(e))
 
 
+def _load_manifest_for_info(ref: str) -> ArenaManifest:
+    """The manifest for `ref`, without ever installing it.
+
+    'installed' means pulled/run, not merely browsed: unlike `_ensure_installed`,
+    this never caches a fetched manifest to disk.
+    """
+    from ..arena import catalog
+    from ..arena.manifest import ManifestError
+
+    agent_id, _, version = ref.partition(":")
+    try:
+        found = catalog.installed(agent_id, version or None)
+    except ManifestError:
+        found = None  # a corrupt cached manifest: fetch it fresh instead
+    if found:
+        return found[0]
+    loaded = _load_index()
+    try:
+        return catalog.read_manifest(catalog.resolve(loaded.index, ref), loaded.location)
+    except (catalog.CatalogError, ManifestError) as e:
+        _fail(str(e))
+
+
 def _preflight(m: ArenaManifest | None = None) -> None:
     from ..arena import runtime
 
@@ -118,6 +142,8 @@ def config_set(pairs):
             _fail(f"{key} is reserved for hb's own credentials and is never passed to agents")
         try:
             keys.set_value(key, value)
+        except (OSError, UnicodeDecodeError) as e:
+            _fail(f"cannot read {keys.config_file()}: {e}")
         except ValueError as e:
             _fail(str(e))
         _ok(f"{key} saved")
@@ -129,7 +155,10 @@ def config_get(key):
     """Show stored keys (values masked)."""
     from ..arena import keys
 
-    values = keys.read_config()
+    try:
+        values = keys.read_config()
+    except (OSError, UnicodeDecodeError) as e:
+        _fail(f"cannot read {keys.config_file()}: {e}")
     if key:
         values = {key: values[key]} if key in values else {}
     if not values:
@@ -145,7 +174,11 @@ def config_unset(key):
     """Remove a stored key."""
     from ..arena import keys
 
-    if keys.unset_value(key):
+    try:
+        removed = keys.unset_value(key)
+    except (OSError, UnicodeDecodeError) as e:
+        _fail(f"cannot read {keys.config_file()}: {e}")
+    if removed:
         _ok(f"{key} removed")
     else:
         _say(f"{key} was not set", "dim")
@@ -214,7 +247,7 @@ def info_command(ref, as_agent_yaml):
     """Show an agent's details, required keys and planted vulnerabilities."""
     import yaml
 
-    m, _ = _ensure_installed(ref, refresh=False)
+    m = _load_manifest_for_info(ref)
     if as_agent_yaml:
         click.echo(yaml.safe_dump(m.agent_yaml(), sort_keys=False, allow_unicode=True), nl=False)
         return
@@ -330,11 +363,22 @@ def _print_endpoints(agent_id: str, gateway: str) -> None:
 )
 def run_command(ref, env_file):
     """Pull (if needed), start an agent and serve it through the gateway."""
-    from ..arena import keys, runtime
+    from ..arena import daemon, keys, runtime
+    from ..arena.paths import gateway_port
 
+    # Validate the gateway port before touching Docker or the catalog, so a bad
+    # HB_ARENA_PORT fails fast instead of after a pull/start we'd have to unwind.
+    try:
+        port = gateway_port()
+    except ValueError as e:
+        _fail(str(e))
     m, agent_dir = _ensure_installed(ref, refresh=False)
     _preflight(m)
-    env, missing = keys.resolve_env(m.runtime.env.required, m.runtime.env.optional, env_file)
+    try:
+        env, missing = keys.resolve_env(m.runtime.env.required, m.runtime.env.optional, env_file)
+    except (OSError, UnicodeDecodeError, ValueError) as e:
+        path = env_file or keys.config_file()
+        _fail(f"cannot read {path}: {e}")
     if missing:
         hints = "\n".join(f"  hb arena config set {k}=..." for k in missing)
         _fail(f"{m.id} needs {', '.join(missing)}:\n{hints}")
@@ -363,7 +407,14 @@ def run_command(ref, env_file):
         _fail(f"{e} → hb arena logs {m.id}")
     except runtime.DockerError as e:
         _fail(str(e))
-    gateway = _ensure_gateway()
+    try:
+        gateway = daemon.ensure_running(port)
+    except (daemon.GatewayError, ValueError) as e:
+        # The agent is up but has no gateway to be reached through: don't leave it
+        # running unreachable, and say so.
+        with contextlib.suppress(runtime.DockerError):
+            runtime.stop(m.id, kind)
+        _fail(f"{e} (the agent was stopped)")
     telemetry.capture("arena_run", {"agent": m.id, "version": m.version})
     _ok(f"{m.id} {m.version} is running\n")
     _print_endpoints(m.id, gateway)
@@ -412,19 +463,34 @@ def logs_command(agent_id, follow, tail):
 @click.option("--all", "stop_all", is_flag=True, help="Stop every arena agent and the gateway")
 def stop_command(agent_id, stop_all):
     """Stop an agent (the gateway stops when nothing is left running)."""
-    from ..arena import runtime
+    from ..arena import daemon, runtime
 
     if not agent_id and not stop_all:
         _fail("give an agent id or --all")
-    try:
-        targets = runtime.list_running() if stop_all else [_running_or_fail(agent_id)]
-        for a in targets:
-            runtime.stop(a.id, a.kind)
-            _ok(f"{a.id} stopped")
-    except runtime.DockerError as e:
-        _fail(str(e))
-    if stop_all and not targets:
-        _say("No arena agents running.", "dim")
+    if stop_all:
+        try:
+            targets = runtime.list_running()
+        except runtime.DockerError as e:
+            # Docker being down doesn't mean the gateway is: stop it regardless, then
+            # report the docker error.
+            with contextlib.suppress(ValueError):
+                daemon.stop_gateway()
+            _fail(str(e))
+        try:
+            for a in targets:
+                runtime.stop(a.id, a.kind)
+                _ok(f"{a.id} stopped")
+        except runtime.DockerError as e:
+            _fail(str(e))
+        if not targets:
+            _say("No arena agents running.", "dim")
+    else:
+        agent = _running_or_fail(agent_id)
+        try:
+            runtime.stop(agent.id, agent.kind)
+        except runtime.DockerError as e:
+            _fail(str(e))
+        _ok(f"{agent.id} stopped")
     _stop_gateway_if_idle()
 
 
@@ -508,14 +574,30 @@ def endpoint_command(agent_id):
 @click.option("--host", default="127.0.0.1", show_default=True)
 @click.option("--port", type=int, default=None, help="Default: HB_ARENA_PORT or 11500")
 def serve_command(host, port):
-    """Run the gateway in the foreground."""
+    """Run the gateway in the foreground.
+
+    \b
+    Other commands (hb arena run/stop/reset) find the gateway via HB_ARENA_PORT
+    (default 11500): set HB_ARENA_PORT so hb arena run/stop/reset find it if you
+    serve on a non-default --port.
+    """
     from ..arena import daemon
+    from ..arena.paths import gateway_port
 
     if host not in daemon.LOOPBACK_HOSTS:
         _say(
             "Warning: arena agents are intentionally vulnerable and will be reachable "
             "from your network.",
             "yellow",
+        )
+    try:
+        resolved_port = port if port is not None else gateway_port()
+    except ValueError as e:  # a malformed HB_ARENA_PORT
+        _fail(str(e))
+    if daemon.is_up(resolved_port):
+        _fail(
+            f"a gateway is already running on port {resolved_port} → "
+            "hb arena stop --all or choose another --port"
         )
     try:
         daemon.serve(host, port)

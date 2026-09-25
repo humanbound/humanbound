@@ -65,6 +65,8 @@ def cli(ctx, base_url: str):
       hb logs                                             # View logs
       hb report -o report.html                            # Export report
       hb guardrails -o rules.yaml                         # Export rules
+      hb arena run <agent>                                # Try a vulnerable agent
+      hb test --target arena://<agent>                    # Test it (local engine, no login)
 
     \b
     Platform (with login):

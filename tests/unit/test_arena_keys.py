@@ -100,6 +100,13 @@ def test_set_accepts_inner_quotes_and_spaces(arena_home):
     assert keys.read_config() == {"OK": 'a "b" c\''}
 
 
+def test_parse_env_file_rejects_non_utf8(tmp_path):
+    f = tmp_path / "bad.env"
+    f.write_bytes(b"OPENAI_API_KEY=\xff\xfe\n")
+    with pytest.raises(UnicodeDecodeError):
+        keys.parse_env_file(f)
+
+
 def test_resolve_env_never_returns_hb_credentials(arena_home, tmp_path, monkeypatch):
     monkeypatch.setenv("HB_API_KEY", "hb-secret")
     monkeypatch.setenv("humanbound_token", "hb-token")
