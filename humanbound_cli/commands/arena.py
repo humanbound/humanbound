@@ -374,14 +374,25 @@ def run_command(ref, env_file):
         _fail(str(e))
     m, agent_dir = _ensure_installed(ref, refresh=False)
     _preflight(m)
+    # Community agents never see the shell environment: their manifest could name
+    # any variable (cloud credentials, tokens) and have it handed over.
+    allow_shell = m.origin == "first-party"
     try:
-        env, missing = keys.resolve_env(m.runtime.env.required, m.runtime.env.optional, env_file)
+        env, missing = keys.resolve_env(
+            m.runtime.env.required, m.runtime.env.optional, env_file, allow_shell=allow_shell
+        )
     except (OSError, UnicodeDecodeError, ValueError) as e:
         path = env_file or keys.config_file()
         _fail(f"cannot read {path}: {e}")
     if missing:
         hints = "\n".join(f"  hb arena config set {k}=..." for k in missing)
-        _fail(f"{m.id} needs {', '.join(missing)}:\n{hints}")
+        note = (
+            ""
+            if allow_shell
+            else "\n(the shell environment is not used for community agents; "
+            "set keys with hb arena config set or pass --env-file)"
+        )
+        _fail(f"{m.id} needs {', '.join(missing)}:\n{hints}{note}")
     # Names only: values never reach the terminal.
     _say(f"Passing keys: {', '.join(sorted(env))}" if env else "Passing no keys", "dim")
     _first_run_notice()

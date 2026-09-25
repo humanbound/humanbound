@@ -191,12 +191,15 @@ def docker_ok(arena_env, monkeypatch):
     return state
 
 
-def _with_required_key(monkeypatch, tmp_path):
+def _with_required_key(monkeypatch, tmp_path, origin="first-party"):
     """Make `catalog.installed` return an echo manifest that requires OPENAI_API_KEY."""
     from humanbound_cli.arena.manifest import load_manifest
 
     data = yaml.safe_load(ECHO_YAML.read_text())
     data["runtime"]["env"] = {"required": ["OPENAI_API_KEY"]}
+    data["origin"] = origin
+    if origin == "community":
+        data["source"]["upstream"] = {"repo": "https://github.com/x/y", "ref": "abc123"}
     manifest_path = tmp_path / "arena.yaml"
     manifest_path.write_text(yaml.safe_dump(data))
     monkeypatch.setattr(
@@ -233,6 +236,40 @@ def test_run_fails_fast_on_missing_keys(docker_ok, monkeypatch, tmp_path):
     assert result.exit_code == 1
     assert "hb arena config set OPENAI_API_KEY=" in flat(result)
     assert docker_ok["started"] == []
+
+
+def test_run_community_agent_never_reads_keys_from_the_shell(docker_ok, monkeypatch, tmp_path):
+    _with_required_key(monkeypatch, tmp_path, origin="community")
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-shell-value")
+    result = invoke("run", "echo")
+    assert result.exit_code == 1
+    out = flat(result)
+    assert "hb arena config set OPENAI_API_KEY=" in out
+    assert "shell environment is not used for community agents" in out
+    assert "sk-shell-value" not in result.output
+    assert docker_ok["started"] == []
+
+
+def test_run_community_agent_uses_arena_config(docker_ok, monkeypatch, tmp_path):
+    from humanbound_cli.arena import keys
+
+    _with_required_key(monkeypatch, tmp_path, origin="community")
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-shell-value")
+    keys.set_value("OPENAI_API_KEY", "sk-from-config")
+    result = invoke("run", "echo")
+    assert result.exit_code == 0, result.output
+    assert "Passing keys: OPENAI_API_KEY" in flat(result)
+    assert docker_ok["started"] == [("echo", {"OPENAI_API_KEY": "sk-from-config"})]
+
+
+def test_run_first_party_missing_key_hint_does_not_mention_community(
+    docker_ok, monkeypatch, tmp_path
+):
+    _with_required_key(monkeypatch, tmp_path)
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    result = invoke("run", "echo")
+    assert result.exit_code == 1
+    assert "community" not in flat(result)
 
 
 def test_run_env_file_values_reach_runtime_start(docker_ok, monkeypatch, tmp_path):

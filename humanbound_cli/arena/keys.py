@@ -113,13 +113,25 @@ def mask(value: str) -> str:
 
 
 def resolve_env(
-    required: list[str], optional: list[str], env_file: Path | None = None
+    required: list[str],
+    optional: list[str],
+    env_file: Path | None = None,
+    *,
+    allow_shell: bool,
 ) -> tuple[dict[str, str], list[str]]:
     """Collect the declared keys. Later sources win: arena.env < process env < --env-file.
 
+    With ``allow_shell=False`` (community agents) the process environment is never
+    consulted: a manifest could otherwise declare e.g. AWS_SECRET_ACCESS_KEY and
+    harvest it from the user's shell. Only arena.env and --env-file are used then.
+
     hb's own credentials (HB_*, HUMANBOUND_*) are never handed out, even if asked for.
     """
-    sources = [read_config(), dict(os.environ), parse_env_file(env_file) if env_file else {}]
+    sources = [
+        read_config(),
+        dict(os.environ) if allow_shell else {},
+        parse_env_file(env_file) if env_file else {},
+    ]
     env: dict[str, str] = {}
     for key in [*required, *optional]:
         if is_reserved(key):

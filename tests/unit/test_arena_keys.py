@@ -38,7 +38,7 @@ def test_resolve_env_precedence_and_missing(arena_home, tmp_path, monkeypatch):
     env_file.write_text("C=from-file\n")
     monkeypatch.setenv("HB_API_KEY", "never-used")
 
-    env, missing = keys.resolve_env(["A", "B", "C", "D"], ["E"], env_file)
+    env, missing = keys.resolve_env(["A", "B", "C", "D"], ["E"], env_file, allow_shell=True)
 
     assert env == {"A": "from-config", "B": "from-process", "C": "from-file"}
     assert missing == ["D"]
@@ -113,7 +113,27 @@ def test_resolve_env_never_returns_hb_credentials(arena_home, tmp_path, monkeypa
     env_file = tmp_path / "run.env"
     env_file.write_text("HB_API_KEY=from-file\n")
 
-    env, missing = keys.resolve_env(["HB_API_KEY"], ["humanbound_token"], env_file)
+    env, missing = keys.resolve_env(
+        ["HB_API_KEY"], ["humanbound_token"], env_file, allow_shell=True
+    )
 
     assert env == {}
     assert missing == ["HB_API_KEY"]
+
+
+def test_resolve_env_without_shell_ignores_the_process_environment(
+    arena_home, tmp_path, monkeypatch
+):
+    keys.set_value("A", "from-config")
+    monkeypatch.setenv("A", "from-process")
+    monkeypatch.setenv("B", "from-process")
+    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "harvest-me")
+    env_file = tmp_path / "run.env"
+    env_file.write_text("C=from-file\n")
+
+    env, missing = keys.resolve_env(
+        ["A", "B", "C", "AWS_SECRET_ACCESS_KEY"], [], env_file, allow_shell=False
+    )
+
+    assert env == {"A": "from-config", "C": "from-file"}
+    assert missing == ["B", "AWS_SECRET_ACCESS_KEY"]
