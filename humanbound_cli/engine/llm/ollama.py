@@ -48,6 +48,8 @@ class LLMPinger:
         max_tokens=DEFAULT_MAX_OUT_TOKENS,
         temperature=DEFAULT_TEMPERATURE,
     ):
+        import openai
+
         retry_counter = 0
         max_tokens = min(max_tokens, ALLOWED_MAX_OUT_TOKENS)
 
@@ -67,16 +69,28 @@ class LLMPinger:
                 if content is None:
                     return "[No content in LLM response]"
                 return content
-            except Exception as e:
-                if "rate" in str(e).lower() or "429" in str(e):
-                    retry_counter += 1
-                    if retry_counter <= MAX_RETRY_COUNTER:
-                        time.sleep(retry_counter)
-                        continue
-                    raise Exception("502/Rate limit error.")
-                if "connection" in str(e).lower():
+            except openai.RateLimitError:
+                retry_counter += 1
+                if retry_counter <= MAX_RETRY_COUNTER:
+                    time.sleep(retry_counter)
+                    continue
+                raise Exception("502/Rate limit error.")
+            except openai.APITimeoutError:
+                raise Exception(
+                    f"502/ollama at {self.endpoint} did not respond within "
+                    f"{LLM_PING_TIMEOUT}s. Try a smaller model."
+                )
+            except openai.APIConnectionError as e:
+                cause = e.__cause__
+                while cause is not None and not isinstance(cause, ConnectionRefusedError):
+                    cause = cause.__cause__ or cause.__context__
+                if cause is not None:
                     raise Exception(
                         f"Cannot connect to ollama at {self.endpoint}. "
                         f"Is ollama running? Start it with: ollama serve"
                     )
+                raise Exception(
+                    f"502/Connection to ollama at {self.endpoint} failed - {e.__cause__}"
+                )
+            except Exception as e:
                 raise Exception(f"502/Error while pinging ollama - {str(e)}")
