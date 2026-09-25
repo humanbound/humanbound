@@ -66,6 +66,7 @@ nav:
     - Adversarial Engine: methodology/adversarial-engine.md
   - 🧪 Testing:
     - Test Command: testing/test-command.md
+    - Arena: testing/arena.md
     - Collaborative Redteam [Preview]: testing/collaborative-redteam.md
     - Log Upload: testing/log-upload.md
     - Assessments: testing/assessments.md
