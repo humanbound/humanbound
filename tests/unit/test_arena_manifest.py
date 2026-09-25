@@ -115,6 +115,37 @@ def test_a2a_integration_needs_no_http_calls():
     assert parse_manifest(doc).integration.path == "/a2a"
 
 
+def test_integration_path_must_start_with_slash():
+    with pytest.raises(ManifestError, match="integration.path"):
+        parse_manifest(_with(integration={"type": "a2a", "path": "a2a"}))
+
+
+def test_http_call_endpoint_must_start_with_slash():
+    with pytest.raises(ManifestError, match="endpoint"):
+        parse_manifest(
+            _with(
+                integration__chat_completion={"endpoint": "run", "payload": {"prompt": "$PROMPT"}}
+            )
+        )
+
+
+def test_chat_completion_payload_must_contain_prompt_placeholder():
+    with pytest.raises(ManifestError, match=r"chat_completion\.payload must contain \$PROMPT"):
+        parse_manifest(
+            _with(integration__chat_completion={"endpoint": "/run", "payload": {"x": "y"}})
+        )
+
+
+def test_chat_completion_payload_prompt_placeholder_is_case_insensitive_and_nested():
+    doc = _with(
+        integration__chat_completion={
+            "endpoint": "/run",
+            "payload": {"nested": {"list": [1, "$prompt"]}},
+        }
+    )
+    assert parse_manifest(doc).integration.chat_completion.payload["nested"]["list"][1] == "$prompt"
+
+
 def test_future_schema_version_asks_for_upgrade():
     with pytest.raises(ManifestError, match="newer hb"):
         parse_manifest(_with(schema_version=SCHEMA_VERSION + 1))

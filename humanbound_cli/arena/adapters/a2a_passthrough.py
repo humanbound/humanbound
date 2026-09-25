@@ -16,17 +16,27 @@ class A2APassthrough:
         self.client = client
 
     async def forward(self, body: dict, a2a_version: str | None) -> tuple[int, dict]:
-        headers = {"A2A-Version": a2a_version} if a2a_version else {}
+        if not a2a_version:
+            from ..a2a import A2A_VERSION  # lazy: a2a.py imports adapters.http
+
+            a2a_version = A2A_VERSION
+        headers = {"A2A-Version": a2a_version}
         try:
             resp = await self.client.post(
                 self.url, json=body, headers=headers, timeout=self.timeout_s
             )
+        except httpx.ConnectError as e:
+            raise AgentError("agent_not_running", f"cannot reach the agent: {e}") from None
         except httpx.TimeoutException:
             raise AgentError(
                 "agent_timeout", f"the agent did not answer within {self.timeout_s}s"
             ) from None
-        except httpx.HTTPError as e:
-            raise AgentError("agent_not_running", f"cannot reach the agent: {e}") from None
+        except (httpx.HTTPError, httpx.InvalidURL) as e:
+            raise AgentError("agent_error", f"cannot reach the agent: {e}") from None
+        if not resp.is_success:
+            raise AgentError(
+                "agent_error", f"the agent returned HTTP {resp.status_code}: {resp.text[:300]}"
+            )
         try:
             return resp.status_code, resp.json()
         except ValueError:

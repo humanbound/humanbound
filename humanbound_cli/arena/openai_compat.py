@@ -1,7 +1,10 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (c) 2024-2026 Humanbound
 """OpenAI Chat Completions façade, so eval tools (promptfoo, garak, PyRIT) can target
-arena agents. Each request is a fresh conversation; multi-turn agents should use A2A."""
+arena agents. Each request is a fresh conversation; multi-turn agents should use A2A.
+
+System messages in `messages` are ignored: the arena agent's own system prompt comes
+from its arena.yaml, not from the caller."""
 
 from __future__ import annotations
 
@@ -27,9 +30,14 @@ def parse_chat_request(body: Any) -> tuple[str, str, list[dict]]:
     model = body.get("model") or ""
     if not isinstance(model, str) or not model.startswith("arena/") or len(model) <= len("arena/"):
         raise ValueError("model must be 'arena/<agent-id>'")
-    if body.get("stream"):
+    if body.get("stream") is True:
         raise ValueError("stream=true is not supported yet")
-    messages = [m for m in body.get("messages") or [] if isinstance(m, dict)]
+    messages_raw = body.get("messages")
+    if messages_raw is None:
+        messages_raw = []
+    if not isinstance(messages_raw, list):
+        raise ValueError("messages must be a list")
+    messages = [m for m in messages_raw if isinstance(m, dict)]
     user_indexes = [i for i, m in enumerate(messages) if m.get("role") == "user"]
     if not user_indexes:
         raise ValueError("messages must contain at least one user message")
@@ -39,7 +47,10 @@ def parse_chat_request(body: Any) -> tuple[str, str, list[dict]]:
         for m in messages[:last]
         if m.get("role") in ("user", "assistant")
     ]
-    return model[len("arena/") :], _text(messages[last].get("content")), history
+    prompt = _text(messages[last].get("content"))
+    if not prompt:
+        raise ValueError("the last user message must have non-empty text")
+    return model[len("arena/") :], prompt, history
 
 
 def chat_response(agent_id: str, text: str, metadata: dict) -> dict:

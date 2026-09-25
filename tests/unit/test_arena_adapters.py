@@ -53,6 +53,36 @@ def test_fill_endpoint_and_extract_path():
         extract_path(data, "choices.5.message")
 
 
+def test_fill_endpoint_matches_whole_identifiers_only():
+    # "$thread" must not also match inside "$thread_id".
+    assert fill_endpoint("/t/$thread_id/chat", {"thread": "X", "thread_id": "Y"}) == "/t/Y/chat"
+
+
+def test_fill_endpoint_leaves_unknown_keys_untouched():
+    assert fill_endpoint("/t/$missing/chat", {"thread_id": "Y"}) == "/t/$missing/chat"
+
+
+def test_fill_endpoint_only_substitutes_str_int_float_not_bool():
+    assert fill_endpoint("/t/$n/x", {"n": 3}) == "/t/3/x"
+    assert fill_endpoint("/t/$n/x", {"n": 1.5}) == "/t/1.5/x"
+    assert fill_endpoint("/t/$n/x", {"n": True}) == "/t/$n/x"
+
+
+def test_fill_endpoint_encodes_by_default():
+    assert fill_endpoint("/t/$v/x", {"v": "a/b?c"}) == "/t/a%2Fb%3Fc/x"
+
+
+def test_fill_endpoint_can_skip_encoding():
+    assert fill_endpoint("/t/$v/x", {"v": "a/b?c"}, encode=False) == "/t/a/b?c/x"
+
+
+def test_extract_path_rejects_non_ascii_digit_list_indexes():
+    # "¹" (superscript one) is .isdigit() but not ascii; must not be treated as an index.
+    data = {"items": ["a", "b"]}
+    with pytest.raises(KeyError):
+        extract_path(data, "items.¹")
+
+
 def _integration(**kw):
     base = {
         "type": "http",
@@ -142,6 +172,19 @@ def test_agent_failures_map_to_codes(handler, code):
     assert exc.value.code == code
 
 
+def test_none_extracted_text_is_unextractable_response():
+    def handler(request):
+        return httpx.Response(200, json={"reply": None})
+
+    async def go():
+        async with client_for(handler) as c:
+            await HttpAdapter(_integration(), "http://agent", 5, c).send({}, "hi", [])
+
+    with pytest.raises(AgentError) as exc:
+        run(go())
+    assert exc.value.code == "unextractable_response"
+
+
 def test_timeout_and_unreachable_map_to_codes():
     def timeout(request):
         raise httpx.ReadTimeout("slow")
@@ -177,3 +220,79 @@ def test_a2a_passthrough_forwards_body_and_version_header():
     status, data = run(go())
     assert status == 200 and data["id"] == 1
     assert seen == {"path": "/a2a", "version": "1.0"}
+
+
+def test_a2a_passthrough_defaults_version_header_when_falsy():
+    seen = {}
+
+    def handler(request):
+        seen["version"] = request.headers.get("A2A-Version")
+        return httpx.Response(200, json={"jsonrpc": "2.0", "id": 1, "result": {}})
+
+    async def go():
+        async with client_for(handler) as c:
+            return await A2APassthrough("http://agent", "/a2a", 5, c).forward(
+                {"jsonrpc": "2.0", "id": 1, "method": "SendMessage"}, None
+            )
+
+    run(go())
+    assert seen["version"] == "1.0"
+
+
+def test_a2a_passthrough_non_success_maps_to_agent_error():
+    def handler(request):
+        return httpx.Response(502, text="bad gateway upstream")
+
+    async def go():
+        async with client_for(handler) as c:
+            await A2APassthrough("http://agent", "/a2a", 5, c).forward(
+                {"jsonrpc": "2.0", "id": 1, "method": "SendMessage"}, "1.0"
+            )
+
+    with pytest.raises(AgentError) as exc:
+        run(go())
+    assert exc.value.code == "agent_error"
+    assert "502" in str(exc.value)
+
+
+def test_a2a_passthrough_non_json_2xx_is_unextractable_response():
+    def handler(request):
+        return httpx.Response(200, text="not json")
+
+    async def go():
+        async with client_for(handler) as c:
+            await A2APassthrough("http://agent", "/a2a", 5, c).forward(
+                {"jsonrpc": "2.0", "id": 1, "method": "SendMessage"}, "1.0"
+            )
+
+    with pytest.raises(AgentError) as exc:
+        run(go())
+    assert exc.value.code == "unextractable_response"
+
+
+def test_a2a_passthrough_connect_error_maps_to_agent_not_running():
+    def handler(request):
+        raise httpx.ConnectError("refused")
+
+    async def go():
+        async with client_for(handler) as c:
+            await A2APassthrough("http://agent", "/a2a", 5, c).forward(
+                {"jsonrpc": "2.0", "id": 1, "method": "SendMessage"}, "1.0"
+            )
+
+    with pytest.raises(AgentError) as exc:
+        run(go())
+    assert exc.value.code == "agent_not_running"
+
+
+def test_call_conversation_defaults_to_none_and_works():
+    def handler(request):
+        return httpx.Response(200, json={"reply": "ok"})
+
+    async def go():
+        async with client_for(handler) as c:
+            adapter = HttpAdapter(_integration(), "http://agent", 5, c)
+            return await adapter._call(_integration().chat_completion, {}, "hi")
+
+    data = run(go())
+    assert data == {"reply": "ok"}

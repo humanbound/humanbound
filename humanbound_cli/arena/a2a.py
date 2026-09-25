@@ -78,7 +78,7 @@ def agent_card(m: ArenaManifest, url: str) -> dict:
                 "id": m.id,
                 "name": m.name,
                 "description": m.agent.scope.business.strip(),
-                "tags": list(m.tags),
+                "tags": list(m.tags) if m.tags else [m.id],
             }
         ],
     }
@@ -98,7 +98,15 @@ def check_version(header: str | None) -> None:
 def parse_envelope(body: Any) -> tuple[Any, str, Any]:
     if not isinstance(body, dict) or body.get("jsonrpc") != "2.0" or "method" not in body:
         raise RpcError(INVALID_REQUEST, "Request payload validation error")
-    return body.get("id"), body["method"], body.get("params")
+    if "id" not in body:
+        raise RpcError(INVALID_REQUEST, "notifications are not supported; include an id")
+    rpc_id = body["id"]
+    if isinstance(rpc_id, bool) or not isinstance(rpc_id, (str, int, float)):
+        raise RpcError(INVALID_REQUEST, "id must be a string, integer, or number")
+    method = body["method"]
+    if not isinstance(method, str):
+        raise RpcError(INVALID_REQUEST, "method must be a string")
+    return rpc_id, method, body.get("params")
 
 
 def parse_message(params: Any) -> IncomingMessage:
@@ -113,10 +121,16 @@ def parse_message(params: Any) -> IncomingMessage:
     texts = [p["text"] for p in parts if isinstance(p, dict) and isinstance(p.get("text"), str)]
     if len(texts) != len(parts):
         raise RpcError(CONTENT_TYPE_NOT_SUPPORTED, "only text parts are supported")
+    context_id = msg.get("contextId")
+    if context_id is not None and not isinstance(context_id, str):
+        raise RpcError(INVALID_PARAMS, "params.message.contextId must be a string")
+    message_id = msg.get("messageId")
+    if message_id is not None and not isinstance(message_id, str):
+        raise RpcError(INVALID_PARAMS, "params.message.messageId must be a string")
     return IncomingMessage(
         text="\n".join(texts),
-        context_id=msg.get("contextId") or None,
-        message_id=msg.get("messageId") or uuid.uuid4().hex,
+        context_id=context_id or None,
+        message_id=message_id or uuid.uuid4().hex,
     )
 
 
@@ -155,20 +169,51 @@ def from_agent_error(e: AgentError) -> RpcError:
     return RpcError(code, str(e), http_status=status, reason=reason)
 
 
-def reply_text(result: Any) -> str:
-    """Text of a SendMessage result, whether the agent answered with a Message or a Task."""
+def reply_text(body: Any) -> str:
+    """Text of a whole JSON-RPC SendMessage response body (Message or Task result).
+
+    Raises AgentError('agent_error', ...) if the body carries a JSON-RPC `error`, and
+    AgentError('unextractable_response', ...) if `result` is missing, not a dict, or
+    otherwise malformed. Every level is isinstance-guarded so a malformed agent
+    response never raises AttributeError/TypeError/KeyError here.
+    """
+    if not isinstance(body, dict):
+        raise AgentError("unextractable_response", f"malformed A2A response: {str(body)[:300]}")
+    error = body.get("error")
+    if error is not None:
+        code = error.get("code") if isinstance(error, dict) else None
+        message = error.get("message") if isinstance(error, dict) else error
+        raise AgentError("agent_error", f"agent returned A2A error {code}: {message}")
+    result = body.get("result")
     if not isinstance(result, dict):
-        return ""
+        raise AgentError(
+            "unextractable_response", f"A2A response has no 'result': {str(body)[:300]}"
+        )
+
+    def _parts_of(obj: Any) -> list:
+        parts = obj.get("parts") if isinstance(obj, dict) else None
+        return parts if isinstance(parts, list) else []
+
     task = result.get("task")
     if isinstance(task, dict):
-        parts = [p for art in task.get("artifacts") or [] for p in art.get("parts") or []]
+        artifacts = task.get("artifacts")
+        parts = [
+            p for art in (artifacts if isinstance(artifacts, list) else []) for p in _parts_of(art)
+        ]
         if not parts:
-            parts = ((task.get("status") or {}).get("message") or {}).get("parts") or []
+            status = task.get("status")
+            status_message = status.get("message") if isinstance(status, dict) else None
+            parts = _parts_of(status_message)
     else:
-        parts = (result.get("message") or {}).get("parts") or []
-    return "\n".join(
+        parts = _parts_of(result.get("message"))
+    text = "\n".join(
         p["text"] for p in parts if isinstance(p, dict) and isinstance(p.get("text"), str)
     )
+    if not parts:
+        raise AgentError(
+            "unextractable_response", f"A2A response has no text parts: {str(body)[:300]}"
+        )
+    return text
 
 
 def send_message_body(text: str, context_id: str | None = None) -> dict:

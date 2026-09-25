@@ -33,6 +33,20 @@ def test_context_store_evicts_oldest_beyond_capacity():
     assert fresh.started is False  # evicted, so a new empty context
 
 
+def test_context_store_get_or_create_is_lru_touch_on_hit():
+    store = ContextStore(max_items=2)
+    first, first_ctx = store.get_or_create("echo", None)
+    second, _ = store.get_or_create("echo", None)
+    # touch `first` so it becomes the most-recently-used, not `second`.
+    store.get_or_create("echo", first)
+    store.get_or_create("echo", None)  # third entry evicts the LRU one, which is now `second`
+    assert len(store) == 2
+    _, still_there = store.get_or_create("echo", first)
+    assert still_there is first_ctx  # not evicted
+    _, evicted = store.get_or_create("echo", second)
+    assert evicted.started is False  # was evicted, so a fresh context
+
+
 def test_agent_card_fields():
     card = a2a.agent_card(ECHO, "http://127.0.0.1:11500/a2a/echo")
     assert card["name"] == "Echo"
@@ -48,6 +62,12 @@ def test_agent_card_fields():
     assert card["defaultInputModes"] == ["text/plain"]
     assert card["skills"][0]["id"] == "echo"
     assert "Intentionally vulnerable" in card["description"]
+
+
+def test_agent_card_skill_tags_fall_back_to_agent_id_when_no_tags():
+    untagged = ECHO.model_copy(update={"tags": []})
+    card = a2a.agent_card(untagged, "http://127.0.0.1:11500/a2a/echo")
+    assert card["skills"][0]["tags"] == [untagged.id]
 
 
 def test_parse_envelope_and_message():
@@ -76,12 +96,31 @@ def test_parse_envelope_and_message():
         ([], a2a.INVALID_REQUEST),
         ({"jsonrpc": "1.0", "method": "SendMessage"}, a2a.INVALID_REQUEST),
         ({"jsonrpc": "2.0", "id": 1}, a2a.INVALID_REQUEST),
+        ({"jsonrpc": "2.0", "method": "SendMessage"}, a2a.INVALID_REQUEST),
+        ({"jsonrpc": "2.0", "method": "SendMessage", "id": True}, a2a.INVALID_REQUEST),
+        ({"jsonrpc": "2.0", "method": "SendMessage", "id": []}, a2a.INVALID_REQUEST),
+        ({"jsonrpc": "2.0", "method": "SendMessage", "id": None}, a2a.INVALID_REQUEST),
+        ({"jsonrpc": "2.0", "method": 5, "id": 1}, a2a.INVALID_REQUEST),
     ],
 )
 def test_bad_envelopes(body, code):
     with pytest.raises(a2a.RpcError) as exc:
         a2a.parse_envelope(body)
     assert exc.value.code == code
+
+
+def test_missing_id_says_notifications_not_supported():
+    with pytest.raises(a2a.RpcError) as exc:
+        a2a.parse_envelope({"jsonrpc": "2.0", "method": "SendMessage"})
+    assert "notifications are not supported" in exc.value.message
+
+
+def test_parse_envelope_accepts_int_str_and_float_ids():
+    for rpc_id in (1, "abc", 1.5):
+        got_id, method, _ = a2a.parse_envelope(
+            {"jsonrpc": "2.0", "id": rpc_id, "method": "SendMessage"}
+        )
+        assert got_id == rpc_id and method == "SendMessage"
 
 
 @pytest.mark.parametrize(
@@ -100,6 +139,19 @@ def test_bad_messages(params, code):
     with pytest.raises(a2a.RpcError) as exc:
         a2a.parse_message(params)
     assert exc.value.code == code
+
+
+@pytest.mark.parametrize(
+    "params",
+    [
+        {"message": {"role": "ROLE_USER", "parts": [{"text": "x"}], "contextId": 5}},
+        {"message": {"role": "ROLE_USER", "parts": [{"text": "x"}], "messageId": 5}},
+    ],
+)
+def test_context_id_and_message_id_must_be_strings(params):
+    with pytest.raises(a2a.RpcError) as exc:
+        a2a.parse_message(params)
+    assert exc.value.code == a2a.INVALID_PARAMS
 
 
 def test_check_version_accepts_missing_and_1_0_rejects_others():
@@ -134,12 +186,43 @@ def test_agent_errors_map_to_json_rpc_and_http_status():
 
 
 def test_reply_text_from_message_or_task():
-    assert a2a.reply_text({"message": {"parts": [{"text": "a"}, {"text": "b"}]}}) == "a\nb"
-    task = {"task": {"artifacts": [{"parts": [{"text": "from artifact"}]}]}}
+    assert (
+        a2a.reply_text({"result": {"message": {"parts": [{"text": "a"}, {"text": "b"}]}}}) == "a\nb"
+    )
+    task = {"result": {"task": {"artifacts": [{"parts": [{"text": "from artifact"}]}]}}}
     assert a2a.reply_text(task) == "from artifact"
-    status_only = {"task": {"status": {"message": {"parts": [{"text": "from status"}]}}}}
+    status_only = {
+        "result": {"task": {"status": {"message": {"parts": [{"text": "from status"}]}}}}
+    }
     assert a2a.reply_text(status_only) == "from status"
-    assert a2a.reply_text(None) == ""
+
+
+def test_reply_text_raises_on_jsonrpc_error():
+    body = {"jsonrpc": "2.0", "id": 1, "error": {"code": -32000, "message": "boom"}}
+    with pytest.raises(AgentError) as exc:
+        a2a.reply_text(body)
+    assert exc.value.code == "agent_error"
+    assert "boom" in str(exc.value) and "-32000" in str(exc.value)
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        {"jsonrpc": "2.0", "id": 1},
+        {"jsonrpc": "2.0", "id": 1, "result": "not a dict"},
+        {"jsonrpc": "2.0", "id": 1, "result": None},
+        None,
+        "nope",
+        [],
+        {"jsonrpc": "2.0", "id": 1, "result": {"message": "not a dict"}},
+        {"jsonrpc": "2.0", "id": 1, "result": {"task": "not a dict", "message": None}},
+        {"jsonrpc": "2.0", "id": 1, "result": {"task": {"artifacts": "not a list"}}},
+    ],
+)
+def test_reply_text_raises_unextractable_on_malformed_input_without_crashing(body):
+    with pytest.raises(AgentError) as exc:
+        a2a.reply_text(body)
+    assert exc.value.code == "unextractable_response"
 
 
 def test_send_message_body_shape():

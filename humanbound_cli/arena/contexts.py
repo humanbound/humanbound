@@ -30,6 +30,10 @@ class ContextStore:
             self._items[key] = ctx
             while len(self._items) > self._max:
                 del self._items[next(iter(self._items))]
+        else:
+            # Touch on hit: move to the end so it's the most-recently-used entry.
+            del self._items[key]
+            self._items[key] = ctx
         return cid, ctx
 
     def drop_agent(self, agent_id: str) -> None:

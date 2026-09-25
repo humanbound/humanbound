@@ -35,11 +35,32 @@ def test_parses_model_last_user_message_and_prior_history():
             "stream",
         ),
         ("nope", "JSON object"),
+        ({"model": "arena/echo", "messages": "nope"}, "messages must be a list"),
+        (
+            {"model": "arena/echo", "messages": [{"role": "user", "content": ""}]},
+            "non-empty",
+        ),
+        (
+            {"model": "arena/echo", "messages": [{"role": "user", "content": []}]},
+            "non-empty",
+        ),
     ],
 )
 def test_rejects_bad_requests(body, fragment):
     with pytest.raises(ValueError, match=fragment):
         parse_chat_request(body)
+
+
+@pytest.mark.parametrize("stream_value", ["true", 1, "yes", False, None])
+def test_stream_only_rejected_when_exactly_true(stream_value):
+    agent_id, prompt, _ = parse_chat_request(
+        {
+            "model": "arena/echo",
+            "stream": stream_value,
+            "messages": [{"role": "user", "content": "hi"}],
+        }
+    )
+    assert agent_id == "echo" and prompt == "hi"
 
 
 def test_chat_response_shape():

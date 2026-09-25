@@ -10,7 +10,9 @@ from __future__ import annotations
 
 import copy
 import json
+import re
 import time
+import urllib.parse
 from dataclasses import dataclass
 from typing import Any
 
@@ -52,11 +54,21 @@ def substitute(item: Any, values: dict, prompt: str, conversation: list[dict]) -
     return item
 
 
-def fill_endpoint(endpoint: str, values: dict) -> str:
-    for key, value in values.items():
-        if isinstance(value, (str, int, float)):
-            endpoint = endpoint.replace(f"${key}", str(value))
-    return endpoint
+_PLACEHOLDER = re.compile(r"\$([A-Za-z_][A-Za-z0-9_]*)")
+
+
+def fill_endpoint(endpoint: str, values: dict, *, encode: bool = True) -> str:
+    def replace(match: re.Match) -> str:
+        key = match.group(1)
+        if key not in values:
+            return match.group(0)
+        value = values[key]
+        if isinstance(value, bool) or not isinstance(value, (str, int, float)):
+            return match.group(0)
+        text = str(value)
+        return urllib.parse.quote(text, safe="") if encode else text
+
+    return _PLACEHOLDER.sub(replace, endpoint)
 
 
 def extract_path(obj: Any, dotted: str) -> Any:
@@ -64,7 +76,12 @@ def extract_path(obj: Any, dotted: str) -> Any:
     for part in dotted.split("."):
         if isinstance(current, dict) and part in current:
             current = current[part]
-        elif isinstance(current, list) and part.isdigit() and int(part) < len(current):
+        elif (
+            isinstance(current, list)
+            and part.isascii()
+            and part.isdigit()
+            and int(part) < len(current)
+        ):
             current = current[int(part)]
         else:
             raise KeyError(dotted)
@@ -81,19 +98,26 @@ class HttpAdapter:
         self.client = client
 
     async def _call(
-        self, call: HttpCall, values: dict, prompt: str = "", conversation: list[dict] = ()
+        self,
+        call: HttpCall,
+        values: dict,
+        prompt: str = "",
+        conversation: list[dict] | None = None,
     ) -> Any:
-        url = self.base_url + fill_endpoint(call.endpoint, values)
-        headers = {k: fill_endpoint(v, values) for k, v in call.headers.items()}
-        body = substitute(copy.deepcopy(call.payload), values, prompt, list(conversation))
+        conversation = list(conversation) if conversation is not None else []
+        url = self.base_url + fill_endpoint(call.endpoint, values, encode=True)
+        headers = {k: fill_endpoint(v, values, encode=False) for k, v in call.headers.items()}
+        body = substitute(copy.deepcopy(call.payload), values, prompt, conversation)
         try:
             resp = await self.client.post(url, json=body, headers=headers, timeout=self.timeout_s)
+        except httpx.ConnectError as e:
+            raise AgentError("agent_not_running", f"cannot reach the agent: {e}") from None
         except httpx.TimeoutException:
             raise AgentError(
                 "agent_timeout", f"the agent did not answer within {self.timeout_s}s"
             ) from None
-        except httpx.HTTPError as e:
-            raise AgentError("agent_not_running", f"cannot reach the agent: {e}") from None
+        except (httpx.HTTPError, httpx.InvalidURL) as e:
+            raise AgentError("agent_error", f"cannot reach the agent: {e}") from None
         if not resp.is_success:
             raise AgentError(
                 "agent_error", f"the agent returned HTTP {resp.status_code}: {resp.text[:300]}"
@@ -125,6 +149,11 @@ class HttpAdapter:
                 "unextractable_response",
                 f"reply path '{mapping.text}' not found in the agent response: {str(data)[:300]}",
             ) from None
+        if text is None:
+            raise AgentError(
+                "unextractable_response",
+                f"reply path '{mapping.text}' was null in the agent response: {str(data)[:300]}",
+            )
         tool_calls = None
         if mapping.tool_calls:
             try:

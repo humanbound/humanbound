@@ -131,10 +131,27 @@ class Runtime(_Strict):
     timeout_s: int = Field(default=120, gt=0)
 
 
+def _contains_prompt_placeholder(value: Any) -> bool:
+    if isinstance(value, str):
+        return value.lower() == "$prompt"
+    if isinstance(value, dict):
+        return any(_contains_prompt_placeholder(v) for v in value.values())
+    if isinstance(value, list):
+        return any(_contains_prompt_placeholder(v) for v in value)
+    return False
+
+
 class HttpCall(_Strict):
     endpoint: str
     headers: dict[str, str] = Field(default_factory=dict)
     payload: Any = Field(default_factory=dict)
+
+    @field_validator("endpoint")
+    @classmethod
+    def _absolute_endpoint(cls, value: str) -> str:
+        if not value.startswith("/"):
+            raise ValueError("endpoint must start with '/'")
+        return value
 
 
 class ResponseMap(_Strict):
@@ -150,10 +167,20 @@ class Integration(_Strict):
     response: ResponseMap | None = None
     history: Literal["none", "gateway", "agent"] = "none"
 
+    @field_validator("path")
+    @classmethod
+    def _absolute_path(cls, value: str) -> str:
+        if not value.startswith("/"):
+            raise ValueError("integration.path must start with '/'")
+        return value
+
     @model_validator(mode="after")
     def _http_needs_calls(self) -> Integration:
         if self.type == "http" and (self.chat_completion is None or self.response is None):
             raise ValueError("integration type 'http' needs 'chat_completion' and 'response'")
+        if self.type == "http" and self.chat_completion is not None:
+            if not _contains_prompt_placeholder(self.chat_completion.payload):
+                raise ValueError("chat_completion.payload must contain $PROMPT")
         return self
 
 
