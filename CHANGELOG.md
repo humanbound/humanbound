@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **A conversation the judge cannot assess now counts against the result.**
+  When the judge's verdict could not be parsed (for example, the judge model
+  refused) or the judge call failed, the conversation was dropped from the
+  posture grade and `--fail-on`, so a run whose breaches all went unjudged
+  scored a clean A and passed the gate. In local runs of every orchestrator
+  (OWASP agentic, OWASP single-turn and behavioural QA), such a conversation
+  is now logged with `fail_category: "judge_error"` (`result` stays
+  `"error"`), counts as not defended in the posture grade and the HTML
+  report's Defense Rate, and makes `--fail-on` exit `1` at any threshold.
+  Other errors are unchanged, and the results panel
+  warns that they are left out of the grade. If your judge model sometimes
+  returns malformed verdicts, a gated build that passed before may now fail.
+  (#74)
+
 ### Fixed
 - **Ollama errors no longer claim the server is down when it is not.** The
   provider showed "Is ollama running?" for any error whose text contained

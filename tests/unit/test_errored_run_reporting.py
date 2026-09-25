@@ -60,6 +60,7 @@ def test_all_errored_truth_table(stats, expected):
 _CLEAN = {"total": 3, "pass": 3, "fail": 0, "error": 0}
 _ALL_ERRORED = {"total": 3, "pass": 0, "fail": 0, "error": 3}
 _HIGH_INSIGHT = [{"result": "fail", "severity": "high", "explanation": "x"}]
+_UNJUDGED = {"total": 4, "pass": 3, "fail": 0, "error": 1, "unjudged": 1}
 
 
 @pytest.mark.parametrize(
@@ -75,6 +76,9 @@ _HIGH_INSIGHT = [{"result": "fail", "severity": "high", "explanation": "x"}]
         (_CLEAN, _HIGH_INSIGHT, "Failed", "high", EXIT_RUN_FAILED),  # Failed wins over fail-on
         ({"total": 5, "pass": 2, "fail": 0, "error": 3}, None, "Finished", "", EXIT_OK),  # partial
         ({"total": 2, "pass": 1, "fail": 1, "error": 0}, None, "Failed", "", EXIT_RUN_FAILED),
+        (_UNJUDGED, None, "Finished", "critical", EXIT_FINDINGS),  # may hide a finding
+        (_UNJUDGED, None, "Finished", "", EXIT_OK),  # no gate, no change
+        ({**_UNJUDGED, "unjudged": 0}, None, "Finished", "high", EXIT_OK),  # other errors only
     ],
 )
 def test_resolve_exit_policy(stats, insights, final_status, fail_on, expected):
@@ -109,14 +113,25 @@ def test_panel_warns_and_goes_red_when_all_errored():
     assert "NOT a passing result" in body
 
 
-def test_panel_shows_errored_line_without_warning_on_partial_errors():
+def test_panel_warns_that_partial_errors_are_left_out_of_the_grade():
     stats = {"total": 5, "pass": 2, "fail": 0, "error": 3}
-    title, lines, border = _build_results_panel(_result(stats), Posture(), all_errored=False)
+    title, lines, border = _build_results_panel(
+        _result(stats), Posture(overall_score=100.0, grade="A"), all_errored=False
+    )
     body = "\n".join(lines)
     assert title == "Experiment Complete"
     assert border == "green"
     assert "Errored:[/yellow] 3" in body
+    assert "3 conversation(s) errored and are left out of the posture grade" in body
     assert "No conversations completed" not in body
+
+
+def test_panel_separates_unjudged_from_other_errors():
+    stats = {"total": 6, "pass": 3, "fail": 0, "error": 3, "unjudged": 2}
+    _, lines, _ = _build_results_panel(_result(stats), Posture(), all_errored=False)
+    body = "\n".join(lines)
+    assert "2 conversation(s) could not be judged" in body
+    assert "1 conversation(s) errored and are left out" in body
 
 
 def test_panel_is_clean_on_a_normal_pass():
@@ -127,6 +142,7 @@ def test_panel_is_clean_on_a_normal_pass():
     assert title == "Experiment Complete"
     assert border == "green"
     assert "Errored" not in body
+    assert "left out of the posture grade" not in body
     assert "Posture Grade" in body
 
 

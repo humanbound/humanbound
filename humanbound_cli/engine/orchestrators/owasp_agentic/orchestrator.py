@@ -13,7 +13,8 @@ from concurrent.futures import ThreadPoolExecutor, wait
 
 from ...bot import Bot, Telemetry
 from ...callbacks import EngineCallbacks, log_buffer_len
-from ...schemas import LogsAnonymous, Status
+from ...schemas import JUDGE_ERROR_CATEGORY, LogsAnonymous, Status
+from ..base import JudgeError
 from .config import TestingConfiguration
 from .generator import Conversationer, Synthesizer
 from .judge import Judge
@@ -87,7 +88,10 @@ async def __do_single_pipeline_run(
                     }
                 )
 
-        analysis = judge.evaluate(conversation, telemetry_data=telemetry_data)
+        try:
+            analysis = judge.evaluate(conversation, telemetry_data=telemetry_data)
+        except Exception as e:
+            raise JudgeError(str(e)) from e
 
         # Debug: emit verdict
         if callbacks and callbacks.on_verdict.__code__ != (lambda x: None).__code__:
@@ -156,7 +160,7 @@ async def __do_single_pipeline_run(
                 response="",
                 result="error",
                 gen_category=test_sub_category,
-                fail_category="exception",
+                fail_category=JUDGE_ERROR_CATEGORY if isinstance(e, JudgeError) else "exception",
                 explanation=ex,
                 severity=100,
                 confidence=100,

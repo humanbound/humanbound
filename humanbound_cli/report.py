@@ -181,12 +181,14 @@ def generate_html_report(experiment, logs):
     total = stats.get("total", stats.get("pass", 0) + stats.get("fail", 0))
     passed = stats.get("pass", stats.get("pass_", 0))
     failed = stats.get("fail", 0)
+    unjudged = stats.get("unjudged", 0)
 
     posture_score = posture_data.get("posture", 0) if posture_data else 0
     posture_grade = (
         posture_data.get("grade", _score_to_grade(posture_score)) if posture_data else "F"
     )
-    defense_rate = (passed / (passed + failed)) if (passed + failed) > 0 else 0
+    assessed = passed + failed + unjudged
+    defense_rate = (passed / assessed) if assessed > 0 else 0
 
     # ── Build report body ──────────────────────────────────
 

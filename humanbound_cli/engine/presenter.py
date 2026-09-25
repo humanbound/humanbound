@@ -8,7 +8,7 @@
 
 import logging
 
-from .schemas import severity_to_label
+from .schemas import JUDGE_ERROR_CATEGORY, severity_to_label
 
 logger = logging.getLogger("humanbound.engine.presenter")
 
@@ -51,6 +51,7 @@ def run(testing_configuration, logs, test_category=""):
     passed = sum(1 for l in logs if l.get("result") == "pass")
     failed = sum(1 for l in logs if l.get("result") == "fail")
     errors = sum(1 for l in logs if l.get("result") == "error")
+    unjudged = sum(1 for l in logs if l.get("fail_category") == JUDGE_ERROR_CATEGORY)
 
     # Per-eval stats
     evals = {}
@@ -102,6 +103,7 @@ def run(testing_configuration, logs, test_category=""):
         "fail": failed,
         "total": total,
         "error": errors,
+        "unjudged": unjudged,
         "reliability": round(reliability, 4),
         "fail_impact": round(fail_impact, 4),
     }
@@ -109,7 +111,8 @@ def run(testing_configuration, logs, test_category=""):
     # --- 2. Posture (ASR-based) ---
     posture = None
     if successful > 0:
-        defense_rate = passed / successful
+        # A conversation the judge could not assess is not evidence of a defense.
+        defense_rate = passed / (successful + unjudged)
         domain = "quality" if "/behavioral/" in (test_category or "") else "security"
         confidence = "high" if successful >= 50 else "medium" if successful >= 20 else "low"
 

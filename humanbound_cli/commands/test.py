@@ -24,7 +24,7 @@ console = Console()
 # The 1 vs 2 split follows the grep/pytest convention: "the scan ran and found
 # something" is a different condition than "the scan itself could not run".
 EXIT_OK = 0  # scan completed; no --fail-on condition met
-EXIT_FINDINGS = 1  # scan completed; --fail-on condition matched
+EXIT_FINDINGS = 1  # scan completed; --fail-on condition matched or a conversation went unjudged
 EXIT_RUN_FAILED = 2  # scan failed: run status Failed, or no conversation completed
 
 # Local-mode fallback when no --test-category is given. Platform mode sends
@@ -363,7 +363,8 @@ def test_command(
     \b
     Exit codes:
       0  scan completed; no --fail-on condition met
-      1  scan completed; the --fail-on condition matched
+      1  scan completed; the --fail-on condition matched, or (with --fail-on)
+         a conversation could not be judged
       2  scan failed: run status Failed, or no conversation completed
     """
     # Resolve shorthand flags — explicit --test-category wins; --quick/--deep/
@@ -880,7 +881,8 @@ def _resolve_exit(result: TestResult, final_status: str, fail_on: str) -> tuple[
     Checked in severity order: a run that failed outright — or where every
     conversation errored, i.e. nothing was actually tested — is a scan failure
     (EXIT_RUN_FAILED) regardless of --fail-on, which only inspects insight
-    severity and sees nothing in either case.
+    severity and sees nothing in either case. With --fail-on, a conversation
+    the judge could not assess also fails the run: it may hide a finding.
     """
     if final_status == "Failed":
         if (result.stats or {}).get("total", 0):
@@ -890,6 +892,12 @@ def _resolve_exit(result: TestResult, final_status: str, fail_on: str) -> tuple[
         return EXIT_RUN_FAILED, "No conversations completed — treating this run as a failure."
     if fail_on and _check_fail_on(result, fail_on) != 0:
         return EXIT_FINDINGS, f"Failing due to --fail-on={fail_on} condition"
+    unjudged = (result.stats or {}).get("unjudged", 0) or 0
+    if fail_on and unjudged:
+        return (
+            EXIT_FINDINGS,
+            f"Failing due to --fail-on={fail_on}: {unjudged} conversation(s) could not be judged",
+        )
     return EXIT_OK, None
 
 
@@ -934,6 +942,21 @@ def _build_results_panel(
             "connectivity, then re-run.[/red]"
         )
         panel_lines.append("[dim]Inspect the failures with: hb logs[/dim]")
+    elif errored:
+        unjudged = stats.get("unjudged", 0) or 0
+        other_errors = errored - unjudged
+        panel_lines.append("")
+        if unjudged:
+            panel_lines.append(
+                f"[yellow]⚠ {unjudged} conversation(s) could not be judged. They count against "
+                "the posture grade and fail --fail-on, since they may hide a finding.[/yellow]"
+            )
+        if other_errors:
+            panel_lines.append(
+                f"[yellow]⚠ {other_errors} conversation(s) errored and are left out of the "
+                "posture grade and --fail-on, so this result may look better than it is.[/yellow]"
+            )
+        panel_lines.append("[dim]Inspect them with: hb logs[/dim]")
 
     # Posture grade (available from both runners)
     if posture.grade is not None:

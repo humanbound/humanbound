@@ -89,6 +89,10 @@ class LogEntry(BaseModel):
     meta: dict | None = {}  # telemetry data (flattened)
 
 
+# fail_category of an error log whose conversation ran but could not be judged.
+JUDGE_ERROR_CATEGORY = "judge_error"
+
+
 class LogsAnonymous(BaseModel):
     """Internal log entry — used by the orchestrator during execution. Converted to LogEntry on export."""
 
@@ -147,6 +151,7 @@ class Stats(BaseModel):
     fail: int = 0
     total: int = 0
     error: int = 0
+    unjudged: int = 0
     fail_impact: float = 0
     total_perfomance_index: float | None = 0
 
