@@ -22,6 +22,7 @@ from pydantic import (
 )
 
 from ..extractors.capabilities.types import CAPABILITY_KEYS
+from .keys import is_reserved, is_valid_name
 
 SCHEMA_VERSION = 1
 
@@ -100,10 +101,27 @@ class Health(_Strict):
     path: str = "/health"
     timeout_s: int = Field(default=60, gt=0)
 
+    @field_validator("path")
+    @classmethod
+    def _absolute_path(cls, value: str) -> str:
+        if not value.startswith("/"):
+            raise ValueError("must start with '/'")
+        return value
+
 
 class EnvSpec(_Strict):
     required: list[str] = Field(default_factory=list)
     optional: list[str] = Field(default_factory=list)
+
+    @field_validator("required", "optional")
+    @classmethod
+    def _safe_names(cls, value: list[str]) -> list[str]:
+        for name in value:
+            if not is_valid_name(name):
+                raise ValueError(f"invalid env var name {name!r}")
+            if is_reserved(name):
+                raise ValueError(f"{name} is reserved for hb's own credentials")
+        return value
 
 
 class Runtime(_Strict):

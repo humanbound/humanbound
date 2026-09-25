@@ -163,3 +163,34 @@ def test_gateway_port_rejects_non_numeric_env(monkeypatch):
     monkeypatch.setenv("HB_ARENA_PORT", "not-a-port")
     with pytest.raises(ValueError, match="HB_ARENA_PORT must be a port number, got 'not-a-port'"):
         paths.gateway_port()
+
+
+@pytest.mark.parametrize(
+    "env",
+    [
+        {"required": ["HB_API_KEY"]},
+        {"optional": ["hb_token"]},
+        {"required": ["HUMANBOUND_API_KEY"]},
+        {"optional": ["Humanbound_Session"]},
+    ],
+)
+def test_env_names_reserved_for_hb_credentials_are_rejected(env):
+    with pytest.raises(ManifestError, match="reserved for hb's own credentials"):
+        parse_manifest(_with(runtime__env=env))
+
+
+@pytest.mark.parametrize("name", ["1BAD", "A-B", "A B", "", "A=B"])
+def test_env_names_must_be_valid_identifiers(name):
+    with pytest.raises(ManifestError, match="runtime.env"):
+        parse_manifest(_with(runtime__env={"required": [name]}))
+
+
+def test_env_names_that_merely_contain_hb_are_allowed():
+    m = parse_manifest(_with(runtime__env={"required": ["OPENAI_API_KEY", "MY_HB_THING"]}))
+    assert m.runtime.env.required == ["OPENAI_API_KEY", "MY_HB_THING"]
+
+
+@pytest.mark.parametrize("path", ["health", "", "http://evil/health"])
+def test_health_path_must_start_with_slash(path):
+    with pytest.raises(ManifestError, match="runtime.health.path"):
+        parse_manifest(_with(runtime__health={"path": path}))

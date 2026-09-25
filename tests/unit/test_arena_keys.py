@@ -47,3 +47,66 @@ def test_resolve_env_precedence_and_missing(arena_home, tmp_path, monkeypatch):
 def test_mask_hides_most_of_the_value():
     assert keys.mask("short") == "****"
     assert keys.mask("sk-abcdefghijklmnop") == "sk-…mnop"
+
+
+@pytest.mark.parametrize(
+    "values",
+    [
+        {"1BAD": "x"},
+        {"A-B": "x"},
+        {"OK": "multi\nline"},
+        {"OK": "carriage\rreturn"},
+        {"OK": "nul\0byte"},
+    ],
+)
+def test_write_env_file_rejects_bad_keys_and_control_chars(tmp_path, values):
+    with pytest.raises(ValueError):
+        keys.write_env_file(tmp_path / "d" / "x.env", values)
+    assert not (tmp_path / "d" / "x.env").exists()
+
+
+def test_write_env_file_is_atomic_and_private(tmp_path, monkeypatch):
+    target = tmp_path / "d" / "x.env"
+    keys.write_env_file(target, {"A": "old"})
+    assert stat.S_IMODE(target.stat().st_mode) == 0o600
+    assert stat.S_IMODE(target.parent.stat().st_mode) == 0o700
+
+    def boom(src, dst):
+        raise OSError("disk full")
+
+    monkeypatch.setattr(keys.os, "replace", boom)
+    with pytest.raises(OSError, match="disk full"):
+        keys.write_env_file(target, {"A": "new"})
+    assert target.read_text() == "A=old\n"
+    assert [p.name for p in target.parent.iterdir()] == ["x.env"]
+
+
+def test_write_env_file_replaces_content(tmp_path):
+    target = tmp_path / "x.env"
+    keys.write_env_file(target, {"A": "1", "B": "2"})
+    keys.write_env_file(target, {"C": "3"})
+    assert target.read_text() == "C=3\n"
+    assert stat.S_IMODE(target.stat().st_mode) == 0o600
+
+
+@pytest.mark.parametrize("value", [" lead", "trail ", "\tx", '"quoted"', "'quoted'", "nul\0"])
+def test_set_rejects_values_that_would_not_round_trip(arena_home, value):
+    with pytest.raises(ValueError):
+        keys.set_value("OK", value)
+
+
+def test_set_accepts_inner_quotes_and_spaces(arena_home):
+    keys.set_value("OK", 'a "b" c\'')
+    assert keys.read_config() == {"OK": 'a "b" c\''}
+
+
+def test_resolve_env_never_returns_hb_credentials(arena_home, tmp_path, monkeypatch):
+    monkeypatch.setenv("HB_API_KEY", "hb-secret")
+    monkeypatch.setenv("humanbound_token", "hb-token")
+    env_file = tmp_path / "run.env"
+    env_file.write_text("HB_API_KEY=from-file\n")
+
+    env, missing = keys.resolve_env(["HB_API_KEY"], ["humanbound_token"], env_file)
+
+    assert env == {}
+    assert missing == ["HB_API_KEY"]
