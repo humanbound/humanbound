@@ -73,6 +73,27 @@ def build_agent_yaml(scope: dict) -> dict:
     return doc
 
 
+def scope_from_agent_yaml(doc: dict) -> dict:
+    """Inverse of build_agent_yaml: map an agent.yaml to the local scope shape `hb test` uses.
+
+    Kept next to build_agent_yaml so both directions change together.
+    """
+    scope = doc.get("scope") or {}
+    intents = doc.get("intents") or {}
+    out: dict = {
+        "overall_business_scope": scope.get("business") or "",
+        "intents": {
+            "permitted": _as_list(intents.get("permitted")),
+            "restricted": _as_list(intents.get("restricted")),
+        },
+        "more_info": scope.get("more_info") or "",
+    }
+    capabilities = doc.get("capabilities")
+    if capabilities is not None:
+        out["capabilities"] = {k: k in capabilities for k in CAPABILITY_KEYS}
+    return out
+
+
 def dump_agent_yaml(doc: dict, source: str) -> str:
     """Render agent.yaml with a short header naming where it came from."""
     import yaml
