@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "humanbound"
-version = "2.9.0"
+version = "2.10.0"
 description = "Open-source adversarial testing engine, SDK, and CLI for AI agents."
 readme = "README.md"
 license = "Apache-2.0"
@@ -68,7 +68,7 @@ engine = [
     "httpx>=0.27",
 ]
 firewall = [
-    "humanbound-firewall>=0.2",
+    "humanbound-firewall>=0.3",
     "scikit-learn>=1.3.0",
     "torch>=2.0.0",
 ]

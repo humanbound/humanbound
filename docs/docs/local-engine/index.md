@@ -75,7 +75,7 @@ hb test --endpoint ./bot-config.json --scope ./scope.json --wait
 hb posture
 hb logs
 hb report -o report.html
-hb guardrails -o rules.yaml
+hb guardrails -o rules.json
 ```
 
 ## When to Use Local vs Platform
