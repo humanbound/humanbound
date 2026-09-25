@@ -10,10 +10,14 @@ from unittest.mock import patch
 from humanbound_cli.engine.callbacks import EngineCallbacks
 from humanbound_cli.engine.presenter import run as presenter_run
 from humanbound_cli.engine.schemas import JUDGE_ERROR_CATEGORY, ExperimentResults, Stats
+from humanbound_cli.report import generate_html_report
 
 AGENTIC = importlib.import_module("humanbound_cli.engine.orchestrators.owasp_agentic.orchestrator")
 SINGLE_TURN = importlib.import_module(
     "humanbound_cli.engine.orchestrators.owasp_single_turn.orchestrator"
+)
+BEHAVIORAL = importlib.import_module(
+    "humanbound_cli.engine.orchestrators.behavioral_qa.orchestrator"
 )
 
 
@@ -23,6 +27,8 @@ class _Judge:
 
 
 class _Conversationer:
+    number_of_iterations = 1
+
     def __init__(self, *args, error=None, **kwargs):
         self.error = error
 
@@ -52,21 +58,18 @@ def test_agentic_bot_failure_is_still_an_exception():
     assert log["fail_category"] == "exception"
 
 
+EXPERIMENT = {"id": "e", "lang": "english", "testing_level": "unit", "configuration": {"scope": {}}}
+
+
 def test_single_turn_judge_failure_is_a_judge_error():
     logs = []
-    experiment = {
-        "id": "e",
-        "lang": "english",
-        "testing_level": "unit",
-        "configuration": {"scope": {}},
-    }
     with (
         patch.object(SINGLE_TURN, "Conversationer", _Conversationer),
         patch.object(SINGLE_TURN, "Judge", return_value=_Judge()),
     ):
         getattr(SINGLE_TURN, "__do_thread_run")(
             None,
-            experiment,
+            EXPERIMENT,
             {},
             "llm001",
             None,
@@ -75,6 +78,24 @@ def test_single_turn_judge_failure_is_a_judge_error():
             callbacks=EngineCallbacks(on_logs=logs.extend, flush_every_log=True),
         )
     assert logs[0]["fail_category"] == JUDGE_ERROR_CATEGORY
+
+
+def test_behavioral_judge_failure_is_a_judge_error():
+    logs = []
+    with (
+        patch.object(BEHAVIORAL, "Conversationer", _Conversationer),
+        patch.object(BEHAVIORAL, "Judge", return_value=_Judge()),
+    ):
+        getattr(BEHAVIORAL, "__do_thread_run")(
+            None,
+            EXPERIMENT,
+            {},
+            "first_time_user_experience",
+            None,
+            [],
+            callbacks=EngineCallbacks(on_logs=logs.extend, flush_every_log=True),
+        )
+    assert logs and all(log["fail_category"] == JUDGE_ERROR_CATEGORY for log in logs)
 
 
 def _log(result, fail_category=""):
@@ -97,3 +118,9 @@ def test_unjudged_count_survives_saving_the_results():
     stats = presenter_run(None, [_log("pass"), _log("error", JUDGE_ERROR_CATEGORY)])["stats"]
     saved = ExperimentResults(stats=Stats(**stats)).model_dump()
     assert saved["stats"]["unjudged"] == 1
+
+
+def test_report_defense_rate_counts_unjudged_conversations():
+    stats = {"total": 4, "pass": 2, "fail": 0, "error": 2, "unjudged": 2}
+    html = generate_html_report({"results": {"stats": stats}}, logs=[])
+    assert "50.0%" in html
