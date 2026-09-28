@@ -5,7 +5,8 @@
 Each generator drives a real ``Bot`` with a per-turn telemetry config (replies
 carrying ``metadata.tool_calls``), with ``requests`` mocked. The metadata
 returned by every ``Bot.ping()`` turn must reach
-``Telemetry.standardize_accumulated_metadata`` so the judge sees tool calls.
+``Telemetry.standardize_accumulated_metadata`` so the judge sees tool calls,
+including the fixed opening turn OWASP agentic sends before generated turns.
 """
 
 from __future__ import annotations
@@ -18,6 +19,9 @@ import pytest
 from humanbound_cli.engine.bot import Bot, Telemetry
 from humanbound_cli.engine.orchestrators.behavioral_qa import generator as behavioral_qa
 from humanbound_cli.engine.orchestrators.owasp_agentic import generator as owasp_agentic
+from humanbound_cli.engine.orchestrators.owasp_agentic import (
+    orchestrator as owasp_agentic_orchestrator,
+)
 from humanbound_cli.engine.orchestrators.owasp_single_turn import generator as owasp_single_turn
 
 
@@ -187,3 +191,122 @@ def test_owasp_single_turn_without_metadata_yields_empty_telemetry(clientbot, co
 
     assert telemetry_data["tool_executions"] == []
     assert telemetry_data["resource_usage"] == {}
+
+
+# ── the opening turn (owasp_agentic sends a fixed opener before the generated turns) ──
+
+_single_pipeline_run = getattr(owasp_agentic_orchestrator, "__do_single_pipeline_run")
+
+
+class _CapturingJudge:
+    def __init__(self):
+        self.telemetry_data = "unset"
+
+    def evaluate(self, conversation, telemetry_data=None):
+        self.telemetry_data = telemetry_data
+        return {
+            "result": "pass",
+            "category": "",
+            "explanation": "",
+            "severity": 0,
+            "confidence": 100,
+        }
+
+
+def _run_pipeline(clientbot, replies, telemetry_config, depth=3):
+    conv = _conversationer(owasp_agentic.Conversationer, clientbot, depth=depth)
+    judge = _CapturingJudge()
+    telemetry_client = Telemetry(telemetry_config, "exp-1") if telemetry_config else None
+    with (
+        patch("humanbound_cli.engine.bot.requests.post", side_effect=replies) as post,
+        patch.object(owasp_agentic_orchestrator.time, "sleep"),
+    ):
+        logs, _ = asyncio.run(
+            _single_pipeline_run(
+                conv,
+                judge,
+                "GOAL: test",
+                "category",
+                "org",
+                {"id": "exp-1"},
+                [],
+                100,
+                telemetry_config=telemetry_config,
+                telemetry_client=telemetry_client,
+                opening="opening prompt",
+            )
+        )
+    return logs, judge, post
+
+
+def test_owasp_agentic_opening_turn_tool_calls_reach_judge_and_saved_log(clientbot, config):
+    logs, judge, _ = _run_pipeline(clientbot, THREE_TURNS, config["telemetry"])
+
+    assert len(logs) == 1 and logs[0]["result"] == "pass"
+    assert [t["a"] for t in logs[0]["conversation"]] == ["a1", "a2", "a3"]
+    _assert_three_turn_tools(judge.telemetry_data)
+    assert [t["turn"] for t in judge.telemetry_data["turns"]] == [1, 2, 3]
+
+    saved = logs[0]["meta"][0]["telemetry"]
+    assert [(t["turn"], t["tool_name"]) for t in saved["tool_executions"]] == [
+        (1, "lookup"),
+        (3, "refund"),
+        (3, "email"),
+    ]
+    assert [t["turn"] for t in saved["turns"]] == [1, 2, 3]
+
+
+def test_owasp_agentic_opening_turn_only(clientbot, config):
+    """A conversation that ends with the opener still reports the opener's tool calls."""
+    reply = _reply("a1", [_call("lookup", {"id": 7}, "found")])
+    logs, judge, _ = _run_pipeline(clientbot, [reply], config["telemetry"], depth=1)
+
+    assert judge.telemetry_data["tool_executions"] == [
+        {"turn": 1, "tool_name": "lookup", "parameters": {"id": 7}, "result": "found"}
+    ]
+
+
+def test_owasp_agentic_opening_turn_end_of_conversation_unchanged(clientbot):
+    telemetry_config = {
+        "mode": "end_of_conversation",
+        "endpoint": "https://agent.example/telemetry",
+        "extraction_map": {"tool_executions": "tool_calls"},
+    }
+    with patch.object(Telemetry, "fetch", return_value={"tool_executions": []}) as fetch:
+        logs, judge, _ = _run_pipeline(clientbot, THREE_TURNS, telemetry_config)
+
+    fetch.assert_called_once()
+    assert fetch.call_args.args[1] == 3
+    assert judge.telemetry_data == {"tool_executions": []}
+
+
+def test_owasp_agentic_opening_turn_without_telemetry_config(clientbot):
+    logs, judge, post = _run_pipeline(clientbot, THREE_TURNS, None)
+
+    assert post.call_count == 3
+    assert judge.telemetry_data is None
+    assert logs[0]["meta"] == []
+
+
+def test_owasp_agentic_prompt_and_chat_keep_their_return_shapes(clientbot, config):
+    conv = _conversationer(owasp_agentic.Conversationer, clientbot, depth=2)
+    opening_metadata = []
+    with patch("humanbound_cli.engine.bot.requests.post", side_effect=THREE_TURNS[:2]):
+        pre, _, _, payload = asyncio.run(
+            conv.prompt("opening", payload={}, metadata=opening_metadata)
+        )
+        result = asyncio.run(
+            conv.chat(
+                lambda turn, history: "strategy",
+                payload=payload,
+                conversation=pre,
+                opening_metadata=opening_metadata,
+                telemetry_client=Telemetry,
+                telemetry_config=config["telemetry"],
+            )
+        )
+
+    assert pre == [{"u": "opening", "a": "a1"}]
+    assert [m["turn"] for m in opening_metadata] == [1]
+    assert len(result) == 4
+    assert [t["turn"] for t in result[3]["tool_executions"]] == [1]

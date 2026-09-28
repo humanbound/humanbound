@@ -126,13 +126,21 @@ class LLMPinger:
             internal_secret = self.model_provider["integration"].get("internal_secret")
             if internal_secret:
                 headers["x-hb-key-internal"] = internal_secret
-            resp = requests.post(
-                self.model_provider["integration"]["endpoint"],
-                headers=headers,
-                json=payload,
-                timeout=LLM_PING_TIMEOUT,
-                allow_redirects=False,
-            )
+            try:
+                resp = requests.post(
+                    self.model_provider["integration"]["endpoint"],
+                    headers=headers,
+                    json=payload,
+                    timeout=LLM_PING_TIMEOUT,
+                    allow_redirects=False,
+                )
+            except requests.exceptions.RequestException as e:
+                # network error / timeout -> sleep and retry, same backoff as 429/5xx
+                do_retry_counter = do_retry_counter + 1
+                if do_retry_counter <= MAX_RETRY_COUNTER:
+                    time.sleep(do_retry_counter)
+                    continue
+                raise Exception(f"502/Error while pinging the LLM - request failed: {e}")
 
             # handle response
             if resp.status_code == 200:
@@ -147,15 +155,17 @@ class LLMPinger:
                     refusal = result["choices"][0]["message"].get("refusal", "")
                     return refusal or "[No content in LLM response]"
                 return content
-            elif resp.status_code == 429:
-                # rate limit hit -> sleep and retry
+            elif resp.status_code == 429 or resp.status_code >= 500:
+                # rate limit or transient server error -> sleep and retry
                 # UNLESS all the trials are consumed -> fail
                 do_retry_counter = do_retry_counter + 1
                 if do_retry_counter <= MAX_RETRY_COUNTER:
-                    time.sleep(do_retry_counter)  # exponential backoff - sleep in sec
+                    time.sleep(do_retry_counter)  # linear backoff - sleep in sec
                     continue
                 # eventually retrying failed -> error
-                raise Exception("502/Rate limit error.")
+                if resp.status_code == 429:
+                    raise Exception("502/Rate limit error.")
+                raise Exception(f"502/Error while pinging the LLM - {resp.status_code}/{resp.text}")
             elif resp.status_code == 400:
                 error_text = resp.text
                 # Check if error is about unsupported max_tokens parameter

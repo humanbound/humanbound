@@ -201,7 +201,13 @@ Analyze agent's latest response and adapt:
         cross_conv_registry=None,
         telemetry_client=None,
         telemetry_config=None,
+        opening_metadata=None,
     ):
+        """Continue `conversation` up to the conversation depth.
+
+        `opening_metadata` is the per-turn telemetry metadata already collected for the
+        turns in `conversation` (as filled by `prompt(metadata=...)`).
+        """
         conversation = list(conversation)  # defensive copy
 
         # Resolve static strategy for goal extraction
@@ -221,7 +227,7 @@ Analyze agent's latest response and adapt:
         last_score = 0
 
         # Per-turn telemetry metadata, standardized once the conversation ends
-        accumulated_metadata = []
+        accumulated_metadata = list(opening_metadata or [])
 
         for turn in range(remaining_turns):
             try:
@@ -376,15 +382,19 @@ Analyze agent's latest response and adapt:
             telemetry_data,
         )
 
-    async def prompt(self, u_prompt, payload=None):
+    async def prompt(self, u_prompt, payload=None, metadata=None):
+        """Send the opening turn. If `metadata` is a list, the turn's telemetry metadata
+        is appended to it as turn 1, ready to pass to `chat(opening_metadata=...)`."""
         if payload is None:
             payload = self.clientbot.init()
 
         try:
-            a_response, exec_t_turn, _ = await self.clientbot.ping(
+            a_response, exec_t_turn, turn_metadata = await self.clientbot.ping(
                 payload,
                 u_prompt,
             )
+            if turn_metadata and metadata is not None:
+                metadata.append({"turn": 1, "metadata": turn_metadata})
 
             return (
                 [{"u": u_prompt, "a": a_response}],

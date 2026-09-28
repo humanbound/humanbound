@@ -227,6 +227,10 @@ class ExperimentMeta(BaseModel):
     results: ExperimentResults = ExperimentResults()
     # local-only: the scope the run tested against, so hb guardrails can build agent.yaml
     scope: dict[str, Any] | None = None
+    # local-only: what was tested (arena runs: {kind, agent_id, agent_version, gateway,
+    # whitebox}) and how (category, level, lang, provider name and model; never keys)
+    target: dict[str, Any] | None = None
+    configuration: dict[str, Any] | None = None
     created_at: str = ""
     completed_at: str | None = None
 

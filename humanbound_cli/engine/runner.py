@@ -31,6 +31,9 @@ class TestConfig:
     repo_path: str | None = None
     prompt_path: str | None = None
     scope_path: str | None = None
+    # What was tested, when hb knows more than the endpoint (e.g. an arena agent):
+    # {kind, agent_id, agent_version, gateway, whitebox}. Saved in meta.json (local mode).
+    target: dict | None = None
     # Output modes
     debug: bool = False  # single-threaded, full sequential output
     verbose: bool = False  # threaded, Rich Live dashboard

@@ -100,7 +100,15 @@ class LLMPinger:
         max_tokens = min(max_tokens, ALLOWED_MAX_OUT_TOKENS)
         while do_retry_counter <= MAX_RETRY_COUNTER:
             # api call to serverless LLM
-            resp = self.__do_completion_api_call(system_p, user_p, max_tokens, temperature)
+            try:
+                resp = self.__do_completion_api_call(system_p, user_p, max_tokens, temperature)
+            except requests.exceptions.RequestException as e:
+                # network error / timeout -> sleep and retry, same backoff as 429/5xx
+                do_retry_counter = do_retry_counter + 1
+                if do_retry_counter <= MAX_RETRY_COUNTER:
+                    time.sleep(do_retry_counter)
+                    continue
+                raise Exception(f"502/Error while pinging the LLM - request failed: {e}")
 
             # handle response
             if resp.status_code == 200:
@@ -113,15 +121,17 @@ class LLMPinger:
                     refusal = result["choices"][0]["message"].get("refusal", "")
                     return refusal or "[No content in LLM response]"
                 return content
-            elif resp.status_code == 429:
-                # rate limit hit -> sleep and retry
+            elif resp.status_code == 429 or resp.status_code >= 500:
+                # rate limit or transient server error -> sleep and retry
                 # UNLESS all the trials are consumed -> fail
                 do_retry_counter = do_retry_counter + 1
                 if do_retry_counter <= MAX_RETRY_COUNTER:
-                    time.sleep(do_retry_counter)  # exponential backoff - sleep in sec
+                    time.sleep(do_retry_counter)  # linear backoff - sleep in sec
                     continue
                 # eventually retrying failed -> error
-                raise Exception("502/Rate limit error.")
+                if resp.status_code == 429:
+                    raise Exception("502/Rate limit error.")
+                raise Exception(f"502/Error while pinging the LLM - {resp.status_code}/{resp.text}")
             elif resp.status_code == 400:
                 raise Exception(f"502/Inappropriate content ({resp.text}). Please try again.")
             else:

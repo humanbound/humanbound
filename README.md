@@ -90,6 +90,22 @@ export HB_MODEL=llama3.1:8b
 hb test --endpoint ./bot-config.json --scope ./scope.yaml --wait
 ```
 
+### Practice on a vulnerable agent
+
+No agent of your own at hand? `hb arena` runs intentionally vulnerable agents
+locally, in Docker, so you can see what a test finds. No login needed.
+
+```bash
+hb arena ls                          # what the catalog offers
+hb arena run <agent>                 # start one, with its network access blocked
+hb test --target arena://<agent>     # test it on the local engine
+hb arena stop <agent>
+```
+
+Arena agents are built to be exploited and their isolation is best effort:
+never run them where there is sensitive data or access to critical systems.
+See the [Arena docs](https://docs.humanbound.ai/testing/arena/).
+
 ### Describe your agent
 
 `bot-config.json` tells the engine how to call your agent's API:

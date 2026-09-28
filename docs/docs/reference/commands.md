@@ -1,5 +1,5 @@
 ---
-description: "Complete hb CLI reference — every command and flag, grouped by workflow — auth, projects, test, redteam, posture, logs, MCP."
+description: "Complete hb CLI reference — every command and flag, grouped by workflow — auth, projects, test, arena, posture, logs, MCP."
 keywords:
   - hb command reference
   - humanbound CLI reference
@@ -57,6 +57,7 @@ The complete `hb` CLI reference, organised into eight categories: global flags, 
 | Command | Description |
 |---|---|
 | `hb test` | Create and run new security test experiment |
+| `hb test --target arena://<agent>` | Test a running [arena](../testing/arena.md) agent on the local engine; the agent is reset first (`--no-reset` skips that). No login needed |
 | `hb experiments list` | List all experiments for current project |
 | `hb experiments show <id> [--config]` | Show detailed experiment information; `--config` prints the configuration the run used (bot integration, scope, context) as reusable JSON |
 | `hb experiments status [id] [--all]` | Check experiment status (single, watch, or all-experiments dashboard) |
@@ -64,6 +65,28 @@ The complete `hb` CLI reference, organised into eight categories: global flags, 
 | `hb experiments terminate <id>` | Stop running experiment |
 | `hb experiments delete <id>` | Delete experiment and logs |
 | `hb status [--all]` | Check status of latest experiment or all experiments (alias) |
+
+## Arena
+
+Run intentionally vulnerable agents locally, in Docker, and test them. None of these commands needs a login. See [Arena](../testing/arena.md).
+
+| Command | Description |
+|---|---|
+| `hb arena ls [--installed]` | List the agents of the catalog, or only the installed ones |
+| `hb arena info <id>[:version] [--agent-yaml]` | Show an agent's details, keys, what it may reach on the network and its planted vulnerabilities |
+| `hb arena validate <path>` | Validate an `arena.yaml` (and its compose file) |
+| `hb arena pull <id>[:version]` | Install an agent and pull its images |
+| `hb arena run <id>[:version] [--env-file FILE] [--yes]` | Start an agent with its network access blocked and make it reachable through the gateway |
+| `hb arena ps` | List running agents |
+| `hb arena logs <id> [-f] [--tail N] [--door]` | Show an agent's logs; `--door` shows what it reached or was refused on the network |
+| `hb arena check <id> [--json]` | Check a running agent's containers against the container baseline |
+| `hb arena reset <id>` | Recreate an agent from its image |
+| `hb arena stop <id>` / `--all` / `--all --any-owner` | Stop one agent, all of yours, or every owner's on this Docker |
+| `hb arena rm <id>` | Stop an agent and remove its images and cached manifest |
+| `hb arena endpoint <id>` | Print an agent's A2A and OpenAI-compatible URLs and your access token |
+| `hb arena token` | Print only your gateway access token |
+| `hb arena config set/get/unset` | Manage the keys agents receive |
+| `hb arena serve [--host H] [--port P]` | Run the gateway in the foreground |
 
 ## Results
 

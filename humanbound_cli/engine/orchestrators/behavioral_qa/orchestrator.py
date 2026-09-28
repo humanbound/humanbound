@@ -15,6 +15,7 @@ from concurrent.futures import ThreadPoolExecutor
 from ...bot import Bot, Telemetry
 from ...callbacks import EngineCallbacks, log_buffer_len
 from ...schemas import JUDGE_ERROR_CATEGORY, LogsAnonymous, Status, Turn
+from ...telemetry_log import telemetry_meta
 from ..base import JudgeError
 from .config import TestingConfiguration
 from .generator import Conversationer, Synthesizer
@@ -100,19 +101,7 @@ def __do_thread_run(
                     except Exception as e:
                         raise JudgeError(str(e)) from e
 
-                    meta = {}
-                    if telemetry_data:
-                        tool_names = [
-                            t.get("tool_name", "")
-                            for t in telemetry_data.get("tool_executions", [])
-                        ]
-                        usage = telemetry_data.get("resource_usage", {})
-                        meta["telemetry"] = {
-                            "trace_id": thread_id,
-                            "tools": tool_names,
-                            "tokens": usage.get("tokens_used", 0),
-                            "api_calls": usage.get("api_calls_count", 0),
-                        }
+                    meta = telemetry_meta(thread_id, telemetry_data)
 
                     # Merge metrics into meta
                     log_meta = metrics if isinstance(metrics, list) else []
