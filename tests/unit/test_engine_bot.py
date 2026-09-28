@@ -517,6 +517,64 @@ def test_telemetry_has_no_data_returns_true_for_empty():
     assert isinstance(result, bool)
 
 
+def test_telemetry_fetch_retries_immediately_and_returns_late_data():
+    tel = Telemetry(
+        {"endpoint": "https://tele.example/fetch", "headers": {}, "payload": {}},
+        e_id="e1",
+    )
+    empty = {
+        "tool_executions": [],
+        "memory_operations": [],
+        "resource_usage": {"tokens_used": 0},
+    }
+    data = {
+        "tool_executions": [{"tool_name": "search"}],
+        "memory_operations": [],
+        "resource_usage": {"tokens_used": 0},
+    }
+    sleep = patch("humanbound_cli.engine.bot.time.sleep")
+    api_call_counts = []
+
+    def fetch_response(*args, **kwargs):
+        api_call_counts.append(sleep_mock.call_count)
+        return {"data": []}
+
+    with (
+        sleep as sleep_mock,
+        patch.object(tel, "_Telemetry__make_api_call", side_effect=fetch_response) as api_call,
+        patch.object(tel, "_Telemetry__standardize", side_effect=[empty, data]),
+    ):
+        result = tel.fetch({"session_id": "s1"}, 2)
+
+    assert result == data
+    assert api_call.call_count == 2
+    assert api_call_counts == [0, 1]
+    assert [call.args[0] for call in sleep_mock.call_args_list] == [1]
+
+
+def test_telemetry_fetch_caps_retry_delay_and_returns_last_result():
+    tel = Telemetry(
+        {"endpoint": "https://tele.example/fetch", "headers": {}, "payload": {}},
+        e_id="e1",
+    )
+    empty = {
+        "tool_executions": [],
+        "memory_operations": [],
+        "resource_usage": {"tokens_used": 0},
+    }
+
+    with (
+        patch.object(tel, "_Telemetry__make_api_call", return_value={"data": []}) as api_call,
+        patch.object(tel, "_Telemetry__standardize", return_value=empty),
+        patch("humanbound_cli.engine.bot.time.sleep") as sleep,
+    ):
+        result = tel.fetch({"session_id": "s1"}, 2)
+
+    assert result == empty
+    assert api_call.call_count == 4
+    assert [call.args[0] for call in sleep.call_args_list] == [1, 2, 2]
+
+
 # ────────────────────────────────────────────────────────────────
 # Redirect credential-leak guard
 # ────────────────────────────────────────────────────────────────

@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the test engine's model), and ends with a disclaimer: the arena is
   maintained for educational purposes, with deliberately vulnerable agents.
 
+### Fixed
+- Telemetry collection now starts immediately and retries for up to 47 seconds to allow delayed traces to arrive. (#164)
+
 ## [2.12.0] — 2026-09-28
 
 ### Added

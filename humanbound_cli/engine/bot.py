@@ -1557,10 +1557,8 @@ class Telemetry:
     def fetch(self, session_metadata, total_turns):
         """Fetch telemetry data after conversation completes.
 
-        Uses progressive retry with delay to allow vendor ingestion:
-        - Initial 5s delay
-        - Up to 3 retries with increasing delays (2s, 5s, 8s)
-        - Total max wait: ~20s before giving up
+        Fetch immediately, then allow vendor ingestion through up to three retries
+        with a total of five seconds of delay before giving up.
         """
         try:
             fetch_payload = {
@@ -1569,13 +1567,9 @@ class Telemetry:
                 "HUMANBOUND_EID": self.e_id,
             }
 
-            # Initial delay — allow vendor to ingest traces (~15s for Langfuse)
-            time.sleep(15)
+            retry_delays = (1, 2, 2)
 
-            retry_delay = 5
-            max_retries = 3
-
-            for attempt in range(max_retries + 1):
+            for attempt in range(len(retry_delays) + 1):
                 raw_data = self.__make_api_call(
                     fetch_payload,
                     self.config["endpoint"],
@@ -1595,11 +1589,10 @@ class Telemetry:
                     return standardized
 
                 # Last attempt — don't sleep
-                if attempt == max_retries:
+                if attempt == len(retry_delays):
                     break
 
-                time.sleep(retry_delay)
-                retry_delay += 5  # 5 → 10 → 15
+                time.sleep(retry_delays[attempt])
 
             # All retries exhausted — return whatever we got (may be empty)
             return standardized if raw_data else None
