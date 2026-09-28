@@ -67,7 +67,7 @@
   <meta property="og:image:alt" content="Complete hb CLI reference — every command and flag, grouped by workflow — auth, projects, test, redteam, posture, logs, MCP." />
   <meta name="twitter:image:alt" content="Complete hb CLI reference — every command and flag, grouped by workflow — auth, projects, test, redteam, posture, logs, MCP." />
   
-  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/reference/commands/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Commands","item":"https://docs.humanbound.ai/reference/commands/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/reference/commands/#article","headline":"Commands","description":"Complete hb CLI reference \u2014 every command and flag, grouped by workflow \u2014 auth, projects, test, redteam, posture, logs, MCP.","url":"https://docs.humanbound.ai/reference/commands/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-08-14T16:11:52+03:00","keywords":"hb command reference, humanbound CLI reference, hb commands list, humanbound CLI commands, CLI cheatsheet, command index"}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/reference/commands/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Commands","item":"https://docs.humanbound.ai/reference/commands/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/reference/commands/#article","headline":"Commands","description":"Complete hb CLI reference \u2014 every command and flag, grouped by workflow \u2014 auth, projects, test, redteam, posture, logs, MCP.","url":"https://docs.humanbound.ai/reference/commands/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-09-28T12:15:50+03:00","keywords":"hb command reference, humanbound CLI reference, hb commands list, humanbound CLI commands, CLI cheatsheet, command index"}]}</script>
   
 
   
@@ -2584,11 +2584,11 @@
 </tr>
 <tr>
 <td><code>hb logs --assessment &lt;id&gt;</code></td>
-<td>List logs for a specific assessment</td>
+<td>List logs for a specific assessment; requires login</td>
 </tr>
 <tr>
 <td><code>hb logs --finding &lt;id&gt;</code></td>
-<td>List logs linked to a specific finding</td>
+<td>List logs linked to a specific finding; requires login</td>
 </tr>
 <tr>
 <td><code>hb logs --verdict pass\|fail</code></td>
@@ -2596,19 +2596,19 @@
 </tr>
 <tr>
 <td><code>hb logs --category &lt;name&gt;</code></td>
-<td>Filter by test category (substring match)</td>
+<td>Filter by test category (substring match); requires login</td>
 </tr>
 <tr>
 <td><code>hb logs --from DATE --until DATE</code></td>
-<td>Filter by date range (ISO 8601)</td>
+<td>Filter by date range (ISO 8601); requires login</td>
 </tr>
 <tr>
 <td><code>hb logs --days N</code></td>
-<td>Shorthand for last N days</td>
+<td>Shorthand for last N days; requires login</td>
 </tr>
 <tr>
 <td><code>hb logs --last N</code></td>
-<td>Show logs from last N experiments</td>
+<td>Show logs from last N experiments; requires login</td>
 </tr>
 <tr>
 <td><code>hb logs --format json\|html\|table</code></td>

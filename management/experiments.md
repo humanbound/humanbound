@@ -55,7 +55,7 @@ hb logs <id> --format html -o report.html
 # Export as JSON
 hb logs <id> --format json --all -o results.json
 
-# Project-wide logs with scope flags
+# Project-wide logs with scope flags (require login)
 hb logs --last 5                           # Last 5 experiments
 hb logs --last 3 --verdict fail            # Failed logs from last 3
 hb logs --category owasp_agentic           # Filter by test category
