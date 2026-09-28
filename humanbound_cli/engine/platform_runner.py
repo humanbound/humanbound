@@ -136,7 +136,7 @@ class PlatformTestRunner(TestRunner):
             if len(data_points) >= 2:
                 prev = data_points[-2]
                 posture.previous_grade = prev.get("grade")
-                posture.previous_score = prev.get("score")
+                posture.previous_score = prev.get("avg_score", prev.get("score"))
         except Exception:
             pass
 

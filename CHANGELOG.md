@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **`hb posture --trends` shows the posture history.** The trends endpoint
+  returns `data_points` with `bucket`, `avg_score` and `grade`, but the
+  command looked for `snapshots` or `data`, so it always said there was no
+  history. `hb test` read the previous score from `score` instead of
+  `avg_score`, so the "Previously" line showed the grade without a score.
+- **`hb posture --org` shows the organisation's score and dimensions.** The
+  organisation posture endpoint returns the score as `posture` and its
+  dimensions as `security` and `quality`, but the command read `score` and
+  `agent_security`, so it showed `0/100` next to the real grade, and it
+  crashed with a `TypeError` when a dimension was `null`. It now reads the
+  endpoint's names and shows only the dimensions the platform returns.
+- **`hb test` no longer crashes printing a posture error that contains
+  square brackets.** The server's message was printed as Rich markup, so text
+  like `[/data]` raised a markup error after the run had finished.
 - **`hb posture` and `hb test` show the platform posture score.** The
   project posture endpoint returns the score as `posture`, but the CLI read
   `overall_score`, so `hb posture` showed `0/100` next to the real grade and

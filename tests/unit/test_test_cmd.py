@@ -313,6 +313,7 @@ class TestPostureFetch:
         [
             APIError("Internal Server Error", status_code=500),
             NotAuthenticatedError("Not authenticated. Please run 'hb login' first."),
+            APIError("Internal error [/data] missing", status_code=500),
         ],
     )
     @patch("humanbound_cli.commands.test.time.sleep")
