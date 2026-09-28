@@ -23,6 +23,10 @@ from .runner import PaginatedLogs, Posture, TestConfig, TestResult, TestRunner, 
 
 logger = logging.getLogger("humanbound.engine.local")
 
+# Model used when HB_MODEL / config `model` is unset. Other providers have no sensible
+# default (Azure needs the deployment name), so they require an explicit model.
+DEFAULT_MODELS = {"openai": "gpt-4.1", "ollama": "llama3.1:8b"}
+
 
 def _ensure_private_dir(path: Path) -> None:
     """Create ``path`` (and parents) with owner-only (0700) permissions.
@@ -72,10 +76,16 @@ class _LocalRun:
     def __init__(self, experiment_id, config: TestConfig):
         self.experiment_id = experiment_id
         self.config = config
+        # What pollers see. A final status (Finished/Failed/Terminated) is set only after the
+        # results are saved, so a poller that sees it can read them.
         self.status = "Created"
+        # What the orchestrator reported through on_complete (it may say "Finished" before
+        # the analysis has even started).
+        self._reported_status = None
         self.logs = []
         self.results = None
         self.scope = None
+        self.provider = None  # {"name", "model"} only: never the key or endpoint
         self.error = None
         self.thread = None
         self._terminated = threading.Event()
@@ -84,7 +94,7 @@ class _LocalRun:
     def make_callbacks(self):
         cb = EngineCallbacks(
             on_logs=lambda logs: self.logs.extend(logs),
-            on_complete=lambda status: setattr(self, "status", status),
+            on_complete=lambda status: setattr(self, "_reported_status", status),
             is_terminated=self._terminated.is_set,
             on_error=lambda title, details: logger.warning(f"[{title}] {details}"),
             get_strategies=lambda pid: [],  # no cross-session FSLF locally
@@ -103,6 +113,10 @@ class _LocalRun:
         try:
             # Resolve provider
             provider = _resolve_provider()
+            self.provider = {
+                "name": provider.get("name"),
+                "model": (provider.get("integration") or {}).get("model"),
+            }
 
             # Resolve scope
             from .llm import get_llm_pinger
@@ -162,14 +176,16 @@ class _LocalRun:
 
             # Preserve a terminal failure/cancellation reported by the
             # orchestrator. Completed logs are still useful partial results.
-            if self.status in ("Failed", "Terminated"):
+            reported = self._reported_status
+            if reported in ("Failed", "Terminated"):
                 if self.logs:
                     self.results = presenter_run(
                         None,
                         self.logs,
                         test_category=self.config.test_category,
                     )
-                    self._save_results()
+                    self._save_results(status=reported)
+                self.status = reported
                 return
 
             # Phase 3: Post-processing
@@ -180,14 +196,12 @@ class _LocalRun:
                 test_category=self.config.test_category,
             )
 
-            # Write results to files
-            self._save_results()
-
+            # Write results to files (meta.json records the final status), then say so.
+            self._save_results(status="Finished")
             self.status = "Finished"
 
         except Exception as e:
             self.error = str(e)
-            self.status = "Failed"
             # User-visible: clean message, no traceback. Traceback goes to
             # DEBUG level so `--debug` users can still see the full stack.
             logger.error(f"Local test failed: {e}")
@@ -200,14 +214,17 @@ class _LocalRun:
                         self.logs,
                         test_category=self.config.test_category,
                     )
-                    self._save_results()
+                    self._save_results(status="Failed")
                 except Exception:
                     logger.debug("Could not save partial results", exc_info=True)
+            self.status = "Failed"
 
-    def _save_results(self):
+    def _save_results(self, status=None):
         """Write meta.json + logs.jsonl to .humanbound/results/
 
-        Uses Pydantic models for validation — ensures output matches API schema.
+        `status` is the status meta.json records (default: the current one); the caller
+        sets `self.status` to it only afterwards. Uses Pydantic models for validation —
+        ensures output matches API schema.
         """
         from .schemas import (
             ExecT,
@@ -245,7 +262,7 @@ class _LocalRun:
         meta = ExperimentMeta(
             id=self.experiment_id,
             name=self.config.name,
-            status=self.status,
+            status=status or self.status,
             # Local mode applies the schema defaults the backend would otherwise
             # fill when a field is left unset (deferred) on the config.
             test_category=self.config.test_category or "",
@@ -253,6 +270,14 @@ class _LocalRun:
             lang=self.config.lang or "english",
             results=exp_results,
             scope=self.scope,
+            target=self.config.target,
+            configuration={
+                "test_category": self.config.test_category or "",
+                "testing_level": self.config.testing_level or "",
+                "lang": self.config.lang or "english",
+                "provider": (self.provider or {}).get("name"),
+                "model": (self.provider or {}).get("model"),
+            },
             created_at=self._created_at,
             completed_at=time.strftime("%Y-%m-%dT%H:%M:%S"),
         )
@@ -570,6 +595,23 @@ def _resolve_provider():
             "Option 4: Use managed LLM (requires login)\n"
             "  hb login"
         )
+
+    from .llm import SUPPORTED_PROVIDERS, resolve_provider_name, unsupported_provider_error
+
+    # Check support first, so an unknown provider isn't reported as a missing model.
+    canonical = resolve_provider_name(name)
+    if canonical not in SUPPORTED_PROVIDERS:
+        raise unsupported_provider_error(name)
+
+    if not model:
+        model = DEFAULT_MODELS.get(canonical)
+        if not model:
+            raise ValueError(
+                f"No model configured for the {canonical} provider.\n\n"
+                "  export HB_MODEL=<model id"
+                + (", e.g. your deployment name" if canonical == "azureopenai" else "")
+                + ">\n  (or: hb config set model <model id>)"
+            )
 
     integration = {}
     if api_key:

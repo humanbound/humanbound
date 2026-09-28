@@ -2,12 +2,14 @@
 # Copyright (c) 2024-2026 Humanbound
 import asyncio
 import copy
+import ipaddress
 import json
 import logging
 import re
 import ssl
 import time
 import traceback
+import uuid
 from urllib.parse import urlparse
 
 import certifi
@@ -52,6 +54,44 @@ def truncate(match):
     if len(url) > MIN_URL_LENGTH:
         return url[:MIN_URL_LENGTH] + "..."
     return url
+
+
+def _is_loopback(url):
+    """The endpoint is on this machine (localhost, 127.0.0.0/8 or ::1)."""
+    try:
+        host = urlparse(url).hostname
+    except ValueError:
+        return False
+    if not host:
+        return False
+    if host.lower() == "localhost":
+        return True
+    try:
+        return ipaddress.ip_address(host).is_loopback
+    except ValueError:
+        return False
+
+
+def _proxy_kwargs(url):
+    """requests kwargs so that a loopback endpoint (a local agent, the hb arena gateway) never
+    goes through a proxy from the environment (HTTP_PROXY, ALL_PROXY, ...): the proxy would
+    see its traffic, headers included, or fail to reach it. Other endpoints are unchanged.
+    A fresh dict every call: requests adds the environment's proxies into the one it gets."""
+    if _is_loopback(url):
+        return {"proxies": {"http": None, "https": None, "all": None}}
+    return {}
+
+
+def _ws_supports_proxy():
+    """websockets >= 15 reads proxies from the environment (and takes `proxy=None`)."""
+    try:
+        from websockets.version import version
+    except ImportError:
+        return False
+    try:
+        return int(str(version).split(".")[0]) >= 15
+    except ValueError:
+        return False
 
 
 def _raise_if_redirect(resp):
@@ -208,6 +248,10 @@ class Bot(ResponseExtractor):
 
         if isinstance(item, str):
             # string -> check for the various placeholders
+            if item.lower() == "$uuid":
+                # fresh per occurrence, e.g. A2A messageId
+                return uuid.uuid4().hex, False
+
             if item.lower() == "$prompt":
                 return u_prompt, True
 
@@ -382,6 +426,7 @@ class Bot(ResponseExtractor):
             json=payload,
             timeout=REQUESTS_TIMEOUT,
             allow_redirects=False,
+            **_proxy_kwargs(endpoint),
         )
         if resp.status_code == 405:
             t_start = time.time()
@@ -391,6 +436,7 @@ class Bot(ResponseExtractor):
                 params=payload,
                 timeout=REQUESTS_TIMEOUT,
                 allow_redirects=False,
+                **_proxy_kwargs(endpoint),
             )
         _raise_if_redirect(resp)
         if resp.status_code != 200 and resp.status_code != 201:
@@ -515,6 +561,8 @@ class Bot(ResponseExtractor):
             # toggle; cap the module budget so only the initial handshake is sent.
             ws_client.MAX_REDIRECTS = 1
 
+            # A loopback endpoint never goes through a proxy from the environment.
+            no_proxy = {"proxy": None} if _is_loopback(endpoint) and _ws_supports_proxy() else {}
             try:
                 async with ws_client.connect(
                     endpoint,
@@ -523,6 +571,7 @@ class Bot(ResponseExtractor):
                     close_timeout=REQUESTS_TIMEOUT,
                     ssl=ssl_context,
                     additional_headers=headers,
+                    **no_proxy,
                 ) as websocket:
                     await websocket.send(json.dumps(payload, ensure_ascii=False))
                     message, exec_t = await self.__listen(websocket)
@@ -572,6 +621,8 @@ class Bot(ResponseExtractor):
                 timeout=REQUESTS_TIMEOUT,
                 verify=ssl_context,
                 follow_redirects=False,
+                # A loopback endpoint never goes through a proxy from the environment.
+                trust_env=not _is_loopback(endpoint),
             ) as client:
                 async with client.stream(
                     "POST",
@@ -639,6 +690,12 @@ class Bot(ResponseExtractor):
                 time.sleep(1)  # small delay to avoid race conditions
             else:
                 base_payload = {}
+
+            if not isinstance(base_payload, dict):
+                base_payload = {}
+            # one id per conversation (init runs once per conversation), usable as
+            # $humanbound_conversation_id, e.g. for A2A contextId
+            base_payload = {"humanbound_conversation_id": uuid.uuid4().hex, **base_payload}
 
             # 2.2 - optional thread/session start; skipped when thread_init is null/missing/empty-endpoint
             init_cfg = self.bot_config.get("thread_init") or {}
@@ -761,6 +818,7 @@ class Telemetry:
                 json=payload,
                 timeout=REQUESTS_TIMEOUT,
                 allow_redirects=False,
+                **_proxy_kwargs(endpoint),
             )
         else:  # GET
             resp = requests.get(
@@ -769,6 +827,7 @@ class Telemetry:
                 params=payload,
                 timeout=REQUESTS_TIMEOUT,
                 allow_redirects=False,
+                **_proxy_kwargs(endpoint),
             )
 
         _raise_if_redirect(resp)
@@ -1616,6 +1675,8 @@ class Telemetry:
 
             total_tokens = 0
             total_api_calls = 0
+            # The raw per-turn metadata, kept for saved results (the judge ignores it).
+            turns = []
 
             for turn_data in accumulated_metadata:
                 turn_num = turn_data.get("turn", 0)
@@ -1623,6 +1684,7 @@ class Telemetry:
 
                 if not metadata:
                     continue
+                turns.append({"turn": turn_num, "metadata": metadata})
 
                 # Extract tool executions
                 tool_path = extraction_map.get("tool_executions")
@@ -1692,6 +1754,8 @@ class Telemetry:
                 standardized["resource_usage"]["tokens_used"] = total_tokens
             if total_api_calls > 0:
                 standardized["resource_usage"]["api_calls_count"] = total_api_calls
+            if turns:
+                standardized["turns"] = turns
 
             return standardized
 

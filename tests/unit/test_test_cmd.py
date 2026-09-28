@@ -14,6 +14,7 @@ from conftest import (
     MOCK_PROVIDER,
     assert_exit_error,
     assert_exit_ok,
+    local_runner,
     platform_runner,
 )
 
@@ -352,3 +353,339 @@ class TestOutputFormat:
 
         assert_exit_ok(result)
         assert "exp-abc123" in result.output
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# Arena targets (hb test --target arena://<id>)
+# ─────────────────────────────────────────────────────────────────────────
+
+RESOLVE_PATCH = "humanbound_cli.arena.target.resolve_target"
+RESET_PATCH = "humanbound_cli.arena.target.reset_via_gateway"
+BASELINE_PATCH = "humanbound_cli.arena.target.enforce_baseline"
+ARENA_GATEWAY = "http://127.0.0.1:8475"
+ARENA_TOKEN = "arena-gateway-token-SECRET-never-saved-0000"
+
+
+def _arena_target(tmp_path, context="You are Pricer; prices are public.", whitebox=True):
+    from humanbound_cli.arena.target import ArenaTarget, bot_config
+
+    scope = tmp_path / "scope.yaml"
+    scope.write_text("permitted: []\nrestricted: []\n")
+    return ArenaTarget(
+        agent_id="pricer",
+        gateway=ARENA_GATEWAY,
+        bot_config=bot_config("pricer", ARENA_GATEWAY, token=ARENA_TOKEN),
+        scope_path=scope,
+        context=context,
+        whitebox=whitebox,
+        version="1.2.0",
+    )
+
+
+@pytest.fixture(autouse=True)
+def _baseline_met(monkeypatch):
+    """Arena runs never reach Docker here: the container baseline is met unless a test says
+    otherwise (it patches BASELINE_PATCH or the runtime underneath). Returns the real check."""
+    from humanbound_cli.arena import target
+
+    real = target.enforce_baseline
+    monkeypatch.setattr(target, "enforce_baseline", lambda arena: None)
+    return real
+
+
+def _local_runner_mock():
+    r = local_runner()
+    r.start.return_value = None
+    return r
+
+
+class TestArenaTarget:
+    @patch(RESET_PATCH)
+    @patch(RESOLVE_PATCH)
+    @patch(RUNNER_PATCH)
+    def test_target_forces_local_and_builds_whitebox_config(
+        self, mock_get_runner, mock_resolve, mock_reset, tmp_path
+    ):
+        target = _arena_target(tmp_path)
+        mock_resolve.return_value = target
+        r = _local_runner_mock()
+        mock_get_runner.return_value = r
+
+        result = runner.invoke(cli, ["test", "--target", "arena://pricer"])
+
+        mock_get_runner.assert_called_once_with(force_local=True)
+        mock_resolve.assert_called_once_with("arena://pricer")
+        config = _started_config(r)
+        assert config.endpoint == target.bot_config
+        assert config.scope_path == str(target.scope_path)
+        assert config.context == target.context
+        assert "whitebox" in result.output
+        mock_reset.assert_called_once_with("pricer", ARENA_GATEWAY)
+        # What a benchmark needs to know about the tested agent (saved in meta.json).
+        assert config.target == {
+            "kind": "arena",
+            "agent_id": "pricer",
+            "agent_version": "1.2.0",
+            "gateway": ARENA_GATEWAY,
+            "whitebox": True,
+        }
+
+    @pytest.mark.parametrize(
+        "default_catalog, props",
+        [(True, {"agent": "pricer", "version": "1.2.0"}), (False, {"agent": "custom"})],
+    )
+    @patch(RESET_PATCH)
+    @patch(RESOLVE_PATCH)
+    @patch(RUNNER_PATCH)
+    def test_arena_test_event_names_only_default_catalog_agents(
+        self,
+        mock_get_runner,
+        mock_resolve,
+        mock_reset,
+        default_catalog,
+        props,
+        tmp_path,
+        monkeypatch,
+    ):
+        import dataclasses
+
+        captured = []
+        monkeypatch.setattr(
+            "humanbound_cli.telemetry.capture",
+            lambda event, props=None: captured.append((event, props)),
+        )
+        mock_resolve.return_value = dataclasses.replace(
+            _arena_target(tmp_path), default_catalog=default_catalog
+        )
+        mock_get_runner.return_value = _local_runner_mock()
+
+        runner.invoke(cli, ["test", "--target", "arena://pricer"])
+
+        assert ("arena_test", props) in captured
+        assert ARENA_TOKEN not in repr(captured)  # the gateway token never reaches telemetry
+
+    @patch(RESET_PATCH)
+    @patch(RESOLVE_PATCH)
+    @patch(RUNNER_PATCH)
+    def test_agent_without_tool_calls_is_labelled_blackbox(
+        self, mock_get_runner, mock_resolve, mock_reset, tmp_path
+    ):
+        mock_resolve.return_value = _arena_target(tmp_path, whitebox=False)
+        mock_get_runner.return_value = _local_runner_mock()
+
+        result = runner.invoke(cli, ["test", "--target", "arena://pricer"])
+
+        assert "blackbox" in result.output
+        assert "whitebox" not in result.output
+
+    @patch(RESET_PATCH)
+    @patch(RESOLVE_PATCH)
+    @patch(RUNNER_PATCH)
+    def test_manifest_context_is_used_literally(
+        self, mock_get_runner, mock_resolve, mock_reset, tmp_path
+    ):
+        # A manifest context that happens to be the path of an existing file
+        # must NOT be read as a file.
+        existing = tmp_path / "secret.txt"
+        existing.write_text("FILE CONTENTS")
+        target = _arena_target(tmp_path, context=str(existing))
+        mock_resolve.return_value = target
+        r = _local_runner_mock()
+        mock_get_runner.return_value = r
+
+        runner.invoke(cli, ["test", "--target", "arena://pricer"])
+
+        assert _started_config(r).context == str(existing)
+
+    @patch(RESET_PATCH)
+    @patch(RESOLVE_PATCH)
+    @patch(RUNNER_PATCH)
+    def test_user_context_file_is_still_read(
+        self, mock_get_runner, mock_resolve, mock_reset, tmp_path
+    ):
+        mock_resolve.return_value = _arena_target(tmp_path)
+        r = _local_runner_mock()
+        mock_get_runner.return_value = r
+        ctx_file = tmp_path / "ctx.txt"
+        ctx_file.write_text("  from the user file  ")
+
+        runner.invoke(cli, ["test", "--target", "arena://pricer", "--context", str(ctx_file)])
+
+        assert _started_config(r).context == "from the user file"
+
+    @patch(RESET_PATCH)
+    @patch(RESOLVE_PATCH)
+    @patch(RUNNER_PATCH)
+    def test_explicit_scope_wins(self, mock_get_runner, mock_resolve, mock_reset, tmp_path):
+        mock_resolve.return_value = _arena_target(tmp_path)
+        r = _local_runner_mock()
+        mock_get_runner.return_value = r
+        own = tmp_path / "own-scope.yaml"
+        own.write_text("permitted: []\n")
+
+        runner.invoke(cli, ["test", "--target", "arena://pricer", "--scope", str(own)])
+
+        assert _started_config(r).scope_path == str(own)
+
+    @patch(RESET_PATCH)
+    @patch(RESOLVE_PATCH)
+    @patch(RUNNER_PATCH)
+    def test_reset_failure_exits_2(self, mock_get_runner, mock_resolve, mock_reset, tmp_path):
+        from humanbound_cli.arena.target import TargetError
+
+        mock_resolve.return_value = _arena_target(tmp_path)
+        mock_reset.side_effect = TargetError("reset endpoint exploded")
+        r = _local_runner_mock()
+        mock_get_runner.return_value = r
+
+        result = runner.invoke(cli, ["test", "--target", "arena://pricer"])
+
+        assert_exit_error(result, 2)
+        assert "reset endpoint exploded" in result.output
+        r.start.assert_not_called()
+
+    @patch(RESOLVE_PATCH)
+    @patch(RUNNER_PATCH)
+    def test_not_running_exits_2_with_hint(self, mock_get_runner, mock_resolve):
+        from humanbound_cli.arena.target import TargetError
+
+        mock_resolve.side_effect = TargetError("pricer is not running → hb arena run pricer")
+
+        result = runner.invoke(cli, ["test", "--target", "arena://pricer"])
+
+        assert_exit_error(result, 2)
+        assert "hb arena run pricer" in result.output
+        mock_get_runner.assert_not_called()
+
+    @patch(RESOLVE_PATCH)
+    @patch(RUNNER_PATCH)
+    def test_target_and_endpoint_conflict(self, mock_get_runner, mock_resolve):
+        result = runner.invoke(cli, ["test", "--target", "arena://pricer", "--endpoint", "{}"])
+
+        assert_exit_error(result, 2)
+        assert "--target or --endpoint" in result.output
+        mock_resolve.assert_not_called()
+        mock_get_runner.assert_not_called()
+
+    @patch(RESOLVE_PATCH)
+    @patch(RUNNER_PATCH)
+    def test_non_arena_target_rejected(self, mock_get_runner, mock_resolve):
+        result = runner.invoke(cli, ["test", "--target", "http://example.com/agent"])
+
+        assert_exit_error(result, 2)
+        assert "arena://" in result.output
+        mock_resolve.assert_not_called()
+        mock_get_runner.assert_not_called()
+
+
+class TestArenaBaseline:
+    @patch(RESET_PATCH)
+    @patch(RESOLVE_PATCH)
+    @patch(RUNNER_PATCH)
+    def test_baseline_is_checked_after_the_reset_and_before_the_experiment(
+        self, mock_get_runner, mock_resolve, mock_reset, tmp_path, monkeypatch
+    ):
+        from humanbound_cli.arena import target
+
+        order = []
+        mock_resolve.return_value = _arena_target(tmp_path)
+        mock_reset.side_effect = lambda *a: order.append("reset")
+        monkeypatch.setattr(target, "enforce_baseline", lambda t: order.append(("check", t)))
+        r = _local_runner_mock()
+        r.start.side_effect = lambda config: order.append("start")
+        mock_get_runner.return_value = r
+
+        runner.invoke(cli, ["test", "--target", "arena://pricer"])
+
+        assert order == ["reset", ("check", mock_resolve.return_value), "start"]
+
+    @pytest.mark.parametrize("flag", ["--no-reset", "--no-auto-start"])
+    @patch(RESET_PATCH)
+    @patch(RESOLVE_PATCH)
+    @patch(RUNNER_PATCH)
+    def test_baseline_is_checked_without_a_reset_too(
+        self, mock_get_runner, mock_resolve, mock_reset, flag, tmp_path, monkeypatch
+    ):
+        from humanbound_cli.arena import target
+
+        checked = []
+        mock_resolve.return_value = _arena_target(tmp_path)
+        monkeypatch.setattr(target, "enforce_baseline", lambda t: checked.append(t.agent_id))
+        r = _local_runner_mock()
+        mock_get_runner.return_value = r
+
+        runner.invoke(cli, ["test", "--target", "arena://pricer", flag])
+
+        mock_reset.assert_not_called()
+        assert checked == ["pricer"]
+        r.start.assert_called_once()
+
+    @patch(RESET_PATCH)
+    @patch(RESOLVE_PATCH)
+    @patch(RUNNER_PATCH)
+    def test_baseline_violations_stop_the_agent_and_exit_2(
+        self, mock_get_runner, mock_resolve, mock_reset, tmp_path, monkeypatch, _baseline_met
+    ):
+        from humanbound_cli.arena import runtime, target
+        from humanbound_cli.arena.baseline import Violation
+
+        # the real check (not the autouse fixture's stand-in), on faked Docker data
+        monkeypatch.setattr(target, "enforce_baseline", _baseline_met)
+        violations = [
+            Violation("arena-x-pricer", "non-root", "runs as root (Config.User is 'root')"),
+            Violation("arena-x-pricer-db-1", "host-mounts", "mounts the host path /etc"),
+        ]
+        stopped = []
+        monkeypatch.setattr(runtime, "check_baseline", lambda agent_id: violations)
+        monkeypatch.setattr(
+            runtime, "stop", lambda agent_id, kind, **kw: stopped.append((agent_id, kind))
+        )
+        mock_resolve.return_value = _arena_target(tmp_path)
+        r = _local_runner_mock()
+        mock_get_runner.return_value = r
+
+        result = runner.invoke(cli, ["test", "--target", "arena://pricer"])
+
+        assert_exit_error(result, 2)
+        for v in violations:
+            assert str(v) in result.output
+        assert "container baseline" in result.output
+        assert stopped == [("pricer", "image")]
+        r.start.assert_not_called()
+
+
+class TestLocalRunJoin:
+    @patch("humanbound_cli.commands.test._display_results")
+    @patch("humanbound_cli.commands.test._wait_for_completion", return_value="Finished")
+    @patch("humanbound_cli.commands.test._join_local_run")
+    @patch(RESET_PATCH)
+    @patch(RESOLVE_PATCH)
+    @patch(RUNNER_PATCH)
+    def test_local_worker_is_joined_before_results_are_read(
+        self,
+        mock_get_runner,
+        mock_resolve,
+        mock_reset,
+        mock_join,
+        mock_wait,
+        mock_display,
+        tmp_path,
+    ):
+        from humanbound_cli.engine.runner import TestResult
+
+        order = []
+        mock_resolve.return_value = _arena_target(tmp_path)
+        r = local_runner()
+        r.start.return_value = "exp-1"
+        r.get_result.side_effect = lambda eid: (
+            order.append("result")
+            or TestResult(
+                experiment_id=eid, name="x", status="Finished", stats={"pass": 1, "total": 1}
+            )
+        )
+        mock_join.side_effect = lambda run, eid: order.append(("join", eid))
+        mock_get_runner.return_value = r
+
+        runner.invoke(cli, ["test", "--target", "arena://pricer"])
+
+        assert order[:2] == [("join", "exp-1"), "result"]

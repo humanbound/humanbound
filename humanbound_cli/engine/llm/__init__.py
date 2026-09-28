@@ -18,6 +18,14 @@ def resolve_provider_name(name) -> str:
     return PROVIDER_ALIASES.get(name, name)
 
 
+def unsupported_provider_error(raw) -> ValueError:
+    """The error for a provider name that isn't supported (shown with the user's input)."""
+    aliases = ", ".join(f"{a} -> {c}" for a, c in PROVIDER_ALIASES.items())
+    return ValueError(
+        f"Unsupported LLM provider: {raw}. Supported: {SUPPORTED_PROVIDERS} (aliases: {aliases})"
+    )
+
+
 def get_llm_pinger(model_provider):
     """Return an LLMPinger instance for the given provider.
 
@@ -44,10 +52,6 @@ def get_llm_pinger(model_provider):
     elif name == "ollama":
         from .ollama import LLMPinger
     else:
-        aliases = ", ".join(f"{a} -> {c}" for a, c in PROVIDER_ALIASES.items())
-        raise ValueError(
-            f"Unsupported LLM provider: {raw}. "
-            f"Supported: {SUPPORTED_PROVIDERS} (aliases: {aliases})"
-        )
+        raise unsupported_provider_error(raw)
 
     return LLMPinger(model_provider)

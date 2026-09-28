@@ -395,3 +395,17 @@ MOCK_SUBSCRIPTION = {
     "status": "active",
     "limits": {"experiments_per_month": 100},
 }
+
+
+# ---------------------------------------------------------------------------
+# Arena fixtures
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def arena_home(tmp_path, monkeypatch):
+    """Point ~ (and so ~/.humanbound/arena) at a temp dir; clear arena env overrides."""
+    monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.delenv("HB_ARENA_INDEX", raising=False)
+    monkeypatch.delenv("HB_ARENA_PORT", raising=False)
+    return tmp_path / ".humanbound" / "arena"

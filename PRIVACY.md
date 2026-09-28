@@ -83,7 +83,7 @@ account **email** as a PostHog person property (`$set: { email }`), read
 locally from `~/.humanbound/credentials.json`. Anonymous, pre-login events
 never carry an email.
 
-The eight events:
+The eleven events:
 
 | Event | When it fires | Event-specific properties |
 |---|---|---|
@@ -93,6 +93,9 @@ The eight events:
 | `test_complete` | When `hb test` finishes | `test_level`, `category`, `is_local`, `outcome`, `duration_ms`, `finding_count` |
 | `posture_view` | When posture is rendered | `is_local`, `mode`, `has_coverage` |
 | `findings_view` | When findings list is rendered | `filter_applied` |
+| `arena_pull` | When `hb arena pull` fetches an arena agent | `agent` (catalog id), `version`; for an agent from a catalog other than the default Humanbound one, only `agent: "custom"` |
+| `arena_run` | When `hb arena run` starts an arena agent | `agent`, `version` (custom catalogs: `agent: "custom"` only) |
+| `arena_test` | When `hb test --target arena://…` starts | `agent`, `version` (custom catalogs: `agent: "custom"` only) |
 | `gated_command_hit` | When a platform-only feature is attempted without login | `command` (e.g. `hb monitor`) |
 | `telemetry_disabled` | Once per machine ever, when telemetry is disabled — at `hb telemetry disable`, or on the first run with `DO_NOT_TRACK=1` / `HB_TELEMETRY_DISABLED=1` set | `reason` (`command`, `DO_NOT_TRACK`, `HB_TELEMETRY_DISABLED`, `opt_out_state`) |
 

@@ -11,6 +11,7 @@ from rich.console import Console
 from rich.markup import escape
 from rich.panel import Panel
 from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
+from rich.text import Text
 
 from .. import telemetry
 from ..engine import Posture, TestConfig, TestResult, get_runner
@@ -243,6 +244,17 @@ def _fire_test_complete(
     "Same shape as 'hb connect --endpoint'. Overrides the project's default integration.",
 )
 @click.option(
+    "--target",
+    default=None,
+    help="Arena target, arena://<agent> with an id from 'hb arena ls'. Runs on the local engine.",
+)
+@click.option(
+    "--no-reset",
+    is_flag=True,
+    default=False,
+    help="Don't reset the arena agent to a clean state before the run.",
+)
+@click.option(
     "--category",
     default=None,
     help="Shorthand alias for --test-category (e.g. humanbound/behavioral/qa)",
@@ -326,6 +338,8 @@ def test_command(
     lang: str,
     provider_id: str,
     endpoint: str,
+    target: str,
+    no_reset: bool,
     category: str,
     deep: bool,
     full: bool,
@@ -348,6 +362,7 @@ def test_command(
       hb test --endpoint ./config.json --repo . --wait
       hb test --endpoint ./config.json --prompt ./system.txt --wait
       hb test --endpoint ./config.json --scope ./scope.yaml --wait
+      hb test --target arena://<agent>             # Arena agent (see 'hb arena')
 
     \b
     Platform mode (requires login + project):
@@ -390,6 +405,33 @@ def test_command(
         timestamp = time.strftime("%Y%m%d-%H%M%S")
         category_short = test_category.split("/")[-1] if test_category else "test"
         name = f"cli-{category_short}-{timestamp}"
+
+    # --- Arena target: resolve before runner selection (it forces the local engine) ---
+    arena = None
+    if target:
+        from ..arena import target as arena_target
+
+        if endpoint:
+            console.print("[red]Use either --target or --endpoint, not both.[/red]")
+            raise SystemExit(EXIT_RUN_FAILED)
+        if not arena_target.is_arena_target(target):
+            console.print("[red]--target only accepts arena://<agent-id> targets.[/red]")
+            raise SystemExit(EXIT_RUN_FAILED)
+        try:
+            arena = arena_target.resolve_target(target)
+        except arena_target.TargetError as e:
+            console.print(Text(str(e), style="red"))
+            raise SystemExit(EXIT_RUN_FAILED)
+        local = True
+        console.print(f"[dim]Arena target {target} → local engine[/dim]")
+        if not scope_path and not repo and not prompt:
+            scope_path = str(arena.scope_path)
+        telemetry.capture(
+            "arena_test",
+            {"agent": arena.agent_id, "version": arena.version}
+            if arena.default_catalog
+            else {"agent": "custom"},
+        )
 
     # --- Runner selection (login + project is the switch) ---
     try:
@@ -492,6 +534,10 @@ def test_command(
         if endpoint:
             integration = _load_integration(endpoint)
             has_telemetry = bool(integration.get("telemetry"))
+        elif arena:
+            # Whitebox only when the agent reports tool calls through the gateway.
+            integration = arena.bot_config
+            has_telemetry = arena.whitebox
         elif is_platform:
             try:
                 client = runner.client
@@ -509,7 +555,13 @@ def test_command(
             console.print("  Depth: [yellow]blackbox[/yellow]")
 
         # Context: string or path to .txt file (max 1500 chars)
-        ctx_value = _resolve_context(context) if context else ""
+        # An arena manifest's context is used literally (never read as a file path).
+        if context:
+            ctx_value = _resolve_context(context)
+        elif arena:
+            ctx_value = arena.context
+        else:
+            ctx_value = ""
         if ctx_value and len(ctx_value) > 1500:
             console.print(
                 f"[red]Context too long ({len(ctx_value)} chars). Maximum is 1,500.[/red]"
@@ -532,7 +584,40 @@ def test_command(
             scope_path=scope_path,
             debug=debug,
             verbose=verbose,
+            target=(
+                {
+                    "kind": "arena",
+                    "agent_id": arena.agent_id,
+                    "agent_version": arena.version,
+                    "gateway": arena.gateway,
+                    "whitebox": arena.whitebox,
+                }
+                if arena
+                else None
+            ),
         )
+
+        # Arena: start from a clean agent state (drops its conversations too)
+        if arena and not no_reset and not no_auto_start:
+            from ..arena import target as arena_target
+
+            try:
+                with console.status(f"Resetting {arena.agent_id}..."):
+                    arena_target.reset_via_gateway(arena.agent_id, arena.gateway)
+            except arena_target.TargetError as e:
+                console.print(Text(str(e), style="red"))
+                raise SystemExit(EXIT_RUN_FAILED)
+
+        # Arena: the agent's containers must meet the container baseline (else it is stopped)
+        if arena:
+            from ..arena import target as arena_target
+
+            try:
+                arena_target.enforce_baseline(arena)
+            except arena_target.TargetError as e:
+                # one problem per line, never re-wrapped
+                console.print(Text(str(e), style="red"), soft_wrap=True)
+                raise SystemExit(EXIT_RUN_FAILED)
 
         # Start experiment via runner
         with console.status("Creating experiment..."):
@@ -598,6 +683,11 @@ def test_command(
         else:
             console.print("\n[bold]Waiting for completion...[/bold]\n")
             final_status = _wait_for_completion(runner, experiment_id)
+
+        # The local worker saves its results before it reports a final status; let it
+        # finish (and release its files) before the results are read and rendered.
+        if not is_platform:
+            _join_local_run(runner, experiment_id)
 
         # Get final results via runner
         result = runner.get_result(experiment_id)
@@ -669,6 +759,18 @@ def test_command(
             duration_ms=duration_ms,
             finding_count=_findings_seen,
         )
+
+
+LOCAL_JOIN_TIMEOUT_S = 60
+
+
+def _join_local_run(runner, experiment_id: str) -> None:
+    """Wait (up to LOCAL_JOIN_TIMEOUT_S) for a local run's worker thread to end."""
+    runs = getattr(runner, "_runs", None)
+    run = runs.get(experiment_id) if isinstance(runs, dict) else None
+    thread = getattr(run, "thread", None)
+    if thread is not None:
+        thread.join(timeout=LOCAL_JOIN_TIMEOUT_S)
 
 
 def _wait_for_completion(runner: TestRunner, experiment_id: str) -> str:

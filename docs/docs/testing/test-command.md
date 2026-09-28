@@ -42,10 +42,19 @@ Endpoint Override (optional):
   -e, --endpoint          Agent integration config -- JSON string or file path.
                           Same shape as 'hb connect --endpoint'.
                           Overrides the project's default integration.
+
+Arena Target (optional):
+  --target                arena://<agent>, a running arena agent.
+                          Runs on the local engine; no login needed.
+  --no-reset              Don't reset the arena agent to a clean state
+                          before the run.
 ```
 
 !!! info "Note"
     The `-e / --endpoint` flag is only needed if your project was not connected with `hb connect --endpoint`, or if you want to temporarily test against a different agent. When a default integration is configured, `hb test` works with no additional flags. Your `--endpoint` JSON file can also include a `telemetry` section for white-box agentic testing -- see [Agent Configuration File](../getting-started/agent-config.md#telemetry-optional).
+
+!!! info "Testing an arena agent"
+    `--target arena://<agent>` tests an intentionally vulnerable agent started with `hb arena run`. Its integration, scope and judge context come from the agent's manifest, so `--endpoint`, `--repo`, `--prompt` and `--scope` are not needed. See [Arena](arena.md#testing-with-hb-test).
 
 !!! tip "Reusing a previous run's configuration"
     Every experiment stores the configuration it ran with. Print it back and feed it straight into a new run:

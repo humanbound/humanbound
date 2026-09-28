@@ -7,6 +7,114 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.12.0] — 2026-09-28
+
+### Added
+- **`hb arena`: run intentionally vulnerable AI agents locally and test them.**
+  `hb arena ls/info/pull/run/ps/logs/reset/stop/rm/endpoint/token/check/config/validate/serve`
+  pull agents from the Humanbound Arena catalog and run them in Docker (loopback
+  only, all capabilities dropped, no-new-privileges). A local gateway on
+  `127.0.0.1:11500` serves every running agent as an **A2A v1.0** agent (Agent
+  Card + JSON-RPC `SendMessage`) and through an OpenAI-compatible
+  `/v1/chat/completions` endpoint, so other tools can target them too. Every
+  gateway call needs a per-user access token (`~/.humanbound/arena/gateway.token`,
+  created on first use; `hb arena endpoint <id>` prints it), sent as
+  `Authorization: Bearer <token>` (for OpenAI-compatible tools,
+  `OPENAI_API_KEY=<token>`) or `X-Arena-Token`, so other local users and
+  processes can't drive your agents; `hb` sends it itself. Agents'
+  LLM keys are kept separately in `~/.humanbound/arena/arena.env` (0600).
+  Trust comes from where the catalog was fetched, never from what a manifest
+  says about itself: agents from the default Humanbound catalog may also read
+  LLM keys (`OPENAI_API_KEY` and a few others) from the shell, while agents
+  from any other catalog (`HB_ARENA_INDEX`: a fork, a local checkout, a file)
+  read keys only from there or `--env-file` and are confirmed once before
+  their first run (`--yes` to skip), with their developer, upstream project,
+  images and key names shown; `HB_*`/`HUMANBOUND_*` names are refused. Every
+  manifest names its `developer` (name, URL, optional contact) and may name
+  the `upstream` project it packages (repo, full commit SHA, SPDX license).
+  When a catalog's index lists an agent's images with their registry digests,
+  `pull` and `run` fetch them by digest and refuse a local image under the
+  same tag that isn't the published one (a stale pull or a local build),
+  saying how to fix it (`docker rmi <ref>`, or run from a local catalog);
+  catalogs without digests use tags as usual. Agent containers are limited
+  (512 processes, 2 GB, 2 CPUs, no restart). Compose-based agents are checked
+  against an allowlist (prebuilt images only, no host mounts or host
+  networking, no variable interpolation beyond declared keys). Agents,
+  networks and the gateway are scoped to the `~/.humanbound` they were started
+  from, so several users or sessions can share one machine; `stop --all
+  --any-owner` cleans up machine-wide. `HB_ARENA_INDEX` points at another
+  catalog, `HB_ARENA_PORT` changes the gateway port. No login is needed.
+  Docker errors say what to do on each OS (including permission denied on the
+  Docker socket), `hb arena run` warns on Linux Docker Engine before 28, and
+  `hb arena` refuses Docker commands inside the hb Docker image. Podman isn't
+  supported.
+- **A container baseline for arena agents, checked before they are used.**
+  After starting an agent (`hb arena run`, `reset`, and a reset through the
+  gateway) and again right before `hb test --target arena://<agent>` starts
+  its experiment, hb inspects every container of the agent, side services
+  included, and refuses to continue unless each runs as a non-root user, is
+  not privileged, drops all capabilities and adds none, sets
+  no-new-privileges, shares no host namespace, mounts no host path or device
+  and publishes ports on 127.0.0.1 only (and is only on networks with no
+  route out, see below). A failing agent is stopped and the
+  problems are printed one per line (`hb test` exits with 2); there is no
+  option to skip the check. `hb arena check <id> [--json]` runs it on demand
+  without stopping anything (exit 0: the containers meet the container
+  baseline, 1: problems found, 2: not running or Docker unusable). It covers
+  configuration only, not what an agent does or what it sends to the
+  destinations it may reach. Its rule ids (`inspect-data`, `non-root`, `not-privileged`,
+  `capabilities`, `no-new-privileges`, `host-namespaces`, `host-mounts`,
+  `loopback-ports`, `internal-networks`) are stable for scripts. `hb arena run` now shows a short
+  notice every time:
+  arena agents are intentionally vulnerable, their isolation is best effort,
+  use them at your own risk and never where there is sensitive data or
+  access to critical systems.
+- **An arena agent's network access is blocked, except for what it needs.**
+  hb starts every agent on Docker networks that have no route out, and runs a
+  small proxy of its own next to it (the door), which is the agent's only way
+  out and the way in from `127.0.0.1`. The door lets through the agent's model
+  (the host and port of `OPENAI_BASE_URL`, or `api.openai.com:443` when unset,
+  for agents that list an `OPENAI_*` key) and the exact hosts the manifest
+  lists under the new optional `runtime.egress`; the agent's own compose
+  services stay reachable to each other. Everything else is refused, including
+  your machine and your local network. `hb arena info`, `hb arena run` and
+  the first-run confirmation show what an agent may reach; `hb arena logs <id>
+  --door` shows what it reached or was refused. The container baseline has a
+  new rule, `internal-networks`. There is no option to start an agent without
+  the block. Limits: an allowed destination is still a way out, only web
+  traffic of clients that honour the proxy variables passes (anything else
+  fails), and a container is not a virtual machine. Manifests may not declare
+  the proxy variables as keys.
+- **Declared vulnerabilities can reference published standards.** A
+  `ground_truth` entry in `arena.yaml` takes an optional `references` list of
+  `<standard>:<id>` strings (for example `owasp-llm:LLM02`,
+  `atlas:AML.T0051.000`). hb checks the shape only and shows them in
+  `hb arena info`.
+- **`hb arena token`** prints only your gateway access token (creating it if
+  needed), for scripts: `TOKEN=$(hb arena token)`. Treat it like a password.
+- **`hb test --target arena://<agent>`** tests a running arena agent on the
+  local engine: the agent's own scope and judge context come from its
+  manifest, the agent is reset to a clean state first (`--no-reset` to skip),
+  and agents that report tool calls are tested whitebox.
+- **Saved local results carry more for benchmarking.** Each conversation in
+  `logs.jsonl` now includes `meta.telemetry.tool_executions` (turn, tool name,
+  parameters, result) and the per-turn metadata (capped in size, without the
+  tool calls already in `tool_executions`); `meta.json` records the
+  run's `configuration` (category, level, language, provider, model — never
+  keys) and, for arena runs, the `target` (agent id and version, gateway,
+  whitebox). Existing fields are unchanged.
+- **Two bot-config placeholders for A2A agents:** `$UUID` (a fresh id at each
+  use) and `$humanbound_conversation_id` (stable within a conversation). These
+  names are now reserved.
+- **Default models for the local engine:** with `HB_PROVIDER=openai` and no
+  `HB_MODEL`, the engine uses `gpt-4.1`; with `ollama`, `llama3.1:8b`. Other
+  providers still need `HB_MODEL` and now say so clearly.
+
+### Changed
+- **The OpenAI and Azure OpenAI providers retry 5xx responses and network
+  errors** with the same backoff already used for rate limits (429). Other 4xx
+  errors are not retried.
+
 ### Fixed
 - **`hb posture --coverage` no longer crashes.** The coverage endpoint
   returns `by_category` keyed by category name with `pass_count`, but the
@@ -59,6 +167,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   latest experiment's logs as if they were filtered. They now say they
   require login. `--all` was ignored too, so a local `--format json --all`
   export stopped at 50 logs; it now exports every log. (#158)
+- **Local runs are saved with status `Finished`.** `meta.json` of a
+  successful local run recorded `Analysing`, because it was written before the
+  status changed. A local run now reports its final status only once its
+  results are on disk, and `hb test` waits for them before showing them.
+- **Loopback endpoints skip environment proxies.** With `HTTP_PROXY`,
+  `HTTPS_PROXY` or `ALL_PROXY` set, `hb test` sent requests to an agent on
+  `localhost`/`127.0.0.1`/`::1` through the proxy; it now connects directly
+  (other endpoints still use the proxy).
 - **Per-turn telemetry now reaches the judge in local runs.** With
   telemetry in `per_turn` mode, the engine discarded the metadata each
   agent reply carried and standardized an empty set instead, so the judge
@@ -67,6 +183,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   behavioural QA) now collects each turn's metadata and passes the tool
   executions to the judge. `end_of_conversation` telemetry is unchanged.
   (#157)
+- **The opening turn's telemetry is kept.** With per-turn telemetry, OWASP
+  agentic conversations that start with a fixed opening prompt dropped that
+  turn's metadata, so its tool calls never reached the judge or the saved
+  results (`meta.telemetry.tool_executions` and `turns`). The opening turn is
+  now recorded as turn 1.
+- **The arena gateway no longer fails requests on a dropped connection.** It
+  reused kept-alive connections an agent's server had just closed, and an
+  occasional request failed with "Server disconnected without sending a
+  response". The gateway now opens a new connection per agent call and
+  retries once when an agent closes the connection without answering.
 
 ## [2.11.0] — 2026-09-25
 

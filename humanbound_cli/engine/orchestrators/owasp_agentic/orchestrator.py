@@ -14,6 +14,7 @@ from concurrent.futures import ThreadPoolExecutor, wait
 from ...bot import Bot, Telemetry
 from ...callbacks import EngineCallbacks, log_buffer_len
 from ...schemas import JUDGE_ERROR_CATEGORY, LogsAnonymous, Status
+from ...telemetry_log import telemetry_meta
 from ..base import JudgeError
 from .config import TestingConfiguration
 from .generator import Conversationer, Synthesizer
@@ -64,8 +65,11 @@ async def __do_single_pipeline_run(
 
         payload = None
         pre_conversation = []
+        opening_metadata = []
         if opening:
-            pre_conversation, _, _, payload = await conversationer.prompt(opening)
+            pre_conversation, _, _, payload = await conversationer.prompt(
+                opening, metadata=opening_metadata
+            )
         conversation, thread_id, exec_t, telemetry_data = await conversationer.chat(
             clean_template,
             payload=payload,
@@ -73,6 +77,7 @@ async def __do_single_pipeline_run(
             cross_conv_registry=cross_conv_registry,
             telemetry_client=telemetry_client,
             telemetry_config=telemetry_config,
+            opening_metadata=opening_metadata,
         )
 
         # Debug: emit per-turn info
@@ -114,19 +119,9 @@ async def __do_single_pipeline_run(
 
         # Build meta array
         meta = []
-        if telemetry_data:
-            tool_names = [t.get("tool_name", "") for t in telemetry_data.get("tool_executions", [])]
-            usage = telemetry_data.get("resource_usage", {})
-            meta.append(
-                {
-                    "telemetry": {
-                        "trace_id": thread_id,
-                        "tools": tool_names,
-                        "tokens": usage.get("tokens_used", 0),
-                        "api_calls": usage.get("api_calls_count", 0),
-                    }
-                }
-            )
+        telemetry_entry = telemetry_meta(thread_id, telemetry_data)
+        if telemetry_entry:
+            meta.append(telemetry_entry)
 
         logs.append(
             LogsAnonymous(

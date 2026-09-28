@@ -37,8 +37,10 @@ Provider is resolved in this order (first match wins):
 ```bash
 export HB_PROVIDER=openai
 export HB_API_KEY=sk-proj-...
-export HB_MODEL=gpt-4.1        # optional, uses provider default
+export HB_MODEL=gpt-4.1        # optional for openai and ollama only (see below)
 ```
+
+`HB_MODEL` (or `hb config set model …`) is optional only for `openai` (default `gpt-4.1`) and `ollama` (default `llama3.1:8b`). Every other provider needs an explicit model; for Azure OpenAI that is your deployment name.
 
 ### Config File
 
@@ -57,12 +59,12 @@ Config is stored at `~/.humanbound/config.yaml`. Never sent to Humanbound.
 
 | Provider | `HB_PROVIDER` | Key prefix | Notes |
 |---|---|---|---|
-| OpenAI | `openai` | `sk-` | GPT-4o, GPT-4.1, etc. |
-| Anthropic | `anthropic` or `claude` | `sk-ant-` | Claude 3.5, Claude 4, etc. |
-| Google | `gemini` | | Gemini Pro, etc. |
-| Azure OpenAI | `azureopenai` | | Requires `HB_ENDPOINT` with `?api-version=` |
-| Grok (xAI) | `grok` | | |
-| Ollama | `ollama` | Not needed | Full local isolation |
+| OpenAI | `openai` | `sk-` | Default model `gpt-4.1` |
+| Anthropic | `anthropic` or `claude` | `sk-ant-` | `HB_MODEL` required |
+| Google | `gemini` | | `HB_MODEL` required |
+| Azure OpenAI | `azureopenai` | | Requires `HB_ENDPOINT` with `?api-version=`; `HB_MODEL` = deployment name |
+| Grok (xAI) | `grok` | | `HB_MODEL` required |
+| Ollama | `ollama` | Not needed | Full local isolation; default model `llama3.1:8b` |
 
 ### Azure OpenAI
 
@@ -71,7 +73,7 @@ Azure requires the full endpoint URL including the api-version:
 ```bash
 export HB_PROVIDER=azureopenai
 export HB_API_KEY=your-azure-key
-export HB_MODEL=gpt-4.1
+export HB_MODEL=your-deployment   # required: the Azure deployment name
 export HB_ENDPOINT="https://your-resource.openai.azure.com/openai/deployments/your-deployment/chat/completions?api-version=2025-01-01-preview"
 ```
 
@@ -89,7 +91,7 @@ ollama pull llama3.1:8b
 
 # Configure
 export HB_PROVIDER=ollama
-export HB_MODEL=llama3.1:8b
+export HB_MODEL=llama3.1:8b   # optional, this is the default
 
 # Run test (only calls: your bot + local ollama)
 hb test --endpoint ./config.json --scope ./scope.json --wait

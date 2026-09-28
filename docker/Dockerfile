@@ -12,8 +12,10 @@ FROM python:3.12-slim
 LABEL org.opencontainers.image.source="https://github.com/humanbound/humanbound" \
     org.opencontainers.image.description="Humanbound CLI - open-source adversarial testing engine for AI agents" \
     org.opencontainers.image.licenses="Apache-2.0"
+# HB_DOCKER_IMAGE: `hb arena` (which needs Docker on the host) refuses to run in here.
 ENV PYTHONUNBUFFERED=1 \
-    HOME=/home/hb
+    HOME=/home/hb \
+    HB_DOCKER_IMAGE=1
 RUN useradd --create-home --uid 1000 hb \
     && mkdir -p /workspace \
     && chown hb:hb /workspace
