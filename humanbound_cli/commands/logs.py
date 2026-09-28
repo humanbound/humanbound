@@ -83,7 +83,7 @@ def logs_group(
     \b
     Examples:
       hb logs abc123                             # Specific experiment
-      hb logs abc123 --result fail               # Only failed
+      hb logs abc123 --verdict fail              # Only failed
       hb logs --assessment def456                # Assessment logs
       hb logs --finding ghi789                   # Finding evidence
       hb logs --last 5 --format json -o logs.json
@@ -95,11 +95,23 @@ def logs_group(
     # --- Runner selection ---
     runner = get_runner()
     is_platform = isinstance(runner, PlatformTestRunner)
+    scope_flags = any([last_n, test_category, from_date, until_date, days])
 
     if not is_platform:
         # Local mode: read from files (Phase 3+)
         # For now, only experiment-level table/json/html from local results
-        _local_logs(experiment_id, output_format, output, verdict, page, size)
+        if assessment_id or finding_id:
+            console_err.print("[yellow]Assessment and finding logs require login.[/yellow]")
+            console_err.print("  hb login")
+            raise SystemExit(0)
+        if scope_flags:
+            console_err.print(
+                "[yellow]Filtering by --last, --category, --from, --until or --days "
+                "requires login.[/yellow]"
+            )
+            console_err.print("  hb login")
+            raise SystemExit(0)
+        _local_logs(experiment_id, output_format, output, verdict, page, size, fetch_all)
         return
 
     # Platform mode: full feature set (assessments, findings, project-level, etc.)
@@ -111,7 +123,6 @@ def logs_group(
         raise SystemExit(1)
 
     # Validation
-    scope_flags = any([last_n, test_category, from_date, until_date, days])
     exclusive_count = sum(bool(x) for x in [experiment_id, assessment_id, finding_id, scope_flags])
     if exclusive_count > 1:
         console_err.print(
@@ -663,7 +674,7 @@ def _export_html(client: HumanboundClient, experiment_id: str, output: str):
 # ---------------------------------------------------------------------------
 
 
-def _local_logs(experiment_id, output_format, output, verdict, page, size):
+def _local_logs(experiment_id, output_format, output, verdict, page, size, fetch_all):
     """Read logs from local results files. Full implementation in Phase 3."""
     from pathlib import Path
 
@@ -701,7 +712,7 @@ def _local_logs(experiment_id, output_format, output, verdict, page, size):
 
     # Paginate
     start = (page - 1) * size
-    page_logs = logs[start : start + size]
+    page_logs = logs if fetch_all and output_format == "json" else logs[start : start + size]
 
     if output_format == "json":
         json_output = _json.dumps({"logs": page_logs, "total": len(logs)}, indent=2, default=str)

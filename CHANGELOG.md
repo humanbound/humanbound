@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **Local `hb logs` no longer silently ignores its filters.** Without login,
+  `--last`, `--category`, `--from`, `--until`, `--days`, `--assessment` and
+  `--finding` were accepted but had no effect, so the command showed the
+  latest experiment's logs as if they were filtered. They now say they
+  require login. `--all` was ignored too, so a local `--format json --all`
+  export stopped at 50 logs; it now exports every log. (#158)
 - **Per-turn telemetry now reaches the judge in local runs.** With
   telemetry in `per_turn` mode, the engine discarded the metadata each
   agent reply carried and standardized an empty set instead, so the judge

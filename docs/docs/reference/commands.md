@@ -71,13 +71,13 @@ The complete `hb` CLI reference, organised into eight categories: global flags, 
 |---|---|
 | `hb logs` | List logs from the latest experiment |
 | `hb logs <experiment-id>` | View logs for a specific experiment |
-| `hb logs --assessment <id>` | List logs for a specific assessment |
-| `hb logs --finding <id>` | List logs linked to a specific finding |
+| `hb logs --assessment <id>` | List logs for a specific assessment; requires login |
+| `hb logs --finding <id>` | List logs linked to a specific finding; requires login |
 | `hb logs --verdict pass\|fail` | Filter by verdict |
-| `hb logs --category <name>` | Filter by test category (substring match) |
-| `hb logs --from DATE --until DATE` | Filter by date range (ISO 8601) |
-| `hb logs --days N` | Shorthand for last N days |
-| `hb logs --last N` | Show logs from last N experiments |
+| `hb logs --category <name>` | Filter by test category (substring match); requires login |
+| `hb logs --from DATE --until DATE` | Filter by date range (ISO 8601); requires login |
+| `hb logs --days N` | Shorthand for last N days; requires login |
+| `hb logs --last N` | Show logs from last N experiments; requires login |
 | `hb logs --format json\|html\|table` | Output format (default: table) |
 | `hb logs -o FILE` | Save output to file |
 | `hb logs upload <file>` | Upload conversation logs for evaluation |

@@ -9,12 +9,14 @@ so we patch `get_runner` and wire in a mock client through the shared
 import json
 from unittest.mock import MagicMock, patch
 
+import pytest
 from click.testing import CliRunner
 from conftest import (
     MOCK_EXPERIMENT,
     MOCK_LOG,
     MOCK_LOG_PASS,
     assert_exit_ok,
+    local_runner,
     platform_runner,
 )
 
@@ -324,3 +326,62 @@ class TestOutputFormat:
 
         assert_exit_ok(result)
         assert "pass" in result.output.lower() or "fail" in result.output.lower()
+
+
+class TestLocalMode:
+    @staticmethod
+    def _write_local_logs(tmp_path, count):
+        exp_dir = tmp_path / ".humanbound" / "results" / "exp-20260920T100000-abcd1234"
+        exp_dir.mkdir(parents=True)
+        lines = [json.dumps({"result": "pass", "explanation": f"log {i}"}) for i in range(count)]
+        (exp_dir / "logs.jsonl").write_text("\n".join(lines) + "\n")
+
+    @patch(RUNNER_PATCH)
+    def test_all_exports_every_log(self, mock_get_runner, tmp_path, monkeypatch):
+        mock_get_runner.return_value = local_runner()
+        monkeypatch.chdir(tmp_path)
+        self._write_local_logs(tmp_path, 60)
+
+        result = runner.invoke(cli, ["logs", "--format", "json", "--all", "-o", "out.json"])
+
+        assert_exit_ok(result)
+        data = json.loads((tmp_path / "out.json").read_text())
+        assert data["total"] == 60
+        assert len(data["logs"]) == 60
+
+    @patch(RUNNER_PATCH)
+    def test_json_without_all_is_paginated(self, mock_get_runner, tmp_path, monkeypatch):
+        mock_get_runner.return_value = local_runner()
+        monkeypatch.chdir(tmp_path)
+        self._write_local_logs(tmp_path, 60)
+
+        result = runner.invoke(cli, ["logs", "--format", "json", "-o", "out.json"])
+
+        assert_exit_ok(result)
+        assert len(json.loads((tmp_path / "out.json").read_text())["logs"]) == 50
+
+    @pytest.mark.parametrize(
+        "flags,message",
+        [
+            (["--last", "2"], "requires login"),
+            (["--category", "owasp_agentic"], "requires login"),
+            (["--from", "2026-09-01"], "requires login"),
+            (["--until", "2026-09-01"], "requires login"),
+            (["--days", "7"], "requires login"),
+            (["--assessment", "a-1"], "require login"),
+            (["--finding", "f-1"], "require login"),
+        ],
+    )
+    @patch(RUNNER_PATCH)
+    def test_platform_only_options_require_login(
+        self, mock_get_runner, flags, message, tmp_path, monkeypatch
+    ):
+        mock_get_runner.return_value = local_runner()
+        monkeypatch.chdir(tmp_path)
+        self._write_local_logs(tmp_path, 3)
+
+        result = runner.invoke(cli, ["logs", *flags])
+
+        assert result.exit_code == 0
+        assert message in result.output
+        assert "log 0" not in result.output
