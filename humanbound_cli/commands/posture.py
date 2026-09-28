@@ -4,6 +4,7 @@
 
 import click
 from rich.console import Console
+from rich.markup import escape
 from rich.panel import Panel
 from rich.table import Table
 
@@ -53,6 +54,11 @@ def posture_command(project: str, as_json: bool, trends: bool, org: bool, covera
 
     if not is_platform:
         # Local mode
+        if project:
+            missing, fix = platform_requirement()
+            console.print(f"[yellow]Project posture requires {missing}.[/yellow]")
+            console.print(fix)
+            raise SystemExit(0)
         if trends:
             missing, fix = platform_requirement()
             console.print(f"[yellow]Posture history requires {missing}.[/yellow]")
@@ -69,6 +75,8 @@ def posture_command(project: str, as_json: bool, trends: bool, org: bool, covera
             if missing != "login":
                 console.print("[yellow]No project selected.[/yellow]")
                 console.print(f"{fix}\n")
+            if coverage:
+                console.print(f"[dim]--coverage requires {missing}; ignoring it.[/dim]\n")
         _local_posture(as_json)
         _fire_posture_view(is_local=True, mode="current", has_coverage=coverage)
         return
@@ -240,38 +248,15 @@ def _display_posture(posture: dict):
         )
     )
 
-    # Breakdown table
-    finding_metrics = posture.get("finding_metrics", {})
-    coverage_metrics = posture.get("coverage_metrics", {})
-    resilience_metrics = posture.get("resilience_metrics", {})
+    _display_dimensions(posture.get("dimensions") or {})
 
-    if finding_metrics or coverage_metrics or resilience_metrics:
-        console.print("\n[bold]Score Breakdown:[/bold]\n")
-
-        table = Table(show_header=True, header_style="bold")
-        table.add_column("Component", width=15)
-        table.add_column("Score", width=10, justify="right")
-        table.add_column("Weight", width=10, justify="right")
-        table.add_column("Bar", width=30)
-
-        components = [
-            ("Findings", finding_metrics.get("score", 0), "40%"),
-            ("Confidence", finding_metrics.get("avg_confidence", 0), "25%"),
-            ("Coverage", coverage_metrics.get("score", 0), "20%"),
-            ("Resilience", resilience_metrics.get("score", 0), "15%"),
-        ]
-
-        for name, comp_score, weight in components:
-            bar = _score_bar(comp_score)
-            color = "green" if comp_score >= 80 else ("yellow" if comp_score >= 60 else "red")
-            table.add_row(
-                name,
-                f"[{color}]{comp_score:.0f}[/{color}]",
-                weight,
-                bar,
-            )
-
-        console.print(table)
+    findings = posture.get("findings")
+    if isinstance(findings, dict):
+        console.print(
+            f"\n[bold]Findings:[/bold] {findings.get('open', 0)} open "
+            f"({findings.get('critical', 0)} critical, {findings.get('high', 0)} high), "
+            f"{findings.get('regressed', 0)} regressed"
+        )
 
     # Recommendations
     recommendations = posture.get("recommendations", [])
@@ -408,9 +393,6 @@ def _calculate_fallback_posture(client: HumanboundClient, project_id: str):
         posture = {
             "overall_score": score,
             "grade": _score_to_grade(score),
-            "finding_metrics": {"score": pass_rate},
-            "coverage_metrics": {"score": 70},
-            "resilience_metrics": {"score": 85},
             "recommendations": [],
             "last_tested": latest.get("created_at", "")[:10],
         }
@@ -456,43 +438,41 @@ def _display_org_posture(response: dict):
         )
     )
 
-    # Dimension breakdown
-    dimensions = response.get("dimensions", {})
-    if dimensions:
-        console.print("\n[bold]Dimensions:[/bold]\n")
-
-        table = Table(show_header=True, header_style="bold")
-        table.add_column("Dimension", width=20)
-        table.add_column("Score", width=10, justify="right")
-        table.add_column("Bar", width=30)
-
-        dimension_labels = {
-            "security": "Agent Security",
-            "agent_security": "Agent Security",
-            "shadow_ai": "Shadow AI",
-            "quality": "Quality",
-        }
-
-        for key, label in dimension_labels.items():
-            dim_data = dimensions.get(key)
-            if dim_data is None:
-                continue
-            dim_score = (
-                dim_data.get("posture", dim_data.get("score", 0))
-                if isinstance(dim_data, dict)
-                else dim_data
-            )
-            bar = _score_bar(dim_score)
-            color = "green" if dim_score >= 80 else ("yellow" if dim_score >= 60 else "red")
-            table.add_row(
-                label,
-                f"[{color}]{dim_score:.0f}[/{color}]",
-                bar,
-            )
-
-        console.print(table)
-
+    _display_dimensions(response.get("dimensions") or {})
     _print_next(org=True)
+
+
+def _display_dimensions(dimensions: dict):
+    """Display the per-dimension scores the posture endpoints return."""
+    dimension_labels = {
+        "security": "Agent Security",
+        "agent_security": "Agent Security",
+        "shadow_ai": "Shadow AI",
+        "quality": "Quality",
+    }
+    rows = []
+    for key, label in dimension_labels.items():
+        dim_data = dimensions.get(key)
+        if dim_data is None:
+            continue
+        dim_score = (
+            dim_data.get("posture", dim_data.get("score", 0))
+            if isinstance(dim_data, dict)
+            else dim_data
+        )
+        rows.append((label, dim_score))
+    if not rows:
+        return
+
+    console.print("\n[bold]Dimensions:[/bold]\n")
+    table = Table(show_header=True, header_style="bold")
+    table.add_column("Dimension", width=20)
+    table.add_column("Score", width=10, justify="right")
+    table.add_column("Bar", width=30)
+    for label, dim_score in rows:
+        color = "green" if dim_score >= 80 else ("yellow" if dim_score >= 60 else "red")
+        table.add_row(label, f"[{color}]{dim_score:.0f}[/{color}]", _score_bar(dim_score))
+    console.print(table)
 
 
 def _display_coverage_section(response: dict):
@@ -519,6 +499,9 @@ def _display_coverage_section(response: dict):
 
     # Category breakdown
     categories = response.get("categories", response.get("by_category", []))
+    # The coverage endpoint returns by_category keyed by category name.
+    if isinstance(categories, dict):
+        categories = [{"category": name, **stats} for name, stats in categories.items()]
     if categories:
         table = Table(show_header=True, header_style="bold")
         table.add_column("Category", width=25)
@@ -528,7 +511,7 @@ def _display_coverage_section(response: dict):
         for cat in categories:
             name = cat.get("category", cat.get("name", ""))
             total = cat.get("total", cat.get("tests_run", 0))
-            passed = cat.get("pass", cat.get("passed", 0))
+            passed = cat.get("pass", cat.get("passed", cat.get("pass_count", 0)))
 
             if total > 0:
                 rate = (passed / total) * 100
@@ -537,7 +520,7 @@ def _display_coverage_section(response: dict):
             else:
                 rate_str = "[dim]-[/dim]"
 
-            table.add_row(name, str(total), rate_str)
+            table.add_row(escape(str(name)), str(total), rate_str)
 
         console.print(table)
 
@@ -551,7 +534,7 @@ def _display_coverage_section(response: dict):
                 if isinstance(gap, dict)
                 else str(gap)
             )
-            console.print(f"  - {name}")
+            console.print(f"  - {escape(str(name))}")
         if len(gap_list) > 5:
             console.print(f"  [dim]... and {len(gap_list) - 5} more[/dim]")
 

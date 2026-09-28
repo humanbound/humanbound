@@ -68,6 +68,17 @@ COVERAGE_RESPONSE = {
 }
 
 
+# Shape the coverage endpoint returns today: by_category keyed by category name
+PLATFORM_COVERAGE_RESPONSE = {
+    "coverage_percentage": 100.0,
+    "by_category": {
+        "prompt_injection": {"tests_run": 20, "pass_count": 14, "fail_count": 6},
+        "data_leakage": {"tests_run": 10, "pass_count": 10, "fail_count": 0},
+    },
+    "gaps": [],
+}
+
+
 def _make_client(**overrides):
     m = MagicMock()
     m.is_authenticated.return_value = True
@@ -187,6 +198,55 @@ class TestHappyPath:
         result = runner.invoke(cli, ["posture", "--org", "--json"])
         data = assert_valid_json(result)
         assert data.get("score") == 72.5
+
+    @patch(RUNNER_PATCH)
+    def test_coverage_by_category_from_platform(self, mock_get_runner):
+        mock = _make_client()
+        mock.get.return_value = PLATFORM_POSTURE_RESPONSE
+        mock.get_coverage.return_value = PLATFORM_COVERAGE_RESPONSE
+        mock_get_runner.return_value = platform_runner(mock)
+        result = runner.invoke(cli, ["posture", "--coverage"])
+        assert_exit_ok(result)
+        assert "prompt_injection" in result.output
+        assert "70%" in result.output
+
+    @patch(RUNNER_PATCH)
+    def test_coverage_names_are_printed_as_text(self, mock_get_runner):
+        mock = _make_client()
+        mock.get.return_value = PLATFORM_POSTURE_RESPONSE
+        mock.get_coverage.return_value = {
+            "coverage_percentage": 50.0,
+            "by_category": {"odd[/x]name": {"tests_run": 2, "pass_count": 1}},
+            "gaps": [{"category": "gap[/y]"}],
+        }
+        mock_get_runner.return_value = platform_runner(mock)
+        result = runner.invoke(cli, ["posture", "--coverage"])
+        assert_exit_ok(result)
+        assert "odd[/x]name" in result.output
+        assert "gap[/y]" in result.output
+
+    @patch(RUNNER_PATCH)
+    def test_dimensions_and_findings_from_platform(self, mock_get_runner):
+        mock = _make_client()
+        mock.get.return_value = PLATFORM_POSTURE_RESPONSE
+        mock_get_runner.return_value = platform_runner(mock)
+        result = runner.invoke(cli, ["posture"])
+        assert_exit_ok(result)
+        assert "Agent Security" in result.output
+        assert "Findings: 3 open (0 critical, 1 high), 0 regressed" in result.output
+
+    @patch(RUNNER_PATCH)
+    def test_fallback_posture_shows_no_made_up_scores(self, mock_get_runner):
+        mock = _make_client()
+        mock.get.side_effect = APIError("Not found", 404)
+        mock.list_experiments.return_value = {
+            "data": [{"results": {"stats": {"total": 10, "pass": 7, "fail": 3}}}]
+        }
+        mock_get_runner.return_value = platform_runner(mock)
+        result = runner.invoke(cli, ["posture"])
+        assert "70.0/100" in result.output
+        assert "Resilience" not in result.output
+        assert "Coverage" not in result.output
 
     @patch(RUNNER_PATCH)
     def test_coverage_flag(self, mock_get_runner):
@@ -337,3 +397,22 @@ def test_local_posture_says_no_project_selected(
     assert (
         "No project selected. Use 'hb projects use <id>' to select a project first." in output
     ) is shown
+
+
+@patch("humanbound_cli.client.HumanboundClient.is_authenticated", return_value=False)
+@patch(RUNNER_PATCH)
+def test_local_project_flag_requires_login(mock_get_runner, _auth, tmp_path, monkeypatch):
+    mock_get_runner.return_value = local_runner()
+    monkeypatch.chdir(tmp_path)
+    result = runner.invoke(cli, ["posture", "--project", "proj-x"])
+    assert result.exit_code == 0
+    assert "Project posture requires login." in result.output
+
+
+@patch("humanbound_cli.client.HumanboundClient.is_authenticated", return_value=False)
+@patch(RUNNER_PATCH)
+def test_local_coverage_flag_is_reported_as_ignored(mock_get_runner, _auth, tmp_path, monkeypatch):
+    mock_get_runner.return_value = local_runner()
+    monkeypatch.chdir(tmp_path)
+    result = runner.invoke(cli, ["posture", "--coverage"])
+    assert "--coverage requires login; ignoring it." in " ".join(result.output.split())

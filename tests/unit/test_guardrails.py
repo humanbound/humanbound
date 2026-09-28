@@ -201,6 +201,27 @@ class TestLocalGuardrails:
         assert data["rules"][0]["threat_class"] == "legacy"
 
 
+class TestLocalIgnoredOptions:
+    @patch("humanbound_cli.client.HumanboundClient.is_authenticated", return_value=False)
+    @patch(RUNNER_PATCH)
+    def test_model_options_are_reported_as_ignored(
+        self, mock_get_runner, _auth, tmp_path, monkeypatch
+    ):
+        mock_get_runner.return_value = local_runner()
+        monkeypatch.chdir(tmp_path)
+        experiment_dir = tmp_path / ".humanbound" / "results" / "20260803-guardrails"
+        experiment_dir.mkdir(parents=True)
+        (experiment_dir / "meta.json").write_text(json.dumps({"results": {"insights": []}}))
+
+        result = runner.invoke(cli, ["guardrails", "--model", "gpt-4o-mini", "--include-reasoning"])
+
+        assert_exit_ok(result)
+        assert "--model and --include-reasoning require login; ignoring them." in " ".join(
+            result.stderr.split()
+        )
+        json.loads(result.stdout)
+
+
 class TestErrorCases:
     @patch(RUNNER_PATCH)
     def test_not_authenticated(self, mock_get_runner):
