@@ -767,3 +767,22 @@ class TestGetRunnerKeyMode:
 
         monkeypatch.setenv("HUMANBOUND_API_KEY", "hb_abc123")
         assert isinstance(get_runner(force_local=True), LocalTestRunner)
+
+
+class TestPlatformRequirement:
+    """platform_requirement(): why get_runner() fell back to local mode."""
+
+    def test_logged_out_needs_login(self):
+        from humanbound_cli.engine import platform_requirement
+
+        with patch("humanbound_cli.client.HumanboundClient.is_authenticated", return_value=False):
+            assert platform_requirement() == ("login", "  hb login")
+
+    def test_logged_in_without_project_needs_a_project(self):
+        from humanbound_cli.engine import platform_requirement
+
+        with patch("humanbound_cli.client.HumanboundClient.is_authenticated", return_value=True):
+            assert platform_requirement() == (
+                "a selected project",
+                "Use 'hb projects use <id>' to select a project first.",
+            )

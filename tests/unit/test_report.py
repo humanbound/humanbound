@@ -239,3 +239,13 @@ class TestLocalReport:
         assert '<div class="label">Conversations</div><div class="value">10</div>' in html
         assert "70.0%" in html
         assert ">C</text>" in html
+
+
+@patch("humanbound_cli.client.HumanboundClient.is_authenticated", return_value=True)
+@patch(RUNNER_PATCH)
+def test_logged_in_without_project_is_told_to_select_one(mock_get_runner, _auth):
+    mock_get_runner.return_value = local_runner()
+    result = runner.invoke(report_command, ["--org"])
+    assert result.exit_code == 0
+    assert "Organisation report requires a selected project" in result.output
+    assert "Use 'hb projects use <id>' to select a project first." in result.output

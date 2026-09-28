@@ -12,6 +12,7 @@ from conftest import (
     MOCK_POSTURE_TRENDS,
     assert_exit_ok,
     assert_valid_json,
+    local_runner,
     platform_runner,
 )
 
@@ -311,3 +312,28 @@ class TestOutputFormat:
         assert_exit_ok(result)
         assert "62.68/100" in result.output
         assert "0/100" not in result.output
+
+
+@patch("humanbound_cli.client.HumanboundClient.is_authenticated", return_value=True)
+@patch(RUNNER_PATCH)
+def test_logged_in_without_project_is_told_to_select_one(mock_get_runner, _auth):
+    mock_get_runner.return_value = local_runner()
+    result = runner.invoke(cli, ["posture", "--trends"])
+    assert result.exit_code == 0
+    assert "Posture history requires a selected project" in result.output
+    assert "Use 'hb projects use <id>' to select a project first." in result.output
+
+
+@pytest.mark.parametrize("args,shown", [([], True), (["--json"], False)])
+@patch("humanbound_cli.client.HumanboundClient.is_authenticated", return_value=True)
+@patch(RUNNER_PATCH)
+def test_local_posture_says_no_project_selected(
+    mock_get_runner, _auth, args, shown, tmp_path, monkeypatch
+):
+    mock_get_runner.return_value = local_runner()
+    monkeypatch.chdir(tmp_path)
+    result = runner.invoke(cli, ["posture", *args])
+    output = " ".join(result.output.split())
+    assert (
+        "No project selected. Use 'hb projects use <id>' to select a project first." in output
+    ) is shown

@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **Logged in without a selected project, the CLI says so.** The CLI falls
+  back to local mode when no project is selected, but `hb posture --trends`/
+  `--org`, `hb report --org`/`--assessment` and the `hb logs` filters told a
+  logged-in user they "require login" and pointed to `hb login`, which could
+  not help. They now say they require a selected project and point to
+  `hb projects use <id>`, and plain `hb posture` says no project is selected
+  before showing local results.
 - **`hb posture --trends` shows the posture history.** The trends endpoint
   returns `data_points` with `bucket`, `avg_score` and `grade`, but the
   command looked for `snapshots` or `data`, so it always said there was no

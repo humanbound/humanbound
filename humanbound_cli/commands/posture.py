@@ -9,7 +9,7 @@ from rich.table import Table
 
 from .. import telemetry
 from ..client import HumanboundClient
-from ..engine import get_runner
+from ..engine import get_runner, platform_requirement
 from ..engine.platform_runner import PlatformTestRunner
 from ..exceptions import APIError, NotAuthenticatedError
 
@@ -54,14 +54,21 @@ def posture_command(project: str, as_json: bool, trends: bool, org: bool, covera
     if not is_platform:
         # Local mode
         if trends:
-            console.print("[yellow]Posture history requires login.[/yellow]")
+            missing, fix = platform_requirement()
+            console.print(f"[yellow]Posture history requires {missing}.[/yellow]")
             console.print("Track score trends, finding lifecycle, and regressions across scans.\n")
-            console.print("  hb login")
+            console.print(fix)
             raise SystemExit(0)
         if org:
-            console.print("[yellow]Organisation posture requires login.[/yellow]")
-            console.print("  hb login")
+            missing, fix = platform_requirement()
+            console.print(f"[yellow]Organisation posture requires {missing}.[/yellow]")
+            console.print(fix)
             raise SystemExit(0)
+        if not as_json:
+            missing, fix = platform_requirement()
+            if missing != "login":
+                console.print("[yellow]No project selected.[/yellow]")
+                console.print(f"{fix}\n")
         _local_posture(as_json)
         _fire_posture_view(is_local=True, mode="current", has_coverage=coverage)
         return

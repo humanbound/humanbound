@@ -10,7 +10,7 @@ from rich.console import Console
 
 from .. import telemetry
 from ..config import write_secure_file
-from ..engine import get_runner
+from ..engine import get_runner, platform_requirement
 from ..engine.platform_runner import PlatformTestRunner
 from ..exceptions import APIError, NotAuthenticatedError
 
@@ -42,12 +42,14 @@ def report_command(org: bool, assessment_id: str, output: str, as_json: bool):
 
     if not is_platform:
         if org:
-            console.print("[yellow]Organisation report requires login.[/yellow]")
-            console.print("  hb login")
+            missing, fix = platform_requirement()
+            console.print(f"[yellow]Organisation report requires {missing}.[/yellow]")
+            console.print(fix)
             raise SystemExit(0)
         if assessment_id:
-            console.print("[yellow]Assessment report requires login.[/yellow]")
-            console.print("  hb login")
+            missing, fix = platform_requirement()
+            console.print(f"[yellow]Assessment report requires {missing}.[/yellow]")
+            console.print(fix)
             raise SystemExit(0)
         _local_report(output, as_json)
         return

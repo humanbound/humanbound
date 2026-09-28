@@ -372,9 +372,10 @@ class TestLocalMode:
             (["--finding", "f-1"], "require login"),
         ],
     )
+    @patch("humanbound_cli.client.HumanboundClient.is_authenticated", return_value=False)
     @patch(RUNNER_PATCH)
     def test_platform_only_options_require_login(
-        self, mock_get_runner, flags, message, tmp_path, monkeypatch
+        self, mock_get_runner, _auth, flags, message, tmp_path, monkeypatch
     ):
         mock_get_runner.return_value = local_runner()
         monkeypatch.chdir(tmp_path)
@@ -385,6 +386,23 @@ class TestLocalMode:
         assert result.exit_code == 0
         assert message in result.output
         assert "log 0" not in result.output
+
+    @patch("humanbound_cli.client.HumanboundClient.is_authenticated", return_value=True)
+    @patch(RUNNER_PATCH)
+    def test_logged_in_without_project_is_told_to_select_one(
+        self, mock_get_runner, _auth, tmp_path, monkeypatch
+    ):
+        mock_get_runner.return_value = local_runner()
+        monkeypatch.chdir(tmp_path)
+        self._write_local_logs(tmp_path, 3)
+
+        result = runner.invoke(cli, ["logs", "--days", "7"])
+
+        output = " ".join(result.output.split())
+        assert result.exit_code == 0
+        assert "requires a selected project" in output
+        assert "Use 'hb projects use <id>' to select a project first." in output
+        assert "hb login" not in output
 
     @patch(RUNNER_PATCH)
     def test_html_report_uses_saved_results(self, mock_get_runner, tmp_path, monkeypatch):

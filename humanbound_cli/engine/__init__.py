@@ -38,3 +38,12 @@ def get_runner(force_local: bool = False) -> TestRunner:
     from .local_runner import LocalTestRunner
 
     return LocalTestRunner()
+
+
+def platform_requirement() -> tuple[str, str]:
+    """What get_runner() is missing to use the platform, and the line that says how to fix it."""
+    from ..client import HumanboundClient
+
+    if HumanboundClient().is_authenticated():
+        return "a selected project", "Use 'hb projects use <id>' to select a project first."
+    return "login", "  hb login"
