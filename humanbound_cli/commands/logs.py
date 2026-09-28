@@ -13,7 +13,7 @@ from rich.table import Table
 from .. import telemetry
 from ..client import HumanboundClient
 from ..config import write_secure_file
-from ..engine import get_runner
+from ..engine import get_runner, platform_requirement
 from ..engine.platform_runner import PlatformTestRunner
 from ..exceptions import APIError, NotAuthenticatedError
 
@@ -101,15 +101,17 @@ def logs_group(
         # Local mode: read from files (Phase 3+)
         # For now, only experiment-level table/json/html from local results
         if assessment_id or finding_id:
-            console_err.print("[yellow]Assessment and finding logs require login.[/yellow]")
-            console_err.print("  hb login")
+            missing, fix = platform_requirement()
+            console_err.print(f"[yellow]Assessment and finding logs require {missing}.[/yellow]")
+            console_err.print(fix)
             raise SystemExit(0)
         if scope_flags:
+            missing, fix = platform_requirement()
             console_err.print(
                 "[yellow]Filtering by --last, --category, --from, --until or --days "
-                "requires login.[/yellow]"
+                f"requires {missing}.[/yellow]"
             )
-            console_err.print("  hb login")
+            console_err.print(fix)
             raise SystemExit(0)
         _local_logs(experiment_id, output_format, output, verdict, page, size, fetch_all)
         return

@@ -13,6 +13,18 @@ from humanbound_cli.exceptions import AuthenticationError
 from humanbound_cli.main import cli
 
 
+@pytest.fixture(autouse=True)
+def _isolated_credentials(tmp_path, monkeypatch):
+    """Keep login/logout in these tests away from the real ~/.humanbound."""
+    config_dir = tmp_path / ".humanbound"
+    config_dir.mkdir()
+    token_file = config_dir / "credentials.json"
+    monkeypatch.setattr("humanbound_cli.client.CONFIG_DIR", config_dir)
+    monkeypatch.setattr("humanbound_cli.client.TOKEN_FILE", token_file)
+    monkeypatch.setattr("humanbound_cli.config.CONFIG_DIR", config_dir)
+    monkeypatch.setattr("humanbound_cli.config.TOKEN_FILE", token_file)
+
+
 class _FakeRequest:
     """Minimal socket-like request used to run a callback handler."""
 
