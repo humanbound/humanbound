@@ -6,6 +6,7 @@ Mocked HumanboundClient — no live API needed.
 
 from unittest.mock import MagicMock, patch
 
+import pytest
 from click.testing import CliRunner
 from conftest import (
     MOCK_POSTURE_TRENDS,
@@ -16,6 +17,7 @@ from conftest import (
 
 from humanbound_cli.exceptions import APIError, NotAuthenticatedError
 from humanbound_cli.main import cli
+from tests.unit._contract.schemas import OrgPostureResponse, PostureTrendsResponse
 
 RUNNER_PATCH = "humanbound_cli.commands.posture.get_runner"
 runner = CliRunner()
@@ -112,6 +114,33 @@ class TestHappyPath:
         assert "History" in result.output or "60" in result.output
 
     @patch(RUNNER_PATCH)
+    def test_trends_from_data_points(self, mock_get_runner):
+        mock = _make_client()
+        mock.get_posture_trends.return_value = PostureTrendsResponse(
+            data_points=[
+                {
+                    "bucket": "2026-09-20",
+                    "avg_score": 48.0,
+                    "min_score": 48.0,
+                    "max_score": 48.0,
+                    "grade": "D",
+                },
+                {
+                    "bucket": "2026-09-27",
+                    "avg_score": 62.68,
+                    "min_score": 62.68,
+                    "max_score": 62.68,
+                    "grade": "C",
+                },
+            ]
+        ).model_dump()
+        mock_get_runner.return_value = platform_runner(mock)
+        result = runner.invoke(cli, ["posture", "--trends"])
+        assert_exit_ok(result)
+        assert "2026-09-27" in result.output
+        assert "62.68" in result.output or "63" in result.output
+
+    @patch(RUNNER_PATCH)
     def test_trends_json(self, mock_get_runner):
         mock = _make_client()
         mock.get_posture_trends.return_value = TRENDS_RESPONSE
@@ -128,6 +157,26 @@ class TestHappyPath:
         result = runner.invoke(cli, ["posture", "--org"])
         assert_exit_ok(result)
         assert "Organisation" in result.output or "72" in result.output
+
+    @pytest.mark.parametrize(
+        "quality",
+        [{"posture": 81.0, "grade": "B"}, None],
+        ids=["both-dimensions", "quality-null"],
+    )
+    @patch(RUNNER_PATCH)
+    def test_org_posture_from_posture_field(self, mock_get_runner, quality):
+        mock = _make_client()
+        mock.get.return_value = OrgPostureResponse(
+            posture=66.2,
+            grade="C",
+            dimensions={"security": {"posture": 58.4, "grade": "D"}, "quality": quality},
+        ).model_dump()
+        mock_get_runner.return_value = platform_runner(mock)
+        result = runner.invoke(cli, ["posture", "--org"])
+        assert_exit_ok(result)
+        assert "66.2/100" in result.output
+        assert "Agent Security" in result.output
+        assert "58" in result.output
 
     @patch(RUNNER_PATCH)
     def test_org_posture_json(self, mock_get_runner):

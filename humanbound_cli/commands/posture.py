@@ -313,7 +313,7 @@ def _display_trends(response):
     trends = response.get("data", response) if isinstance(response, dict) else response
 
     if isinstance(trends, dict):
-        snapshots = trends.get("snapshots", trends.get("data", []))
+        snapshots = trends.get("data_points", trends.get("snapshots", trends.get("data", [])))
     else:
         snapshots = trends
 
@@ -330,9 +330,10 @@ def _display_trends(response):
 
     prev_score = None
     for snapshot in snapshots:
-        score = snapshot.get("score", 0)
-        grade = snapshot.get("grade", _score_to_grade(score))
-        date = str(snapshot.get("created_at", snapshot.get("date", "")))[:10]
+        score = snapshot.get("avg_score", snapshot.get("score", 0))
+        grade = snapshot.get("grade") or _score_to_grade(score)
+        date = snapshot.get("bucket", snapshot.get("created_at", snapshot.get("date", "")))
+        date = str(date)[:10]
 
         # Color score
         if score >= 80:
@@ -424,7 +425,7 @@ def _calculate_fallback_posture(client: HumanboundClient, project_id: str):
 
 def _display_org_posture(response: dict):
     """Display org-level posture with 3 dimensions."""
-    score = response.get("score", 0)
+    score = response.get("posture", response.get("score", 0))
     grade = response.get("grade", _score_to_grade(score))
 
     # Color based on score
@@ -459,14 +460,21 @@ def _display_org_posture(response: dict):
         table.add_column("Bar", width=30)
 
         dimension_labels = {
+            "security": "Agent Security",
             "agent_security": "Agent Security",
             "shadow_ai": "Shadow AI",
             "quality": "Quality",
         }
 
         for key, label in dimension_labels.items():
-            dim_data = dimensions.get(key, {})
-            dim_score = dim_data.get("score", 0) if isinstance(dim_data, dict) else dim_data
+            dim_data = dimensions.get(key)
+            if dim_data is None:
+                continue
+            dim_score = (
+                dim_data.get("posture", dim_data.get("score", 0))
+                if isinstance(dim_data, dict)
+                else dim_data
+            )
             bar = _score_bar(dim_score)
             color = "green" if dim_score >= 80 else ("yellow" if dim_score >= 60 else "red")
             table.add_row(

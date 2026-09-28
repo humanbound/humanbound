@@ -8,6 +8,7 @@ from pathlib import Path
 
 import click
 from rich.console import Console
+from rich.markup import escape
 from rich.panel import Panel
 from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 
@@ -603,7 +604,9 @@ def test_command(
         try:
             posture = runner.get_posture(experiment_id)
         except (APIError, NotAuthenticatedError) as e:
-            console.print(f"[yellow]Could not fetch posture from the platform: {e}[/yellow]")
+            console.print(
+                f"[yellow]Could not fetch posture from the platform: {escape(str(e))}[/yellow]"
+            )
             posture = Posture()
 
         # Record real finding count for telemetry. Platform's

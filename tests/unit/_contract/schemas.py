@@ -158,30 +158,33 @@ class OrgPostureResponse(BaseModel):
     dimensions: PostureDimensions | None = None
 
 
-class PostureTrendSnapshot(BaseModel):
-    """Single point on a posture trend line."""
+class PostureTrendDataPoint(BaseModel):
+    """Single bucket on a posture trend line."""
 
-    __upstream_source__ = "PostureSnapshot.PostureTrendSnapshot"
+    __upstream_source__ = "Responses.PostureTrendDataPoint"
     model_config = ConfigDict(extra="allow")
 
-    captured_at: str = ""
-    posture: float = 0.0
-    grade: str = "F"
+    bucket: str = ""
+    avg_score: float = 0.0
+    min_score: float = 0.0
+    max_score: float = 0.0
+    grade: str | None = None
+    snapshot_count: int = 0
 
 
 class PostureTrendsResponse(BaseModel):
     """GET /projects/{id}/posture/trends."""
 
-    __upstream_source__ = "PostureSnapshot.PostureTrendsResponse"
+    __upstream_source__ = "Responses.PostureTrendsResponse"
     model_config = ConfigDict(extra="allow")
 
-    snapshots: list[PostureTrendSnapshot] = []
-    granularity: str = "daily"
-
-
-# ──────────────────────────────────────────────────────────────────────────
-# Findings
-# ──────────────────────────────────────────────────────────────────────────
+    data_points: list[PostureTrendDataPoint] = []
+    trend: str | None = None
+    score_delta: float | None = None
+    period_start: str = ""
+    period_end: str = ""
+    granularity: str = "raw"
+    total_snapshots: int = 0
 
 
 class FindingResponse(BaseModel):
@@ -472,7 +475,7 @@ __all__ = [
     "PostureDimensions",
     "ProjectPostureResponse",
     "OrgPostureResponse",
-    "PostureTrendSnapshot",
+    "PostureTrendDataPoint",
     "PostureTrendsResponse",
     # Findings
     "FindingResponse",
