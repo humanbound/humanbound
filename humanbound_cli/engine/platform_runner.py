@@ -103,16 +103,13 @@ class PlatformTestRunner(TestRunner):
         if not project_id:
             return Posture()
 
-        try:
-            resp = self.client.get(
-                f"projects/{project_id}/posture",
-                include_project=True,
-            )
-        except Exception:
-            return Posture()
+        resp = self.client.get(
+            f"projects/{project_id}/posture",
+            include_project=True,
+        )
 
         posture = Posture(
-            overall_score=resp.get("overall_score"),
+            overall_score=resp.get("overall_score", resp.get("posture")),
             grade=resp.get("grade"),
             dimensions=resp.get("dimensions", {}),
             recommendations=resp.get("recommendations", []),

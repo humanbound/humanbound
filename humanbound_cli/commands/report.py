@@ -168,6 +168,7 @@ def _local_report(output: str, as_json: bool):
         filepath = output or f"report-{exp_dir.name}.json"
     else:
         # Build experiment dict matching what generate_html_report expects
+        results = meta.get("results") or {}
         experiment = {
             "id": meta.get("id", exp_dir.name),
             "name": meta.get("name", "Local Experiment"),
@@ -177,10 +178,10 @@ def _local_report(output: str, as_json: bool):
             "lang": meta.get("lang", ""),
             "created_at": meta.get("created_at", ""),
             "results": {
-                "stats": meta.get("stats", {}),
-                "insights": meta.get("insights", []),
-                "posture": meta.get("posture", {}),
-                "exec_t": meta.get("exec_t", {}),
+                "stats": results.get("stats") or meta.get("stats", {}),
+                "insights": results.get("insights") or meta.get("insights", []),
+                "posture": results.get("posture") or meta.get("posture", {}),
+                "exec_t": results.get("exec_t") or meta.get("exec_t", {}),
                 "tests": {},
             },
         }

@@ -600,7 +600,11 @@ def test_command(
 
         # Get final results via runner
         result = runner.get_result(experiment_id)
-        posture = runner.get_posture(experiment_id)
+        try:
+            posture = runner.get_posture(experiment_id)
+        except (APIError, NotAuthenticatedError) as e:
+            console.print(f"[yellow]Could not fetch posture from the platform: {e}[/yellow]")
+            posture = Posture()
 
         # Record real finding count for telemetry. Platform's
         # posture.finding_count is the canonical "open findings" count when

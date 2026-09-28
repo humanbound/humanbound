@@ -16,6 +16,7 @@ from humanbound_cli.exceptions import APIError, NotAuthenticatedError
 from .conftest import (
     assert_exit_error,
     assert_exit_ok,
+    local_runner,
     platform_runner,
 )
 
@@ -208,3 +209,33 @@ class TestFlags:
         import pathlib
 
         assert pathlib.Path(outfile).exists()
+
+
+class TestLocalReport:
+    @patch(RUNNER_PATCH)
+    def test_html_report_uses_saved_results(self, mock_get_runner, tmp_path, monkeypatch):
+        mock_get_runner.return_value = local_runner()
+        monkeypatch.chdir(tmp_path)
+        exp_dir = tmp_path / ".humanbound" / "results" / "exp-20260928-100000-abcd1234"
+        exp_dir.mkdir(parents=True)
+        meta = {
+            "id": "exp-20260928-100000-abcd1234",
+            "status": "Finished",
+            "test_category": "humanbound/adversarial/owasp_agentic",
+            "results": {
+                "stats": {"total": 10, "pass": 7, "fail": 3, "error": 0},
+                "posture": {"posture": 63.82, "grade": "C", "domain": "security"},
+                "insights": [],
+                "exec_t": {},
+            },
+        }
+        (exp_dir / "meta.json").write_text(json.dumps(meta))
+        (exp_dir / "logs.jsonl").write_text(json.dumps({"result": "pass"}) + "\n")
+
+        result = runner.invoke(report_command, ["-o", "report.html"])
+
+        assert_exit_ok(result)
+        html = (tmp_path / "report.html").read_text()
+        assert '<div class="label">Conversations</div><div class="value">10</div>' in html
+        assert "70.0%" in html
+        assert ">C</text>" in html

@@ -31,6 +31,16 @@ POSTURE_RESPONSE = {
     "last_tested": "2025-06-01",
 }
 
+# Shape the project posture endpoint returns today: the score is under "posture"
+PLATFORM_POSTURE_RESPONSE = {
+    "posture": 62.68,
+    "grade": "C",
+    "dimensions": {"security": {"posture": 62.68, "grade": "C", "findings": {}}, "quality": None},
+    "findings": {"open": 3, "critical": 0, "high": 1, "regressed": 0},
+    "evaluated_at": "2026-09-28T10:00:00Z",
+    "stale": False,
+}
+
 ORG_POSTURE_RESPONSE = {
     "score": 72.5,
     "grade": "C",
@@ -242,3 +252,13 @@ class TestOutputFormat:
         result = runner.invoke(cli, ["posture"])
         assert_exit_ok(result)
         assert "72" in result.output
+
+    @patch(RUNNER_PATCH)
+    def test_displays_score_from_posture_field(self, mock_get_runner):
+        mock = _make_client()
+        mock.get.return_value = PLATFORM_POSTURE_RESPONSE
+        mock_get_runner.return_value = platform_runner(mock)
+        result = runner.invoke(cli, ["posture"])
+        assert_exit_ok(result)
+        assert "62.68/100" in result.output
+        assert "0/100" not in result.output
