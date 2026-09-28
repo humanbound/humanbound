@@ -33,7 +33,7 @@
 ## Testing
 
 - [Test Command](https://docs.humanbound.ai/testing/test-command/): hb test reference — orchestrators, testing levels, languages, providers, and every flag that shapes an adversarial run.
-- [Collaborative Redteam [Preview]](https://docs.humanbound.ai/testing/collaborative-redteam/): Collaborative Redteam — multi-user adversarial red-teaming sessions with an AI co-pilot, integrated with the Red Coworker collaboration loop.
+- [Arena](https://docs.humanbound.ai/testing/arena/): hb arena runs intentionally vulnerable AI agents locally in Docker, serves them over A2A v1.0 and an OpenAI-compatible API, and tests them with hb test --target arena://<id>.
 - [Log Upload](https://docs.humanbound.ai/testing/log-upload/): Upload real conversation logs and evaluate them against Humanbound's security judges — score safety, scope, and policy adherence retroactively.
 - [Assessments](https://docs.humanbound.ai/testing/assessments/): Assessments are point-in-time snapshots of a project's security state — posture, findings, and coverage produced by every ASCAM activity.
 - [Reports](https://docs.humanbound.ai/testing/reports/): Generate branded HTML security reports at four detail levels — executive, summary, detailed, and forensic — for stakeholders inside and outside your team.
@@ -85,7 +85,7 @@
 
 ## Reference
 
-- [Commands](https://docs.humanbound.ai/reference/commands/): Complete hb CLI reference — every command and flag, grouped by workflow — auth, projects, test, redteam, posture, logs, MCP.
+- [Commands](https://docs.humanbound.ai/reference/commands/): Complete hb CLI reference — every command and flag, grouped by workflow — auth, projects, test, arena, posture, logs, MCP.
 - [Glossary](https://docs.humanbound.ai/reference/glossary/): Glossary of key terms used throughout Humanbound — orchestrator, judge, scope, posture, finding, experiment, and more.
 
 ## Shell Completion

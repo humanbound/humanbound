@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Complete hb CLI reference — every command and flag, grouped by workflow — auth, projects, test, redteam, posture, logs, MCP.">
+        <meta name="description" content="Complete hb CLI reference — every command and flag, grouped by workflow — auth, projects, test, arena, posture, logs, MCP.">
       
       
       
@@ -64,16 +64,16 @@
   
   <meta property="og:site_name" content="Humanbound" />
   <meta property="og:locale" content="en_US" />
-  <meta property="og:image:alt" content="Complete hb CLI reference — every command and flag, grouped by workflow — auth, projects, test, redteam, posture, logs, MCP." />
-  <meta name="twitter:image:alt" content="Complete hb CLI reference — every command and flag, grouped by workflow — auth, projects, test, redteam, posture, logs, MCP." />
+  <meta property="og:image:alt" content="Complete hb CLI reference — every command and flag, grouped by workflow — auth, projects, test, arena, posture, logs, MCP." />
+  <meta name="twitter:image:alt" content="Complete hb CLI reference — every command and flag, grouped by workflow — auth, projects, test, arena, posture, logs, MCP." />
   
-  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/reference/commands/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Commands","item":"https://docs.humanbound.ai/reference/commands/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/reference/commands/#article","headline":"Commands","description":"Complete hb CLI reference \u2014 every command and flag, grouped by workflow \u2014 auth, projects, test, redteam, posture, logs, MCP.","url":"https://docs.humanbound.ai/reference/commands/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-09-28T12:15:50+03:00","keywords":"hb command reference, humanbound CLI reference, hb commands list, humanbound CLI commands, CLI cheatsheet, command index"}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/reference/commands/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Commands","item":"https://docs.humanbound.ai/reference/commands/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/reference/commands/#article","headline":"Commands","description":"Complete hb CLI reference \u2014 every command and flag, grouped by workflow \u2014 auth, projects, test, arena, posture, logs, MCP.","url":"https://docs.humanbound.ai/reference/commands/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-09-28T22:50:53+03:00","keywords":"hb command reference, humanbound CLI reference, hb commands list, humanbound CLI commands, CLI cheatsheet, command index"}]}</script>
   
 
   
 <meta property="og:type" content="website" />
 <meta property="og:title" content="Commands - Humanbound" />
-<meta property="og:description" content="Complete hb CLI reference — every command and flag, grouped by workflow — auth, projects, test, redteam, posture, logs, MCP." />
+<meta property="og:description" content="Complete hb CLI reference — every command and flag, grouped by workflow — auth, projects, test, arena, posture, logs, MCP." />
 <meta property="og:image" content="https://docs.humanbound.ai/assets/images/social/reference/commands.png" />
 <meta property="og:image:type" content="image/png" />
 <meta property="og:image:width" content="1200" />
@@ -81,7 +81,7 @@
 <meta property="og:url" content="https://docs.humanbound.ai/reference/commands/" />
 <meta property="twitter:card" content="summary_large_image" />
 <meta property="twitter:title" content="Commands - Humanbound" />
-<meta property="twitter:description" content="Complete hb CLI reference — every command and flag, grouped by workflow — auth, projects, test, redteam, posture, logs, MCP." />
+<meta property="twitter:description" content="Complete hb CLI reference — every command and flag, grouped by workflow — auth, projects, test, arena, posture, logs, MCP." />
 <meta property="twitter:image" content="https://docs.humanbound.ai/assets/images/social/reference/commands.png" />
 </head>
   
@@ -942,14 +942,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../testing/collaborative-redteam/" class="md-nav__link">
+      <a href="../../testing/arena/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Collaborative Redteam [Preview]
+    Arena
   
 
     
@@ -2230,6 +2230,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#arena" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Arena
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#results" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2536,6 +2547,10 @@
 <td>Create and run new security test experiment</td>
 </tr>
 <tr>
+<td><code>hb test --target arena://&lt;agent&gt;</code></td>
+<td>Test a running <a href="../../testing/arena/">arena</a> agent on the local engine; the agent is reset first (<code>--no-reset</code> skips that). No login needed</td>
+</tr>
+<tr>
 <td><code>hb experiments list</code></td>
 <td>List all experiments for current project</td>
 </tr>
@@ -2562,6 +2577,78 @@
 <tr>
 <td><code>hb status [--all]</code></td>
 <td>Check status of latest experiment or all experiments (alias)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="arena">Arena</h2>
+<p>Run intentionally vulnerable agents locally, in Docker, and test them. None of these commands needs a login. See <a href="../../testing/arena/">Arena</a>.</p>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>hb arena ls [--installed]</code></td>
+<td>List the agents of the catalog, or only the installed ones</td>
+</tr>
+<tr>
+<td><code>hb arena info &lt;id&gt;[:version] [--agent-yaml]</code></td>
+<td>Show an agent's details, keys, what it may reach on the network and its planted vulnerabilities</td>
+</tr>
+<tr>
+<td><code>hb arena validate &lt;path&gt;</code></td>
+<td>Validate an <code>arena.yaml</code> (and its compose file)</td>
+</tr>
+<tr>
+<td><code>hb arena pull &lt;id&gt;[:version]</code></td>
+<td>Install an agent and pull its images</td>
+</tr>
+<tr>
+<td><code>hb arena run &lt;id&gt;[:version] [--env-file FILE] [--yes]</code></td>
+<td>Start an agent with its network access blocked and make it reachable through the gateway</td>
+</tr>
+<tr>
+<td><code>hb arena ps</code></td>
+<td>List running agents</td>
+</tr>
+<tr>
+<td><code>hb arena logs &lt;id&gt; [-f] [--tail N] [--door]</code></td>
+<td>Show an agent's logs; <code>--door</code> shows what it reached or was refused on the network</td>
+</tr>
+<tr>
+<td><code>hb arena check &lt;id&gt; [--json]</code></td>
+<td>Check a running agent's containers against the container baseline</td>
+</tr>
+<tr>
+<td><code>hb arena reset &lt;id&gt;</code></td>
+<td>Recreate an agent from its image</td>
+</tr>
+<tr>
+<td><code>hb arena stop &lt;id&gt;</code> / <code>--all</code> / <code>--all --any-owner</code></td>
+<td>Stop one agent, all of yours, or every owner's on this Docker</td>
+</tr>
+<tr>
+<td><code>hb arena rm &lt;id&gt;</code></td>
+<td>Stop an agent and remove its images and cached manifest</td>
+</tr>
+<tr>
+<td><code>hb arena endpoint &lt;id&gt;</code></td>
+<td>Print an agent's A2A and OpenAI-compatible URLs and your access token</td>
+</tr>
+<tr>
+<td><code>hb arena token</code></td>
+<td>Print only your gateway access token</td>
+</tr>
+<tr>
+<td><code>hb arena config set/get/unset</code></td>
+<td>Manage the keys agents receive</td>
+</tr>
+<tr>
+<td><code>hb arena serve [--host H] [--port P]</code></td>
+<td>Run the gateway in the foreground</td>
 </tr>
 </tbody>
 </table>

@@ -16,7 +16,7 @@
         <link rel="prev" href="../../methodology/adversarial-engine/">
       
       
-        <link rel="next" href="../collaborative-redteam/">
+        <link rel="next" href="../arena/">
       
       
         
@@ -67,7 +67,7 @@
   <meta property="og:image:alt" content="hb test reference — orchestrators, testing levels, languages, providers, and every flag that shapes an adversarial run." />
   <meta name="twitter:image:alt" content="hb test reference — orchestrators, testing levels, languages, providers, and every flag that shapes an adversarial run." />
   
-  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/testing/test-command/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Test Command","item":"https://docs.humanbound.ai/testing/test-command/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/testing/test-command/#article","headline":"Test Command","description":"hb test reference \u2014 orchestrators, testing levels, languages, providers, and every flag that shapes an adversarial run.","url":"https://docs.humanbound.ai/testing/test-command/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-08-06T16:02:41+03:00","keywords":"hb test reference, test command flags, testing levels, test category, --fail-on flag, experiment configuration, test command CLI, adversarial test execution"}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/testing/test-command/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Test Command","item":"https://docs.humanbound.ai/testing/test-command/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/testing/test-command/#article","headline":"Test Command","description":"hb test reference \u2014 orchestrators, testing levels, languages, providers, and every flag that shapes an adversarial run.","url":"https://docs.humanbound.ai/testing/test-command/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-09-28T22:50:53+03:00","keywords":"hb test reference, test command flags, testing levels, test category, --fail-on flag, experiment configuration, test command CLI, adversarial test execution"}]}</script>
   
 
   
@@ -952,14 +952,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../collaborative-redteam/" class="md-nav__link">
+      <a href="../arena/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Collaborative Redteam [Preview]
+    Arena
   
 
     
@@ -2294,10 +2294,20 @@
 <a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>  -e, --endpoint          Agent integration config -- JSON string or file path.
 <a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>                          Same shape as 'hb connect --endpoint'.
 <a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>                          Overrides the project's default integration.
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>Arena Target (optional):
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>  --target                arena://&lt;agent&gt;, a running arena agent.
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>                          Runs on the local engine; no login needed.
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>  --no-reset              Don't reset the arena agent to a clean state
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>                          before the run.
 </code></pre></div>
 <div class="admonition info">
 <p class="admonition-title">Note</p>
 <p>The <code>-e / --endpoint</code> flag is only needed if your project was not connected with <code>hb connect --endpoint</code>, or if you want to temporarily test against a different agent. When a default integration is configured, <code>hb test</code> works with no additional flags. Your <code>--endpoint</code> JSON file can also include a <code>telemetry</code> section for white-box agentic testing -- see <a href="../../getting-started/agent-config/#telemetry-optional">Agent Configuration File</a>.</p>
+</div>
+<div class="admonition info">
+<p class="admonition-title">Testing an arena agent</p>
+<p><code>--target arena://&lt;agent&gt;</code> tests an intentionally vulnerable agent started with <code>hb arena run</code>. Its integration, scope and judge context come from the agent's manifest, so <code>--endpoint</code>, <code>--repo</code>, <code>--prompt</code> and <code>--scope</code> are not needed. See <a href="../arena/#testing-with-hb-test">Arena</a>.</p>
 </div>
 <div class="admonition tip">
 <p class="admonition-title">Reusing a previous run's configuration</p>
