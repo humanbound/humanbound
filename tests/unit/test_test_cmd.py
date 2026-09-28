@@ -7,6 +7,7 @@ so we patch ``get_runner`` and assert on the ``TestConfig`` passed to
 
 from unittest.mock import MagicMock, patch
 
+import pytest
 from click.testing import CliRunner
 from conftest import (
     MOCK_PROJECT,
@@ -16,7 +17,7 @@ from conftest import (
     platform_runner,
 )
 
-from humanbound_cli.exceptions import APIError
+from humanbound_cli.exceptions import APIError, NotAuthenticatedError
 from humanbound_cli.main import cli
 
 RUNNER_PATCH = "humanbound_cli.commands.test.get_runner"
@@ -304,6 +305,28 @@ class TestExitCodeContract:
         r.start.assert_called_once()
         assert "exp-new" in result.output
         assert "staged" not in result.output.lower()
+
+
+class TestPostureFetch:
+    @pytest.mark.parametrize(
+        "error",
+        [
+            APIError("Internal Server Error", status_code=500),
+            NotAuthenticatedError("Not authenticated. Please run 'hb login' first."),
+        ],
+    )
+    @patch("humanbound_cli.commands.test.time.sleep")
+    @patch(RUNNER_PATCH)
+    def test_posture_fetch_failure_is_reported(self, mock_get_runner, _sleep, error):
+        r = platform_runner(_make_client(), experiment_id="exp-new")
+        r.get_posture.side_effect = error
+        mock_get_runner.return_value = r
+
+        result = runner.invoke(cli, ["test", "--wait"])
+
+        assert_exit_ok(result)
+        assert "Could not fetch posture from the platform" in result.output
+        assert "Experiment Complete" in result.output
 
 
 # ─────────────────────────────────────────────────────────────────────────

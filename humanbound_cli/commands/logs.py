@@ -726,6 +726,7 @@ def _local_logs(experiment_id, output_format, output, verdict, page, size, fetch
         exp_name = exp_dirs[0].name
         meta_file = exp_dirs[0] / "meta.json"
         meta = _json.loads(meta_file.read_text()) if meta_file.exists() else {}
+        results = meta.get("results") or {}
 
         experiment = {
             "id": meta.get("id", exp_name),
@@ -735,8 +736,9 @@ def _local_logs(experiment_id, output_format, output, verdict, page, size, fetch
             "testing_level": meta.get("testing_level", ""),
             "created_at": meta.get("created_at", ""),
             "results": {
-                "stats": meta.get("stats", {}),
-                "insights": meta.get("insights", []),
+                "stats": results.get("stats") or meta.get("stats", {}),
+                "insights": results.get("insights") or meta.get("insights", []),
+                "posture": results.get("posture") or meta.get("posture", {}),
             },
         }
 

@@ -191,10 +191,6 @@ def _local_posture(as_json: bool):
         print(json.dumps(posture_data, indent=2, default=str))
         return
 
-    # Map local format (posture key) to display format (overall_score key)
-    if "posture" in posture_data and "overall_score" not in posture_data:
-        posture_data["overall_score"] = posture_data["posture"]
-
     if not posture_data:
         console.print("[yellow]No posture data in latest experiment.[/yellow]")
         return
@@ -212,7 +208,8 @@ def _local_posture(as_json: bool):
 
 def _display_posture(posture: dict):
     """Display posture score with visual breakdown."""
-    score = posture.get("overall_score", 0)
+    # Local results and the project posture API both carry the score as "posture".
+    score = posture.get("overall_score", posture.get("posture", 0))
     grade = posture.get("grade", _score_to_grade(score))
 
     # Color based on score

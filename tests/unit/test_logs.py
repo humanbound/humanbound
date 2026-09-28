@@ -385,3 +385,29 @@ class TestLocalMode:
         assert result.exit_code == 0
         assert message in result.output
         assert "log 0" not in result.output
+
+    @patch(RUNNER_PATCH)
+    def test_html_report_uses_saved_results(self, mock_get_runner, tmp_path, monkeypatch):
+        mock_get_runner.return_value = local_runner()
+        monkeypatch.chdir(tmp_path)
+        self._write_local_logs(tmp_path, 3)
+        meta = {
+            "id": "exp-20260928-100000-abcd1234",
+            "status": "Finished",
+            "test_category": "humanbound/adversarial/owasp_agentic",
+            "results": {
+                "stats": {"total": 10, "pass": 7, "fail": 3, "error": 0},
+                "posture": {"posture": 63.82, "grade": "C", "domain": "security"},
+                "insights": [],
+                "exec_t": {},
+            },
+        }
+        exp_dir = next((tmp_path / ".humanbound" / "results").iterdir())
+        (exp_dir / "meta.json").write_text(json.dumps(meta))
+
+        result = runner.invoke(cli, ["logs", "--format", "html", "-o", "logs.html"])
+
+        assert_exit_ok(result)
+        html = (tmp_path / "logs.html").read_text()
+        assert '<div class="label">Conversations</div><div class="value">10</div>' in html
+        assert ">C</text>" in html

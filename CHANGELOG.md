@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **`hb posture` and `hb test` show the platform posture score.** The
+  project posture endpoint returns the score as `posture`, but the CLI read
+  `overall_score`, so `hb posture` showed `0/100` next to the real grade and
+  `hb test` showed the grade with no score.
+- **`hb test` says when it cannot fetch the posture.** A failed posture
+  request made the grade silently disappear from the results; it now prints
+  that the posture could not be fetched, and why. (#160)
+- **Local HTML reports show the run's results.** `hb report` and
+  `hb logs --format html` read the stats, posture and insights from the top of
+  `meta.json`, but local runs save them under `results`, so every local report
+  showed 0 conversations, 0 passed, 0 failed and a 0/F posture.
 - **Local `hb logs` no longer silently ignores its filters.** Without login,
   `--last`, `--category`, `--from`, `--until`, `--days`, `--assessment` and
   `--finding` were accepted but had no effect, so the command showed the
