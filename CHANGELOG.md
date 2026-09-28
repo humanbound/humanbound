@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **`hb posture --coverage` no longer crashes.** The coverage endpoint
+  returns `by_category` keyed by category name with `pass_count`, but the
+  command expected a list, so it raised `AttributeError`; per-category pass
+  rates now show.
+- **`hb posture` shows the real breakdown.** The "Score Breakdown" table read
+  fields the platform no longer returns, so it only appeared in the fallback
+  path, filled with fixed placeholder values (Coverage 70, Resilience 85). It
+  is replaced by the platform's Security and Quality dimensions and a line of
+  open, critical, high and regressed findings.
+- **Options that need the platform no longer pass silently when not logged
+  in.** `hb posture --project` now says it requires login (or a selected
+  project); `hb posture --coverage` and `hb guardrails --model` /
+  `--include-reasoning` say they are being ignored.
 - **Logged in without a selected project, the CLI says so.** The CLI falls
   back to local mode when no project is selected, but `hb posture --trends`/
   `--org`, `hb report --org`/`--assessment` and the `hb logs` filters told a

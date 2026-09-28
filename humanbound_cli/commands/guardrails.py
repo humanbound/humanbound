@@ -11,7 +11,7 @@ from rich.console import Console
 from .. import telemetry
 from ..agent_yaml import build_agent_yaml, dump_agent_yaml, load_scope_file
 from ..config import write_secure_file
-from ..engine import get_runner
+from ..engine import get_runner, platform_requirement
 from ..engine.platform_runner import PlatformTestRunner
 from ..exceptions import APIError, NotAuthenticatedError
 
@@ -84,6 +84,11 @@ def guardrails_command(
     is_platform = isinstance(runner, PlatformTestRunner)
 
     if not is_platform:
+        if model or include_reasoning:
+            missing, _ = platform_requirement()
+            console_err.print(
+                f"[dim]--model and --include-reasoning require {missing}; ignoring them.[/dim]"
+            )
         if output_format == "yaml" and vendor == "humanbound":
             _local_agent_yaml(output, scope_path)
         else:
