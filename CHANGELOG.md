@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Telemetry collection now starts immediately and retries up to five times over
   47 seconds so delayed traces can be collected. (#164)
+- **The `openai` provider works with reasoning models** such as the o-series and
+  gpt-5 family. When OpenAI rejects `max_tokens` or a non-default `temperature`
+  for the model, the request is retried with `max_completion_tokens` or without
+  `temperature`, and later calls send the accepted form directly.
 
 ## [2.12.0] — 2026-09-28
 

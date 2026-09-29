@@ -68,23 +68,30 @@ class LLMPinger:
             if model_provider is None
             else model_provider
         )
+        # Reasoning models reject "max_tokens" (they want "max_completion_tokens")
+        # and any temperature but the default. Each is switched on the first 400
+        # that says so, then kept for later calls.
+        self.token_param = "max_tokens"
+        self.send_temperature = True
 
     def __do_completion_api_call(self, system_p, user_p, max_tokens, temperature):
+        payload = {
+            "model": self.model_provider["integration"]["model"],
+            "messages": [
+                {"role": "system", "content": system_p},
+                {"role": "user", "content": user_p},
+            ],
+            self.token_param: max_tokens,
+        }
+        if self.send_temperature:
+            payload["temperature"] = temperature
         return requests.post(
             OPENAI_CHAT_COMPLETION_ENDPOINT,
             headers={
                 "Content-Type": "application/json",
                 "Authorization": f"Bearer {self.model_provider['integration']['api_key']}",
             },
-            json={
-                "model": self.model_provider["integration"]["model"],
-                "messages": [
-                    {"role": "system", "content": system_p},
-                    {"role": "user", "content": user_p},
-                ],
-                "max_tokens": max_tokens,
-                "temperature": temperature,
-            },
+            json=payload,
             timeout=LLM_PING_TIMEOUT,
             allow_redirects=False,
         )
@@ -133,6 +140,20 @@ class LLMPinger:
                     raise Exception("502/Rate limit error.")
                 raise Exception(f"502/Error while pinging the LLM - {resp.status_code}/{resp.text}")
             elif resp.status_code == 400:
+                if (
+                    self.token_param == "max_tokens"
+                    and "max_tokens" in resp.text
+                    and "max_completion_tokens" in resp.text
+                ):
+                    self.token_param = "max_completion_tokens"
+                    continue
+                if (
+                    self.send_temperature
+                    and "Unsupported value" in resp.text
+                    and "temperature" in resp.text
+                ):
+                    self.send_temperature = False
+                    continue
                 raise Exception(f"502/Inappropriate content ({resp.text}). Please try again.")
             else:
                 # not sucess and also not rate limit error -> total error
