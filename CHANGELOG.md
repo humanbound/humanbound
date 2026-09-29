@@ -15,7 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   maintained for educational purposes, with deliberately vulnerable agents.
 
 ### Fixed
-- Telemetry collection now starts immediately and retries for up to 47 seconds to allow delayed traces to arrive. (#164)
+- Telemetry collection now starts immediately and retries up to five times over
+  47 seconds so delayed traces can be collected. (#164)
 
 ## [2.12.0] — 2026-09-28
 

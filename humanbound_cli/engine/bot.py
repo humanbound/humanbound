@@ -1557,8 +1557,8 @@ class Telemetry:
     def fetch(self, session_metadata, total_turns):
         """Fetch telemetry data after conversation completes.
 
-        Fetch immediately, then allow vendor ingestion through up to three retries
-        with a total of five seconds of delay before giving up.
+        Fetch immediately, then allow vendor ingestion through five retries
+        with a total of 47 seconds of delay before giving up.
         """
         try:
             fetch_payload = {
@@ -1567,7 +1567,7 @@ class Telemetry:
                 "HUMANBOUND_EID": self.e_id,
             }
 
-            retry_delays = (1, 2, 2)
+            retry_delays = (2, 5, 10, 15, 15)
 
             for attempt in range(len(retry_delays) + 1):
                 raw_data = self.__make_api_call(

@@ -549,7 +549,46 @@ def test_telemetry_fetch_retries_immediately_and_returns_late_data():
     assert result == data
     assert api_call.call_count == 2
     assert api_call_counts == [0, 1]
-    assert [call.args[0] for call in sleep_mock.call_args_list] == [1]
+    assert [call.args[0] for call in sleep_mock.call_args_list] == [2]
+
+
+def test_telemetry_fetch_returns_traces_ready_after_15_seconds():
+    tel = Telemetry(
+        {"endpoint": "https://tele.example/fetch", "headers": {}, "payload": {}},
+        e_id="e1",
+    )
+    empty = {
+        "tool_executions": [],
+        "memory_operations": [],
+        "resource_usage": {"tokens_used": 0},
+    }
+    data = {
+        "tool_executions": [{"tool_name": "search"}],
+        "memory_operations": [],
+        "resource_usage": {"tokens_used": 0},
+    }
+    elapsed = 0
+    attempt_times = []
+
+    def fetch_response(*args, **kwargs):
+        attempt_times.append(elapsed)
+        return {"data": []}
+
+    def advance_time(delay):
+        nonlocal elapsed
+        elapsed += delay
+
+    with (
+        patch("humanbound_cli.engine.bot.time.sleep", side_effect=advance_time) as sleep,
+        patch.object(tel, "_Telemetry__make_api_call", side_effect=fetch_response) as api_call,
+        patch.object(tel, "_Telemetry__standardize", side_effect=[empty, empty, empty, data]),
+    ):
+        result = tel.fetch({"session_id": "s1"}, 2)
+
+    assert result == data
+    assert api_call.call_count == 4
+    assert attempt_times == [0, 2, 7, 17]
+    assert [call.args[0] for call in sleep.call_args_list] == [2, 5, 10]
 
 
 def test_telemetry_fetch_caps_retry_delay_and_returns_last_result():
@@ -571,8 +610,8 @@ def test_telemetry_fetch_caps_retry_delay_and_returns_last_result():
         result = tel.fetch({"session_id": "s1"}, 2)
 
     assert result == empty
-    assert api_call.call_count == 4
-    assert [call.args[0] for call in sleep.call_args_list] == [1, 2, 2]
+    assert api_call.call_count == 6
+    assert [call.args[0] for call in sleep.call_args_list] == [2, 5, 10, 15, 15]
 
 
 # ────────────────────────────────────────────────────────────────
