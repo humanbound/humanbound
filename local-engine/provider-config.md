@@ -33,11 +33,14 @@ hb config
 
 Config is stored at `~/.humanbound/config.yaml`. Never sent to Humanbound.
 
+!!! note "Environment variables and the config file don't mix"
+    When `HB_PROVIDER` is set, the config file is not read at all, so an `endpoint` or `model` saved with `hb config set` is ignored. Set everything through environment variables, or everything through the config file.
+
 ### Supported Providers
 
 | Provider | `HB_PROVIDER` | Key prefix | Notes |
 |---|---|---|---|
-| OpenAI | `openai` | `sk-` | Default model `gpt-4.1` |
+| OpenAI | `openai` | `sk-` | Default model `gpt-4.1`. Optional `HB_ENDPOINT` for OpenAI-compatible APIs |
 | Anthropic | `anthropic` or `claude` | `sk-ant-` | `HB_MODEL` required |
 | Google | `gemini` | | `HB_MODEL` required |
 | Azure OpenAI | `azureopenai` | | Requires `HB_ENDPOINT` with `?api-version=`; `HB_MODEL` = deployment name |
@@ -54,6 +57,19 @@ export HB_API_KEY=your-azure-key
 export HB_MODEL=your-deployment   # required: the Azure deployment name
 export HB_ENDPOINT="https://your-resource.openai.azure.com/openai/deployments/your-deployment/chat/completions?api-version=2025-01-01-preview"
 ```
+
+### OpenRouter and other OpenAI-compatible APIs
+
+The `openai` provider accepts a base URL in `HB_ENDPOINT`, so any service that speaks the OpenAI chat completions API works, including OpenRouter, LiteLLM and vLLM:
+
+```bash
+export HB_PROVIDER=openai
+export HB_API_KEY=sk-or-...                      # the service's key, not an OpenAI key
+export HB_ENDPOINT=https://openrouter.ai/api/v1  # base URL; /chat/completions is added
+export HB_MODEL=anthropic/claude-haiku-4.5       # the service's model ID
+```
+
+With no `HB_ENDPOINT`, requests go to `api.openai.com` as before. If you switch from Ollama to OpenAI with `hb config`, clear the old endpoint with `hb config set endpoint ""`, or requests will go to the Ollama URL. An `HB_ENDPOINT` left in your shell does the same thing, so `unset HB_ENDPOINT` too.
 
 ### Ollama (Full Isolation)
 
@@ -102,6 +118,9 @@ You can still use your own provider on the platform by adding it via `hb provide
 
 ??? question "How do I configure Azure OpenAI with Humanbound?"
     Set `HB_PROVIDER=azureopenai`, provide your Azure API key via `HB_API_KEY`, and set `HB_ENDPOINT` to the full deployment URL including `?api-version=`, for example `https://your-resource.openai.azure.com/openai/deployments/your-deployment/chat/completions?api-version=2025-01-01-preview`.
+
+??? question "Can I use OpenRouter or another OpenAI-compatible API?"
+    Yes. Set `HB_PROVIDER=openai`, put that service's key in `HB_API_KEY`, and set `HB_ENDPOINT` to its base URL, for example `https://openrouter.ai/api/v1`. `HB_MODEL` takes the service's own model ID, such as `anthropic/claude-haiku-4.5` on OpenRouter. The same works for LiteLLM, vLLM and other servers that expose `/chat/completions`.
 
 ??? question "Can I run Humanbound with no external API calls at all?"
     Yes — use Ollama. Set `HB_PROVIDER=ollama` and `HB_MODEL=llama3.1:8b`, start `ollama serve`, and tests will only call your bot and the local Ollama instance. Note that local models produce lower-quality attacks than cloud providers.
