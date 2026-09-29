@@ -67,7 +67,7 @@
   <meta property="og:image:alt" content="hb arena runs intentionally vulnerable AI agents locally in Docker, serves them over A2A v1.0 and an OpenAI-compatible API, and tests them with hb test --target arena://<id>." />
   <meta name="twitter:image:alt" content="hb arena runs intentionally vulnerable AI agents locally in Docker, serves them over A2A v1.0 and an OpenAI-compatible API, and tests them with hb test --target arena://<id>." />
   
-  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/testing/arena/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Arena","item":"https://docs.humanbound.ai/testing/arena/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/testing/arena/#article","headline":"Arena","description":"hb arena runs intentionally vulnerable AI agents locally in Docker, serves them over A2A v1.0 and an OpenAI-compatible API, and tests them with hb test --target arena://<id>.","url":"https://docs.humanbound.ai/testing/arena/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-09-28T22:50:53+03:00","keywords":"hb arena, vulnerable AI agents, arena://, A2A gateway, local AI red teaming, hb test --target, OpenAI-compatible endpoint, practice targets"}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/testing/arena/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Arena","item":"https://docs.humanbound.ai/testing/arena/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/testing/arena/#article","headline":"Arena","description":"hb arena runs intentionally vulnerable AI agents locally in Docker, serves them over A2A v1.0 and an OpenAI-compatible API, and tests them with hb test --target arena://<id>.","url":"https://docs.humanbound.ai/testing/arena/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-09-29T08:01:12+03:00","keywords":"hb arena, vulnerable AI agents, arena://, A2A gateway, local AI red teaming, hb test --target, OpenAI-compatible endpoint, practice targets"}]}</script>
   
 
   
@@ -1002,10 +1002,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#quick-start" class="md-nav__link">
+  <a href="#concept-and-architecture" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Quick Start
+        Concept and Architecture
       
     </span>
   </a>
@@ -1013,6 +1013,51 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#network-and-privilege-isolation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Network and Privilege Isolation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Usage
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Usage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#quick-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick start
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#model-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Model configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#commands" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1022,41 +1067,8 @@
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#network-access" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Network Access
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#container-baseline" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Container Baseline
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#platform-notes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Platform Notes
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#keys" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1066,124 +1078,56 @@
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#catalogs-and-trust" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Catalogs and Trust
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Catalogs and Trust">
-      <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#image-digests" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Image digests
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#calling-agents-from-other-tools" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Calling Agents From Other Tools
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Calling Agents From Other Tools">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#access-token" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Access token
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#a2a" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        A2A
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#openai-compatible-facade" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        OpenAI-compatible façade
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#testing-with-hb-test" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Testing With hb test
+        Testing with hb test
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#results" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Results
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#writing-an-arena-agent" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Writing an Arena Agent
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Writing an Arena Agent">
-      <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#reporting-tool-calls" class="md-nav__link">
+  <a href="#calling-agents-from-other-tools" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Reporting tool calls
+        Calling agents from other tools
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#other-catalogs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Other catalogs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#writing-an-agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Writing an agent
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#platform-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Platform notes
       
     </span>
   </a>
@@ -1192,6 +1136,17 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#disclaimer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Disclaimer
+      
+    </span>
+  </a>
   
 </li>
       
@@ -2498,41 +2453,201 @@
 
 
 <h1 id="arena">Arena</h1>
-<p><code>hb arena</code> runs intentionally vulnerable AI agents on your machine and lets you test them with <code>hb test</code> in one step. It pulls a packaged agent from the Humanbound Arena catalog, starts it in Docker, and serves it through a local gateway that speaks A2A v1.0 (with an OpenAI-compatible façade), so every agent looks the same to <code>hb</code> and to other tools. No <code>hb login</code> is needed. Each agent also works as a worked example of pointing <code>hb</code> at your own agent.</p>
-<h2 id="quick-start">Quick Start</h2>
-<p>You need Docker (running) and an LLM key for the agent.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>humanbound
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>hb<span class="w"> </span>arena<span class="w"> </span>ls<span class="w">                                   </span><span class="c1"># browse the catalog</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>hb<span class="w"> </span>arena<span class="w"> </span>info<span class="w"> </span>&lt;agent&gt;<span class="w">                         </span><span class="c1"># details, required keys, planted vulnerabilities</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>hb<span class="w"> </span>arena<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span><span class="nv">OPENAI_API_KEY</span><span class="o">=</span>sk-...<span class="w">     </span><span class="c1"># the agent's key, stored in ~/.humanbound/arena/arena.env</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>hb<span class="w"> </span>arena<span class="w"> </span>run<span class="w"> </span>&lt;agent&gt;<span class="w">                          </span><span class="c1"># pull, start, wait for health, start the gateway</span>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>hb<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--target<span class="w"> </span>arena://&lt;agent&gt;<span class="w">              </span><span class="c1"># adversarial test on the local engine</span>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>hb<span class="w"> </span>arena<span class="w"> </span>stop<span class="w"> </span>--all<span class="w">                           </span><span class="c1"># stop your agents and your gateway</span>
+<p><code>hb arena</code> runs intentionally vulnerable AI agents on your machine, so you can practise testing agents and see what <code>hb test</code> finds. No <code>hb login</code> is needed.</p>
+<h2 id="concept-and-architecture">Concept and Architecture</h2>
+<p>Each agent is a packaged application with planted, documented vulnerabilities. You pull one from a catalog, run it locally, and attack it.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>hb test / other tools
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>        │  A2A v1.0 or OpenAI-compatible, with your access token
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>        ▼
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>gateway (127.0.0.1:11500)
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        │
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>        ▼
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>door ──► agent containers        network without a route out
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>  │
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>  └────► the agent's model, and the hosts its manifest lists
 </code></pre></div>
-<p>Replace <code>&lt;agent&gt;</code> with an agent id from <code>hb arena ls</code>; the examples below use the same placeholder.</p>
-<p><code>hb test</code> on an arena target always runs on the local engine, which needs its own LLM provider (for the attacker and the judge), for example:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HB_PROVIDER</span><span class="o">=</span>openai<span class="w"> </span><span class="nv">HB_API_KEY</span><span class="o">=</span>sk-...<span class="w">   </span><span class="c1"># model defaults to gpt-4.1</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="c1"># or fully local:</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HB_PROVIDER</span><span class="o">=</span>ollama<span class="w">                     </span><span class="c1"># model defaults to llama3.1:8b</span>
-</code></pre></div>
-<p><strong>Local models for the agent.</strong> Agents that list <code>OPENAI_BASE_URL</code> among their keys (check <code>hb arena info &lt;id&gt;</code>) can use any OpenAI-compatible server instead of OpenAI. The agent runs in a container, so point it at the host, for example Ollama with Docker Desktop:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>hb<span class="w"> </span>arena<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span><span class="nv">OPENAI_BASE_URL</span><span class="o">=</span>http://host.docker.internal:11434/v1
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>hb<span class="w"> </span>arena<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span><span class="nv">OPENAI_API_KEY</span><span class="o">=</span>ollama<span class="w">     </span><span class="c1"># most local servers ignore the value</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>hb<span class="w"> </span>arena<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span><span class="nv">OPENAI_MODEL</span><span class="o">=</span>llama3.1:8b<span class="w">  </span><span class="c1"># when the agent lists OPENAI_MODEL</span>
-</code></pre></div>
-<p>The host and port of <code>OPENAI_BASE_URL</code> are what hb lets the agent reach as its model (see <a href="#network-access">Network access</a>): with the settings above that is <code>host.docker.internal:11434</code> and nothing else on your machine. <code>localhost</code> would be the agent's own container, so hb warns when <code>OPENAI_BASE_URL</code> points there.</p>
-<p>On Linux with Docker Engine, a server listening on the host's <code>127.0.0.1</code> can't be reached from a container. Make the server listen on the Docker bridge address (usually <code>172.17.0.1</code>; see <code>ip -4 addr show docker0</code>); <code>host.docker.internal</code> then works as above (hb gives its proxy a <code>host-gateway</code> entry for it), and so does the address itself:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nv">OLLAMA_HOST</span><span class="o">=</span><span class="m">172</span>.17.0.1<span class="w"> </span>ollama<span class="w"> </span>serve<span class="w">           </span><span class="c1"># or OLLAMA_HOST=0.0.0.0, firewalled from your network</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>hb<span class="w"> </span>arena<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span><span class="nv">OPENAI_BASE_URL</span><span class="o">=</span>http://172.17.0.1:11434/v1
-</code></pre></div>
-<p><code>OLLAMA_HOST=0.0.0.0</code> also works, but exposes Ollama to your network unless a firewall blocks port 11434; with <code>ufw</code> or <code>firewalld</code> you may also need to allow that port from the Docker networks.</p>
+<table>
+<thead>
+<tr>
+<th>Part</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Catalog</strong></td>
+<td>An index of agents, each described by an <code>arena.yaml</code> manifest. The default one is <a href="https://github.com/humanbound/humanbound-arena">humanbound-arena</a>.</td>
+</tr>
+<tr>
+<td><strong>Agent</strong></td>
+<td>One or more Docker containers, started without privileges, on a network that has no route out.</td>
+</tr>
+<tr>
+<td><strong>Door</strong></td>
+<td>A small proxy hb runs next to each agent: the way in from <code>127.0.0.1</code>, and the agent's only way out.</td>
+</tr>
+<tr>
+<td><strong>Gateway</strong></td>
+<td>A local server that presents every running agent the same way and requires your access token.</td>
+</tr>
+</tbody>
+</table>
 <div class="admonition warning">
-<p class="admonition-title">Intentionally vulnerable</p>
-<p>Arena agents are built to be exploited, and their isolation is best effort: use them at your own risk, and never run them where there is sensitive data or access to critical systems. <code>hb arena run</code> says so every time it starts an agent. Their containers and the gateway listen on <code>127.0.0.1</code> only, and every gateway call needs your <a href="#access-token">access token</a>. <code>hb arena serve --host &lt;addr&gt;</code> binds the gateway to another interface and makes every running agent reachable (with the token) from your network; only do that on a network you trust, and never on a machine that holds real data or credentials the agents could reach.</p>
-<p>hb blocks an agent's <a href="#network-access">network access</a>, except for its model and the hosts its manifest lists. That narrows what a hijacked agent can do; it doesn't make it harmless. Whatever the agent sends to a destination it may reach leaves your machine. Don't run arena agents next to local services that hold real data or accept requests without authentication. On Linux with Docker Engine before 28, ports published on <code>127.0.0.1</code> may also be reachable from other machines on your local network; <code>hb arena run</code> warns about it, and upgrading the engine fixes it.</p>
+<p class="admonition-title">Warning</p>
+<p>Arena agents are built to be exploited. Read the <a href="#disclaimer">disclaimer</a> before you run one.</p>
 </div>
-<h2 id="commands">Commands</h2>
-<p>None of these commands needs <code>hb login</code>. <code>ls</code>, <code>info</code> and <code>validate</code> never install anything; <code>pull</code> and <code>run</code> cache the manifest and pull the images.</p>
+<h2 id="network-and-privilege-isolation">Network and Privilege Isolation</h2>
+<p>Agents are built to be exploited, so hb limits what a hijacked one can reach and do.</p>
+<p><strong>Network.</strong> An agent's network has no route out. Through the door it may reach only:</p>
+<table>
+<thead>
+<tr>
+<th>Destination</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Its model</td>
+<td>The host and port of <code>OPENAI_BASE_URL</code>, or <code>api.openai.com:443</code> when unset. Only for agents that declare an <code>OPENAI_*</code> key.</td>
+</tr>
+<tr>
+<td>Hosts its manifest lists</td>
+<td><code>runtime.egress</code> in <code>arena.yaml</code>.</td>
+</tr>
+<tr>
+<td>Its own services</td>
+<td>The other containers of a multi-container agent.</td>
+</tr>
+</tbody>
+</table>
+<p>Everything else is refused, including your machine and your local network. <code>hb arena logs &lt;id&gt; --door</code> shows what was <code>allowed</code> and what was <code>blocked</code>.</p>
+<p><strong>Privileges.</strong> Every container of an agent must meet the container baseline:</p>
+<table>
+<thead>
+<tr>
+<th>Rule id</th>
+<th>The container…</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>non-root</code></td>
+<td>runs as a user other than root</td>
+</tr>
+<tr>
+<td><code>not-privileged</code></td>
+<td>is not privileged</td>
+</tr>
+<tr>
+<td><code>capabilities</code></td>
+<td>drops all capabilities and adds none</td>
+</tr>
+<tr>
+<td><code>no-new-privileges</code></td>
+<td>cannot gain new privileges</td>
+</tr>
+<tr>
+<td><code>host-namespaces</code></td>
+<td>shares no namespace with the host</td>
+</tr>
+<tr>
+<td><code>host-mounts</code></td>
+<td>mounts no host path or device</td>
+</tr>
+<tr>
+<td><code>loopback-ports</code></td>
+<td>publishes ports on <code>127.0.0.1</code> only</td>
+</tr>
+<tr>
+<td><code>internal-networks</code></td>
+<td>is only on networks with no route out</td>
+</tr>
+</tbody>
+</table>
+<p>Containers are also limited to 512 processes, 2 GB of memory and 2 CPUs.</p>
+<p>hb checks the baseline before it reports an agent ready and again before a test, and stops an agent that fails. <code>hb arena check &lt;id&gt;</code> runs the check on demand: exit code <code>0</code> all rules met, <code>1</code> problems found, <code>2</code> agent not running or Docker unusable.</p>
+<p>Neither protection can be switched off. Both have limits:</p>
+<ul>
+<li>An allowed destination is still a way out. hb filters by host and port, not by content.</li>
+<li>Only web traffic from clients that honour <code>HTTP_PROXY</code> and <code>HTTPS_PROXY</code> passes. Anything else fails to connect.</li>
+<li>The baseline covers how containers are configured, not what an agent does.</li>
+<li>On a Docker that cannot hide the network's gateway address, the agent may reach what the Docker host serves on all interfaces. <code>hb arena run</code> warns when that is so.</li>
+</ul>
+<h2 id="usage">Usage</h2>
+<h3 id="quick-start">Quick start</h3>
+<p>You need Docker running and an LLM key for the agent.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>pip<span class="w"> </span>install<span class="w"> </span>humanbound
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>hb<span class="w"> </span>arena<span class="w"> </span>ls<span class="w">                                   </span><span class="c1"># browse the catalog</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>hb<span class="w"> </span>arena<span class="w"> </span>info<span class="w"> </span>&lt;agent&gt;<span class="w">                         </span><span class="c1"># keys, network, planted vulnerabilities</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>hb<span class="w"> </span>arena<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span><span class="nv">OPENAI_API_KEY</span><span class="o">=</span>sk-...<span class="w">     </span><span class="c1"># the agent's model key</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>hb<span class="w"> </span>arena<span class="w"> </span>run<span class="w"> </span>&lt;agent&gt;<span class="w">                          </span><span class="c1"># pull, start, wait until healthy</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>hb<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--target<span class="w"> </span>arena://&lt;agent&gt;<span class="w">              </span><span class="c1"># test it on the local engine</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>hb<span class="w"> </span>arena<span class="w"> </span>stop<span class="w"> </span>--all
+</code></pre></div>
+<h3 id="model-configuration">Model configuration</h3>
+<p>Two models are involved, configured separately.</p>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Used for</th>
+<th>Configured with</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>The agent's</td>
+<td>The agent's own answers</td>
+<td><code>hb arena config set</code>, stored in <code>~/.humanbound/arena/arena.env</code></td>
+</tr>
+<tr>
+<td>The test engine's</td>
+<td>The attacker and the judge in <code>hb test</code></td>
+<td><code>HB_PROVIDER</code>, <code>HB_API_KEY</code>, <code>HB_MODEL</code> in your shell</td>
+</tr>
+</tbody>
+</table>
+<p><strong>The agent's model.</strong> <code>hb arena info &lt;id&gt;</code> lists the keys an agent accepts. Most take:</p>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>OPENAI_API_KEY</code></td>
+<td>The key for the model's API. Usually required.</td>
+</tr>
+<tr>
+<td><code>OPENAI_MODEL</code></td>
+<td>The model name. The agent's default applies when unset.</td>
+</tr>
+<tr>
+<td><code>OPENAI_BASE_URL</code></td>
+<td>Any OpenAI-compatible server. <code>https://api.openai.com/v1</code> when unset.</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>hb<span class="w"> </span>arena<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span><span class="nv">OPENAI_API_KEY</span><span class="o">=</span>sk-...<span class="w"> </span><span class="nv">OPENAI_MODEL</span><span class="o">=</span>gpt-4.1-mini
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="c1"># a local model, for example Ollama on this machine</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>hb<span class="w"> </span>arena<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span><span class="nv">OPENAI_BASE_URL</span><span class="o">=</span>http://host.docker.internal:11434/v1
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>hb<span class="w"> </span>arena<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span><span class="nv">OPENAI_API_KEY</span><span class="o">=</span>ollama<span class="w"> </span><span class="nv">OPENAI_MODEL</span><span class="o">=</span>llama3.1:8b
+</code></pre></div>
+<ul>
+<li>Changes apply at the next <code>hb arena run</code>.</li>
+<li>The host and port of <code>OPENAI_BASE_URL</code> are the only model destination the agent may reach.</li>
+<li><code>localhost</code> in <code>OPENAI_BASE_URL</code> would be the agent's own container; use <code>host.docker.internal</code>.</li>
+<li>On Linux the local server must listen on the Docker bridge address (usually <code>172.17.0.1</code>), not on <code>127.0.0.1</code>.</li>
+</ul>
+<p><strong>The test engine's model.</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HB_PROVIDER</span><span class="o">=</span>openai<span class="w"> </span><span class="nv">HB_API_KEY</span><span class="o">=</span>sk-...<span class="w">   </span><span class="c1"># model defaults to gpt-4.1</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HB_PROVIDER</span><span class="o">=</span>ollama<span class="w">                     </span><span class="c1"># or fully local; defaults to llama3.1:8b</span>
+</code></pre></div>
+<h3 id="commands">Commands</h3>
 <table>
 <thead>
 <tr>
@@ -2543,344 +2658,146 @@
 <tbody>
 <tr>
 <td><code>hb arena ls [--installed]</code></td>
-<td>List the catalog (or only installed agents), with a STATE column: <code>installed</code> or <code>running</code>.</td>
+<td>List the catalog, or only installed agents.</td>
 </tr>
 <tr>
-<td><code>hb arena info &lt;id&gt;[:version] [--agent-yaml]</code></td>
-<td>Show details (developer, upstream project if any, and the image digests the catalog publishes), required and optional keys, what the agent may reach on the network and the planted vulnerabilities. <code>--agent-yaml</code> prints only the embedded <code>agent.yaml</code>. Never installs.</td>
+<td><code>hb arena info &lt;id&gt; [--agent-yaml]</code></td>
+<td>Show an agent's details. Never installs.</td>
 </tr>
 <tr>
-<td><code>hb arena validate &lt;path&gt;</code></td>
-<td>Validate an <code>arena.yaml</code> (its folder must be named after its <code>id</code>); for compose agents also check the compose file. Never installs.</td>
+<td><code>hb arena pull &lt;id&gt;</code></td>
+<td>Install an agent and pull its images.</td>
 </tr>
 <tr>
-<td><code>hb arena pull &lt;id&gt;[:version]</code></td>
-<td>Install the agent and pull its image(s), by digest when the catalog lists one (see <a href="#catalogs-and-trust">Catalogs and trust</a>), and the image of hb's proxy.</td>
-</tr>
-<tr>
-<td><code>hb arena run &lt;id&gt;[:version] [--env-file FILE] [--yes]</code></td>
-<td>Install if needed, resolve keys, confirm an agent from a catalog other than the default one on its first run (<code>--yes</code> skips the question), start the agent with its <a href="#network-access">network access</a> blocked, wait for its health check and make sure the gateway is up. Re-running an agent drops the conversations the gateway held for it.</td>
+<td><code>hb arena run &lt;id&gt; [--env-file FILE] [--yes]</code></td>
+<td>Start an agent and the gateway.</td>
 </tr>
 <tr>
 <td><code>hb arena ps</code></td>
-<td>List running agents with their A2A and native URLs.</td>
+<td>List running agents and their URLs.</td>
 </tr>
 <tr>
 <td><code>hb arena logs &lt;id&gt; [-f] [--tail N] [--door]</code></td>
-<td>Show an agent's container logs (default: last 200 lines). <code>--door</code> shows what the agent reached or was refused on the network instead.</td>
-</tr>
-<tr>
-<td><code>hb arena reset &lt;id&gt;</code></td>
-<td>Recreate the agent from its image. This drops its conversations.</td>
+<td>Show an agent's logs; <code>--door</code> shows what it reached or was refused.</td>
 </tr>
 <tr>
 <td><code>hb arena check &lt;id&gt; [--json]</code></td>
-<td>Check the running agent's containers against the <a href="#container-baseline">container baseline</a>: one problem per line, exit code 0, 1 or 2. Never stops anything.</td>
+<td>Check the agent's containers against the <a href="#network-and-privilege-isolation">container baseline</a>.</td>
+</tr>
+<tr>
+<td><code>hb arena reset &lt;id&gt;</code></td>
+<td>Recreate the agent. Drops its conversations.</td>
 </tr>
 <tr>
 <td><code>hb arena stop &lt;id&gt;</code> / <code>--all</code> / <code>--all --any-owner</code></td>
-<td>Stop one of your agents, or all of yours, including one whose container exited or was stopped outside hb. Your gateway stops when none of your agents is left. <code>--all --any-owner</code> also stops every other user's or session's arena agents on this Docker (it warns with how many); their gateways keep running.</td>
+<td>Stop one agent, all of yours, or every user's on this Docker.</td>
 </tr>
 <tr>
 <td><code>hb arena rm &lt;id&gt;</code></td>
-<td>Stop the agent and remove its images and cached manifest. Only the images its manifest names are removed, and not one that a container outside the arena uses.</td>
+<td>Stop an agent and remove its images and manifest.</td>
 </tr>
 <tr>
 <td><code>hb arena endpoint &lt;id&gt;</code></td>
-<td>Print the A2A and OpenAI URLs, your gateway access token, a <code>curl</code> example and a ready-to-use hb bot config (both carry the token).</td>
+<td>Print the agent's URLs, your token and a ready-to-use bot config.</td>
 </tr>
 <tr>
 <td><code>hb arena token</code></td>
-<td>Print only your gateway access token (created if there is none yet), for scripts: <code>TOKEN=$(hb arena token)</code>. Treat it like a password.</td>
-</tr>
-<tr>
-<td><code>hb arena serve [--host H] [--port P]</code></td>
-<td>Run the gateway in the foreground (default <code>127.0.0.1</code>, port <code>HB_ARENA_PORT</code> or 11500; 1–65535). The access token is required whatever the host.</td>
+<td>Print only your access token.</td>
 </tr>
 <tr>
 <td><code>hb arena config set/get/unset</code></td>
-<td>Manage the agents' keys (see below).</td>
+<td>Manage the keys agents receive.</td>
+</tr>
+<tr>
+<td><code>hb arena validate &lt;path&gt;</code></td>
+<td>Validate an <code>arena.yaml</code>.</td>
+</tr>
+<tr>
+<td><code>hb arena serve [--host H] [--port P]</code></td>
+<td>Run the gateway in the foreground.</td>
 </tr>
 </tbody>
 </table>
-<p>The gateway listens on <code>http://127.0.0.1:11500</code>. Set <code>HB_ARENA_PORT</code> to use another port (a number from 1 to 65535); set it for every <code>hb arena</code> and <code>hb test</code> command, since they all find the gateway through it. Calls to the gateway and the agents on <code>127.0.0.1</code> never go through a proxy, even when <code>HTTP_PROXY</code> or <code>ALL_PROXY</code> is set.</p>
-<p><strong>Several users or sessions on one machine.</strong> Arena agents belong to the home directory that started them (its <em>owner</em>, a short id derived from <code>~/.humanbound/arena</code>). Containers, networks and compose projects are named <code>arena-&lt;owner&gt;-&lt;id&gt;</code> and labelled <code>io.humanbound.arena.owner=&lt;owner&gt;</code>, so two users, sandboxes or CI jobs with different <code>HOME</code>s can run the same agent side by side. <code>ps</code>, <code>stop</code>, <code>stop --all</code>, <code>rm</code>, <code>reset</code> and <code>hb test --target</code> only ever see your own agents; only <code>stop --all --any-owner</code> reaches the others (including containers from hb versions before owners existed, named <code>arena-&lt;id&gt;</code>). If containers from an older hb (without an owner) are left on this Docker, <code>ps</code> and <code>stop --all</code> point you at <code>hb arena stop --all --any-owner</code>. Each owner also needs its own gateway port: if <code>HB_ARENA_PORT</code> points at a port where another owner's gateway runs, hb refuses to use or stop it and asks you to pick another port.</p>
-<h2 id="network-access">Network Access</h2>
-<p>An agent can be talked into doing things, so hb starts it with its network access blocked. It may reach:</p>
-<table>
-<thead>
-<tr>
-<th>Destination</th>
-<th>Where it comes from</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>its model</td>
-<td>the host and port of <code>OPENAI_BASE_URL</code>, or <code>api.openai.com:443</code> when that key is unset. Only for agents that list an <code>OPENAI_*</code> key.</td>
-</tr>
-<tr>
-<td>the hosts its manifest lists</td>
-<td><code>runtime.egress</code> in <code>arena.yaml</code>: exact host names, port 443 unless the entry says otherwise.</td>
-</tr>
-<tr>
-<td>its own services</td>
-<td>the other containers of a compose agent.</td>
-</tr>
-</tbody>
-</table>
-<p>Nothing else: not the internet, not your machine, not your local network. <code>hb arena info &lt;id&gt;</code> shows what an agent may reach before you install it, <code>hb arena run</code> prints it every time, and the confirmation before the first run of an agent from another catalog shows it too.</p>
-<p><strong>How.</strong> The agent's Docker networks are created without a route out (<code>--internal</code>), and, where Docker supports it, without an address of their own on the host. Next to each agent hb runs a small container of its own, the <em>door</em>, on the agent's networks and on one ordinary network. It carries calls from <code>127.0.0.1</code> on your machine in to the agent, and it is an HTTP proxy that lets the destinations above through and answers <code>403</code> (with the header <code>X-Arena-Egress: blocked</code>) to everything else. hb sets <code>HTTP_PROXY</code>, <code>HTTPS_PROXY</code> and <code>NO_PROXY</code> (and their lowercase spellings) in every container of the agent, so clients that honour them use the proxy for everything but the agent's own services. The door runs in the official Python image, referenced by digest, as a non-root user, read-only and without capabilities.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>$ hb arena logs &lt;agent&gt; --door
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>door: in → arena-&lt;owner&gt;-&lt;agent&gt;:8080
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>door: out → api.openai.com:443
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>allowed api.openai.com:443
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>blocked example.com:443
-</code></pre></div>
-<p>One line per destination tried: <code>allowed</code>, <code>blocked</code> (not on the list, or a listed host that resolves to a private address) or <code>failed</code> (on the list, but unreachable). When an agent doesn't become healthy, <code>hb arena run</code> shows what the door refused.</p>
-<p><strong>What it is not.</strong></p>
+<p><code>HB_ARENA_PORT</code> changes the gateway port; set it for every <code>hb arena</code> and <code>hb test</code> command. Agents belong to the home directory that started them, so several users can share one Docker.</p>
+<h3 id="keys">Keys</h3>
+<p>Keys are stored in <code>~/.humanbound/arena/arena.env</code>, readable only by you.</p>
 <ul>
-<li>An allowed destination is still a way out. Whatever the agent sends to its model or to a listed host leaves your machine; hb filters by host name and port and does not look at what is sent.</li>
-<li>Only web traffic passes, and only from clients that use the proxy. A client that ignores the proxy variables, or speaks another protocol, can't connect at all; it fails instead of getting through. With Docker Engine 25.0.5 or later, names outside the agent's own services don't resolve inside its containers either; older engines may still pass name lookups on.</li>
-<li>Your own choice of model is let through as you wrote it, also when it is on your machine or your local network (that is what a local model needs): the host and the port of <code>OPENAI_BASE_URL</code>, nothing else there. Hosts from a manifest must resolve to public addresses.</li>
-<li>On a Docker that can't create a network without an address on the host, the agent may still reach what the Docker host serves on all interfaces, through the network's gateway address. <code>hb arena run</code> says so when that is the case. With Docker Desktop the Docker host is its virtual machine, not your computer.</li>
-<li>A container is not a virtual machine. This narrows what a hijacked agent can reach; the warning above still holds.</li>
+<li>An agent receives only the keys its manifest declares. <code>hb arena run</code> prints their names, never their values.</li>
+<li>Precedence, later wins: <code>arena.env</code>, your shell, <code>--env-file</code>.</li>
+<li>Only LLM keys such as <code>OPENAI_API_KEY</code> are read from your shell, and only for agents from the default catalog.</li>
+<li><code>HB_*</code> and <code>HUMANBOUND_*</code> names are never passed to an agent.</li>
 </ul>
-<p>There is no option to start an agent without the block. An agent whose client can't use a proxy has to be changed to use one.</p>
-<h2 id="container-baseline">Container Baseline</h2>
-<p>hb starts every agent container without privileges and out of reach of the host. Before it reports an agent ready, and again before a test, it inspects every container of the agent (for a compose agent, its side services too, running or not) and the networks they are on, and refuses to continue unless each one:</p>
-<table>
-<thead>
-<tr>
-<th>Rule</th>
-<th>The container…</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>non-root</code></td>
-<td>runs as a user other than root: <code>Config.User</code> is set and is not <code>root</code> or <code>0</code> (a <code>:group</code> part is ignored).</td>
-</tr>
-<tr>
-<td><code>not-privileged</code></td>
-<td>is not privileged.</td>
-</tr>
-<tr>
-<td><code>capabilities</code></td>
-<td>drops all Linux capabilities (<code>ALL</code>) and adds none.</td>
-</tr>
-<tr>
-<td><code>no-new-privileges</code></td>
-<td>can't gain new privileges (<code>no-new-privileges</code>, or <code>no-new-privileges:true</code>).</td>
-</tr>
-<tr>
-<td><code>host-namespaces</code></td>
-<td>shares no namespace with the host (pid, ipc, network, uts, user), nor its pid, ipc or network namespace with another container.</td>
-</tr>
-<tr>
-<td><code>host-mounts</code></td>
-<td>mounts no host path (no <code>bind</code> or <code>npipe</code> mounts; named volumes and <code>tmpfs</code> are fine) and maps no host device.</td>
-</tr>
-<tr>
-<td><code>loopback-ports</code></td>
-<td>publishes ports on <code>127.0.0.1</code> only, both where they are published now and where its configuration would publish them (publishing nothing is fine).</td>
-</tr>
-<tr>
-<td><code>internal-networks</code></td>
-<td>is only on networks that have no route out (Docker reports <code>Internal: true</code> for each).</td>
-</tr>
-</tbody>
-</table>
-<p>A field hb can't read counts as a problem, since the rule can't be confirmed.</p>
-<p><strong>When it runs.</strong> <code>hb arena run</code> and <code>hb arena reset</code> (and a reset through the gateway, including the one <code>hb test</code> does before a run) check the containers right after starting them: if any rule fails, hb stops the agent and prints one problem per line instead of reporting it running. <code>hb test --target arena://&lt;id&gt;</code> checks again right before the experiment starts; if a rule fails it prints the problems, stops the agent and exits with code 2. There is no option to skip the check.</p>
-<p><strong><code>hb arena check &lt;id&gt;</code></strong> runs the same check on demand and only reports: it never stops anything.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>$ hb arena check &lt;agent&gt;
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>✓ &lt;agent&gt;: 2 containers meet the container baseline
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>$ hb arena check &lt;agent&gt;
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>arena-&lt;owner&gt;-&lt;agent&gt;-backend-1: non-root: runs as root (Config.User is '0')
-</code></pre></div>
-<table>
-<thead>
-<tr>
-<th>Exit code</th>
-<th>Meaning</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>0</code></td>
-<td>Every container meets the container baseline.</td>
-</tr>
-<tr>
-<td><code>1</code></td>
-<td>Problems found, one per line: <code>&lt;container&gt;: &lt;rule&gt;: &lt;problem&gt;</code> (a summary goes to stderr).</td>
-</tr>
-<tr>
-<td><code>2</code></td>
-<td>The agent isn't running, or Docker is unusable.</td>
-</tr>
-</tbody>
-</table>
-<p><code>--json</code> prints <code>{"agent": "&lt;id&gt;", "containers": ["&lt;name&gt;", …], "violations": [{"container", "rule", "message"}, …]}</code> for scripts, with the same exit codes. <code>containers</code> lists every container checked; an agent with no containers to check is a problem (<code>(agent): inspect-data: no containers to check</code>), never a pass.</p>
-<p>The rule ids (<code>inspect-data</code>, <code>non-root</code>, <code>not-privileged</code>, <code>capabilities</code>, <code>no-new-privileges</code>, <code>host-namespaces</code>, <code>host-mounts</code>, <code>loopback-ports</code>, <code>internal-networks</code>) are stable identifiers that scripts may match on. <code>inspect-data</code> reports problems with the agent as a whole (its container is <code>(agent)</code>): no containers to check, or inspect data hb can't read.</p>
-<p><strong>What it does not cover.</strong> The baseline is about how the containers and their networks are configured, nothing more. It says nothing about what an agent does, what its code or image contain, or what it sends to the destinations it may reach (see <a href="#network-access">Network access</a>). Meeting it doesn't make an agent harmless: arena agents stay intentionally vulnerable, and their isolation is best effort.</p>
-<h2 id="platform-notes">Platform Notes</h2>
-<ul>
-<li><strong>Linux.</strong> Docker Engine and Docker Desktop both work. If <code>hb arena</code> says it got <em>permission denied on the Docker socket</em>, add your user to the <code>docker</code> group (<code>sudo usermod -aG docker $USER</code>, then log out and in) or, for rootless Docker, set <code>DOCKER_HOST=unix://$XDG_RUNTIME_DIR/docker.sock</code>. Compose agents need the Compose v2 plugin (<code>docker compose</code>, e.g. the <code>docker-compose-plugin</code> package). Docker Engine 28 or later is recommended (see the warning above); for local models, see <a href="#quick-start">above</a>.</li>
-<li><strong>macOS.</strong> Docker Desktop (or another engine that provides the <code>docker</code> CLI and socket, such as Colima or OrbStack).</li>
-<li><strong>Windows.</strong> Docker Desktop. Two limitations: there is no lock around starting the gateway, so two <code>hb</code> commands starting it at the same moment race (one of them fails and can simply be re-run); and the files under <code>%USERPROFILE%\.humanbound\arena</code> (keys, gateway token, results) are protected by your user profile's permissions, not by POSIX modes.</li>
-<li><strong>Podman</strong> isn't supported, not even through its <code>docker</code> compatibility command.</li>
-<li><strong>The hb Docker image</strong> can't run <code>hb arena</code>: the agents run on Docker on your machine, which the container can't drive. Commands that need Docker stop with a message; install hb on the host (<code>pip install humanbound</code>) and run <code>hb arena</code> and <code>hb test --target arena://&lt;id&gt;</code> there.</li>
-</ul>
-<h2 id="keys">Keys</h2>
-<p>Arena agents need their own keys (usually an LLM key). They are stored in <code>~/.humanbound/arena/arena.env</code>, readable only by you:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>hb<span class="w"> </span>arena<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span><span class="nv">OPENAI_API_KEY</span><span class="o">=</span>sk-...<span class="w"> </span><span class="nv">OPENAI_MODEL</span><span class="o">=</span>gpt-4.1-mini
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>hb<span class="w"> </span>arena<span class="w"> </span>config<span class="w"> </span>get<span class="w">                 </span><span class="c1"># values are masked</span>
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>hb<span class="w"> </span>arena<span class="w"> </span>config<span class="w"> </span><span class="nb">unset</span><span class="w"> </span>OPENAI_MODEL
+<h3 id="testing-with-hb-test">Testing with hb test</h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>hb<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--target<span class="w"> </span>arena://&lt;agent&gt;
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>hb<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--target<span class="w"> </span>arena://&lt;agent&gt;<span class="w"> </span>--no-reset<span class="w"> </span>--deep
 </code></pre></div>
 <ul>
-<li><strong>Only declared keys are passed.</strong> An agent receives just the keys its manifest lists as required or optional.</li>
-<li><strong>Precedence</strong> (later wins): <code>arena.env</code> &lt; your shell environment &lt; <code>--env-file</code>.</li>
-<li><strong>Only LLM keys, and only for agents from the default catalog, come from your shell.</strong> An agent installed from the default Humanbound catalog may read <code>OPENAI_API_KEY</code>, <code>OPENAI_BASE_URL</code>, <code>OPENAI_MODEL</code>, <code>ANTHROPIC_API_KEY</code>, <code>GEMINI_API_KEY</code>, <code>GOOGLE_API_KEY</code>, <code>AZURE_OPENAI_API_KEY</code>, <code>AZURE_OPENAI_ENDPOINT</code>, <code>OLLAMA_HOST</code>, <code>MISTRAL_API_KEY</code>, <code>GROQ_API_KEY</code> and <code>XAI_API_KEY</code> from your shell. Every other key, and every key of an agent from another catalog (<code>HB_ARENA_INDEX</code>: a fork, a local checkout, a file path), comes only from <code>arena.env</code> and <code>--env-file</code>, so an exported secret is never handed to code you haven't reviewed by accident.</li>
-<li><strong>Confirming agents from other catalogs.</strong> The first time you run an agent from a catalog other than the default one, <code>hb arena run</code> says which catalog it comes from and shows its developer (name, URL, contact), the upstream repository, commit and license it packages (if any), its images (with the digests the catalog lists, if any) and the key names it will receive, and asks before it starts. Your answer is remembered per agent version (and asked again if its manifest, compose file or digests change). <code>--yes</code> accepts without asking, and is required when there is no terminal (CI, scripts).</li>
-<li><strong>Reserved names.</strong> <code>HB_*</code> and <code>HUMANBOUND_*</code> names belong to hb's own credentials: <code>config set</code> refuses them, and they are skipped everywhere else.</li>
-<li><strong>Value rules.</strong> Values can't contain newlines, start or end with whitespace, or be wrapped in quotes. A value from your shell or <code>--env-file</code> that contains a newline, carriage return or NUL stops <code>hb arena run</code> with <code>cannot use key &lt;NAME&gt;</code> (the value is never printed).</li>
-<li><code>hb arena run</code> prints the <strong>names</strong> of the keys it passes, never the values. If a required key is missing it stops before starting anything and tells you which <code>hb arena config set</code> to run.</li>
-<li><code>hb arena reset</code> reuses the keys from the last <code>run</code>; key changes take effect on the next <code>run</code>. If the saved keys are missing (for example, the file under <code>~/.humanbound/arena/run/</code> was deleted) and the agent requires keys, <code>reset</code> refuses with <code>no saved keys for &lt;id&gt; → hb arena run &lt;id&gt; again</code> rather than restart the agent without them.</li>
+<li>The agent must be running. It is reset to a clean state first; <code>--no-reset</code> skips that.</li>
+<li>The test scope and the judge's context come from the agent's manifest.</li>
+<li>Runs are <strong>whitebox</strong> when the agent reports its tool calls, otherwise <strong>blackbox</strong>.</li>
+<li>Results are saved under <code>.humanbound/results/&lt;experiment-id&gt;/</code>: <code>meta.json</code> (run, configuration, target) and <code>logs.jsonl</code> (one conversation per line, with tool executions for whitebox runs).</li>
 </ul>
-<h2 id="catalogs-and-trust">Catalogs and Trust</h2>
-<p>There is one kind of arena agent. What hb trusts is <strong>where the catalog came from</strong>, never anything a manifest says about itself:</p>
-<ul>
-<li><strong>The default catalog</strong> (the Humanbound Arena index on GitHub) is trusted: its agents may read the LLM keys above from your shell, and run without a confirmation.</li>
-<li><strong>Any other catalog</strong> (<code>HB_ARENA_INDEX</code> set to another URL, a fork, a local checkout or an <code>index.json</code> path) is not: its agents never read your shell and are confirmed once before their first run (see <a href="#keys">Keys</a>).</li>
-</ul>
-<p><code>pull</code> and <code>run</code> record where an agent was installed from (and the image digests below) in <code>~/.humanbound/arena/agents/&lt;id&gt;/&lt;version&gt;/installed.json</code>. Anonymous usage telemetry names the agent and version only for agents from the default catalog; for any other catalog it sends <code>agent: "custom"</code>.</p>
-<h3 id="image-digests">Image digests</h3>
-<p>A catalog's index can list, for each agent, the images it published and their registry digests (<code>images: [{ref, digest}]</code>); the published Humanbound catalog does. hb then runs exactly those images, for image agents and for every listed compose service:</p>
-<ul>
-<li>If the tag (<code>ref</code>) isn't on your machine, hb pulls <code>&lt;repository&gt;@&lt;digest&gt;</code> and tags it as <code>ref</code>, so Docker and Compose find it.</li>
-<li>If the tag is already there, it must be that image: its registry digests must include <code>&lt;repository&gt;@&lt;digest&gt;</code>. Otherwise <code>pull</code> and <code>run</code> refuse to use it and say what they found, for example a different digest (a stale pull) or <em>locally built, no registry digest</em> (you built the image yourself). To fix it, either remove the stale local image (<code>docker rmi &lt;ref&gt;</code>) so hb pulls the published one, or run from a local catalog (<code>HB_ARENA_INDEX=&lt;checkout&gt;</code>) to use your local build.</li>
-<li>Images the index doesn't list, and catalogs whose index lists no digests (a local checkout, a pull request), use tags as usual, with no warning.</li>
-</ul>
-<h2 id="calling-agents-from-other-tools">Calling Agents From Other Tools</h2>
-<h3 id="access-token">Access token</h3>
-<p>Every gateway call needs your access token, so other users and processes on your machine (and, with <code>serve --host</code>, on your network) can't drive your agents. hb creates it on first need in <code>~/.humanbound/arena/gateway.token</code> (readable only by you; one per home directory) and sends it on its own calls. <code>hb arena token</code> prints just the token (creating it if needed), so scripts can use <code>TOKEN=$(hb arena token)</code> without knowing where it is kept; <code>hb arena endpoint &lt;id&gt;</code> prints it too. Treat it like a password: anyone who has it can drive your running agents. Pass it as:</p>
-<ul>
-<li><code>Authorization: Bearer &lt;token&gt;</code>, which A2A clients and OpenAI-compatible clients send: for an OpenAI SDK or eval tool, set <code>OPENAI_API_KEY=&lt;token&gt;</code> (and the base URL below);</li>
-<li>or <code>X-Arena-Token: &lt;token&gt;</code>.</li>
-</ul>
-<p>A call without it, or with a wrong one, gets <strong>401</strong> (a JSON-RPC <code>error</code> on <code>POST /a2a/&lt;id&gt;</code>, <code>{"error": {...}}</code> elsewhere). The Agent Card needs it too, and declares it as an HTTP bearer scheme. The only exception is <code>GET /arena/v1/health</code>, which without the token answers just <code>{"status": "ok"}</code> (with it, also the gateway's version, pid and owner). The token never appears in saved results or telemetry; to rotate it, stop your gateway first (<code>hb arena stop --all</code>), then delete the file; the next <code>hb arena run</code> creates a new one. (A gateway whose token file is gone no longer accepts hb's calls, so hb treats it as someone else's and won't stop or reuse it.)</p>
-<h3 id="a2a">A2A</h3>
-<p>Every running agent is an A2A v1.0 server behind the gateway:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>GET  http://127.0.0.1:11500/a2a/&lt;id&gt;/.well-known/agent-card.json   Agent Card
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>POST http://127.0.0.1:11500/a2a/&lt;id&gt;                               JSON-RPC: SendMessage, GetTask
-</code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="nv">TOKEN</span><span class="o">=</span><span class="k">$(</span>hb<span class="w"> </span>arena<span class="w"> </span>token<span class="k">)</span>
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>curl<span class="w"> </span>-s<span class="w"> </span>http://127.0.0.1:11500/a2a/&lt;agent&gt;<span class="w"> </span>-H<span class="w"> </span><span class="s2">"Authorization: Bearer </span><span class="nv">$TOKEN</span><span class="s2">"</span><span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">  </span>-H<span class="w"> </span><span class="s1">'A2A-Version: 1.0'</span><span class="w"> </span>-H<span class="w"> </span><span class="s1">'Content-Type: application/json'</span><span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">  </span>-d<span class="w"> </span><span class="s1">'{"jsonrpc":"2.0","id":"1","method":"SendMessage","params":{"message":{"role":"ROLE_USER","messageId":"m1","parts":[{"text":"Hello"}]}}}'</span>
+<h3 id="calling-agents-from-other-tools">Calling agents from other tools</h3>
+<p>Every call needs your token, as <code>Authorization: Bearer &lt;token&gt;</code> or <code>X-Arena-Token: &lt;token&gt;</code>. Treat it like a password.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nv">TOKEN</span><span class="o">=</span><span class="k">$(</span>hb<span class="w"> </span>arena<span class="w"> </span>token<span class="k">)</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="c1"># A2A v1.0</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>curl<span class="w"> </span>-s<span class="w"> </span>http://127.0.0.1:11500/a2a/&lt;agent&gt;<span class="w"> </span>-H<span class="w"> </span><span class="s2">"Authorization: Bearer </span><span class="nv">$TOKEN</span><span class="s2">"</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">  </span>-H<span class="w"> </span><span class="s1">'A2A-Version: 1.0'</span><span class="w"> </span>-H<span class="w"> </span><span class="s1">'Content-Type: application/json'</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">  </span>-d<span class="w"> </span><span class="s1">'{"jsonrpc":"2.0","id":"1","method":"SendMessage","params":{"message":{"role":"ROLE_USER","messageId":"m1","parts":[{"text":"Hello"}]}}}'</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="c1"># OpenAI-compatible: base URL http://127.0.0.1:11500/v1, model arena/&lt;agent&gt;, API key = token</span>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>curl<span class="w"> </span>-s<span class="w"> </span>http://127.0.0.1:11500/v1/chat/completions<span class="w"> </span>-H<span class="w"> </span><span class="s2">"Authorization: Bearer </span><span class="nv">$TOKEN</span><span class="s2">"</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="w">  </span>-H<span class="w"> </span><span class="s1">'Content-Type: application/json'</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="w">  </span>-d<span class="w"> </span><span class="s1">'{"model":"arena/&lt;agent&gt;","messages":[{"role":"user","content":"Hello"}]}'</span>
 </code></pre></div>
 <ul>
-<li>The reply is always a direct Message: <code>result.message.parts[0].text</code> holds the text and <code>result.message.contextId</code> the conversation id. Send the same <code>contextId</code> to continue a conversation; omit it to start a new one. Conversations are kept in the gateway's memory, per agent, until <code>reset</code> or a gateway restart.</li>
-<li>Per-turn metadata sits under <code>result.message.metadata.humanbound</code>: <code>agent</code>, <code>version</code>, <code>latency_ms</code> and, when the agent reports them, <code>tool_calls</code> (normalized to <code>{name, parameters, result}</code> items, see <a href="#reporting-tool-calls">Reporting tool calls</a>) with the agent's own list under <code>tool_calls_raw</code>.</li>
-<li><strong>Protocol errors</strong> (bad JSON, bad envelope, unknown method, non-text parts, a part whose <code>text</code> isn't a string, unsupported <code>A2A-Version</code>) come back as <strong>HTTP 200</strong> with a JSON-RPC <code>error</code>. <code>GetTask</code> always returns "task not found", since the gateway creates no tasks.</li>
-<li><strong>Agent failures</strong> come back <strong>non-200</strong> (404 not running, 502 agent error or unreadable reply, 503 Docker down, 504 timeout) with a JSON-RPC <code>error</code> whose <code>data</code> holds a <code>google.rpc.ErrorInfo</code> with a <code>reason</code> such as <code>AGENT_TIMEOUT</code>, so clients fail the turn instead of reading an error as a reply.</li>
-<li>Agents that speak A2A natively are passed through: their replies are normalized to a direct Message like any other agent's, and their JSON-RPC errors come back with HTTP 502.</li>
-<li>Besides the token, the gateway only accepts <code>Content-Type: application/json</code> POSTs (others get <strong>415</strong>) and loopback <code>Host</code> headers (others get <strong>400</strong>), so web pages in your browser can't drive it.</li>
+<li>A2A replies carry the text in <code>result.message.parts[0].text</code>. Send back <code>result.message.contextId</code> to continue a conversation.</li>
+<li>The Agent Card is at <code>/a2a/&lt;agent&gt;/.well-known/agent-card.json</code>.</li>
+<li>Agent failures return a non-200 status: 404 not running, 502 agent error, 503 Docker down, 504 timeout.</li>
+<li>The OpenAI-compatible endpoint starts a new conversation per request and does not stream.</li>
 </ul>
-<h3 id="openai-compatible-facade">OpenAI-compatible façade</h3>
-<p>Eval tools that speak OpenAI Chat Completions can use base URL <code>http://127.0.0.1:11500/v1</code> with model <code>arena/&lt;id&gt;</code> and the token as the API key (<code>OPENAI_BASE_URL=http://127.0.0.1:11500/v1 OPENAI_API_KEY=&lt;token&gt;</code>):</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>curl<span class="w"> </span>-s<span class="w"> </span>http://127.0.0.1:11500/v1/chat/completions<span class="w"> </span>-H<span class="w"> </span><span class="s2">"Authorization: Bearer </span><span class="nv">$TOKEN</span><span class="s2">"</span><span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">  </span>-H<span class="w"> </span><span class="s1">'Content-Type: application/json'</span><span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">  </span>-d<span class="w"> </span><span class="s1">'{"model":"arena/&lt;agent&gt;","messages":[{"role":"user","content":"Hello"}]}'</span>
-</code></pre></div>
-<p>Each request is a new conversation (prior <code>messages</code> are passed as history only to agents whose history the gateway keeps), system messages are ignored, and streaming isn't supported. Metadata is returned under a top-level <code>humanbound</code> key.</p>
-<h2 id="testing-with-hb-test">Testing With hb test</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>hb<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--target<span class="w"> </span>arena://&lt;agent&gt;
-<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>hb<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--target<span class="w"> </span>arena://&lt;agent&gt;<span class="w"> </span>--no-reset<span class="w"> </span>--deep
-</code></pre></div>
+<p><code>hb arena endpoint &lt;id&gt;</code> prints a bot config you can adapt for your own A2A agent with <code>hb test --endpoint</code>. It uses two placeholders: <code>$UUID</code> (a fresh id each time) and <code>$humanbound_conversation_id</code> (stable within a conversation).</p>
+<h3 id="other-catalogs">Other catalogs</h3>
+<p><code>HB_ARENA_INDEX</code> points hb at another catalog: a URL, a fork, a local checkout or an <code>index.json</code> path.</p>
 <ul>
-<li><code>--target</code> takes only <code>arena://&lt;id&gt;</code> values and can't be combined with <code>--endpoint</code>. The agent must be running (<code>hb arena run &lt;id&gt;</code>).</li>
-<li>The run always uses the local engine. The agent's <code>agent:</code> block becomes the test scope (unless you pass <code>--scope</code>, <code>--repo</code> or <code>--prompt</code>) and its manifest <code>context</code> goes to the judge.</li>
-<li>Before the run the agent is reset to a clean state. <code>--no-reset</code> skips that, and so does <code>--no-auto-start</code>.</li>
-<li>Right before the experiment starts, the agent's containers are checked against the <a href="#container-baseline">container baseline</a> (with or without a reset). If one fails, <code>hb test</code> prints the problems, stops the agent and exits with code 2.</li>
-<li>Arena runs are <strong>whitebox</strong> when the agent reports its tool calls: an <code>integration.type: http</code> agent whose manifest sets <code>integration.response.tool_calls</code>. The gateway returns those tool calls in the per-turn metadata and the engine passes them to the judge, so findings can cite what the agent did, not only what it said. Other agents (including native A2A agents) run <strong>blackbox</strong>, and <code>hb test</code> prints <code>Depth: blackbox</code>.</li>
+<li>Agents from any catalog other than the default one never read keys from your shell.</li>
+<li>They are confirmed once before their first run, with their developer, images, key names and network access shown. <code>--yes</code> accepts without asking and is required in scripts.</li>
+<li>When a catalog's index lists image digests, hb pulls exactly those images and refuses a different local image under the same tag.</li>
 </ul>
-<p><strong>Your own A2A agent.</strong> <code>hb arena endpoint &lt;id&gt;</code> prints the bot config <code>hb test</code> uses for a whitebox arena target (for a blackbox agent <code>hb test</code> leaves out the <code>telemetry</code> block). It holds your gateway token in its <code>Authorization</code> header, so keep it private. Use it as a template for any A2A v1.0 agent with <code>hb test --endpoint</code>: change the <code>endpoint</code> URL and, if your agent reports metadata, the <code>telemetry</code> paths. Two placeholders make it work with A2A, and both names are reserved:</p>
-<ul>
-<li><code>$UUID</code>: a fresh id at every occurrence (the JSON-RPC <code>id</code> and <code>messageId</code>).</li>
-<li><code>$humanbound_conversation_id</code>: one id per test conversation, stable across its turns (the <code>contextId</code>).</li>
-</ul>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="p">{</span>
-<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">  </span><span class="nt">"streaming"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
-<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">  </span><span class="nt">"chat_completion"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="w">    </span><span class="nt">"endpoint"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://127.0.0.1:11500/a2a/&lt;agent&gt;"</span><span class="p">,</span>
-<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="w">    </span><span class="nt">"headers"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"A2A-Version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1.0"</span><span class="p">,</span><span class="w"> </span><span class="nt">"Authorization"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Bearer &lt;your gateway token&gt;"</span><span class="p">},</span>
-<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="w">    </span><span class="nt">"payload"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"jsonrpc"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2.0"</span><span class="p">,</span><span class="w"> </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"$UUID"</span><span class="p">,</span><span class="w"> </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"SendMessage"</span><span class="p">,</span>
-<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="w">                </span><span class="nt">"params"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"message"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"role"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ROLE_USER"</span><span class="p">,</span><span class="w"> </span><span class="nt">"messageId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"$UUID"</span><span class="p">,</span>
-<a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="w">                                        </span><span class="nt">"contextId"</span><span class="p">:</span><span class="w"> </span><span class="s2">"$humanbound_conversation_id"</span><span class="p">,</span>
-<a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="w">                                        </span><span class="nt">"parts"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"text"</span><span class="p">:</span><span class="w"> </span><span class="s2">"$PROMPT"</span><span class="p">}]}}}</span>
-<a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="w">  </span><span class="p">},</span>
-<a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a><span class="w">  </span><span class="nt">"telemetry"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"mode"</span><span class="p">:</span><span class="w"> </span><span class="s2">"per_turn"</span><span class="p">,</span>
-<a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a><span class="w">                </span><span class="nt">"extraction_map"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"metadata_path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"result.message.metadata.humanbound"</span><span class="p">,</span>
-<a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a><span class="w">                                   </span><span class="nt">"tool_executions"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tool_calls"</span><span class="p">}}</span>
-<a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a><span class="p">}</span>
-</code></pre></div>
-<h2 id="results">Results</h2>
-<p>Every local run (arena targets always run locally) saves its results under <code>.humanbound/results/&lt;experiment-id&gt;/</code> in the directory you ran <code>hb test</code> from (owner-only permissions):</p>
-<ul>
-<li><strong><code>meta.json</code></strong>: the experiment. Besides <code>id</code>, <code>status</code>, <code>test_category</code>, <code>testing_level</code>, <code>lang</code>, <code>results</code> (stats, insights, posture) and <code>scope</code>, it has:<ul>
-<li><code>configuration</code>: <code>{test_category, testing_level, lang, provider, model}</code>, the engine's provider name and model (never its key or endpoint, and never the bot config or the gateway token);</li>
-<li><code>target</code> for <code>hb test --target arena://…</code> runs: <code>{kind: "arena", agent_id, agent_version, gateway, whitebox}</code> (<code>null</code> for other runs).</li>
-</ul>
-</li>
-<li><strong><code>logs.jsonl</code></strong>: one tested conversation per line: <code>thread_id</code>, <code>conversation</code> (<code>[{u, a}]</code> turns), <code>result</code> (<code>pass</code>/<code>fail</code>/<code>error</code>), <code>gen_category</code>, <code>fail_category</code>, <code>explanation</code>, <code>severity</code>, <code>confidence</code>, <code>exec_t</code> and <code>meta</code>. For a whitebox run, <code>meta.telemetry</code> holds:<ul>
-<li><code>tools</code>: the tool names called, in order;</li>
-<li><code>tool_executions</code>: <code>[{turn, tool_name, parameters, result}]</code>, one per call, with the turn (1-based) it happened in;</li>
-<li><code>turns</code>: <code>[{turn, metadata}]</code>, the per-turn metadata the integration returned (for an arena agent: <code>agent</code>, <code>version</code>, <code>latency_ms</code>), minus <code>tool_calls</code> and <code>tool_calls_raw</code>, which <code>tool_executions</code> already holds;</li>
-<li><code>trace_id</code>, <code>tokens</code>, <code>api_calls</code>.</li>
-</ul>
-</li>
-</ul>
-<p><code>turns</code> is saved for any bot config with <code>per_turn</code> telemetry, not only for arena targets: it is whatever the config's <code>metadata_path</code> points at in each reply, so don't put secrets there. To keep logs a reasonable size, any string longer than 4,000 characters in <code>telemetry</code> is cut and ends with <code>…[truncated N chars]</code>, lists longer than 200 items are cut with a last <code>…[N more items]</code> item, objects with more than 200 keys are cut with a <code>"…": "[N more keys]"</code> entry, and NaN or infinite numbers are saved as <code>null</code>. A benchmark can check an agent's <code>ground_truth</code> against these files, for example a <code>tool_called: {name, arg_regex}</code> rule against <code>tool_executions[].tool_name</code> and the JSON of <code>parameters</code>, and <code>reply_contains</code> / <code>reply_regex</code> against the <code>a</code> of each turn, and use <code>target.agent_id</code> and <code>target.agent_version</code> to pick the manifest.</p>
-<h2 id="writing-an-arena-agent">Writing an Arena Agent</h2>
-<p>An agent is an <code>arena.yaml</code> manifest: arena fields at the top level and the Humanbound <code>agent.yaml</code> embedded unchanged under <code>agent:</code>. It lives in a folder named after its <code>id</code> (<code>agents/&lt;id&gt;/arena.yaml</code> in the catalog). Check it locally with <code>hb arena validate path/to/&lt;id&gt;/arena.yaml</code>.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nt">developer</span><span class="p">:</span><span class="w">                          </span><span class="c1"># required: who builds and maintains the agent</span>
-<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ACME Security Research</span>
-<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">  </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://acme.example/arena</span><span class="w">   </span><span class="c1"># http(s)</span>
-<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="w">  </span><span class="nt">contact</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">arena@acme.example</span><span class="w">       </span><span class="c1"># optional</span>
-<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="nt">source</span><span class="p">:</span>
-<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="w">  </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ghcr.io/acme/arena-bank:1.0.0</span>
-<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="w">  </span><span class="nt">upstream</span><span class="p">:</span><span class="w">                         </span><span class="c1"># optional: the project the agent packages, if any</span>
-<a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a><span class="w">    </span><span class="nt">repo</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://github.com/acme/vulnerable-bank</span>
-<a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a><span class="w">    </span><span class="nt">ref</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">c0cf9a14adad76e9d6a53c41741f625334bd9971</span><span class="w">   </span><span class="c1"># the full 40-character commit SHA</span>
-<a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a><span class="w">    </span><span class="nt">license</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Apache-2.0</span><span class="w">             </span><span class="c1"># optional, an SPDX license id</span>
+<h3 id="writing-an-agent">Writing an agent</h3>
+<p>An agent is an <code>arena.yaml</code> in a folder named after its <code>id</code>. The Humanbound <code>agent.yaml</code> sits unchanged under <code>agent:</code>. Check it with <code>hb arena validate &lt;path&gt;</code>.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nt">developer</span><span class="p">:</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ACME Security Research</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://acme.example/arena</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="nt">source</span><span class="p">:</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">  </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ghcr.io/acme/arena-bank:1.0.0</span><span class="w">      </span><span class="c1"># or compose: docker-compose.yml + service:</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="nt">runtime</span><span class="p">:</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">  </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8080</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">  </span><span class="nt">env</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">required</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">OPENAI_API_KEY</span><span class="p p-Indicator">]}</span>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">  </span><span class="nt">egress</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">files.example.com</span><span class="p p-Indicator">]</span><span class="w">               </span><span class="c1"># optional: hosts besides the model</span>
 </code></pre></div>
 <ul>
-<li><code>developer</code> (<code>name</code>, <code>url</code>, optional <code>contact</code>) is shown by <code>hb arena info</code> and before the first run of an agent from a catalog other than the default one. <code>source.upstream</code> is optional; when present, <code>repo</code> must be an http(s) URL, <code>ref</code> a full commit SHA and <code>license</code> an SPDX id.</li>
-<li><code>source.image</code> names a prebuilt image; <code>source.compose</code> names a compose file for multi-container agents. Reference images by tag: the digests hb checks come from the catalog's index (see <a href="#image-digests">Image digests</a>), not from the manifest.</li>
-<li>Compose files are checked against an allowlist before they run. Services must use prebuilt <code>image:</code> (no <code>build:</code>), top-level networks must be plain bridge networks (only <code>driver: bridge</code>, <code>internal</code> and <code>labels</code>; no <code>ipam</code>), top-level volumes must be local (only <code>driver: local</code> and <code>labels</code>), and nothing may reach the host (no published ports, bind mounts, devices or extra privileges). <code>$</code> interpolation is refused, except a service <code>environment</code> value that is exactly <code>${KEY}</code> for a key the manifest declares; that is how the agent receives its keys. For the same reason an <code>environment</code> entry without a value (<code>- KEY</code> or <code>KEY:</code>) is only allowed for a declared key.</li>
-<li>Every agent container runs with <code>cap_drop: ALL</code>, <code>no-new-privileges</code>, <code>restart: "no"</code> and limits of 512 processes, 2 GB of memory and 2 CPUs (a compose service keeps a lower <code>mem_limit</code> or <code>cpus</code> of its own). Build images for that: set the runtime user with <code>USER</code> in the Dockerfile instead of switching users at start-up (<code>su</code>, <code>gosu</code>, <code>setpriv</code>, setuid binaries or a <code>chown</code> in the entrypoint fail without capabilities), and listen on a port of 1024 or above (binding a lower port needs <code>CAP_NET_BIND_SERVICE</code>, even as root).</li>
-<li><code>runtime.egress</code> lists what the agent must reach besides its model, as exact lowercase host names, each with an optional port (<code>files.example.com</code>, <code>api.example.com:8443</code>; port 443 when left out): at most 20, no wildcards, addresses or URLs, and no names of the user's own machine or network (<code>host.docker.internal</code>, <code>*.local</code>, <code>*.internal</code>, …). Leave it out when the agent only talks to its model and its own services. Everything else is blocked (see <a href="#network-access">Network access</a>), so make the agent's clients honour <code>HTTP_PROXY</code>, <code>HTTPS_PROXY</code> and <code>NO_PROXY</code> (most HTTP libraries do by default), and don't declare those variables under <code>runtime.env</code>: hb sets them. A compose service can't be called <code>hb-door</code>.</li>
-<li>Every container must meet the <a href="#container-baseline">container baseline</a>, or hb stops the agent. In particular no image may run as root: set a non-root <code>USER</code> in your Dockerfiles, and give a compose service whose third-party image runs as root by default a <code>user:</code> (for example <code>user: "65534"</code>), if the image can run that way.</li>
-<li>Each <code>ground_truth</code> entry declares one planted vulnerability: <code>category</code> and <code>description</code>, and optionally <code>title</code>, <code>severity</code>, <code>vector</code>, <code>success</code> conditions and <code>references</code>. <code>references</code> maps the vulnerability to published standards, as a list of unique <code>&lt;standard&gt;:&lt;id&gt;</code> strings (for example <code>owasp-llm:LLM02</code> or <code>atlas:AML.T0051.000</code>). hb checks only that shape and shows the references in <code>hb arena info</code>; which ids exist is for the catalog to check.</li>
-<li><code>hb arena validate</code> also accepts a local <code>.env</code> next to the manifest while you develop; installed agents never read one.</li>
-<li><code>arena.yaml</code> and compose files can't use YAML anchors or aliases (<code>&amp;name</code>, <code>*name</code>, <code>&lt;&lt;: *name</code>) and must stay under 256 KB. Text fields can't contain control characters (newlines and tabs are fine in descriptions, <code>context</code> and the <code>agent:</code> block). <code>runtime.timeout_s</code> and <code>runtime.health.timeout_s</code> are at most 600.</li>
+<li>Images must run as a non-root user, listen on port 1024 or above, and work without capabilities.</li>
+<li>HTTP clients must honour the proxy variables. Do not declare them under <code>runtime.env</code>.</li>
+<li>Compose files may use prebuilt images only, with no published ports, host mounts or extra privileges.</li>
+<li><code>ground_truth</code> declares each planted vulnerability, optionally with <code>references</code> such as <code>owasp-llm:LLM02</code>.</li>
+<li>For whitebox runs, point <code>integration.response.tool_calls</code> at a list of <code>{name, parameters, result}</code> items in the agent's reply.</li>
 </ul>
-<h3 id="reporting-tool-calls">Reporting tool calls</h3>
-<p>For a whitebox agent, point <code>integration.response.tool_calls</code> at a list in the agent's JSON reply. Emit one item per tool call in the preferred shape:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="p">{</span><span class="nt">"reply"</span><span class="p">:</span><span class="w"> </span><span class="s2">"..."</span><span class="p">,</span><span class="w"> </span><span class="nt">"trace"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"lookup_price"</span><span class="p">,</span><span class="w"> </span><span class="nt">"parameters"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"sku"</span><span class="p">:</span><span class="w"> </span><span class="s2">"A1"</span><span class="p">},</span><span class="w"> </span><span class="nt">"result"</span><span class="p">:</span><span class="w"> </span><span class="s2">"9.99"</span><span class="p">}]}</span>
-</code></pre></div>
-<p>with <code>response: {text: reply, tool_calls: trace}</code>. The gateway normalizes other common shapes to that one:</p>
+<h3 id="platform-notes">Platform notes</h3>
 <ul>
-<li>the tool name from <code>name</code>, <code>tool</code> or <code>tool_name</code>;</li>
-<li>the arguments from <code>parameters</code>, <code>args</code>, <code>arguments</code> or <code>input</code> (a JSON-object string is parsed);</li>
-<li>the result from <code>result</code>, <code>output</code> or <code>content</code>;</li>
-<li>a call entry (<code>"type": "call"</code> or <code>"tool_call"</code>) followed by its result entry (<code>"type": "result"</code> or <code>"tool_result"</code>, same name or no name) becomes one item;</li>
-<li>items that aren't JSON objects are dropped.</li>
+<li><strong>Linux:</strong> Docker Engine 28 or later is recommended. Compose agents need the Compose v2 plugin.</li>
+<li><strong>macOS and Windows:</strong> Docker Desktop.</li>
+<li><strong>Not supported:</strong> Podman, and running <code>hb arena</code> inside the hb Docker image.</li>
 </ul>
-<p>The agent's original list is kept under <code>tool_calls_raw</code> in the metadata.</p>
+<h2 id="disclaimer">Disclaimer</h2>
+<p>The arena is maintained for educational purposes. Its agents are deliberately vulnerable, and in places deliberately malicious: they exist to be attacked, so that you can learn how agents fail and how to test them.</p>
+<ul>
+<li>Never deploy an arena agent, and never run one where there is sensitive data or access to critical systems.</li>
+<li>Isolation is best effort. A container is not a virtual machine, and whatever an agent sends to a destination it may reach leaves your machine.</li>
+<li>Agents in the default catalog hold fake data only. Give an agent no real credentials beyond the LLM key it needs.</li>
+<li>You use the arena at your own risk. It comes with no warranty, and Humanbound accepts no liability for damage arising from its use.</li>
+</ul>
 
 
 
