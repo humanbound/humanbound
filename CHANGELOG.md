@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Documentation
+- **The Arena page is shorter and reordered.** It opens with the concept and
+  the architecture, then one section on network and privilege isolation, then
+  how to use the arena (with a section on configuring the agent's model and
+  the test engine's model), and ends with a disclaimer: the arena is
+  maintained for educational purposes, with deliberately vulnerable agents.
+
 ## [2.12.0] — 2026-09-28
 
 ### Added
