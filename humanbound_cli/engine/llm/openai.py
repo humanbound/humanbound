@@ -18,6 +18,21 @@ DEFAULT_TEMPERATURE = 0  # default temperature for LLM completion
 OPENAI_CHAT_COMPLETION_ENDPOINT = "https://api.openai.com/v1/chat/completions"
 
 
+def _chat_url(endpoint):
+    """Chat completions URL for an OpenAI-compatible base URL (e.g. OpenRouter).
+
+    ``endpoint`` follows the OpenAI SDK ``base_url`` convention
+    (``https://openrouter.ai/api/v1``); a URL already ending in
+    ``/chat/completions`` is used as-is. No endpoint means api.openai.com.
+    """
+    if not endpoint:
+        return OPENAI_CHAT_COMPLETION_ENDPOINT
+    endpoint = endpoint.rstrip("/")
+    if endpoint.endswith("/chat/completions"):
+        return endpoint
+    return f"{endpoint}/chat/completions"
+
+
 class LLMStreamer:
     def __init__(self, model_provider=None):
         model_provider = (
@@ -86,7 +101,7 @@ class LLMPinger:
         if self.send_temperature:
             payload["temperature"] = temperature
         return requests.post(
-            OPENAI_CHAT_COMPLETION_ENDPOINT,
+            _chat_url(self.model_provider["integration"].get("endpoint")),
             headers={
                 "Content-Type": "application/json",
                 "Authorization": f"Bearer {self.model_provider['integration']['api_key']}",
@@ -122,6 +137,10 @@ class LLMPinger:
                 # success -> return response
                 result = resp.json()
                 if "choices" not in result or not result["choices"]:
+                    # OpenAI-compatible gateways (e.g. OpenRouter) can return 200
+                    # with an error body; surface the provider's message.
+                    if result.get("error"):
+                        raise Exception(f"502/LLM provider error: {result['error']}")
                     raise Exception("502/Invalid LLM response format.")
                 content = result["choices"][0]["message"].get("content")
                 if content is None:

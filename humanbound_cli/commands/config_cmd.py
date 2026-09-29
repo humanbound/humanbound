@@ -122,7 +122,8 @@ def config_set(key, value):
       provider    LLM provider (openai, claude, gemini, grok, azureopenai, ollama)
       api-key     API key for the provider
       model       Model name (e.g. gpt-4.1, llama3.1:8b)
-      endpoint    Custom endpoint URL (e.g. for ollama: http://localhost:11434)
+      endpoint    Custom endpoint URL (e.g. for ollama: http://localhost:11434,
+                  for openai-compatible APIs: https://openrouter.ai/api/v1)
     """
     # Normalize key
     key = key.lower().replace("-", "_")
@@ -150,6 +151,11 @@ def config_set(key, value):
             )
         elif not config.get("api_key"):
             console.print("[dim]Set API key: hb config set api-key <your-key>[/dim]")
+        if config.get("endpoint") and value.lower() in ("openai", "azureopenai", "ollama"):
+            console.print(
+                f"[yellow]Endpoint is still set to {config['endpoint']} and will be used "
+                f'with this provider. Clear it with: hb config set endpoint ""[/yellow]'
+            )
     elif key == "api_key":
         masked = f"{value[:7]}****" if len(value) > 7 else "****"
         console.print(f"[green]API key set:[/green] {masked}")
