@@ -73,7 +73,7 @@ The `endpoint` field supports placeholder replacement using values from the `thr
 
 After all turns in a conversation complete, Humanbound fetches telemetry from your observability platform's API. Best for platforms that expose trace data via REST (LangFuse, LangSmith, OpenAI Assistants).
 
-Humanbound waits for the platform to ingest traces (with automatic retry), then fetches and parses the data.
+Humanbound fetches immediately, then retries after 2, 5, 10, 15, and 15 seconds if no trace data is available. This gives platforms up to 47 seconds to ingest traces across six fetch attempts.
 
 ### `per_turn`
 
@@ -350,7 +350,7 @@ Regardless of the source platform, Humanbound normalizes all telemetry into a st
 ## Troubleshooting
 
 **Telemetry returns empty data:**
-Observability platforms need time to ingest traces. Humanbound waits ~10 seconds after each conversation, then retries up to 3 times with progressive delays (total max ~25 seconds). If your platform has higher latency, traces may still be empty.
+Observability platforms need time to ingest traces. Humanbound fetches immediately after each conversation, then retries after 2, 5, 10, 15, and 15 seconds, for six attempts over up to 47 seconds. If your platform takes longer, traces may still be empty.
 
 **Session not found:**
 Ensure your agent passes the same session ID to both Humanbound (via `thread_init` response) and your observability platform. For LangFuse with LangGraph, use `propagate_attributes(session_id=session_id)`.

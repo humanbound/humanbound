@@ -7,12 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **The `openai` provider works with OpenAI-compatible APIs such as
+  OpenRouter** (#70). In local mode it now sends requests to the base URL in
+  `HB_ENDPOINT` (or `hb config set endpoint`), for example
+  `https://openrouter.ai/api/v1`, instead of always calling `api.openai.com`.
+  An endpoint that an `openai` config used to ignore, such as one left over
+  from Ollama, is now used; `hb config set provider` warns when one is set.
+  A 200 response carrying an `error` body now reports the provider's message.
+
 ### Documentation
 - **The Arena page is shorter and reordered.** It opens with the concept and
   the architecture, then one section on network and privilege isolation, then
   how to use the arena (with a section on configuring the agent's model and
   the test engine's model), and ends with a disclaimer: the arena is
   maintained for educational purposes, with deliberately vulnerable agents.
+
+### Fixed
+- Telemetry collection now starts immediately and retries up to five times over
+  47 seconds so delayed traces can be collected. (#164)
+- **The `openai` provider works with reasoning models** such as the o-series and
+  gpt-5 family. When OpenAI rejects `max_tokens` or a non-default `temperature`
+  for the model, the request is retried with `max_completion_tokens` or without
+  `temperature`, and later calls send the accepted form directly.
 
 ## [2.12.0] — 2026-09-28
 
