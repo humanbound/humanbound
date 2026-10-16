@@ -541,16 +541,8 @@ def _load_orchestrator(test_category: str):
     else:
         # Try loading from ~/.humanbound/orchestrators/ (custom)
         custom_path = Path.home() / ".humanbound" / "orchestrators" / short
-        if custom_path.exists() and (custom_path / "orchestrator.py").exists():
-            import importlib.util
-
-            spec = importlib.util.spec_from_file_location(
-                f"custom_orchestrator_{short}",
-                str(custom_path / "orchestrator.py"),
-            )
-            module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(module)
-            return module
+        if (custom_path / "orchestrator.py").is_file():
+            return _load_custom_orchestrator(short, custom_path)
 
         raise ValueError(
             f"Unknown orchestrator: {test_category}\n\n"
@@ -558,8 +550,56 @@ def _load_orchestrator(test_category: str):
             f"  humanbound/adversarial/owasp_agentic      (default)\n"
             f"  humanbound/adversarial/owasp_single_turn\n"
             f"  humanbound/behavioral/qa\n\n"
-            f"Install custom: hb orchestrators install --source ./my-orchestrator"
+            f"Custom orchestrators are loaded from "
+            f"~/.humanbound/orchestrators/<name>/orchestrator.py"
         )
+
+
+CUSTOM_ORCHESTRATOR_FUNCTIONS = ("orchestrator_generate", "orchestrator_run", "compute_quota")
+
+
+def _load_custom_orchestrator(short: str, custom_path: Path):
+    """Import ``custom_path`` as a package and return its ``orchestrator`` submodule.
+
+    Loading the directory as a package (rather than ``orchestrator.py`` on its own)
+    lets the documented layout work: ``orchestrator.py`` can import its sibling
+    ``config.py``, ``generator.py`` and ``judge.py`` with relative imports.
+    """
+    import importlib
+    import importlib.util
+    import re
+    import sys
+    import types
+
+    pkg_name = "humanbound_custom_orchestrator_" + re.sub(r"\W", "_", short)
+
+    # Drop a previous load of this package so edits on disk are picked up.
+    for name in [n for n in sys.modules if n == pkg_name or n.startswith(pkg_name + ".")]:
+        del sys.modules[name]
+
+    init_file = custom_path / "__init__.py"
+    if init_file.is_file():
+        spec = importlib.util.spec_from_file_location(
+            pkg_name, str(init_file), submodule_search_locations=[str(custom_path)]
+        )
+        assert spec is not None and spec.loader is not None
+        package = importlib.util.module_from_spec(spec)
+        sys.modules[pkg_name] = package
+        spec.loader.exec_module(package)
+    else:
+        package = types.ModuleType(pkg_name)
+        package.__path__ = [str(custom_path)]
+        sys.modules[pkg_name] = package
+
+    module = importlib.import_module(f"{pkg_name}.orchestrator")
+
+    missing = [f for f in CUSTOM_ORCHESTRATOR_FUNCTIONS if not callable(getattr(module, f, None))]
+    if missing:
+        raise ValueError(
+            f"Custom orchestrator '{short}' ({custom_path / 'orchestrator.py'}) "
+            f"does not define: {', '.join(missing)}"
+        )
+    return module
 
 
 def _resolve_provider():

@@ -61,6 +61,10 @@ my_orchestrator/
     orchestrator.py     # generate + run + compute_quota
 ```
 
+The directory is imported as a package, so `orchestrator.py` reaches its sibling
+modules with relative imports (`from .generator import ...`, `from .judge import ...`).
+An `__init__.py` is optional.
+
 ### Required Interface
 
 Your `orchestrator.py` must expose three functions:

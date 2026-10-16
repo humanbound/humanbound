@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Custom orchestrators can import their own modules.** An orchestrator in
+  `~/.humanbound/orchestrators/<name>/` is now loaded as a package, so the
+  documented layout works: `orchestrator.py` can import its `config.py`,
+  `generator.py` and `judge.py` with relative imports. Before, any such import
+  failed with `attempted relative import with no known parent package` (or
+  `No module named 'generator'`), so only a single self-contained
+  `orchestrator.py` could run. A custom orchestrator missing
+  `orchestrator_generate`, `orchestrator_run` or `compute_quota` is now
+  reported by name, and the unknown-orchestrator error points at the custom
+  directory instead of a nonexistent `hb orchestrators install` command.
+
 ## [2.13.0] — 2026-10-02
 
 ### Added
