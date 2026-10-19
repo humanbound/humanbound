@@ -23,7 +23,7 @@ jobs:
           python-version: "3.12"
       - run: python -m pip install --upgrade pip build
       - run: python -m build
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: dist-main
           path: dist/
