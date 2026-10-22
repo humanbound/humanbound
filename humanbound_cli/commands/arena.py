@@ -237,17 +237,37 @@ def _legacy_hint() -> None:
         )
 
 
-def _print_endpoints(agent_id: str, gateway: str, token: str | None = None) -> None:
+# Where an unshown token goes in a command line: the shell fills it in, so the output can
+# be shared (POSIX shells and PowerShell both expand $(...) in double quotes).
+TOKEN_SUBST = "$(hb arena token)"
+# Not the user's OpenAI key, though OpenAI-compatible tools take it in OPENAI_API_KEY.
+NOT_OPENAI_KEY = "(the arena token, not your OpenAI key)"
+
+
+def _print_endpoints(
+    agent_id: str, gateway: str, token: str | None = None, *, show_token: bool = False
+) -> None:
+    from ..arena import keys
+
     _say(f"  A2A agent card:   {gateway}/a2a/{agent_id}/.well-known/agent-card.json")
     _say(f"  A2A endpoint:     {gateway}/a2a/{agent_id}")
     _say(f"  OpenAI base URL:  {gateway}/v1  (model: arena/{agent_id})")
-    if token:
-        # click.echo: never wrapped, so the token can be copied in one piece.
+    if not token:
+        _say("  Access token:     required; hb arena token prints it")
+        return
+    # click.echo: never wrapped, so the token can be copied in one piece.
+    if show_token:
         click.echo(f"  Access token:     {token}")
-        click.echo("    send it as 'Authorization: Bearer <token>' (or 'X-Arena-Token: <token>');")
-        click.echo(f"    OpenAI-compatible tools: OPENAI_API_KEY={token}")
     else:
-        _say(f"  Access token:     required; hb arena endpoint {agent_id} prints it")
+        click.echo(
+            f"  Access token:     {keys.mask(token)}  "
+            "(hb arena token prints it; --show-token shows it here)"
+        )
+    click.echo("    send it as 'Authorization: Bearer <token>' (or 'X-Arena-Token: <token>');")
+    click.echo(
+        f"    OpenAI-compatible tools: OPENAI_API_KEY={token if show_token else TOKEN_SUBST}"
+        f"  {NOT_OPENAI_KEY}"
+    )
 
 
 # ── group ──
@@ -1019,10 +1039,23 @@ def rm_cmd(agent_id: str):
 # ── endpoint / serve ──
 
 
+# What an unshown bot config carries in place of the token.
+TOKEN_PLACEHOLDER = "<hb arena token>"
+
+
 @arena_group.command("endpoint")
 @click.argument("agent_id")
-def endpoint_cmd(agent_id: str):
-    """Print the URLs, the access token, a curl example and the hb bot config for an agent."""
+@click.option(
+    "--show-token",
+    is_flag=True,
+    help="Put the real access token in the output (keep that output private).",
+)
+def endpoint_cmd(agent_id: str, show_token: bool):
+    """Print the URLs, the access token, a curl example and the hb bot config for an agent.
+
+    The token is masked unless you pass --show-token, so the output is safe to share; the
+    curl example asks your shell for it with $(hb arena token).
+    """
     import json
 
     from ..arena import paths, target
@@ -1033,7 +1066,7 @@ def endpoint_cmd(agent_id: str):
         token = paths.gateway_token()
     except OSError as e:
         _fail(f"cannot read {paths.token_file()}: {e}")
-    _print_endpoints(agent_id, gateway, token)
+    _print_endpoints(agent_id, gateway, token, show_token=show_token)
     body = {
         "jsonrpc": "2.0",
         "id": "1",
@@ -1042,32 +1075,96 @@ def endpoint_cmd(agent_id: str):
             "message": {"role": "ROLE_USER", "messageId": "m1", "parts": [{"text": "Hello"}]}
         },
     }
+    auth = (
+        f"'Authorization: Bearer {token}'"
+        if show_token
+        else f'"Authorization: Bearer {TOKEN_SUBST}"'
+    )
     click.echo("")
     click.echo(
-        f"curl -s {gateway}/a2a/{agent_id} -H 'Authorization: Bearer {token}' "
+        f"curl -s {gateway}/a2a/{agent_id} -H {auth} "
         "-H 'A2A-Version: 1.0' -H 'Content-Type: application/json' "
         f"-d '{json.dumps(body, separators=(',', ':'))}'"
     )
     click.echo("")
-    click.echo("hb bot config (hb test --endpoint; it holds the token, so keep it private):")
-    click.echo(json.dumps(target.bot_config(agent_id, gateway, token=token), indent=2))
+    if show_token:
+        click.echo("hb bot config (hb test --endpoint; it holds the token, so keep it private):")
+    else:
+        click.echo(
+            f"hb bot config (hb test --endpoint; put your token in place of {TOKEN_PLACEHOLDER}, "
+            "or use --show-token):"
+        )
+    config = target.bot_config(agent_id, gateway, token=token if show_token else TOKEN_PLACEHOLDER)
+    click.echo(json.dumps(config, indent=2))
 
 
 @arena_group.command("token")
-def token_cmd():
+@click.option(
+    "--rotate",
+    is_flag=True,
+    help="Replace the token with a new one (the old one stops working) and print it.",
+)
+def token_cmd(rotate: bool):
     """Print your gateway access token (created if there is none yet).
 
     Prints only the token, for scripts: TOKEN=$(hb arena token). Every gateway call needs
     it. Treat it like a password: anyone who has it can drive your running agents.
+
+    With --rotate, a new token replaces it and your gateway is restarted to accept only the
+    new one. Do this if the token may have leaked, or after serving on a network
+    (hb arena serve --host).
     """
     from ..arena import paths
 
-    try:
-        token = paths.gateway_token()
-    except OSError as e:
-        click.echo(f"cannot read {paths.token_file()}: {e}", err=True)
-        raise SystemExit(1) from e
+    if rotate:
+        token = _rotate_token()
+    else:
+        try:
+            token = paths.gateway_token()
+        except OSError as e:
+            click.echo(f"cannot read {paths.token_file()}: {e}", err=True)
+            raise SystemExit(1) from e
     click.echo(token)
+
+
+def _rotate_token() -> str:
+    """A new token, with our gateway on HB_ARENA_PORT restarted to accept it. Messages go
+    to stderr, so stdout is only the token."""
+    from ..arena import daemon, paths
+
+    def fail(msg: str) -> NoReturn:
+        click.echo(msg, err=True)
+        raise SystemExit(1)
+
+    try:
+        port = paths.gateway_port()
+    except ValueError as e:
+        fail(str(e))
+    # The gateway accepts only the token it started with, and stopping it takes that token:
+    # stop it before the file changes, or hb could no longer tell it is ours.
+    was_up = daemon.is_up(port)
+    if was_up and not daemon.stop_gateway(port):
+        fail(f"the gateway on port {port} could not be stopped, so the token was not rotated")
+    try:
+        token = paths.rotate_token()
+    except OSError as e:
+        fail(f"cannot write {paths.token_file()}: {e}")
+    click.echo("✓ token rotated: the old one no longer works", err=True)
+    if was_up:
+        try:
+            daemon.ensure_running(port)
+        except daemon.GatewayError as e:
+            click.echo(
+                f"the gateway did not restart ({e}); any hb arena command starts it", err=True
+            )
+        else:
+            click.echo(f"  gateway on port {port} restarted with the new token", err=True)
+    click.echo(
+        "  update what holds the old one: bot configs, OPENAI_API_KEY in other tools, and any "
+        "gateway on another port (hb arena serve: restart it)",
+        err=True,
+    )
+    return token
 
 
 @arena_group.command("serve")
@@ -1082,8 +1179,8 @@ def serve_cmd(host: str, port: int | None):
     """Run the gateway in the foreground.
 
     Other hb arena commands find the gateway via HB_ARENA_PORT (default 11500), so set
-    it for them when you use --port. Every call needs the access token (hb arena endpoint
-    <id> prints it), whatever --host is.
+    it for them when you use --port. Every call needs the access token (hb arena token
+    prints it), whatever --host is.
     """
     from ..arena import daemon
     from ..arena.paths import LOOPBACK_HOSTS, token_file
@@ -1093,6 +1190,11 @@ def serve_cmd(host: str, port: int | None):
         _warn(
             f"Binding to {host}: arena agents are intentionally vulnerable and will be "
             "reachable from your network."
+        )
+        _warn(
+            "The access token is now the only thing between your network and the agents (and "
+            "your LLM quota): share it only with callers you trust, and run "
+            "hb arena token --rotate when you are done."
         )
     if daemon.is_up(port):
         _fail(
@@ -1107,6 +1209,6 @@ def serve_cmd(host: str, port: int | None):
     _say(f"Serving the arena gateway on {host}:{port} (Ctrl+C to stop)")
     _say(
         f"Callers need the access token in {token_file()} "
-        "(hb arena endpoint <id> prints it), sent as 'Authorization: Bearer <token>'."
+        "(hb arena token prints it), sent as 'Authorization: Bearer <token>'."
     )
     daemon.serve(host, port)

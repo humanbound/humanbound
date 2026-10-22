@@ -68,3 +68,26 @@ def test_read_only_lookup_never_creates(arena_home):
 def test_auth_headers(arena_home):
     token = paths.gateway_token()
     assert paths.auth_headers() == {"Authorization": f"Bearer {token}"}
+
+
+def test_rotate_replaces_the_token(arena_home):
+    old = paths.gateway_token()
+    new = paths.rotate_token()
+    assert new != old
+    assert paths.TOKEN_RE.fullmatch(new)
+    assert paths.gateway_token(create=False) == new
+    # no temporary files left behind
+    assert sorted(p.name for p in arena_home.iterdir()) == ["gateway.token"]
+
+
+def test_rotate_creates_a_missing_token(arena_home):
+    token = paths.rotate_token()
+    assert paths.gateway_token(create=False) == token
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="POSIX permissions")
+def test_rotated_token_file_is_private(arena_home):
+    paths.gateway_token()
+    os.chmod(arena_home / "gateway.token", 0o644)
+    paths.rotate_token()
+    assert mode_of(arena_home / "gateway.token") == 0o600

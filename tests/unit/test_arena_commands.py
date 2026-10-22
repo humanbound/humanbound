@@ -1035,13 +1035,29 @@ def test_endpoint(docker_ok):
     assert "Content-Type: application/json" in out and "SendMessage" in out
     config = json.loads(out[out.index("{\n") :])
     assert config["chat_completion"]["endpoint"] == f"{GATEWAY}/a2a/echo"
-    # the owner's token: printed, in the curl example and in the bot config
+    # the owner's token exists but is never printed without --show-token
     token = paths.gateway_token(create=False)
     assert token
+    assert token not in out
+    assert f"Access token:     {keys.mask(token)}" in out
+    assert '-H "Authorization: Bearer $(hb arena token)"' in out
+    assert config["chat_completion"]["headers"]["Authorization"] == "Bearer <hb arena token>"
+    assert "OPENAI_API_KEY=$(hb arena token)  (the arena token, not your OpenAI key)" in out
+
+
+def test_endpoint_show_token(docker_ok):
+    _running(docker_ok)
+    result = run("endpoint", "echo", "--show-token")
+    assert result.exit_code == 0, result.output
+    out = result.output
+    config = json.loads(out[out.index("{\n") :])
+    # the owner's token: printed, in the curl example and in the bot config
+    token = paths.gateway_token(create=False)
     assert f"Access token:     {token}" in out
     assert f"-H 'Authorization: Bearer {token}'" in out
     assert config["chat_completion"]["headers"]["Authorization"] == f"Bearer {token}"
-    assert f"OPENAI_API_KEY={token}" in out
+    assert f"OPENAI_API_KEY={token}  (the arena token, not your OpenAI key)" in out
+    assert "keep it private" in out
 
 
 def test_stop_needs_id_or_all(docker_ok):
@@ -1285,6 +1301,8 @@ def test_serve_warns_on_non_loopback(docker_ok, monkeypatch):
     assert "intentionally vulnerable" in flat(result)
     assert "reachable from your network" in flat(result)
     assert "gateway.token" in flat(result)  # the token is still required
+    assert "the only thing between your network and the agents" in flat(result)
+    assert "hb arena token --rotate" in flat(result)
     assert served == [("0.0.0.0", 12000)]
 
 
@@ -1733,6 +1751,95 @@ def test_token_help_says_to_treat_it_like_a_password(arena_env):
     result = run("token", "--help")
     assert result.exit_code == 0
     assert "like a password" in flat(result)
+
+
+def _gateway(monkeypatch, *, up: bool, stops: bool = True):
+    """A fake gateway on our port: records stop/start and the token file at each step."""
+    from humanbound_cli.arena import daemon
+
+    calls = []
+    state = {"up": up}
+
+    def stop(port=None, **kw):
+        calls.append(("stop", port, paths.gateway_token(create=False)))
+        if stops:
+            state["up"] = False
+        return stops
+
+    def start(port=None, **kw):
+        calls.append(("start", port, paths.gateway_token(create=False)))
+        state["up"] = True
+        return GATEWAY
+
+    monkeypatch.setattr(daemon, "is_up", lambda port=None, **kw: state["up"])
+    monkeypatch.setattr(daemon, "stop_gateway", stop)
+    monkeypatch.setattr(daemon, "ensure_running", start)
+    return calls
+
+
+def test_token_rotate_replaces_the_token(arena_env, monkeypatch):
+    calls = _gateway(monkeypatch, up=False)
+    old = paths.gateway_token()
+    result = run("token", "--rotate")
+    assert result.exit_code == 0, result.output
+    new = paths.gateway_token(create=False)
+    assert new != old
+    assert paths.TOKEN_RE.fullmatch(new)
+    assert result.stdout == new + "\n"  # only the token: TOKEN=$(hb arena token --rotate)
+    assert "old one no longer works" in result.stderr
+    assert calls == []  # no gateway: nothing to stop or start
+    assert run("token").stdout == new + "\n"
+
+
+def test_token_rotate_without_a_token_creates_one(arena_env, monkeypatch):
+    _gateway(monkeypatch, up=False)
+    result = run("token", "--rotate")
+    assert result.exit_code == 0, result.output
+    assert result.stdout.strip() == paths.gateway_token(create=False)
+
+
+def test_token_rotate_restarts_the_gateway(arena_env, monkeypatch):
+    calls = _gateway(monkeypatch, up=True)
+    old = paths.gateway_token()
+    result = run("token", "--rotate")
+    assert result.exit_code == 0, result.output
+    new = paths.gateway_token(create=False)
+    # stopped while it still accepts the old token, started again with the new one
+    assert calls == [("stop", 11500, old), ("start", 11500, new)]
+    assert "restarted with the new token" in result.stderr
+
+
+def test_token_rotate_keeps_the_token_when_the_gateway_wont_stop(arena_env, monkeypatch):
+    calls = _gateway(monkeypatch, up=True, stops=False)
+    old = paths.gateway_token()
+    result = run("token", "--rotate")
+    assert result.exit_code == 1
+    assert result.stdout == ""
+    assert "could not be stopped, so the token was not rotated" in result.stderr
+    assert paths.gateway_token(create=False) == old
+    assert [c[0] for c in calls] == ["stop"]
+
+
+def test_token_rotate_reports_a_failed_restart(arena_env, monkeypatch):
+    from humanbound_cli.arena import daemon
+
+    _gateway(monkeypatch, up=True)
+
+    def broken(port=None, **kw):
+        raise daemon.GatewayError("port taken")
+
+    monkeypatch.setattr(daemon, "ensure_running", broken)
+    result = run("token", "--rotate")
+    assert result.exit_code == 0  # the token did rotate
+    assert result.stdout.strip() == paths.gateway_token(create=False)
+    assert "did not restart (port taken)" in result.stderr
+
+
+def test_token_rotate_needs_no_docker(arena_env, monkeypatch):
+    _gateway(monkeypatch, up=False)
+    monkeypatch.setattr(runtime, "docker_cli", lambda: None)
+    result = run("token", "--rotate")
+    assert result.exit_code == 0, result.output
 
 
 # ── what an agent may reach on the network ──
