@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **A judge model that returns unusable output now says so, without the stack
+  dump.** The "Unexpected judge LLM response" error and the end-of-run
+  "could not be judged" notice now say the judge model may be too weak and to
+  try a stronger one. The traceback that was printed for every such
+  conversation (and for other engine errors) is now shown only with `--debug`.
+  Scoring, retries and the `judge_error` accounting are unchanged.
 - **Custom orchestrators can import their own modules.** An orchestrator in
   `~/.humanbound/orchestrators/<name>/` is now loaded as a package, so the
   documented layout works: `orchestrator.py` can import its `config.py`,

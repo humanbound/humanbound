@@ -95,12 +95,19 @@ class _LocalRun:
         self._terminated = threading.Event()
         self._created_at = time.strftime("%Y-%m-%dT%H:%M:%S")
 
+    def _on_error(self, title, details):
+        # The traceback is for --debug; at normal verbosity one conversation's failure
+        # should not dump several KB of stack into the CLI output.
+        if not self.config.debug:
+            details = {k: v for k, v in details.items() if k != "trace"}
+        logger.warning(f"[{title}] {details}")
+
     def make_callbacks(self):
         cb = EngineCallbacks(
             on_logs=lambda logs: self.logs.extend(logs),
             on_complete=lambda status: setattr(self, "_reported_status", status),
             is_terminated=self._terminated.is_set,
-            on_error=lambda title, details: logger.warning(f"[{title}] {details}"),
+            on_error=self._on_error,
             get_strategies=lambda pid: [],  # no cross-session FSLF locally
             flush_every_log=True,
         )

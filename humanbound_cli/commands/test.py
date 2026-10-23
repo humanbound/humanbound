@@ -1058,7 +1058,8 @@ def _build_results_panel(
         if unjudged:
             panel_lines.append(
                 f"[yellow]⚠ {unjudged} conversation(s) could not be judged. They count against "
-                "the posture grade and fail --fail-on, since they may hide a finding.[/yellow]"
+                "the posture grade and fail --fail-on, since they may hide a finding. A small "
+                "judge model often cannot return valid verdicts; try a stronger one.[/yellow]"
             )
         if other_errors:
             panel_lines.append(
