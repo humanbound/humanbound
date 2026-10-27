@@ -1806,7 +1806,31 @@ def test_token_rotate_restarts_the_gateway(arena_env, monkeypatch):
     new = paths.gateway_token(create=False)
     # stopped while it still accepts the old token, started again with the new one
     assert calls == [("stop", 11500, old), ("start", 11500, new)]
-    assert "restarted with the new token" in result.stderr
+    assert "restarted with the new token, on loopback only" in result.stderr
+
+
+def test_token_rotate_holds_the_start_lock_until_the_token_is_written(arena_env, monkeypatch):
+    import contextlib
+
+    from humanbound_cli.arena import daemon
+
+    calls = _gateway(monkeypatch, up=True)
+    events = []
+
+    @contextlib.contextmanager
+    def lock():
+        events.append("lock")
+        yield
+        events.append(("unlock", paths.gateway_token(create=False)))
+
+    monkeypatch.setattr(daemon, "_gateway_lock", lock)
+    old = paths.gateway_token()
+    result = run("token", "--rotate")
+    assert result.exit_code == 0, result.output
+    new = paths.gateway_token(create=False)
+    # stop and write inside the lock, restart after it is released (it takes the lock)
+    assert events == ["lock", ("unlock", new)]
+    assert calls == [("stop", 11500, old), ("start", 11500, new)]
 
 
 def test_token_rotate_keeps_the_token_when_the_gateway_wont_stop(arena_env, monkeypatch):

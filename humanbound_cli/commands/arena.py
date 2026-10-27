@@ -1141,14 +1141,17 @@ def _rotate_token() -> str:
     except ValueError as e:
         fail(str(e))
     # The gateway accepts only the token it started with, and stopping it takes that token:
-    # stop it before the file changes, or hb could no longer tell it is ours.
-    was_up = daemon.is_up(port)
-    if was_up and not daemon.stop_gateway(port):
-        fail(f"the gateway on port {port} could not be stopped, so the token was not rotated")
-    try:
-        token = paths.rotate_token()
-    except OSError as e:
-        fail(f"cannot write {paths.token_file()}: {e}")
+    # stop it before the file changes, or hb could no longer tell it is ours. The start lock
+    # is held until the new token is written, so no other hb command can start the gateway
+    # with the old token in between. It is released before the restart (which takes it).
+    with daemon._gateway_lock():
+        was_up = daemon.is_up(port)
+        if was_up and not daemon.stop_gateway(port):
+            fail(f"the gateway on port {port} could not be stopped, so the token was not rotated")
+        try:
+            token = paths.rotate_token()
+        except OSError as e:
+            fail(f"cannot write {paths.token_file()}: {e}")
     click.echo("✓ token rotated: the old one no longer works", err=True)
     if was_up:
         try:
@@ -1158,7 +1161,11 @@ def _rotate_token() -> str:
                 f"the gateway did not restart ({e}); any hb arena command starts it", err=True
             )
         else:
-            click.echo(f"  gateway on port {port} restarted with the new token", err=True)
+            click.echo(
+                f"  gateway on port {port} restarted with the new token, on loopback only "
+                "(if it was hb arena serve --host, run that again)",
+                err=True,
+            )
     click.echo(
         "  update what holds the old one: bot configs, OPENAI_API_KEY in other tools, and any "
         "gateway on another port (hb arena serve: restart it)",
