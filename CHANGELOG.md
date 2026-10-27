@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`hb arena endpoint --show-token`** prints the real token in the output.
 
 ### Changed
+- **Breaking: `hb arena endpoint` no longer prints the token.** Scripts that
+  read it there should use `hb arena token`.
 - **`hb arena endpoint` masks the access token by default**, so its output is
   safe to paste or show on screen. The curl example reads the token with
   `$(hb arena token)`, and the bot config carries a `<hb arena token>`
@@ -25,6 +27,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   rotating it afterwards.
 - Hints about the access token (the gateway's 401 message, the Agent Card,
   `hb arena run`, `hb arena serve`) now point at `hb arena token`.
+
+### Fixed
+- **Custom orchestrators can import their own modules.** An orchestrator in
+  `~/.humanbound/orchestrators/<name>/` is now loaded as a package, so the
+  documented layout works: `orchestrator.py` can import its `config.py`,
+  `generator.py` and `judge.py` with relative imports. Before, any such import
+  failed with `attempted relative import with no known parent package` (or
+  `No module named 'generator'`), so only a single self-contained
+  `orchestrator.py` could run. A custom orchestrator missing
+  `orchestrator_generate` or `orchestrator_run` is now reported by name, and the unknown-orchestrator error points at the custom
+  directory instead of a nonexistent `hb orchestrators install` command.
 
 ## [2.13.0] — 2026-10-02
 
