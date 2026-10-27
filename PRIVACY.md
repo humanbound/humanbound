@@ -250,9 +250,12 @@ nothing is ever tied to an account, an email, or a name.
   location from your IP, then discards it (as in
   [What we collect](#what-we-collect)). Withdraw anytime via the banner to
   return to the cookieless, IP-free behavior above.
-- **What we collect:** page views and traffic source only, tagged `source: docs`,
-  plus derived location once you've consented (see above). Autocapture is off,
-  so individual clicks and form inputs are never captured. *(The optional
+- **What we collect:** page views and traffic source, tagged `source: docs`,
+  plus derived location once you've consented (see above). The one click we
+  record is copying a `pip install` command for a Humanbound package (such as
+  `humanbound` or `humanbound-firewall`), and we send only that command and the
+  package name, not the rest of the code block. Autocapture is off, so other clicks
+  and form inputs are never captured. *(The optional
   advertising pixel below is different — see Advertising.)*
 - **Do Not Track:** if your browser sends a `DNT` signal, no analytics are sent.
 - **Region & processor:** PostHog EU Cloud (Frankfurt) — same processor and DPA
