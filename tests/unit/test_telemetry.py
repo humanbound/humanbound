@@ -696,6 +696,24 @@ def test_findings_view_helper_emits_event(monkeypatch):
     ]
 
 
+def test_finding_actioned_helper_maps_status_to_action(monkeypatch):
+    from humanbound_cli.commands import findings as findings_module
+
+    calls = []
+    monkeypatch.setattr(
+        "humanbound_cli.telemetry.capture",
+        lambda event, properties=None: calls.append((event, properties)),
+    )
+
+    findings_module._fire_finding_actioned(status="fixed", finding_id="find-001")
+    findings_module._fire_finding_actioned(status="open", finding_id="find-001")
+
+    assert calls == [
+        ("finding_actioned", {"action_type": "resolved", "finding_id": "find-001"}),
+        ("finding_actioned", {"action_type": "reopened", "finding_id": "find-001"}),
+    ]
+
+
 def test_gated_command_hit_fires_on_not_authenticated_error(monkeypatch):
     """NotAuthenticatedError → gated_command_hit fires before SystemExit."""
     from humanbound_cli.exceptions import NotAuthenticatedError
