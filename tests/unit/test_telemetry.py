@@ -584,6 +584,39 @@ def test_login_fires_identify_from_credentials(monkeypatch):
     )
 
 
+def test_connect_scan_helpers_emit_events(monkeypatch):
+    import requests
+
+    from humanbound_cli.commands import connect as connect_module
+    from humanbound_cli.exceptions import APIError
+
+    calls = []
+    monkeypatch.setattr(
+        "humanbound_cli.telemetry.capture",
+        lambda event, properties=None: calls.append((event, properties)),
+    )
+
+    timeout = APIError("Connection to http://api timed out.")
+    timeout.__cause__ = requests.Timeout()
+
+    connect_module._fire_scan_started(connection_type="endpoint")
+    connect_module._fire_scan_outcome(connection_type="endpoint", duration_seconds=12.34)
+    connect_module._fire_scan_outcome("endpoint", 3.0, error=timeout)
+    connect_module._fire_scan_outcome("endpoint", 3.0, error=APIError("gateway", 504))
+    connect_module._fire_scan_outcome("endpoint", 3.0, error=APIError("boom", 500))
+    connect_module._fire_scan_outcome("endpoint", 3.0, error=APIError("Could not connect"))
+
+    failed = {"connection_type": "endpoint", "duration_seconds": 3.0}
+    assert calls == [
+        ("connect_scan_started", {"connection_type": "endpoint"}),
+        ("scan_completed", {"connection_type": "endpoint", "duration_seconds": 12.3}),
+        ("scan_failed", {**failed, "error_type": "timeout"}),
+        ("scan_failed", {**failed, "error_type": "timeout"}),
+        ("scan_failed", {**failed, "error_type": "http_error"}),
+        ("scan_failed", {**failed, "error_type": "network"}),
+    ]
+
+
 def test_connect_fire_init_helper_emits_event(monkeypatch):
     from humanbound_cli.commands import connect as connect_module
 

@@ -83,12 +83,15 @@ account **email** as a PostHog person property (`$set: { email }`), read
 locally from `~/.humanbound/credentials.json`. Anonymous, pre-login events
 never carry an email.
 
-The twelve events:
+The fifteen events:
 
 | Event | When it fires | Event-specific properties |
 |---|---|---|
 | `install` | First enabled run on this machine | *(baseline only)* |
 | `init` | After `hb connect` completes | `mode`, `success`, `duration_ms` |
+| `connect_scan_started` | When `hb connect` starts scanning the agent (`POST /scan`) | `connection_type` (`endpoint`, `text`, `agentic`) |
+| `scan_completed` | When that scan returns | `connection_type`, `duration_seconds` |
+| `scan_failed` | When that scan errors | `connection_type`, `duration_seconds`, `error_type` (`timeout`, `http_error`, `network`) |
 | `test_start` | When `hb test` starts | `test_level`, `category`, `is_local` |
 | `test_complete` | When `hb test` finishes | `test_level`, `category`, `is_local`, `outcome`, `duration_ms`, `finding_count` |
 | `posture_view` | When posture is rendered | `is_local`, `mode`, `has_coverage` |

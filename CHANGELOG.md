@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   way as doing it in the platform UI. The event carries only `action_type`
   (`resolved` or `reopened`) and the finding's id; no finding text is sent.
   Severity-only updates send nothing. See [PRIVACY.md](PRIVACY.md).
+- **`hb connect` reports the outcome of the agent scan.** It sends
+  `connect_scan_started` before `POST /scan`, then `scan_completed` or
+  `scan_failed`, the same events the platform UI sends from its connect
+  dialog. They carry the connection type, the duration and, on failure, an
+  error type (`timeout`, `http_error` or `network`). Nothing from the scanned
+  scope or the error message is sent. See [PRIVACY.md](PRIVACY.md).
 
 ### Fixed
 - **Custom orchestrators can import their own modules.** An orchestrator in
