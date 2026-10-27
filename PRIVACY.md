@@ -83,16 +83,20 @@ account **email** as a PostHog person property (`$set: { email }`), read
 locally from `~/.humanbound/credentials.json`. Anonymous, pre-login events
 never carry an email.
 
-The eleven events:
+The fifteen events:
 
 | Event | When it fires | Event-specific properties |
 |---|---|---|
 | `install` | First enabled run on this machine | *(baseline only)* |
 | `init` | After `hb connect` completes | `mode`, `success`, `duration_ms` |
+| `connect_scan_started` | When `hb connect` starts scanning the agent (`POST /scan`) | `connection_type` (`endpoint`, `text`, `agentic`) |
+| `scan_completed` | When that scan returns | `connection_type`, `duration_seconds` |
+| `scan_failed` | When that scan errors | `connection_type`, `duration_seconds`, `error_type` (`timeout`, `http_error`, `network`) |
 | `test_start` | When `hb test` starts | `test_level`, `category`, `is_local` |
 | `test_complete` | When `hb test` finishes | `test_level`, `category`, `is_local`, `outcome`, `duration_ms`, `finding_count` |
 | `posture_view` | When posture is rendered | `is_local`, `mode`, `has_coverage` |
 | `findings_view` | When findings list is rendered | `filter_applied` |
+| `finding_actioned` | When `hb findings update --status` resolves or reopens a finding | `action_type` (`resolved`, `reopened`), `finding_id` |
 | `arena_pull` | When `hb arena pull` fetches an arena agent | `agent` (catalog id), `version`; for an agent from a catalog other than the default Humanbound one, only `agent: "custom"` |
 | `arena_run` | When `hb arena run` starts an arena agent | `agent`, `version` (custom catalogs: `agent: "custom"` only) |
 | `arena_test` | When `hb test --target arena://…` starts | `agent`, `version` (custom catalogs: `agent: "custom"` only) |
@@ -250,9 +254,13 @@ nothing is ever tied to an account, an email, or a name.
   location from your IP, then discards it (as in
   [What we collect](#what-we-collect)). Withdraw anytime via the banner to
   return to the cookieless, IP-free behavior above.
-- **What we collect:** page views and traffic source only, tagged `source: docs`,
-  plus derived location once you've consented (see above). Autocapture is off,
-  so individual clicks and form inputs are never captured. *(The optional
+- **What we collect:** page views, traffic source, and how far down each page
+  you scrolled and for how long, tagged `source: docs`,
+  plus derived location once you've consented (see above). The one click we
+  record is copying a `pip install` command for a Humanbound package (such as
+  `humanbound` or `humanbound-firewall`), and we send only that command and the
+  package name, not the rest of the code block. Autocapture is off, so other clicks
+  and form inputs are never captured. *(The optional
   advertising pixel below is different — see Advertising.)*
 - **Do Not Track:** if your browser sends a `DNT` signal, no analytics are sent.
 - **Region & processor:** PostHog EU Cloud (Frankfurt) — same processor and DPA

@@ -14,6 +14,7 @@
     disable_session_recording: true,
     respect_dnt: true,
     capture_pageview: false,
+    capture_pageleave: true,
     autocapture: false,
     ip: ipEnabled,
     property_denylist: ipEnabled ? [] : ['$ip', '$ip_address'],
@@ -25,5 +26,19 @@
   // capture_pageview is off; drive pageviews via document$ so navigation.instant
   // (XHR page swaps, no reload) is counted on every navigation.
   document$.subscribe(function () { posthog.capture('$pageview'); });
+
+  // Track copies of `pip install humanbound*` (install line only). Match the
+  // attribute, not the class: Material renamed .md-clipboard to .md-code__button.
+  var INSTALL_LINE = /\b(?:pip3?|pipx|uv(?:\s+pip|\s+tool)?)\s+install\b[^\n]*?(?:^|[\s"'])(humanbound(?:-[a-z0-9]+)*)(?:\[[^\]\n]*\])?(?:[<>=!~]=?[^\s"']*)?["']?(?=\s|$)/m;
+  document.addEventListener('click', function (event) {
+    var button = event.target.closest && event.target.closest('[data-clipboard-target]');
+    if (!button) return;
+    var selector = button.getAttribute('data-clipboard-target');
+    var block = selector && document.querySelector(selector);
+    var match = block && block.textContent.match(INSTALL_LINE);
+    if (match) {
+      posthog.capture('install_command_copied', { surface: 'docs', command: match[0].trim(), package: match[1] });
+    }
+  });
 </script>
 {% endif %}

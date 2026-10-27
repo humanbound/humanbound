@@ -13,6 +13,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   token, and restarted with the new one, so the old token stops working at
   once. Only the new token goes to stdout: `TOKEN=$(hb arena token --rotate)`.
 - **`hb arena endpoint --show-token`** prints the real token in the output.
+- **`hb findings update --status` sends a `finding_actioned` telemetry
+  event.** Resolving or reopening a finding from the CLI now counts the same
+  way as doing it in the platform UI. The event carries only `action_type`
+  (`resolved` or `reopened`) and the finding's id; no finding text is sent.
+  Severity-only updates send nothing. See [PRIVACY.md](PRIVACY.md).
+- **`hb connect` reports the outcome of the agent scan.** It sends
+  `connect_scan_started` before `POST /scan`, then `scan_completed` or
+  `scan_failed`, the same events the platform UI sends from its connect
+  dialog. They carry the connection type, the duration and, on failure, an
+  error type (`timeout`, `http_error` or `network`). Nothing from the scanned
+  scope or the error message is sent. See [PRIVACY.md](PRIVACY.md).
 
 ### Changed
 - **Breaking: `hb arena endpoint` no longer prints the token.** Scripts that
