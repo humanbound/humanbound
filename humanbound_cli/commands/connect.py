@@ -10,6 +10,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 import click
+import requests
 from rich.console import Console
 from rich.panel import Panel
 
@@ -270,6 +271,30 @@ def _fire_init_event(
             "scope_provided": scope_provided,
         },
     )
+
+
+def _fire_scan_started(connection_type: str) -> None:
+    telemetry.capture("connect_scan_started", {"connection_type": connection_type})
+
+
+def _fire_scan_outcome(
+    connection_type: str, duration_seconds: float, error: Exception | None = None
+) -> None:
+    properties = {
+        "connection_type": connection_type,
+        "duration_seconds": round(duration_seconds, 1),
+    }
+    if error is None:
+        telemetry.capture("scan_completed", properties)
+        return
+    status = getattr(error, "status_code", None)
+    if status in (408, 504) or isinstance(error.__cause__, requests.Timeout):
+        properties["error_type"] = "timeout"
+    elif status:
+        properties["error_type"] = "http_error"
+    else:
+        properties["error_type"] = "network"
+    telemetry.capture("scan_failed", properties)
 
 
 def _print_next(suggestions: list):
@@ -694,9 +719,20 @@ def _connect_agent_platform(
             phases.extend(_SCAN_PHASES.get(st, []))
         phases.extend(_SCAN_PHASES["reflect"])
 
+        connection_type = _resolve_init_mode(endpoint, prompt, repo, openapi)
+        _fire_scan_started(connection_type=connection_type)
         scan_start = time.time()
-        response = _scan_with_progress(client, sources, timeout, phases)
+        try:
+            response = _scan_with_progress(client, sources, timeout, phases)
+        except Exception as e:
+            _fire_scan_outcome(
+                connection_type=connection_type,
+                duration_seconds=time.time() - scan_start,
+                error=e,
+            )
+            raise
         scan_duration = time.time() - scan_start
+        _fire_scan_outcome(connection_type=connection_type, duration_seconds=scan_duration)
 
         console.print(f"  [green]\u2713[/green] Scan complete [dim]({scan_duration:.1f}s)[/dim]\n")
 

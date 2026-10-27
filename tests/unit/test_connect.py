@@ -168,6 +168,61 @@ class TestPlatformFlow:
         project_calls = [c for c in client.post.call_args_list if c.args[0] == "projects"]
         assert project_calls, "POST /projects should have been invoked"
 
+    @patch("humanbound_cli.telemetry.capture")
+    @patch(PATCH_CLIENT)
+    def test_scan_fires_started_and_completed(self, MockCls, mock_capture):
+        client = _make_authenticated_client()
+        client.post.side_effect = lambda path, **kwargs: (
+            {"scope": {}, "risk_profile": {}, "default_integration": None}
+            if path == "scan"
+            else {"id": "proj-new"}
+        )
+        MockCls.return_value = client
+
+        endpoint_json = '{"chat_completion":{"endpoint":"https://bot.example.com"}}'
+        with (
+            patch("humanbound_cli.commands.connect._auto_test"),
+            patch("humanbound_cli.commands.connect._recommend_monitoring"),
+        ):
+            result = runner.invoke(
+                cli, ["connect", "--endpoint", endpoint_json, "--yes", "--name", "bot"]
+            )
+
+        assert result.exit_code == 0, result.output
+        events = [c.args for c in mock_capture.call_args_list]
+        assert ("connect_scan_started", {"connection_type": "endpoint"}) in events
+        completed = [props for name, props in events if name == "scan_completed"]
+        assert len(completed) == 1
+        assert completed[0]["connection_type"] == "endpoint"
+        assert not [name for name, _ in events if name == "scan_failed"]
+
+    @patch("humanbound_cli.telemetry.capture")
+    @patch(PATCH_CLIENT)
+    def test_scan_error_fires_scan_failed(self, MockCls, mock_capture):
+        from humanbound_cli.exceptions import APIError
+
+        client = _make_authenticated_client()
+
+        def post(path, **kwargs):
+            if path == "scan":
+                raise APIError("Server error", 500)
+            return {"id": "proj-new"}
+
+        client.post.side_effect = post
+        MockCls.return_value = client
+
+        endpoint_json = '{"chat_completion":{"endpoint":"https://bot.example.com"}}'
+        result = runner.invoke(
+            cli, ["connect", "--endpoint", endpoint_json, "--yes", "--name", "bot"]
+        )
+
+        assert result.exit_code != 0
+        events = [c.args for c in mock_capture.call_args_list]
+        failed = [props for name, props in events if name == "scan_failed"]
+        assert len(failed) == 1
+        assert failed[0]["error_type"] == "http_error"
+        assert not [name for name, _ in events if name == "scan_completed"]
+
 
 # ---------------------------------------------------------------------------
 # Local flow (unauthenticated): exercises _connect_agent_local body
