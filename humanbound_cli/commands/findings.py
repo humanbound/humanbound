@@ -24,6 +24,16 @@ def _fire_findings_view(filter_applied: bool) -> None:
     )
 
 
+def _fire_finding_actioned(status: str, finding_id: str) -> None:
+    telemetry.capture(
+        "finding_actioned",
+        {
+            "action_type": "resolved" if status == "fixed" else "reopened",
+            "finding_id": finding_id,
+        },
+    )
+
+
 SEVERITY_STYLES = {
     "critical": "[red bold]critical[/red bold]",
     "high": "[red]high[/red]",
@@ -203,6 +213,9 @@ def update_finding(finding_id: str, status: str, severity: str):
 
         with console.status("Updating finding..."):
             client.update_finding(project_id, finding_id, payload)
+
+        if status:
+            _fire_finding_actioned(status=status, finding_id=finding_id)
 
         console.print("[green]Finding updated.[/green]")
         console.print(f"[dim]ID: {finding_id}[/dim]")

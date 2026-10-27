@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **`hb findings update --status` sends a `finding_actioned` telemetry
+  event.** Resolving or reopening a finding from the CLI now counts the same
+  way as doing it in the platform UI. The event carries only `action_type`
+  (`resolved` or `reopened`) and the finding's id; no finding text is sent.
+  Severity-only updates send nothing. See [PRIVACY.md](PRIVACY.md).
+
 ### Fixed
 - **Custom orchestrators can import their own modules.** An orchestrator in
   `~/.humanbound/orchestrators/<name>/` is now loaded as a package, so the

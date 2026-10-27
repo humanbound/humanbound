@@ -83,7 +83,7 @@ account **email** as a PostHog person property (`$set: { email }`), read
 locally from `~/.humanbound/credentials.json`. Anonymous, pre-login events
 never carry an email.
 
-The eleven events:
+The twelve events:
 
 | Event | When it fires | Event-specific properties |
 |---|---|---|
@@ -93,6 +93,7 @@ The eleven events:
 | `test_complete` | When `hb test` finishes | `test_level`, `category`, `is_local`, `outcome`, `duration_ms`, `finding_count` |
 | `posture_view` | When posture is rendered | `is_local`, `mode`, `has_coverage` |
 | `findings_view` | When findings list is rendered | `filter_applied` |
+| `finding_actioned` | When `hb findings update --status` resolves or reopens a finding | `action_type` (`resolved`, `reopened`), `finding_id` |
 | `arena_pull` | When `hb arena pull` fetches an arena agent | `agent` (catalog id), `version`; for an agent from a catalog other than the default Humanbound one, only `agent: "custom"` |
 | `arena_run` | When `hb arena run` starts an arena agent | `agent`, `version` (custom catalogs: `agent: "custom"` only) |
 | `arena_test` | When `hb test --target arena://…` starts | `agent`, `version` (custom catalogs: `agent: "custom"` only) |

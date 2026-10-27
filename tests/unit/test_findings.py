@@ -105,6 +105,34 @@ class TestHappyPath:
         call_args = mock.update_finding.call_args
         assert call_args[0][2].get("status") == "fixed"
 
+    @patch("humanbound_cli.telemetry.capture")
+    @patch(PATCH)
+    def test_update_status_fires_finding_actioned(self, MockCls, mock_capture):
+        MockCls.return_value = _make_client()
+        result = runner.invoke(cli, ["findings", "update", "find-001", "--status", "fixed"])
+        assert_exit_ok(result)
+        mock_capture.assert_any_call(
+            "finding_actioned", {"action_type": "resolved", "finding_id": "find-001"}
+        )
+
+    @patch("humanbound_cli.telemetry.capture")
+    @patch(PATCH)
+    def test_update_severity_only_does_not_fire_finding_actioned(self, MockCls, mock_capture):
+        MockCls.return_value = _make_client()
+        result = runner.invoke(cli, ["findings", "update", "find-001", "--severity", "low"])
+        assert_exit_ok(result)
+        assert "finding_actioned" not in [c.args[0] for c in mock_capture.call_args_list]
+
+    @patch("humanbound_cli.telemetry.capture")
+    @patch(PATCH)
+    def test_update_api_error_does_not_fire_finding_actioned(self, MockCls, mock_capture):
+        mock = _make_client()
+        mock.update_finding.side_effect = APIError("boom", 500)
+        MockCls.return_value = mock
+        result = runner.invoke(cli, ["findings", "update", "find-001", "--status", "fixed"])
+        assert result.exit_code == 1
+        assert "finding_actioned" not in [c.args[0] for c in mock_capture.call_args_list]
+
     @patch(PATCH)
     def test_assign_finding(self, MockCls):
         mock = _make_client()
