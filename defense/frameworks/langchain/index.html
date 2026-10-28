@@ -16,7 +16,7 @@
         <link rel="prev" href="../../firewall/">
       
       
-        <link rel="next" href="../../guardrails/">
+        <link rel="next" href="../pydantic-ai/">
       
       
         
@@ -67,7 +67,7 @@
   <meta property="og:image:alt" content="Guard a LangChain agent with the Humanbound Firewall in two lines — every tool result, every record, the user's turn — with the session carried in the graph state." />
   <meta name="twitter:image:alt" content="Guard a LangChain agent with the Humanbound Firewall in two lines — every tool result, every record, the user's turn — with the session carried in the graph state." />
   
-  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/defense/frameworks/langchain/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"LangChain","item":"https://docs.humanbound.ai/defense/frameworks/langchain/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/defense/frameworks/langchain/#article","headline":"LangChain","description":"Guard a LangChain agent with the Humanbound Firewall in two lines \u2014 every tool result, every record, the user's turn \u2014 with the session carried in the graph state.","url":"https://docs.humanbound.ai/defense/frameworks/langchain/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-09-24T13:44:59+03:00","keywords":"LangChain middleware, LangChain agent security, prompt injection LangChain, humanbound firewall langchain, adapt_to, wrap_tool_call"},{"@type":"FAQPage","@id":"https://docs.humanbound.ai/defense/frameworks/langchain/#faq","isPartOf":{"@id":"https://docs.humanbound.ai/defense/frameworks/langchain/#article"},"mainEntity":[{"@type":"Question","name":"Do I need to list which tools to guard?","acceptedAnswer":{"@type":"Answer","text":"No. The adapter attaches every tool result. Your policy file says which tools return records you authored (`tools.recall`); everything else is outside content. Passing `tools=` to `adapt_to()` only feeds the inventory report."}},{"@type":"Question","name":"Where does the session live?","acceptedAnswer":{"@type":"Answer","text":"In the graph state under `humanbound_session`. A checkpointer persists it across the runs of a thread, and parallel tool calls in one step merge their branches."}}]}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/defense/frameworks/langchain/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"LangChain","item":"https://docs.humanbound.ai/defense/frameworks/langchain/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/defense/frameworks/langchain/#article","headline":"LangChain","description":"Guard a LangChain agent with the Humanbound Firewall in two lines \u2014 every tool result, every record, the user's turn \u2014 with the session carried in the graph state.","url":"https://docs.humanbound.ai/defense/frameworks/langchain/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-10-28T13:48:47+02:00","keywords":"LangChain middleware, LangChain agent security, prompt injection LangChain, humanbound firewall langchain, adapt_to, wrap_tool_call"},{"@type":"FAQPage","@id":"https://docs.humanbound.ai/defense/frameworks/langchain/#faq","isPartOf":{"@id":"https://docs.humanbound.ai/defense/frameworks/langchain/#article"},"mainEntity":[{"@type":"Question","name":"Do I need to list which tools to guard?","acceptedAnswer":{"@type":"Answer","text":"No. The adapter attaches every tool result. Your policy file says which tools return records you authored (`tools.recall`); everything else is outside content. Passing `tools=` to `adapt_to()` only feeds the inventory report."}},{"@type":"Question","name":"Where does the session live?","acceptedAnswer":{"@type":"Answer","text":"In the graph state under `humanbound_session`. A checkpointer persists it across the runs of a thread, and parallel tool calls in one step merge their branches."}}]}]}</script>
   
 
   
@@ -1467,6 +1467,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../pydantic-ai/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pydantic AI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2446,12 +2474,12 @@
 <tbody>
 <tr>
 <td>The human turn entering the model</td>
-<td><code>before_model</code>, when the last message is a <code>HumanMessage</code> with text content — once per run</td>
+<td><code>before_model</code>, when the last message is a <code>HumanMessage</code> — once per run</td>
 <td><code>request</code></td>
 <td>the run ends; the replacement text is the agent's reply</td>
 </tr>
 <tr>
-<td>Every tool's return value that is a text <code>ToolMessage</code></td>
+<td>Every tool's return value that is a <code>ToolMessage</code></td>
 <td><code>wrap_tool_call</code></td>
 <td><code>ingest</code>, or <code>recall</code> when the policy lists the tool under <code>tools.recall</code></td>
 <td>the <code>ToolMessage</code> content is replaced by the withheld notice; its <code>tool_call_id</code> is kept, so the agent loop stays valid</td>
@@ -2470,7 +2498,7 @@
 </tr>
 </tbody>
 </table>
-<p>A tool that returns a <code>Command</code>, or a message whose content is a list of blocks rather than text, is not screened: guard what it reads with <a href="../../firewall/#any-agent-inspect"><code>inspect()</code></a> inside the tool.</p>
+<p>Content given as a list of blocks is screened too (0.3.3 and above): <code>text</code> blocks are judged as text, any other block as its JSON form, and only <code>image</code>, <code>image_url</code>, <code>audio</code> and <code>video</code> blocks are skipped. A tool that returns a <code>Command</code> is not screened: guard what it reads with <a href="../../firewall/#any-agent-inspect"><code>inspect()</code></a> inside the tool.</p>
 <p>A sub-agent exposed <em>as a tool</em> is a tool result and is judged as <code>ingest</code> under this agent's policy. Every hook has an async variant; the firewall call, which is blocking I/O, runs off the event loop.</p>
 <p>The screening call gives the firewall the tool result, a window of recent messages (the system prompt is never included), the session, and the boundary: the tool's name and kind, its own description, the policy's <code>expects</code>, the arguments the model called it with, and the <code>tool_call_id</code>. The ingest judge uses those facts generically — see <a href="../../firewall/#tier-3-llm-judge">Tier 3</a>.</p>
 <h2 id="the-session-in-the-graph-state">The session in the graph state</h2>

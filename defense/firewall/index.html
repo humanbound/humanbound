@@ -67,7 +67,7 @@
   <meta property="og:image:alt" content="Humanbound Firewall — runtime defenses for LLM agents that block prompt injection and policy violations before they reach the agent in production." />
   <meta name="twitter:image:alt" content="Humanbound Firewall — runtime defenses for LLM agents that block prompt injection and policy violations before they reach the agent in production." />
   
-  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/defense/firewall/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Firewall","item":"https://docs.humanbound.ai/defense/firewall/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/defense/firewall/#article","headline":"Firewall","description":"Humanbound Firewall \u2014 runtime defenses for LLM agents that block prompt injection and policy violations before they reach the agent in production.","url":"https://docs.humanbound.ai/defense/firewall/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-09-24T23:00:14+03:00","keywords":"humanbound firewall, LLM agent firewall, runtime AI defense, prompt injection blocking, Tier 2 classifier, SetFit classifier, hb firewall train, agent.yaml configuration, trust classes, indirect prompt injection, LangChain middleware"},{"@type":"FAQPage","@id":"https://docs.humanbound.ai/defense/firewall/#faq","isPartOf":{"@id":"https://docs.humanbound.ai/defense/firewall/#article"},"mainEntity":[{"@type":"Question","name":"Does the firewall only check what the user types?","acceptedAnswer":{"@type":"Answer","text":"No. Since 0.3 every path into the model is a boundary. A payload is judged by who authored it \u2014 a principal's request, outside content the agent ingested (tool output, pages, documents), or the agent's own records coming back (recall) \u2014 each with its own judge. The LangChain adapter attaches every boundary with two lines."}},{"@type":"Question","name":"How is the Tier 2 classifier trained?","acceptedAnswer":{"@type":"Answer","text":"Tier 2 is trained from your Humanbound adversarial and QA test logs \u2014 failed adversarial conversations supply attack examples and passed QA conversations supply benign examples. Run `hb firewall train --model <detector script>` after accumulating test data to produce a `.hbfw` model file."}}]}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/defense/firewall/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Firewall","item":"https://docs.humanbound.ai/defense/firewall/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/defense/firewall/#article","headline":"Firewall","description":"Humanbound Firewall \u2014 runtime defenses for LLM agents that block prompt injection and policy violations before they reach the agent in production.","url":"https://docs.humanbound.ai/defense/firewall/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-10-28T13:48:47+02:00","keywords":"humanbound firewall, LLM agent firewall, runtime AI defense, prompt injection blocking, Tier 2 classifier, SetFit classifier, hb firewall train, agent.yaml configuration, trust classes, indirect prompt injection, LangChain middleware, Pydantic AI capability"},{"@type":"FAQPage","@id":"https://docs.humanbound.ai/defense/firewall/#faq","isPartOf":{"@id":"https://docs.humanbound.ai/defense/firewall/#article"},"mainEntity":[{"@type":"Question","name":"Does the firewall only check what the user types?","acceptedAnswer":{"@type":"Answer","text":"No. Since 0.3 every path into the model is a boundary. A payload is judged by who authored it \u2014 a principal's request, outside content the agent ingested (tool output, pages, documents), or the agent's own records coming back (recall) \u2014 each with its own judge. The LangChain and Pydantic AI adapters attach every boundary with two lines."}},{"@type":"Question","name":"How is the Tier 2 classifier trained?","acceptedAnswer":{"@type":"Answer","text":"Tier 2 is trained from your Humanbound adversarial and QA test logs \u2014 failed adversarial conversations supply attack examples and passed QA conversations supply benign examples. Run `hb firewall train --model <detector script>` after accumulating test data to produce a `.hbfw` model file."}}]}]}</script>
   
 
   
@@ -1739,6 +1739,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../frameworks/pydantic-ai/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pydantic AI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2692,7 +2720,7 @@
 
 
 <h1 id="firewall">Firewall</h1>
-<p>The Humanbound <a href="../../reference/glossary/#defense">Firewall</a> is a runtime defense layer for LLM agents that inspects every path into the model — the user's turn, every tool result and retrieved page, every record coming back from memory — and blocks prompt injection, policy violations, and out-of-scope requests before the model sees them. The sections below cover the trust classes, the multi-tier evaluation architecture, the LangChain adapter and the manual integration, the policy file, and training the Tier 2 classifier from your test logs.</p>
+<p>The Humanbound <a href="../../reference/glossary/#defense">Firewall</a> is a runtime defense layer for LLM agents that inspects every path into the model — the user's turn, every tool result and retrieved page, every record coming back from memory — and blocks prompt injection, policy violations, and out-of-scope requests before the model sees them. The sections below cover the trust classes, the multi-tier evaluation architecture, the LangChain and Pydantic AI adapters and the manual integration, the policy file, and training the Tier 2 classifier from your test logs.</p>
 <div class="admonition note">
 <p class="admonition-title">Version</p>
 <p>This page describes <code>humanbound-firewall</code> 0.3. Trust classes, <code>inspect()</code>, sessions and <code>adapt_to()</code> arrived in 0.3.0; the 0.2 API (<code>evaluate()</code> on a conversation) still works unchanged.</p>
@@ -2862,10 +2890,14 @@
 </code></pre></div>
 <p>Pass your existing conversation array. A conversation that ends with a <code>{"role": "tool", ...}</code> message is judged as <code>ingest</code>: the tool result is the payload and the user's request stays as history. For a plain payload, name the class yourself: <code>fw.evaluate(page_text, cls="ingest")</code>, <code>fw.evaluate(db_row, cls="recall")</code>.</p>
 <h3 id="frameworks">Frameworks</h3>
-<p>If your agent runs on a supported framework, the adapter attaches every boundary for you. Framework adapters are available in <code>humanbound-firewall</code> 0.3.0 and above:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">agent</span> <span class="o">=</span> <span class="n">create_agent</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">tools</span><span class="p">,</span> <span class="n">middleware</span><span class="o">=</span><span class="p">[</span><span class="n">firewall</span><span class="o">.</span><span class="n">adapt_to</span><span class="p">(</span><span class="s2">"langchain"</span><span class="p">)])</span>
+<p>If your agent runs on a supported framework, the adapter attaches every boundary for you. The LangChain adapter is available in <code>humanbound-firewall</code> 0.3.0 and above, the Pydantic AI adapter in 0.3.5 and above:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># LangChain</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">agent</span> <span class="o">=</span> <span class="n">create_agent</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">tools</span><span class="p">,</span> <span class="n">middleware</span><span class="o">=</span><span class="p">[</span><span class="n">firewall</span><span class="o">.</span><span class="n">adapt_to</span><span class="p">(</span><span class="s2">"langchain"</span><span class="p">)])</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c1"># Pydantic AI</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="n">agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">tools</span><span class="o">=</span><span class="n">tools</span><span class="p">,</span> <span class="n">capabilities</span><span class="o">=</span><span class="p">[</span><span class="n">firewall</span><span class="o">.</span><span class="n">adapt_to</span><span class="p">(</span><span class="s2">"pydantic_ai"</span><span class="p">)])</span>
 </code></pre></div>
-<p>See the framework pages — <a href="../frameworks/langchain/">LangChain</a> — for what is attached, how the session travels, and what remains for the manual tier below. <code>adapt_to()</code> imports the adapter lazily; the framework itself is your application's dependency.</p>
+<p>See the framework pages — <a href="../frameworks/langchain/">LangChain</a> and <a href="../frameworks/pydantic-ai/">Pydantic AI</a> — for what is attached, how the session travels, and what remains for the manual tier below. <code>adapt_to()</code> imports the adapter lazily; the framework itself is your application's dependency.</p>
 <h3 id="any-agent-inspect">Any Agent: <code>inspect()</code></h3>
 <p><code>inspect()</code> is the call the adapter makes. Use it wherever content enters your model's context:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">humanbound_firewall</span><span class="w"> </span><span class="kn">import</span> <span class="n">Firewall</span><span class="p">,</span> <span class="n">Session</span>
@@ -2971,7 +3003,7 @@
 <a id="__codelineno-9-33" name="__codelineno-9-33" href="#__codelineno-9-33"></a><span class="w">  </span><span class="nt">mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">block</span><span class="w">              </span><span class="c1"># block | log | passthrough</span>
 <a id="__codelineno-9-34" name="__codelineno-9-34" href="#__codelineno-9-34"></a><span class="w">  </span><span class="nt">tier2_min_turns</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span><span class="w">       </span><span class="c1"># Tier 2 activates after N prior turns</span>
 </code></pre></div>
-<p>Defaults when <code>tools:</code> is absent: every tool is <code>ingest</code>, the human turn is <code>request</code>, and <code>expects</code> is the tool's own description. The loader does not check tool names; the LangChain adapter warns about an entry naming a tool the agent does not have when it is given the tool list (<code>adapt_to("langchain", tools=...)</code>). <code>few_shots</code> entries — examples learned from your findings, not yet part of the export — carry the class they were learned on (<code>class: request | ingest</code>, default <code>request</code>); the recall judge takes none.</p>
+<p>Defaults when <code>tools:</code> is absent: every tool is <code>ingest</code>, the human turn is <code>request</code>, and <code>expects</code> is the tool's own description. The loader does not check tool names; a framework adapter warns about an entry naming a tool the agent does not have when it is given the tool list (<code>adapt_to("langchain", tools=...)</code>, <code>adapt_to("pydantic_ai", tools=...)</code>). <code>few_shots</code> entries — examples learned from your findings, not yet part of the export — carry the class they were learned on (<code>class: request | ingest</code>, default <code>request</code>); the recall judge takes none.</p>
 <h3 id="configuration-properties">Configuration Properties</h3>
 <table>
 <thead>
@@ -3450,8 +3482,9 @@
 <a id="__codelineno-24-18" name="__codelineno-24-18" href="#__codelineno-24-18"></a>    <span class="k">return</span> <span class="n">your_agent</span><span class="o">.</span><span class="n">handle</span><span class="p">(</span><span class="n">conversation</span><span class="p">)</span>
 <a id="__codelineno-24-19" name="__codelineno-24-19" href="#__codelineno-24-19"></a>
 <a id="__codelineno-24-20" name="__codelineno-24-20" href="#__codelineno-24-20"></a>
-<a id="__codelineno-24-21" name="__codelineno-24-21" href="#__codelineno-24-21"></a><span class="c1"># Or, on a supported framework, let the adapter attach every boundary (see Frameworks → LangChain):</span>
+<a id="__codelineno-24-21" name="__codelineno-24-21" href="#__codelineno-24-21"></a><span class="c1"># Or, on a supported framework, let the adapter attach every boundary (see Frameworks):</span>
 <a id="__codelineno-24-22" name="__codelineno-24-22" href="#__codelineno-24-22"></a><span class="c1"># agent = create_agent(model, tools, middleware=[fw.adapt_to("langchain")])</span>
+<a id="__codelineno-24-23" name="__codelineno-24-23" href="#__codelineno-24-23"></a><span class="c1"># agent = Agent(model, tools=tools, capabilities=[fw.adapt_to("pydantic_ai")])</span>
 </code></pre></div>
 <div class="admonition info">
 <p class="admonition-title">Open Source</p>
@@ -3460,7 +3493,7 @@
 <h2 id="frequently-asked-questions">Frequently asked questions</h2>
 <details class="question">
 <summary>Does the firewall only check what the user types?</summary>
-<p>No. Since 0.3 every path into the model is a boundary. A payload is judged by who authored it — a principal's request, outside content the agent ingested (tool output, pages, documents), or the agent's own records coming back (recall) — each with its own judge. The LangChain adapter attaches every boundary with two lines.</p>
+<p>No. Since 0.3 every path into the model is a boundary. A payload is judged by who authored it — a principal's request, outside content the agent ingested (tool output, pages, documents), or the agent's own records coming back (recall) — each with its own judge. The LangChain and Pydantic AI adapters attach every boundary with two lines.</p>
 </details>
 <details class="question">
 <summary>How is the Tier 2 classifier trained?</summary>
