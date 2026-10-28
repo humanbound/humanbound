@@ -37,12 +37,12 @@ agent = create_agent(model, tools, middleware=[firewall.adapt_to("langchain")])
 
 | Boundary | Hook | Trust class | On a block |
 |---|---|---|---|
-| The human turn entering the model | `before_model`, when the last message is a `HumanMessage` with text content — once per run | `request` | the run ends; the replacement text is the agent's reply |
-| Every tool's return value that is a text `ToolMessage` | `wrap_tool_call` | `ingest`, or `recall` when the policy lists the tool under `tools.recall` | the `ToolMessage` content is replaced by the withheld notice; its `tool_call_id` is kept, so the agent loop stays valid |
+| The human turn entering the model | `before_model`, when the last message is a `HumanMessage` — once per run | `request` | the run ends; the replacement text is the agent's reply |
+| Every tool's return value that is a `ToolMessage` | `wrap_tool_call` | `ingest`, or `recall` when the policy lists the tool under `tools.recall` | the `ToolMessage` content is replaced by the withheld notice; its `tool_call_id` is kept, so the agent loop stays valid |
 | The start of the run | `before_agent` | — | the session is read from the state (or created), the run counter advances, the user's request is pinned |
 | The end of the run | `after_agent` | — | the session, including verdicts judged in the background, is written back to the state |
 
-A tool that returns a `Command`, or a message whose content is a list of blocks rather than text, is not screened: guard what it reads with [`inspect()`](../firewall.md#any-agent-inspect) inside the tool.
+Content given as a list of blocks is screened too (0.3.3 and above): `text` blocks are judged as text, any other block as its JSON form, and only `image`, `image_url`, `audio` and `video` blocks are skipped. A tool that returns a `Command` is not screened: guard what it reads with [`inspect()`](../firewall.md#any-agent-inspect) inside the tool.
 
 A sub-agent exposed *as a tool* is a tool result and is judged as `ingest` under this agent's policy. Every hook has an async variant; the firewall call, which is blocking I/O, runs off the event loop.
 
