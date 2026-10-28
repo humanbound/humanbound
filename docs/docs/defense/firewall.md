@@ -12,16 +12,17 @@ keywords:
   - trust classes
   - indirect prompt injection
   - LangChain middleware
+  - Pydantic AI capability
 faq:
   - q: Does the firewall only check what the user types?
-    a: No. Since 0.3 every path into the model is a boundary. A payload is judged by who authored it — a principal's request, outside content the agent ingested (tool output, pages, documents), or the agent's own records coming back (recall) — each with its own judge. The LangChain adapter attaches every boundary with two lines.
+    a: No. Since 0.3 every path into the model is a boundary. A payload is judged by who authored it — a principal's request, outside content the agent ingested (tool output, pages, documents), or the agent's own records coming back (recall) — each with its own judge. The LangChain and Pydantic AI adapters attach every boundary with two lines.
   - q: How is the Tier 2 classifier trained?
     a: Tier 2 is trained from your Humanbound adversarial and QA test logs — failed adversarial conversations supply attack examples and passed QA conversations supply benign examples. Run `hb firewall train --model <detector script>` after accumulating test data to produce a `.hbfw` model file.
 ---
 
 # Firewall
 
-The Humanbound Firewall is a runtime defense layer for LLM agents that inspects every path into the model — the user's turn, every tool result and retrieved page, every record coming back from memory — and blocks prompt injection, policy violations, and out-of-scope requests before the model sees them. The sections below cover the trust classes, the multi-tier evaluation architecture, the LangChain adapter and the manual integration, the policy file, and training the Tier 2 classifier from your test logs.
+The Humanbound Firewall is a runtime defense layer for LLM agents that inspects every path into the model — the user's turn, every tool result and retrieved page, every record coming back from memory — and blocks prompt injection, policy violations, and out-of-scope requests before the model sees them. The sections below cover the trust classes, the multi-tier evaluation architecture, the LangChain and Pydantic AI adapters and the manual integration, the policy file, and training the Tier 2 classifier from your test logs.
 
 !!! note "Version"
     This page describes `humanbound-firewall` 0.3. Trust classes, `inspect()`, sessions and `adapt_to()` arrived in 0.3.0; the 0.2 API (`evaluate()` on a conversation) still works unchanged.
@@ -165,13 +166,17 @@ Pass your existing conversation array. A conversation that ends with a `{"role":
 
 ### Frameworks
 
-If your agent runs on a supported framework, the adapter attaches every boundary for you. Framework adapters are available in `humanbound-firewall` 0.3.0 and above:
+If your agent runs on a supported framework, the adapter attaches every boundary for you. The LangChain adapter is available in `humanbound-firewall` 0.3.0 and above, the Pydantic AI adapter in 0.3.5 and above:
 
 ```python
+# LangChain
 agent = create_agent(model, tools, middleware=[firewall.adapt_to("langchain")])
+
+# Pydantic AI
+agent = Agent(model, tools=tools, capabilities=[firewall.adapt_to("pydantic_ai")])
 ```
 
-See the framework pages — [LangChain](frameworks/langchain.md) — for what is attached, how the session travels, and what remains for the manual tier below. `adapt_to()` imports the adapter lazily; the framework itself is your application's dependency.
+See the framework pages — [LangChain](frameworks/langchain.md) and [Pydantic AI](frameworks/pydantic-ai.md) — for what is attached, how the session travels, and what remains for the manual tier below. `adapt_to()` imports the adapter lazily; the framework itself is your application's dependency.
 
 ### Any Agent: `inspect()`
 
@@ -299,7 +304,7 @@ settings:
   tier2_min_turns: 3       # Tier 2 activates after N prior turns
 ```
 
-Defaults when `tools:` is absent: every tool is `ingest`, the human turn is `request`, and `expects` is the tool's own description. The loader does not check tool names; the LangChain adapter warns about an entry naming a tool the agent does not have when it is given the tool list (`adapt_to("langchain", tools=...)`). `few_shots` entries — examples learned from your findings, not yet part of the export — carry the class they were learned on (`class: request | ingest`, default `request`); the recall judge takes none.
+Defaults when `tools:` is absent: every tool is `ingest`, the human turn is `request`, and `expects` is the tool's own description. The loader does not check tool names; a framework adapter warns about an entry naming a tool the agent does not have when it is given the tool list (`adapt_to("langchain", tools=...)`, `adapt_to("pydantic_ai", tools=...)`). `few_shots` entries — examples learned from your findings, not yet part of the export — carry the class they were learned on (`class: request | ingest`, default `request`); the recall judge takes none.
 
 ### Configuration Properties
 
@@ -699,8 +704,9 @@ def handle_user_message(conversation):
     return your_agent.handle(conversation)
 
 
-# Or, on a supported framework, let the adapter attach every boundary (see Frameworks → LangChain):
+# Or, on a supported framework, let the adapter attach every boundary (see Frameworks):
 # agent = create_agent(model, tools, middleware=[fw.adapt_to("langchain")])
+# agent = Agent(model, tools=tools, capabilities=[fw.adapt_to("pydantic_ai")])
 ```
 
 !!! info "Open Source"
