@@ -67,7 +67,7 @@
   <meta property="og:image:alt" content="hb arena runs intentionally vulnerable AI agents locally in Docker, serves them over A2A v1.0 and an OpenAI-compatible API, and tests them with hb test --target arena://<id>." />
   <meta name="twitter:image:alt" content="hb arena runs intentionally vulnerable AI agents locally in Docker, serves them over A2A v1.0 and an OpenAI-compatible API, and tests them with hb test --target arena://<id>." />
   
-  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/testing/arena/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Arena","item":"https://docs.humanbound.ai/testing/arena/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/testing/arena/#article","headline":"Arena","description":"hb arena runs intentionally vulnerable AI agents locally in Docker, serves them over A2A v1.0 and an OpenAI-compatible API, and tests them with hb test --target arena://<id>.","url":"https://docs.humanbound.ai/testing/arena/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-09-29T08:01:12+03:00","keywords":"hb arena, vulnerable AI agents, arena://, A2A gateway, local AI red teaming, hb test --target, OpenAI-compatible endpoint, practice targets"}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/testing/arena/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Arena","item":"https://docs.humanbound.ai/testing/arena/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/testing/arena/#article","headline":"Arena","description":"hb arena runs intentionally vulnerable AI agents locally in Docker, serves them over A2A v1.0 and an OpenAI-compatible API, and tests them with hb test --target arena://<id>.","url":"https://docs.humanbound.ai/testing/arena/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-10-29T09:27:07+02:00","keywords":"hb arena, vulnerable AI agents, arena://, A2A gateway, local AI red teaming, hb test --target, OpenAI-compatible endpoint, practice targets"}]}</script>
   
 
   
@@ -2725,12 +2725,12 @@
 <td>Stop an agent and remove its images and manifest.</td>
 </tr>
 <tr>
-<td><code>hb arena endpoint &lt;id&gt;</code></td>
-<td>Print the agent's URLs, your token and a ready-to-use bot config.</td>
+<td><code>hb arena endpoint &lt;id&gt; [--show-token]</code></td>
+<td>Print the agent's URLs, a curl example and a bot config. The token is masked unless you pass <code>--show-token</code>.</td>
 </tr>
 <tr>
-<td><code>hb arena token</code></td>
-<td>Print only your access token.</td>
+<td><code>hb arena token [--rotate]</code></td>
+<td>Print only your access token; <code>--rotate</code> replaces it and restarts your gateway.</td>
 </tr>
 <tr>
 <td><code>hb arena config set/get/unset</code></td>
@@ -2767,6 +2767,11 @@
 </ul>
 <h3 id="calling-agents-from-other-tools">Calling agents from other tools</h3>
 <p>Every call needs your token, as <code>Authorization: Bearer &lt;token&gt;</code> or <code>X-Arena-Token: &lt;token&gt;</code>. Treat it like a password.</p>
+<ul>
+<li>It lives in <code>~/.humanbound/arena/gateway.token</code>, readable only by you, and stays the same until you rotate it.</li>
+<li>If it may have leaked, run <code>hb arena token --rotate</code>. The old token stops working, and your gateway restarts with the new one. Update anything that holds the old one (bot configs, <code>OPENAI_API_KEY</code> in other tools).</li>
+<li>The gateway accepts only loopback requests by default. With <code>hb arena serve --host</code>, the token is the only thing between your network and the agents, so rotate it when you are done.</li>
+</ul>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nv">TOKEN</span><span class="o">=</span><span class="k">$(</span>hb<span class="w"> </span>arena<span class="w"> </span>token<span class="k">)</span>
 <a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
 <a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="c1"># A2A v1.0</span>

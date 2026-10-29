@@ -72,8 +72,8 @@ Run intentionally vulnerable agents locally, in Docker, and test them. None of t
 | `hb arena reset <id>` | Recreate an agent from its image |
 | `hb arena stop <id>` / `--all` / `--all --any-owner` | Stop one agent, all of yours, or every owner's on this Docker |
 | `hb arena rm <id>` | Stop an agent and remove its images and cached manifest |
-| `hb arena endpoint <id>` | Print an agent's A2A and OpenAI-compatible URLs and your access token |
-| `hb arena token` | Print only your gateway access token |
+| `hb arena endpoint <id> [--show-token]` | Print an agent's A2A and OpenAI-compatible URLs; the access token is masked unless you pass `--show-token` |
+| `hb arena token [--rotate]` | Print only your gateway access token; `--rotate` replaces it and restarts your gateway |
 | `hb arena config set/get/unset` | Manage the keys agents receive |
 | `hb arena serve [--host H] [--port P]` | Run the gateway in the foreground |
 
