@@ -106,12 +106,8 @@ def gateway_token(*, create: bool = True) -> str | None:
         return None
     ensure_arena_dir()
     token = secrets.token_urlsafe(32)
-    fd, tmp = tempfile.mkstemp(dir=path.parent, prefix=f".{TOKEN_FILE}.", suffix=".tmp")
+    tmp = _write_private_tmp(path, token)
     try:
-        with os.fdopen(fd, "w", encoding="utf-8") as fh:
-            if os.name != "nt":
-                os.fchmod(fh.fileno(), 0o600)
-            fh.write(token + "\n")
         existing = path.exists()
         if existing:
             os.replace(tmp, path)  # a malformed token: replace it
@@ -128,6 +124,40 @@ def gateway_token(*, create: bool = True) -> str | None:
         except OSError:
             pass
     return _read_token(path) or token
+
+
+def rotate_token() -> str:
+    """Replace this owner's token with a new one and return it; the old one stops working.
+
+    A running gateway keeps the token it started with, so the caller stops it first (it
+    accepts only the old token, which stop_gateway presents) and starts it again after.
+    """
+    path = token_file()
+    ensure_arena_dir()
+    token = secrets.token_urlsafe(32)
+    tmp = _write_private_tmp(path, token)
+    try:
+        os.replace(tmp, path)
+    finally:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+    return token
+
+
+def _write_private_tmp(path: Path, token: str) -> str:
+    """`token` in a new 0600 file next to `path`, to be linked or moved into place."""
+    fd, tmp = tempfile.mkstemp(dir=path.parent, prefix=f".{TOKEN_FILE}.", suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            if os.name != "nt":
+                os.fchmod(fh.fileno(), 0o600)
+            fh.write(token + "\n")
+    except BaseException:
+        os.unlink(tmp)
+        raise
+    return tmp
 
 
 def auth_headers(token: str | None = None) -> dict[str, str]:

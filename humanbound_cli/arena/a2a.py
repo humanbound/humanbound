@@ -106,7 +106,7 @@ def agent_card(m: ArenaManifest, url: str) -> dict:
             TOKEN_SCHEME: {
                 "httpAuthSecurityScheme": {
                     "scheme": "Bearer",
-                    "description": "The hb arena gateway token (hb arena endpoint <id> prints it).",
+                    "description": "The hb arena gateway token (hb arena token prints it).",
                 }
             }
         },
