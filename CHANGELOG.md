@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **`hb arena token --rotate`** replaces your gateway access token with a new
+  one. Your running gateway is stopped first, while it still accepts the old
+  token, and restarted with the new one, so the old token stops working at
+  once. Only the new token goes to stdout: `TOKEN=$(hb arena token --rotate)`.
+- **`hb arena endpoint --show-token`** prints the real token in the output.
 - **`hb findings update --status` sends a `finding_actioned` telemetry
   event.** Resolving or reopening a finding from the CLI now counts the same
   way as doing it in the platform UI. The event carries only `action_type`
@@ -19,6 +24,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   dialog. They carry the connection type, the duration and, on failure, an
   error type (`timeout`, `http_error` or `network`). Nothing from the scanned
   scope or the error message is sent. See [PRIVACY.md](PRIVACY.md).
+
+### Changed
+- **Breaking: `hb arena endpoint` no longer prints the token.** Scripts that
+  read it there should use `hb arena token`.
+- **`hb arena endpoint` masks the access token by default**, so its output is
+  safe to paste or show on screen. The curl example reads the token with
+  `$(hb arena token)`, and the bot config carries a `<hb arena token>`
+  placeholder. The `OPENAI_API_KEY` hint now says it is the arena token, not
+  your OpenAI key.
+- **`hb arena serve --host <non-loopback>` warns** that the access token is
+  then the only protection between your network and the agents, and suggests
+  rotating it afterwards.
+- Hints about the access token (the gateway's 401 message, the Agent Card,
+  `hb arena run`, `hb arena serve`) now point at `hb arena token`.
 
 ### Fixed
 - **Custom orchestrators can import their own modules.** An orchestrator in
