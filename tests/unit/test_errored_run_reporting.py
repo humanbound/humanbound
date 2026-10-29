@@ -131,6 +131,7 @@ def test_panel_separates_unjudged_from_other_errors():
     _, lines, _ = _build_results_panel(_result(stats), Posture(), all_errored=False)
     body = "\n".join(lines)
     assert "2 conversation(s) could not be judged" in body
+    assert "try a stronger one" in body
     assert "1 conversation(s) errored and are left out" in body
 
 
