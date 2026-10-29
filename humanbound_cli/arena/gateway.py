@@ -133,7 +133,7 @@ HEALTH_PATH = "/arena/v1/health"
 TOKEN_HEADER = "x-arena-token"
 UNAUTHORIZED = (
     "missing or invalid arena gateway token: send 'Authorization: Bearer <token>' "
-    "(hb arena endpoint <id> prints it)"
+    "(hb arena token prints it)"
 )
 
 
