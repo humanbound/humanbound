@@ -10,7 +10,7 @@
   var ipEnabled = analyticsConsent;   // IP is personal data → collect only with consent
   posthog.init({{ config.extra.posthog.api_key | tojson }}, {
     api_host: {{ config.extra.posthog.host | tojson }},
-    persistence: analyticsConsent ? 'localStorage' : 'memory',
+    persistence: analyticsConsent ? 'cookie' : 'memory',
     disable_session_recording: true,
     respect_dnt: true,
     capture_pageview: false,

@@ -241,19 +241,22 @@ by the international-transfer terms in Reddit's
 ## Docs site analytics
 
 The documentation site (`docs.humanbound.ai`) sends **anonymous** web analytics
-to the same PostHog project as the CLI. There is no login on the docs site, so
-nothing is ever tied to an account, an email, or a name.
+to the same PostHog project as the CLI. There is no login on the docs site; the
+only link to an account is the one described under *With consent* below.
 
 - **Cookieless by default:** until you accept **Analytics** in the cookie
   banner, PostHog stores nothing on your device — no cookies, no local storage —
   and each visit is a fresh anonymous session. Your IP address is never
   recorded as an event property (`ip: false`, with `$ip`/`$ip_address` on a
   denylist) and server-side IP geolocation is disabled (`$geoip_disable: true`).
-- **With consent:** we keep a first-party identifier in your browser's local
-  storage to recognize returning visits, and PostHog derives an approximate
-  location from your IP, then discards it (as in
-  [What we collect](#what-we-collect)). Withdraw anytime via the banner to
-  return to the cookieless, IP-free behavior above.
+- **With consent:** we keep a first-party identifier in a cookie on
+  `.humanbound.ai`, shared across Humanbound sites, to recognize returning
+  visits, and PostHog derives an approximate location from your IP, then
+  discards it (as in [What we collect](#what-we-collect)). If you sign in to
+  the Humanbound Platform in the same browser, your docs and website visits
+  are linked to your account, so we can see which content helps people get
+  started. Signing out of the Platform stops linking later visits. Withdraw
+  anytime via the banner to return to the cookieless, IP-free behavior above.
 - **What we collect:** page views, traffic source, and how far down each page
   you scrolled and for how long, tagged `source: docs`,
   plus derived location once you've consented (see above). The one click we

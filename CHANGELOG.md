@@ -26,6 +26,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   scope or the error message is sent. See [PRIVACY.md](PRIVACY.md).
 
 ### Changed
+- **Docs site analytics can be linked to your Humanbound account.** With
+  Analytics consent, the docs keep their identifier in a cookie shared across
+  Humanbound sites, and signing in to the Platform in the same browser links
+  your docs visits to your account. Without consent nothing is stored or
+  linked. See [PRIVACY.md](PRIVACY.md#docs-site-analytics).
 - **Breaking: `hb arena endpoint` no longer prints the token.** Scripts that
   read it there should use `hb arena token`.
 - **`hb arena endpoint` masks the access token by default**, so its output is
