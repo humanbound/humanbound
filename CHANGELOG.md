@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.14.0] — 2026-10-30
+
 ### Added
 - **`hb arena token --rotate`** replaces your gateway access token with a new
   one. Your running gateway is stopped first, while it still accepts the old
@@ -1052,7 +1054,8 @@ Last release as `humanbound-cli`. See the
 [old release](https://pypi.org/project/humanbound-cli/1.1.0/) on PyPI for
 notes — that history is preserved there and is not re-documented here.
 
-[Unreleased]: https://github.com/humanbound/humanbound/compare/v2.13.0...HEAD
+[Unreleased]: https://github.com/humanbound/humanbound/compare/v2.14.0...HEAD
+[2.14.0]: https://github.com/humanbound/humanbound/releases/tag/v2.14.0
 [2.13.0]: https://github.com/humanbound/humanbound/releases/tag/v2.13.0
 [2.12.0]: https://github.com/humanbound/humanbound/releases/tag/v2.12.0
 [2.11.0]: https://github.com/humanbound/humanbound/releases/tag/v2.11.0
