@@ -2525,7 +2525,7 @@
 
 
 <h4>Cookie consent</h4>
-<p>We use optional cookies: analytics to improve these docs, and advertising (the Reddit Pixel). Nothing is stored on your device unless you accept — use "Manage" to choose per category. <a href="https://github.com/humanbound/humanbound/blob/main/PRIVACY.md#docs-site-analytics" target="_blank" rel="noopener">Privacy policy</a>.</p>
+<p>We use optional cookies: analytics to improve these docs, and advertising (the Reddit Pixel). Nothing is stored on your device unless you accept — use "Manage" to choose per category. The analytics cookie is shared across Humanbound sites. If you accept analytics and later sign in to Humanbound, your visits will be linked to your account. <a href="https://github.com/humanbound/humanbound/blob/main/PRIVACY.md#docs-site-analytics" target="_blank" rel="noopener">Privacy policy</a>.</p>
 <input class="md-toggle" type="checkbox" id="__settings" >
 <div class="md-consent__settings">
   <ul class="task-list">
@@ -2634,7 +2634,7 @@
   var ipEnabled = analyticsConsent;   // IP is personal data → collect only with consent
   posthog.init("phc_yKExP2tUyiPGg3kY3tongw36iGLTYaH7D2DfRCHpZg9r", {
     api_host: "https://eu.i.posthog.com",
-    persistence: analyticsConsent ? 'localStorage' : 'memory',
+    persistence: analyticsConsent ? 'cookie' : 'memory',
     disable_session_recording: true,
     respect_dnt: true,
     capture_pageview: false,
