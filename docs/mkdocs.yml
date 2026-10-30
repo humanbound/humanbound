@@ -128,7 +128,9 @@ extra:
     description: >-
       We use optional cookies: analytics to improve these docs, and advertising
       (the Reddit Pixel). Nothing is stored on your device unless you accept —
-      use "Manage" to choose per category.
+      use "Manage" to choose per category. The analytics cookie is shared across
+      Humanbound sites. If you accept analytics and later sign in to Humanbound,
+      your visits will be linked to your account.
       <a href="https://github.com/humanbound/humanbound/blob/main/PRIVACY.md#docs-site-analytics" target="_blank" rel="noopener">Privacy policy</a>.
     cookies:
       analytics: Analytics
