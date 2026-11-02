@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **`hb logs <experiment-id> --verdict fail` and other options after the
+  experiment ID** failed with `No such command '--verdict'`, although the
+  command's help and the docs use that form. Options may now come before or
+  after the ID.
+- **`hb logs upload <file>` could not be reached.** The optional experiment
+  ID took the word `upload`, so the CLI looked for a subcommand named after
+  the file. The subcommand now runs.
+
 ## [2.14.0] — 2026-10-30
 
 ### Added
