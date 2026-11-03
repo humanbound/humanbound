@@ -422,19 +422,18 @@ First, work through your reasoning step-by-step, then provide your verdict.
 
             return verdict
         except Exception as e:
-            import traceback
-
             _log_error(
                 title="LLM Judge",
                 description={
                     "verdict_string": verdict_json,
                     "error": str(e),
-                    "trace": str(traceback.format_exc()),
                 },
                 tag="LLM verict bad format",
                 hook="ENGINEERING",
             )
             preview = (verdict_json or "")[:30]
             raise Exception(
-                f"502/Unexpected judge LLM response. Not in a valid format. Preview: {preview}"
+                f"502/Unexpected judge LLM response. Not in a valid format. The judge model may be "
+                "too weak to return the required JSON; try a stronger judge model. "
+                f"Preview: {preview}"
             )
