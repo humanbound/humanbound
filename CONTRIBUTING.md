@@ -94,7 +94,7 @@ If you're unsure about a license, ask in the PR before writing code.
 
 - Every new feature needs a test
 - Every bug fix needs a regression test
-- Tests run against Python 3.10, 3.11, and 3.12 in CI
+- Tests run against Python 3.10, 3.11, 3.12, 3.13, and 3.14 in CI
 
 ### Public vs internal APIs
 
