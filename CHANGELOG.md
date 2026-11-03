@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **`CONTRIBUTING.md` lists every Python version CI tests on** (#185). It
+  said tests run on 3.10, 3.11 and 3.12, while CI also runs 3.13 and 3.14.
+
 ## [2.14.0] — 2026-10-30
 
 ### Added
