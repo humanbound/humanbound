@@ -21,7 +21,44 @@ console = Console()
 console_err = Console(stderr=True)
 
 
-@click.group("logs", invoke_without_command=True)
+class _LogsGroup(click.Group):
+    """Group that takes an optional EXPERIMENT_ID *and* has subcommands.
+
+    A stock click.Group gets both wrong: it stops parsing options at the first
+    positional, so ``hb logs <id> --verdict fail`` reads ``--verdict`` as a
+    subcommand name, and the optional EXPERIMENT_ID swallows a subcommand name,
+    so ``hb logs upload file.json`` looks for a subcommand called
+    ``file.json``. Options may follow the ID here, and a leading subcommand
+    name is routed to the subcommand before the group parses anything.
+    """
+
+    _SUBCOMMAND_ARGS = "humanbound.logs.subcommand_args"
+
+    def parse_args(self, ctx: click.Context, args: list[str]) -> list[str]:
+        if args and args[0] in self.commands:
+            ctx.meta[self._SUBCOMMAND_ARGS] = list(args)
+            return super().parse_args(ctx, [])
+        return super().parse_args(ctx, args)
+
+    def invoke(self, ctx: click.Context):
+        sub_args = ctx.meta.pop(self._SUBCOMMAND_ARGS, None)
+        if sub_args is None:
+            return super().invoke(ctx)
+        name, *rest = sub_args
+        cmd = self.commands[name]
+        with ctx:
+            ctx.invoked_subcommand = name
+            click.Command.invoke(self, ctx)
+            with cmd.make_context(name, rest, parent=ctx) as sub_ctx:
+                return sub_ctx.command.invoke(sub_ctx)
+
+
+@click.group(
+    "logs",
+    cls=_LogsGroup,
+    invoke_without_command=True,
+    context_settings={"allow_interspersed_args": True},
+)
 @click.argument("experiment_id", required=False)
 @click.option(
     "--format",

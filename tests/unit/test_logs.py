@@ -429,3 +429,45 @@ class TestLocalMode:
         html = (tmp_path / "logs.html").read_text()
         assert '<div class="label">Conversations</div><div class="value">10</div>' in html
         assert ">C</text>" in html
+
+
+# ---------------------------------------------------------------------------
+# Argument routing (options after the ID, subcommand dispatch)
+# ---------------------------------------------------------------------------
+
+
+class TestArgumentRouting:
+    @patch(RUNNER_PATCH)
+    def test_options_after_experiment_id(self, mock_get_runner):
+        """`hb logs <id> --verdict fail` is the form the help text documents."""
+        client = _make_client()
+        mock_get_runner.return_value = platform_runner(client)
+
+        result = runner.invoke(cli, ["logs", "exp-789", "--verdict", "fail", "--size", "10"])
+
+        assert_exit_ok(result)
+        client.get_experiment_logs.assert_called_once_with(
+            "exp-789", page=1, size=10, result="fail"
+        )
+
+    @patch("humanbound_cli.commands.logs.HumanboundClient")
+    def test_upload_subcommand_is_reachable(self, mock_client_cls, tmp_path):
+        """The optional EXPERIMENT_ID must not swallow the `upload` name."""
+        client = mock_client_cls.return_value
+        client.is_authenticated.return_value = True
+        client.project_id = "proj-456"
+        client.upload_conversations.return_value = {"dataset_id": "ds-1"}
+        data = tmp_path / "convs.json"
+        data.write_text(json.dumps([{"conversation": [{"u": "hi", "a": "hello"}]}]))
+
+        result = runner.invoke(cli, ["logs", "upload", str(data), "--tag", "v2", "--force"])
+
+        assert result.exit_code == 0, result.output
+        client.upload_conversations.assert_called_once()
+        assert client.upload_conversations.call_args.kwargs["tag"] == "v2"
+        assert "ds-1" in result.output
+
+    def test_upload_help(self):
+        result = runner.invoke(cli, ["logs", "upload", "--help"])
+        assert result.exit_code == 0
+        assert "--tag" in result.output
