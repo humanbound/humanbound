@@ -106,7 +106,7 @@ def current_org():
 
     if not client.organisation_id:
         console.print("[yellow]No organisation selected.[/yellow]")
-        console.print("Use 'hb switch <id>' to select one.")
+        console.print("Use 'hb orgs use <id>' to select one.")
         return
 
     try:
@@ -139,7 +139,7 @@ def subscription_details():
 
     if not client.organisation_id:
         console.print("[yellow]No organisation selected.[/yellow]")
-        console.print("Use 'hb switch <id>' first.")
+        console.print("Use 'hb orgs use <id>' first.")
         raise SystemExit(1)
 
     try:
@@ -216,7 +216,7 @@ def org_report(output: str, no_open: bool):
 
     client = HumanboundClient()
     if not client.organisation_id:
-        console.print("[yellow]No organisation selected.[/yellow] Run 'hb switch <id>'")
+        console.print("[yellow]No organisation selected.[/yellow] Run 'hb orgs use <id>'")
         raise SystemExit(1)
 
     oid = client.organisation_id

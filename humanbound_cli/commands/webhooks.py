@@ -39,7 +39,7 @@ def _require_auth() -> HumanboundClient:
 
     if not client.organisation_id:
         console.print("[yellow]No organisation selected.[/yellow]")
-        console.print("Use 'hb switch <org-id>' first.")
+        console.print("Use 'hb orgs use <org-id>' first.")
         raise SystemExit(1)
 
     return client

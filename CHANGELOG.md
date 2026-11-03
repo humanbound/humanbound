@@ -24,6 +24,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `hb connect` messages, the `providers` help and the docs. The `hb --help`
   examples also used `hb posture --history` (now `--trends`) and
   `hb monitor enable --schedule daily` (now just `hb monitor`).
+- "No organisation selected" messages said to run `hb switch <id>`, which
+  doesn't exist. They now say `hb orgs use <id>`. The MCP server's
+  `create_project` description pointed to the removed `hb init`; it now
+  points to `hb connect`.
 
 ## [2.14.0] — 2026-10-30
 

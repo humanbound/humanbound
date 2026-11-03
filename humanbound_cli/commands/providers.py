@@ -44,7 +44,7 @@ def _list_providers():
 
     if not client.organisation_id:
         console_err.print("[yellow]No organisation selected.[/yellow]")
-        console_err.print("Use 'hb switch <id>' to select an organisation first.")
+        console_err.print("Use 'hb orgs use <id>' to select an organisation first.")
         raise SystemExit(1)
 
     try:
@@ -135,7 +135,7 @@ def add_provider(
 
     if not client.organisation_id:
         console_err.print("[yellow]No organisation selected.[/yellow]")
-        console_err.print("Use 'hb switch <id>' to select an organisation first.")
+        console_err.print("Use 'hb orgs use <id>' to select an organisation first.")
         raise SystemExit(1)
 
     # Interactive mode
@@ -218,7 +218,7 @@ def remove_provider(provider_id: str, force: bool):
 
     if not client.organisation_id:
         console_err.print("[yellow]No organisation selected.[/yellow]")
-        console_err.print("Use 'hb switch <id>' to select an organisation first.")
+        console_err.print("Use 'hb orgs use <id>' to select an organisation first.")
         raise SystemExit(1)
 
     try:
@@ -280,7 +280,7 @@ def update_provider(provider_id: str, api_key: str, endpoint: str, model: str, d
 
     if not client.organisation_id:
         console_err.print("[yellow]No organisation selected.[/yellow]")
-        console_err.print("Use 'hb switch <id>' to select an organisation first.")
+        console_err.print("Use 'hb orgs use <id>' to select an organisation first.")
         raise SystemExit(1)
 
     # Check at least one option provided
