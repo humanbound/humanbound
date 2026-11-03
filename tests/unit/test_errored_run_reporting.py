@@ -113,6 +113,32 @@ def test_panel_warns_and_goes_red_when_all_errored():
     assert "NOT a passing result" in body
 
 
+def test_panel_blames_the_judge_when_every_conversation_went_unjudged():
+    stats = {"total": 3, "pass": 0, "fail": 0, "error": 3, "unjudged": 3}
+    title, lines, border = _build_results_panel(_result(stats), Posture(), all_errored=True)
+    body = "\n".join(lines)
+    assert title == "Experiment Complete — no results"
+    assert border == "red"
+    assert "NOT a passing result" in body
+    assert "try a stronger one" in body
+    assert "Check the agent endpoint" not in body
+
+
+def test_panel_keeps_the_endpoint_hint_when_all_errored_for_other_reasons():
+    title, lines, _ = _build_results_panel(_result(_ALL_ERRORED), Posture(), all_errored=True)
+    body = "\n".join(lines)
+    assert "Check the agent endpoint/config" in body
+    assert "stronger" not in body
+
+
+def test_panel_mentions_the_judge_when_all_errored_with_some_unjudged():
+    stats = {"total": 3, "pass": 0, "fail": 0, "error": 3, "unjudged": 1}
+    _, lines, _ = _build_results_panel(_result(stats), Posture(), all_errored=True)
+    body = "\n".join(lines)
+    assert "Check the agent endpoint/config" in body
+    assert "1 of them could not be judged" in body
+
+
 def test_panel_warns_that_partial_errors_are_left_out_of_the_grade():
     stats = {"total": 5, "pass": 2, "fail": 0, "error": 3}
     title, lines, border = _build_results_panel(

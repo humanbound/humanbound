@@ -1044,12 +1044,26 @@ def _build_results_panel(
         panel_lines.append(f"  [yellow]Errored:[/yellow] {errored}")
 
     if all_errored:
+        unjudged = stats.get("unjudged", 0) or 0
         panel_lines.append("")
         panel_lines.append("[red bold]⚠ No conversations completed — every one errored.[/red bold]")
-        panel_lines.append(
-            "[red]This is NOT a passing result. Check the agent endpoint/config and "
-            "connectivity, then re-run.[/red]"
-        )
+        if unjudged == errored:
+            # The agent answered every time; it was the judge that could not produce a verdict.
+            panel_lines.append(
+                "[red]This is NOT a passing result. The judge could not assess any "
+                "conversation. A small judge model often cannot return valid verdicts; try a "
+                "stronger one, then re-run.[/red]"
+            )
+        else:
+            panel_lines.append(
+                "[red]This is NOT a passing result. Check the agent endpoint/config and "
+                "connectivity, then re-run.[/red]"
+            )
+            if unjudged:
+                panel_lines.append(
+                    f"[red]{unjudged} of them could not be judged: a small judge model often "
+                    "cannot return valid verdicts; try a stronger one.[/red]"
+                )
         panel_lines.append("[dim]Inspect the failures with: hb logs[/dim]")
     elif errored:
         unjudged = stats.get("unjudged", 0) or 0

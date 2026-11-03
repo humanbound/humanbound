@@ -223,4 +223,11 @@ Analyze the evaluation results below and provide a concise summary in ENGLISH.
             return summary, metrics
 
         except Exception as e:
-            raise Exception(f"500/Error, could not extract a verdict. Details: {str(e)}")
+            hint = ""
+            if isinstance(e, (ValueError, KeyError, TypeError)):
+                # Parsing the verdict failed (not the LLM call itself).
+                hint = (
+                    " The judge model may be too weak to return the required JSON; "
+                    "try a stronger judge model."
+                )
+            raise Exception(f"500/Error, could not extract a verdict. Details: {str(e)}{hint}")
