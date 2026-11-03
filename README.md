@@ -2,113 +2,107 @@
   <img src="https://raw.githubusercontent.com/humanbound/humanbound/main/assets/logo-dark.svg" alt="Humanbound" width="280"/>
 </p>
 
-<h3 align="center">humanbound</h3>
+<h3 align="center">Find vulnerabilities in your AI agents before attackers do.</h3>
 
 <p align="center">
-  Open-source adversarial testing engine, SDK, and CLI for AI agents.
+  Humanbound attacks your agent the way real attackers will, scores every conversation,
   <br/>
-  Attack your agent the way real users and attackers will: live endpoints,
-  multi-turn conversations, tool abuse. Then turn every failure into a firewall rule.
-  <br/>
-  Runs locally or against the Humanbound Platform. No login required to start.
+  and turns each failure into a firewall rule. Open source, runs locally, no login needed.
 </p>
 
 <p align="center">
-  <a href="#quick-start">Quick Start</a> &middot;
-  <a href="#from-test-results-to-guardrails">Test-to-Guardrail Loop</a> &middot;
-  <a href="#python-sdk">SDK</a> &middot;
-  <a href="https://docs.humanbound.ai/">Documentation</a> &middot;
-  <a href="#contributing">Contributing</a>
+  <a href="https://docs.humanbound.ai/"><img src="https://img.shields.io/badge/Docs-docs.humanbound.ai-FD9506?style=for-the-badge" alt="Docs"/></a>
+  <a href="https://app.humanbound.ai/?utm_source=github&utm_medium=readme&utm_content=badge_platform"><img src="https://img.shields.io/badge/Platform-start%20free-FD9506?style=for-the-badge" alt="Humanbound Platform: start free"/></a>
+  <a href="https://discord.gg/QFTD6tr9zu"><img src="https://img.shields.io/badge/Discord-join-FD9506?style=for-the-badge" alt="Discord"/></a>
+  <a href="https://www.humanbound.ai/contact?utm_source=github&utm_medium=readme&utm_content=badge_enterprise"><img src="https://img.shields.io/badge/Enterprise-contact%20us-555555?style=for-the-badge" alt="Enterprise: contact us"/></a>
 </p>
 
 <p align="center">
   <a href="https://pypi.org/project/humanbound/"><img src="https://img.shields.io/pypi/v/humanbound?style=flat-square&color=FD9506" alt="PyPI version"/></a>
-  <a href="https://pypi.org/project/humanbound/"><img src="https://img.shields.io/pypi/pyversions/humanbound?style=flat-square&color=FD9506" alt="Python versions"/></a>
-  <a href="https://pypi.org/project/humanbound/"><img src="https://img.shields.io/pypi/dm/humanbound?style=flat-square&color=FD9506" alt="Downloads"/></a>
   <a href="https://github.com/humanbound/humanbound/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/humanbound/humanbound/ci.yml?style=flat-square&color=FD9506" alt="CI"/></a>
   <a href="https://github.com/humanbound/humanbound/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-FD9506?style=flat-square" alt="License"/></a>
-  <a href="https://discord.gg/QFTD6tr9zu"><img src="https://img.shields.io/badge/discord-community-FD9506?style=flat-square" alt="Discord"/></a>
-  <a href="https://docs.humanbound.ai/"><img src="https://img.shields.io/badge/docs-humanbound.ai-FD9506?style=flat-square" alt="Docs"/></a>
+  <a href="https://github.com/humanbound/humanbound/stargazers"><img src="https://img.shields.io/github/stars/humanbound/humanbound?style=flat-square&color=FD9506" alt="GitHub stars"/></a>
 </p>
 
 ---
 
-> 📖 **Full documentation** lives at [**docs.humanbound.ai**](https://docs.humanbound.ai/) —
-> this README covers the essentials; the docs have the depth.
+## Overview
 
-## Why Humanbound
+AI agents hold conversations, call tools and keep state, so many security failures appear
+only as a conversation unfolds, never in a single prompt.
 
-Most testing tools test prompts. Humanbound tests **agents**: it drives
-multi-turn conversations against your real endpoint, probes tool use and scope
-boundaries, and scores the results against your security policy. When tests
-fail, `hb guardrails` converts the findings into deployable firewall rules —
-so the same run that finds a hole also patches it.
+Humanbound tests **the agent, not just the prompt**: it holds multi-turn conversations with
+your real endpoint, tries to make the agent misuse its tools or step outside its role, and an
+AI judge scores every reply against your security policy.
 
-## Quick Start
+**Key capabilities:**
 
-### Install
+- **Realistic attacks** — multi-turn conversations that try prompt injection, jailbreaks,
+  tool abuse and data leaks, the way a real attacker would
+- **Standards-mapped** — every finding maps to the OWASP LLM and Agentic AI Top 10
+- **Behavior checks** — does the agent stay on task and answer correctly
+- **A security score** — 0–100 with an A–F grade, plus every conversation that failed
+- **Findings into defenses** — failures become rules for
+  [humanbound-firewall](https://github.com/humanbound/humanbound-firewall)
+- **Fits your workflow** — CLI, Python SDK, GitHub Action and an MCP server for coding agents
 
-```bash
-pip install humanbound                       # CLI + SDK, core deps
-pip install humanbound[engine]               # + OpenAI / Anthropic / Gemini / Ollama providers
-pip install humanbound[firewall]             # + humanbound-firewall runtime
-pip install humanbound[engine,firewall]      # everything
-```
+<p align="center">
+  <img src="https://raw.githubusercontent.com/humanbound/humanbound/main/assets/demo-terminal.png" alt="Output of hb posture, a score of 18.0 out of 100 and grade F, and hb logs --verdict fail, a table of failed conversations with their severity, category such as system_exposure and restriction_bypass, and the judge's explanation." width="100%"/>
+  <br/>
+  <sub>Security score and failed conversations after attacking the <code>hello-world</code> practice agent, with
+  each conversation's severity (0–100) and the judge's reason.</sub>
+</p>
 
-### Docker
+## Use cases
 
-Run the CLI from the official image ([docs](https://docs.humanbound.ai/integrations/docker/)):
+- **Before launch** — red-team a new agent before real users reach it
+- **On every pull request** — fail the build when a prompt, tool or model change opens a hole
+- **In production** — monitor the agent continuously and catch regressions (Platform)
+- **At runtime** — block the attacks it failed with firewall rules generated from the findings
 
-```bash
-docker run --rm -v "$PWD":/workspace \
-  -e HB_PROVIDER=openai -e HB_API_KEY=$OPENAI_API_KEY -e HB_MODEL=gpt-4o-mini \
-  ghcr.io/humanbound/humanbound:2 test --endpoint ./bot-config.json --wait
-```
+## How it works
 
-### CLI usage
+<p align="center">
+  <img src="https://raw.githubusercontent.com/humanbound/humanbound/main/assets/how-it-works.svg" alt="How Humanbound works: the scope defines what the agent may do; attacks are generated from it and run as multi-turn conversations against the real agent; an AI judge scores each reply; failures become findings, which produce a security posture score and firewall rules; then the agent is tested again." width="100%"/>
+</p>
 
-```bash
-# Configure your LLM provider
-export HB_PROVIDER=openai
-export HB_API_KEY=sk-...
+---
 
-# Point Humanbound at your agent and run an adversarial test
-hb test --endpoint ./bot-config.json --repo . --wait
+## Quick start
 
-# View results
-hb posture                         # security score (0-100, A-F)
-hb logs                            # full multi-turn conversation logs
-hb report -o report.html           # HTML report
-```
-
-Full air-gap with [Ollama](https://ollama.com) — zero external API calls (requires the `[engine]` extra):
+**Prerequisites:** Python 3.10+, and an LLM API key (OpenAI, Anthropic, Gemini) or a local
+[Ollama](https://ollama.com). The practice agents below also need Docker and an OpenAI key, or
+an OpenAI-compatible server such as Ollama.
 
 ```bash
-pip install humanbound[engine]
-export HB_PROVIDER=ollama
-export HB_MODEL=llama3.1:8b
-hb test --endpoint ./bot-config.json --scope ./scope.yaml --wait
+pip install 'humanbound[engine]'
+export HB_PROVIDER=openai HB_API_KEY=sk-...   # the model that attacks and judges
 ```
 
-### Practice on a vulnerable agent
+### Attack a practice agent
 
-No agent of your own at hand? `hb arena` runs intentionally vulnerable agents
-locally, in Docker, so you can see what a test finds. No login needed.
+No agent of your own yet? `hello-world` is a deliberately vulnerable shop chatbot that runs
+in Docker. Start it, attack it and see how it broke:
 
 ```bash
-hb arena ls                          # what the catalog offers
-hb arena run <agent>                 # start one, with its network access blocked
-hb test --target arena://<agent>     # test it on the local engine
-hb arena stop <agent>
+hb arena config set OPENAI_API_KEY=sk-...             # the practice agent's model
+hb arena run hello-world
+hb test --target arena://hello-world --quick --wait   # about 20 minutes
+hb posture                                            # security score, 0–100 and A–F
+hb logs --verdict fail                                # the conversations where it broke
+hb arena stop hello-world
 ```
 
-Arena agents are built to be exploited and their isolation is best effort:
-never run them where there is sensitive data or access to critical systems.
-See the [Arena docs](https://docs.humanbound.ai/testing/arena/).
+Building with tools? Try `pricewatch` (tool use, indirect injection). `hb arena ls` lists every
+practice agent ([Arena docs](https://docs.humanbound.ai/testing/arena/)).
 
-### Describe your agent
+> [!WARNING]
+> Practice agents are built to be exploited. Never run them where there is sensitive data.
 
-`bot-config.json` tells the engine how to call your agent's API:
+### Attack your own agent
+
+Humanbound calls your agent's API over REST, WebSocket or SSE. Tell it how in
+`bot-config.json`; `$PROMPT` is replaced with each attack message:
 
 ```json
 {
@@ -116,68 +110,125 @@ See the [Arena docs](https://docs.humanbound.ai/testing/arena/).
     "endpoint": "https://your-bot.com/chat",
     "headers": {"Authorization": "Bearer <token>"},
     "payload": {"message": "$PROMPT"}
-  },
-  "thread_init": {
-    "endpoint": "https://your-bot.com/sessions",
-    "headers": {"Authorization": "Bearer <token>"},
-    "payload": {}
   }
 }
 ```
 
-- **`chat_completion`** (required) — the request the engine sends for every
-  conversation turn: your agent's chat endpoint.
-- **`thread_init`** (optional) — called once before each conversation to
-  create a session/thread. Stateless agents simply omit it (same for
-  `thread_auth`, an optional separate auth step).
-
-The `headers` and `payload` above are examples — they must match your agent's
-actual API input schema. The engine sends them as-is after substituting the
-placeholders:
-
-- **`$PROMPT`** — replaced with the user message of each attack turn. If no
-  `$PROMPT` appears in the payload, the engine appends the message as an
-  OpenAI-style `messages` array instead.
-- **`$CONVERSATION`** — replaced with the prior turns of the conversation,
-  for stateless agents that expect the full history in every request.
-
-`scope.yaml` declares what the agent is — and is not — allowed to do. The
-`restricted` list is what turns generic jailbreak probes into targeted
-tool-abuse attacks:
-
-```yaml
-business_scope: "Customer support for Acme Bank"
-permitted:
-  - Provide account balance and transaction info
-  - Process routine transfers within limits
-restricted:
-  - Process transfers above 10,000 EUR   # tool-abuse boundary the engine attacks
-  - Access internal system records
-more_info: "HIGH: finance domain agent"
-```
-
-See [Agent Configuration](https://docs.humanbound.ai/getting-started/agent-config/)
-and [Scope Discovery](https://docs.humanbound.ai/local-engine/scope-discovery/)
-for the full specifications.
-
-## From test results to guardrails
-
-Every adversarial run produces training data. Feed it straight back into your
-defenses:
+The agent should reply with JSON that has the answer in a field such as `content`, `text`,
+`reply` or `message`; nested fields are fine.
 
 ```bash
-hb test --endpoint ./bot-config.json --wait   # find the failures
-hb guardrails -o rules.json                   # convert findings into guardrail rules
-hb guardrails -f yaml -o agent.yaml           # the firewall's policy file
-hb firewall train --model detectors/setfit_classifier.py   # train a Tier 2 classifier
+hb test --endpoint ./bot-config.json --wait   # about 20 minutes with a cloud model
+hb report -o report.html                      # shareable HTML report
 ```
 
-Deploy the output with
-[humanbound-firewall](https://github.com/humanbound/humanbound-firewall) and
-your agent is protected against exactly the attacks it just failed. No other
-open-source tool closes this loop.
+**Next steps**
 
-## Python SDK
+| Want to… | Do this |
+|---|---|
+| Test an agent that needs a session or login | See [Agent Configuration](https://docs.humanbound.ai/getting-started/agent-config/) |
+| Get sharper attacks | Add `--prompt ./system.txt` or `--repo .`, or write a [`scope.yaml`](https://docs.humanbound.ai/local-engine/scope-discovery/) |
+| Keep everything on your machine | `export HB_PROVIDER=ollama HB_TELEMETRY_DISABLED=1` ([details](https://docs.humanbound.ai/local-engine/provider-config/)) |
+| Run in a container | Use the [Docker image](https://docs.humanbound.ai/integrations/docker/) |
+
+---
+
+## Humanbound Platform
+
+Log in and the same CLI sends its runs to the
+[Humanbound Platform](https://app.humanbound.ai/?utm_source=github&utm_medium=readme&utm_content=platform_heading).
+Your findings and score are kept across runs, and the Platform can keep testing your agent on a
+schedule (`hb monitor`). The free plan needs no card.
+
+```bash
+hb login
+hb connect --endpoint ./bot-config.json    # creates a project and runs a first test
+hb posture --trends                        # score over time
+hb findings                                # open, fixed and regressed findings
+```
+
+**Everything in open source, plus:**
+
+- Findings tracked across runs, and score history
+- Continuous monitoring
+- Cross-session leaks: does one user's data reach another
+- A managed attacker and judge model, no API key needed
+- Team collaboration
+
+[**Start free on app.humanbound.ai →**](https://app.humanbound.ai/?utm_source=github&utm_medium=readme&utm_content=platform_cta)
+
+**Enterprise.** On-premises installation, SAML/OIDC single sign-on, SIEM integration,
+bring-your-own-key models and a named engineer with an SLA.
+[Contact sales →](https://www.humanbound.ai/contact?utm_source=github&utm_medium=readme&utm_content=enterprise_cta)
+
+---
+
+## Turn findings into guardrails
+
+**Test → find → defend → test again.**
+
+1. Export the findings as a firewall policy:
+
+   ```bash
+   hb guardrails -f yaml -o agent.yaml
+   ```
+
+2. Load `agent.yaml` into [humanbound-firewall](https://github.com/humanbound/humanbound-firewall)
+   (`pip install humanbound-firewall`). It blocks the attacks your agent just failed.
+3. Run `hb test` again to confirm.
+
+Optional: train a dedicated classifier from your test logs with `'humanbound[firewall]'`
+([Firewall docs](https://docs.humanbound.ai/defense/firewall/)).
+
+## Run it in CI
+
+[`humanbound/actions`](https://github.com/humanbound/actions) tests your agent on every pull
+request and fails the build on findings at or above a severity:
+
+```yaml
+# .github/workflows/agent-security.yml
+name: Agent security
+on: [pull_request]
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose up -d agent # start your agent, reachable on localhost
+
+      - uses: humanbound/actions@v1
+        with:
+          endpoint: ./bot-config.json   # same format as in the Quick start, pointing at localhost
+          provider-api-key: ${{ secrets.OPENAI_API_KEY }}
+          model: gpt-4.1
+          fail-on: high
+```
+
+Findings can also appear in GitHub's Security tab
+([SARIF](https://github.com/humanbound/actions#security-tab-sarif)). GitLab and other systems:
+[CI/CD docs](https://docs.humanbound.ai/integrations/cicd/).
+
+## Use it from your coding agent
+
+**Ask about your results (MCP server).** Claude Code, Cursor, Windsurf or Copilot can answer
+questions about your score, findings and runs on the Platform. It needs a Humanbound account:
+
+```bash
+pip install 'humanbound[mcp]'
+hb login
+claude mcp add humanbound -- hb mcp
+```
+
+Setup for other editors is in the [MCP docs](https://docs.humanbound.ai/integrations/mcp/).
+
+**Let the agent run the test (plugin, preview).** The
+[`humanbound-test` plugin](https://github.com/humanbound/plugins) lets Claude Code or Cursor
+find your local FastAPI agent and test it for you. It needs a Humanbound account.
+
+## Use it from Python
+
+The CLI and the SDK share one implementation:
 
 ```python
 import json
@@ -186,86 +237,64 @@ import time
 from humanbound import LocalRunner, TestConfig
 
 config = TestConfig(
-    endpoint=json.load(open("bot-config.json")),  # same config file the CLI uses
-    scope_path="scope.yaml",
+    endpoint=json.load(open("bot-config.json")),
+    test_category="humanbound/adversarial/owasp_agentic",
+    testing_level="unit",
+    lang="english",
 )
 
 runner = LocalRunner()
 experiment_id = runner.start(config)
-
 while runner.get_status(experiment_id).status not in ("Finished", "Failed", "Terminated"):
     time.sleep(5)
 
 posture = runner.get_posture(experiment_id)
 print(f"Security posture: {posture.overall_score} ({posture.grade})")
-
-for insight in runner.get_result(experiment_id).insights:
-    print(insight["severity"], "—", insight["category"])
 ```
 
-The CLI and SDK share the same implementation, so they cannot drift. Authoring
-custom orchestrators and wiring `EngineCallbacks` is covered in the
-[docs](https://docs.humanbound.ai/).
+More in the [docs](https://docs.humanbound.ai/), including
+[how the engine works](https://docs.humanbound.ai/local-engine/#architecture).
 
-## Architecture
+---
 
-<p align="center">
-  <img src="assets/architecture.png" alt="Humanbound CLI engine architecture" width="100%"/>
-</p>
+## Documentation
 
-The CLI funnels every entry point — `hb` commands and the MCP server — through a
-single `TestRunner` abstraction. A `PlatformTestRunner` forwards to the
-Humanbound backend; a `LocalTestRunner` drives the in-process engine
-(scope discovery, orchestrators, bot, judge, presenter) against your own LLM
-provider, with results written under `.humanbound/results/`.
-
-## Stability contract
-
-| Import path | Stability |
-|---|---|
-| `from humanbound import X` | **Stable** — semver-protected |
-| `from humanbound.<module> import Y` | **Stable** — semver-protected |
-| `from humanbound_cli.* import Z` | **Internal** — may change any release, do not import from user code |
-
-The full orchestrator authoring guide, Platform integration, and API reference
-live on [docs.humanbound.ai](https://docs.humanbound.ai/).
-
-## Release highlights
-
-- **Clean name**: `humanbound` is the PyPI install. The old `humanbound-cli`
-  package has been yanked from PyPI; install `humanbound` directly.
-- **Public SDK namespace** alongside the CLI — use the CLI or drive the
-  engine from Python.
-- **Firewall integration**: `pip install humanbound[firewall]` pulls
-  [`humanbound-firewall`](https://github.com/humanbound/humanbound-firewall)
-  alongside the CLI.
-
-See the [changelog](https://github.com/humanbound/humanbound/blob/main/CHANGELOG.md)
-for full release notes.
+Everything else is at **[docs.humanbound.ai](https://docs.humanbound.ai/)**: configuration,
+attack methodology, CI/CD, the Platform and the full command reference.
 
 ## Contributing
 
-Contributions welcome. See [CONTRIBUTING.md](https://github.com/humanbound/humanbound/blob/main/CONTRIBUTING.md) for the dev
-loop, release process, and DCO sign-off requirement (see [DCO.md](https://github.com/humanbound/humanbound/blob/main/DCO.md)).
+Code, docs and bug reports are welcome. See [CONTRIBUTING.md](https://github.com/humanbound/humanbound/blob/main/CONTRIBUTING.md) for the dev
+setup and the DCO sign-off.
 
 - 🐛 [Report a bug](https://github.com/humanbound/humanbound/issues/new/choose)
 - 💡 [Request a feature](https://github.com/humanbound/humanbound/issues/new/choose)
-- 🔒 [Report a security issue](https://github.com/humanbound/humanbound/blob/main/SECURITY.md) — **not via public Issues**
+- 🔒 [Report a security issue](https://github.com/humanbound/humanbound/blob/main/SECURITY.md) — **not via public issues**
 - 💬 [Join Discord](https://discord.gg/QFTD6tr9zu)
+- 📋 [Release notes](https://github.com/humanbound/humanbound/blob/main/CHANGELOG.md)
+
+If Humanbound finds something in your agent, a ⭐ helps other builders find it too.
 
 ## Telemetry
 
-The `hb` CLI sends anonymous usage data to help us improve it.
-Disable with `hb telemetry disable`, `HB_TELEMETRY_DISABLED=1`, or
-`DO_NOT_TRACK=1`. Turning telemetry off sends one final anonymous
-`telemetry_disabled` event (once per machine, ever) so we can count
-opt-outs. Full disclosure: [PRIVACY.md](https://github.com/humanbound/humanbound/blob/main/PRIVACY.md).
+The `hb` CLI sends anonymous usage data to help improve the project. To turn it off:
+
+```bash
+hb telemetry disable           # or: export HB_TELEMETRY_DISABLED=1, or: export DO_NOT_TRACK=1
+```
+
+Turning it off sends one final anonymous `telemetry_disabled` event per machine, so we can
+count opt-outs. Details in [PRIVACY.md](https://github.com/humanbound/humanbound/blob/main/PRIVACY.md).
+
+## Authorized use only
+
+> [!WARNING]
+> Humanbound is a security testing tool. Only test AI agents that you own or have explicit
+> permission to test. Do not use it against third-party systems without permission.
 
 ## License
 
-[Apache-2.0](https://github.com/humanbound/humanbound/blob/main/LICENSE). Free to use in any context — commercial or
-open-source — with attribution. See [TRADEMARK.md](https://github.com/humanbound/humanbound/blob/main/TRADEMARK.md) for the
-trademark policy. The code is open; the name is not.
-
-The sibling project [`humanbound-firewall`](https://github.com/humanbound/humanbound-firewall)
-is also Apache-2.0 — same license, different product.
+Humanbound is licensed under the
+[Apache License 2.0](https://github.com/humanbound/humanbound/blob/main/LICENSE). See
+[TRADEMARK.md](https://github.com/humanbound/humanbound/blob/main/TRADEMARK.md) for the
+trademark policy.
