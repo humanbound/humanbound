@@ -52,7 +52,7 @@ def _list_providers():
 
         if not providers:
             console.print("[yellow]No providers configured.[/yellow]")
-            console.print("\n[dim]Use 'hb providers add' to configure a model provider.[/dim]")
+            console.print("\n[dim]Use 'hb providers create' to configure a model provider.[/dim]")
             return
 
         table = Table(title="Model Providers")
@@ -122,9 +122,9 @@ def add_provider(
 
     \b
     Examples:
-      hb providers add --name openai --api-key sk-...
-      hb providers add --name azureopenai --api-key ... --endpoint https://...
-      hb providers add -i  # Interactive mode
+      hb providers create --name openai --api-key sk-...
+      hb providers create --name azureopenai --api-key ... --endpoint https://...
+      hb providers create -i  # Interactive mode
     """
     client = HumanboundClient()
 

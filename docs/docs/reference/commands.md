@@ -136,7 +136,7 @@ Run intentionally vulnerable agents locally, in Docker, and test them. None of t
 | Command | Description |
 |---|---|
 | `hb providers list` | List configured LLM providers |
-| `hb providers add` | Add new LLM provider configuration |
+| `hb providers create` | Add new LLM provider configuration |
 | `hb providers update <id>` | Update provider credentials or settings |
 | `hb providers remove <id>` | Remove provider configuration |
 | `hb api-keys list` | List API keys for programmatic access |

@@ -19,6 +19,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`hb logs upload <file>` could not be reached.** The optional experiment
   ID took the word `upload`, so the CLI looked for a subcommand named after
   the file. The subcommand now runs.
+- Hints and examples pointed to `hb providers add`, which doesn't exist (the
+  command is `hb providers create`). Fixed in the `hb test`, `hb redteam` and
+  `hb connect` messages, the `providers` help and the docs. The `hb --help`
+  examples also used `hb posture --history` (now `--trends`) and
+  `hb monitor enable --schedule daily` (now just `hb monitor`).
 
 ## [2.14.0] — 2026-10-30
 

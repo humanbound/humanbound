@@ -64,3 +64,19 @@ def test_version_flag():
     result = runner.invoke(cli, ["--version"])
     assert result.exit_code == 0
     assert "hb" in result.output.lower()
+
+
+def test_top_level_help_examples_work():
+    """The example commands in `hb --help` should be real commands/options."""
+    out = runner.invoke(cli, ["--help"]).output
+    examples = [
+        line.split("#")[0].split()[1:]
+        for line in out.splitlines()
+        if line.strip().startswith("hb ")
+    ]
+    assert examples
+    for args in examples:
+        result = runner.invoke(cli, args + ["--help"])
+        assert result.exit_code == 0, (
+            f"`hb {' '.join(args)}` from hb --help fails:\n{result.output}"
+        )

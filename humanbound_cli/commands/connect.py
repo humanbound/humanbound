@@ -1417,7 +1417,7 @@ def _auto_test(
 
         if not providers:
             console.print("\n[yellow]No providers configured -- skipping auto-test.[/yellow]")
-            console.print("[dim]Run 'hb providers add' then 'hb test' to test manually.[/dim]")
+            console.print("[dim]Run 'hb providers create' then 'hb test' to test manually.[/dim]")
             return
 
         provider = next((p for p in providers if p.get("is_default")), providers[0])
