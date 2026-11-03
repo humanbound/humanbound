@@ -470,4 +470,4 @@ class TestArgumentRouting:
     def test_upload_help(self):
         result = runner.invoke(cli, ["logs", "upload", "--help"])
         assert result.exit_code == 0
-        assert "Upload conversation logs" in result.output
+        assert "--tag" in result.output
