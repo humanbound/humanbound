@@ -122,6 +122,9 @@ hb test --endpoint ./bot-config.json --wait   # about 20 minutes with a cloud mo
 hb report -o report.html                      # shareable HTML report
 ```
 
+No API key, or your model refuses to write attacks? Test your agent on the Platform with
+[hosted attack models](#hosted-attack-models).
+
 **Next steps**
 
 | Want to… | Do this |
@@ -152,12 +155,25 @@ hb findings                                # open, fixed and regressed findings
 - Findings tracked across runs, and score history
 - Continuous monitoring
 - Cross-session leaks: does one user's data reach another
-- A managed attacker and judge model, no API key needed
+- [Hosted attack models](#hosted-attack-models), no API key needed
 - Team collaboration
+
+### Hosted attack models
+
+Many models refuse to write attacks because of their safety rules, which makes them poor
+attackers. Hosted attack models don't have that problem: if an attack doesn't work with one
+model, it's retried with another, and a separate model grades the results, so the model that
+wrote an attack never judges it.
+
+Sign up, run `hb login` and `hb connect`, and `hb test` runs on the Platform with hosted attack
+models, unless you add your own provider with `hb providers add`. Practice agents and
+`hb test --local` always use your own model.
 
 [**Start free on app.humanbound.ai →**](https://app.humanbound.ai/?utm_source=github&utm_medium=readme&utm_content=platform_cta)
 
-**Enterprise.** On-premises installation, SAML/OIDC single sign-on, SIEM integration,
+### Enterprise
+
+On-premises installation, SAML/OIDC single sign-on, SIEM integration,
 bring-your-own-key models and a named engineer with an SLA.
 [Contact sales →](https://www.humanbound.ai/contact?utm_source=github&utm_medium=readme&utm_content=enterprise_cta)
 
@@ -204,6 +220,10 @@ jobs:
           model: gpt-4.1
           fail-on: high
 ```
+
+With a Humanbound account, pass `api-key`, `org-id` and `project-id` instead of
+`provider-api-key` and `model`, and the run uses [hosted attack models](#hosted-attack-models)
+(or your own provider, if you added one).
 
 Findings can also appear in GitHub's Security tab
 ([SARIF](https://github.com/humanbound/actions#security-tab-sarif)). GitLab and other systems:
