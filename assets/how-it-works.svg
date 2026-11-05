@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 300" width="960" height="300" role="img" aria-labelledby="title desc">
+  <title id="title">How Humanbound works</title>
+  <desc id="desc">The scope defines what the agent may do. Attacks are generated from it and run as multi-turn conversations against the real agent. An AI judge scores each reply, failures become findings, and findings produce a security posture score and firewall rules. The agent is then tested again.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#8b949e"/>
+    </marker>
+  </defs>
+  <style>
+    .step { fill: #FD9506; }
+    .out { fill: none; stroke: #FD9506; stroke-width: 2; }
+    .line { stroke: #8b949e; stroke-width: 2; fill: none; }
+    .loop { stroke: #8b949e; stroke-width: 2; fill: none; stroke-dasharray: 6 5; }
+    text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+    .t { font-size: 15px; font-weight: 700; fill: #241500; }
+    .s { font-size: 12.5px; fill: #3d2600; }
+    .ot { font-size: 15px; font-weight: 700; fill: #FD9506; }
+    .os { font-size: 12.5px; fill: #8b949e; }
+    .lbl { font-size: 12.5px; font-style: italic; fill: #8b949e; }
+  </style>
+
+  <!-- main flow -->
+  <rect class="step" x="20" y="30" width="164" height="86" rx="10"/>
+  <text class="t" x="34" y="58">1  Scope</text>
+  <text class="s" x="34" y="80">what the agent may</text>
+  <text class="s" x="34" y="97">and may not do</text>
+
+  <rect class="step" x="209" y="30" width="164" height="86" rx="10"/>
+  <text class="t" x="223" y="58">2  Attacks</text>
+  <text class="s" x="223" y="80">generated to break</text>
+  <text class="s" x="223" y="97">those boundaries</text>
+
+  <rect class="step" x="398" y="30" width="164" height="86" rx="10"/>
+  <text class="t" x="412" y="58">3  Conversations</text>
+  <text class="s" x="412" y="80">multi-turn, against</text>
+  <text class="s" x="412" y="97">your real agent</text>
+
+  <rect class="step" x="587" y="30" width="164" height="86" rx="10"/>
+  <text class="t" x="601" y="58">4  AI judge</text>
+  <text class="s" x="601" y="80">scores every reply</text>
+  <text class="s" x="601" y="97">against your policy</text>
+
+  <rect class="step" x="776" y="30" width="164" height="86" rx="10"/>
+  <text class="t" x="790" y="58">5  Findings</text>
+  <text class="s" x="790" y="80">severity, OWASP</text>
+  <text class="s" x="790" y="97">mapping, evidence</text>
+
+  <line class="line" x1="184" y1="73" x2="207" y2="73" marker-end="url(#arrow)"/>
+  <line class="line" x1="373" y1="73" x2="396" y2="73" marker-end="url(#arrow)"/>
+  <line class="line" x1="562" y1="73" x2="585" y2="73" marker-end="url(#arrow)"/>
+  <line class="line" x1="751" y1="73" x2="774" y2="73" marker-end="url(#arrow)"/>
+
+  <!-- outputs -->
+  <path class="line" d="M 830 116 V 150 H 669 V 178" marker-end="url(#arrow)"/>
+  <line class="line" x1="886" y1="116" x2="886" y2="178" marker-end="url(#arrow)"/>
+
+  <rect class="out" x="587" y="180" width="164" height="66" rx="10"/>
+  <text class="ot" x="601" y="207">Security posture</text>
+  <text class="os" x="601" y="229">0–100 score, A–F grade</text>
+
+  <rect class="out" x="776" y="180" width="164" height="66" rx="10"/>
+  <text class="ot" x="790" y="207">Firewall rules</text>
+  <text class="os" x="790" y="229">block what it failed</text>
+
+  <!-- test again -->
+  <path class="loop" d="M 858 246 V 274 H 291 V 118" marker-end="url(#arrow)"/>
+  <text class="lbl" x="312" y="266">test again after every change</text>
+</svg>
