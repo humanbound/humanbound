@@ -116,6 +116,7 @@ humanbound_cli = [
     "templates/*.html",
     "templates/*.svg",
     "templates/compliance/*.yaml",
+    "templates/orchestrator/*.tmpl",
     "py.typed",
 ]
 
