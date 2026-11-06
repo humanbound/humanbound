@@ -60,7 +60,7 @@ hb providers update <id> --default
 ## Remove Provider
 
 ```bash
-hb providers remove <id>
+hb providers delete <id>
 ```
 
 ## Supported Providers

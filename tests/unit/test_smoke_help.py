@@ -5,6 +5,8 @@ These tests require NO credentials and NO running API server.
 They catch import errors, missing modules, and broken command registration.
 """
 
+import shlex
+
 import pytest
 from click.testing import CliRunner
 
@@ -66,17 +68,27 @@ def test_version_flag():
     assert "hb" in result.output.lower()
 
 
-def test_top_level_help_examples_work():
-    """The example commands in `hb --help` should be real commands/options."""
-    out = runner.invoke(cli, ["--help"]).output
-    examples = [
-        line.split("#")[0].split()[1:]
-        for line in out.splitlines()
-        if line.strip().startswith("hb ")
-    ]
+def _all_command_paths(cmd=cli, path=()):
+    yield list(path)
+    for name, sub in getattr(cmd, "commands", {}).items():
+        yield from _all_command_paths(sub, (*path, name))
+
+
+def test_help_examples_work():
+    """The example commands in every --help screen should be real commands/options."""
+    examples = []
+    for path in _all_command_paths():
+        out = runner.invoke(cli, [*path, "--help"]).output
+        for line in out.splitlines():
+            line = line.split("#")[0].strip()
+            # skip prose ("hb runs the same check...") and one-line summaries
+            # listing several commands ("hb arena ls / run <agent> / ...")
+            if not line.startswith("hb ") or " / " in line:
+                continue
+            args = shlex.split(line)[1:]
+            if args[0] in cli.commands or args[0].startswith("-"):
+                examples.append(args)
     assert examples
     for args in examples:
         result = runner.invoke(cli, args + ["--help"])
-        assert result.exit_code == 0, (
-            f"`hb {' '.join(args)}` from hb --help fails:\n{result.output}"
-        )
+        assert result.exit_code == 0, f"`hb {' '.join(args)}` fails:\n{result.output}"

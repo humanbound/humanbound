@@ -28,6 +28,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   doesn't exist. They now say `hb orgs use <id>`. The MCP server's
   `create_project` description pointed to the removed `hb init`; it now
   points to `hb connect`.
+- Docs: same fixes in the auth, collaboration, quick start and command
+  reference pages, plus `hb providers remove` -> `delete`,
+  `hb members remove` -> `delete` and `hb webhooks create` -> `add`.
 
 ## [2.14.0] — 2026-10-30
 

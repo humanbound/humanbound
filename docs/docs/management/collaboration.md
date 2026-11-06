@@ -40,7 +40,7 @@ hb members invite dev@company.com --role developer
 hb members invite auditor@external.com --role expert
 
 # Remove
-hb members remove <member-id>
+hb members delete <member-id>
 ```
 
 ## Finding Delegation
@@ -156,7 +156,7 @@ Organization
 # Organization management
 hb orgs list
 hb orgs current
-hb switch <org-id>
+hb orgs use <org-id>
 ```
 
 !!! note "Platform feature"
