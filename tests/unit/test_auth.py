@@ -158,3 +158,14 @@ class TestOutputFormat:
         result = runner.invoke(cli, ["whoami"])
         assert result.exit_code == 0
         assert "hb login" in result.output or "login" in result.output.lower()
+
+
+@patch("humanbound_cli.commands.auth.HumanboundClient")
+def test_login_alias_passes_port_and_force(mock_cls):
+    client = mock_cls.return_value
+    client.is_authenticated.return_value = True
+
+    result = runner.invoke(cli, ["login", "--force", "--port", "9090"])
+
+    assert result.exit_code == 0, result.output
+    client.login.assert_called_once_with(callback_port=9090)
