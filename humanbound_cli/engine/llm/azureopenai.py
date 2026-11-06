@@ -178,7 +178,7 @@ class LLMPinger:
                 # Other 400 errors
                 raise Exception(f"502/Inappropriate content ({error_text}). Please try again.")
             else:
-                # not sucess and also not rate limit error -> total error
+                # not success and also not rate limit error -> total error
                 raise Exception(f"502/Error while pinging the LLM - {resp.status_code}/{resp.text}")
 
 
