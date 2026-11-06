@@ -11,19 +11,19 @@ hb providers list
 ## Add Provider (Interactive)
 
 ```bash
-hb providers add -i
+hb providers create -i
 ```
 
 ## Add OpenAI Provider
 
 ```bash
-hb providers add --name openai --api-key sk-...
+hb providers create --name openai --api-key sk-...
 ```
 
 ## Add Azure OpenAI Provider
 
 ```bash
-hb providers add --name azureopenai \
+hb providers create --name azureopenai \
   --api-key ... \
   --endpoint https://your-resource.openai.azure.com
 ```
@@ -31,7 +31,7 @@ hb providers add --name azureopenai \
 ## Add Claude Provider
 
 ```bash
-hb providers add --name claude --api-key sk-ant-...
+hb providers create --name claude --api-key sk-ant-...
 ```
 
 ## Update Provider
@@ -47,7 +47,7 @@ hb providers update <id> --default
 ## Remove Provider
 
 ```bash
-hb providers remove <id>
+hb providers delete <id>
 ```
 
 ## Supported Providers

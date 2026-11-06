@@ -67,7 +67,7 @@
   <meta property="og:image:alt" content="Configure the LLM providers Humanbound uses for attack generation, judging, and evaluations — credentials, default selection, and per-experiment overrides." />
   <meta name="twitter:image:alt" content="Configure the LLM providers Humanbound uses for attack generation, judging, and evaluations — credentials, default selection, and per-experiment overrides." />
   
-  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/management/providers/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Model Providers","item":"https://docs.humanbound.ai/management/providers/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/management/providers/#article","headline":"Model Providers","description":"Configure the LLM providers Humanbound uses for attack generation, judging, and evaluations \u2014 credentials, default selection, and per-experiment overrides.","url":"https://docs.humanbound.ai/management/providers/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-06-02T10:20:06+03:00","keywords":"LLM providers, hb providers command, model provider configuration, OpenAI provider, Claude provider, Azure OpenAI configuration, default provider, custom LLM provider"}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/management/providers/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Model Providers","item":"https://docs.humanbound.ai/management/providers/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/management/providers/#article","headline":"Model Providers","description":"Configure the LLM providers Humanbound uses for attack generation, judging, and evaluations \u2014 credentials, default selection, and per-experiment overrides.","url":"https://docs.humanbound.ai/management/providers/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-11-06T21:54:03+02:00","keywords":"LLM providers, hb providers command, model provider configuration, OpenAI provider, Claude provider, Azure OpenAI configuration, default provider, custom LLM provider"}]}</script>
   
 
   
@@ -2425,18 +2425,18 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>hb<span class="w"> </span>providers<span class="w"> </span>list
 </code></pre></div>
 <h2 id="add-provider-interactive">Add Provider (Interactive)</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>hb<span class="w"> </span>providers<span class="w"> </span>add<span class="w"> </span>-i
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>hb<span class="w"> </span>providers<span class="w"> </span>create<span class="w"> </span>-i
 </code></pre></div>
 <h2 id="add-openai-provider">Add OpenAI Provider</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>hb<span class="w"> </span>providers<span class="w"> </span>add<span class="w"> </span>--name<span class="w"> </span>openai<span class="w"> </span>--api-key<span class="w"> </span>sk-...
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>hb<span class="w"> </span>providers<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span>openai<span class="w"> </span>--api-key<span class="w"> </span>sk-...
 </code></pre></div>
 <h2 id="add-azure-openai-provider">Add Azure OpenAI Provider</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>hb<span class="w"> </span>providers<span class="w"> </span>add<span class="w"> </span>--name<span class="w"> </span>azureopenai<span class="w"> </span><span class="se">\</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>hb<span class="w"> </span>providers<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span>azureopenai<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span>--api-key<span class="w"> </span>...<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span>--endpoint<span class="w"> </span>https://your-resource.openai.azure.com
 </code></pre></div>
 <h2 id="add-claude-provider">Add Claude Provider</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>hb<span class="w"> </span>providers<span class="w"> </span>add<span class="w"> </span>--name<span class="w"> </span>claude<span class="w"> </span>--api-key<span class="w"> </span>sk-ant-...
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>hb<span class="w"> </span>providers<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span>claude<span class="w"> </span>--api-key<span class="w"> </span>sk-ant-...
 </code></pre></div>
 <h2 id="update-provider">Update Provider</h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Update API key</span>
@@ -2446,7 +2446,7 @@
 <a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>hb<span class="w"> </span>providers<span class="w"> </span>update<span class="w"> </span>&lt;id&gt;<span class="w"> </span>--default
 </code></pre></div>
 <h2 id="remove-provider">Remove Provider</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>hb<span class="w"> </span>providers<span class="w"> </span>remove<span class="w"> </span>&lt;id&gt;
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>hb<span class="w"> </span>providers<span class="w"> </span>delete<span class="w"> </span>&lt;id&gt;
 </code></pre></div>
 <h2 id="supported-providers">Supported Providers</h2>
 <table>

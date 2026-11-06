@@ -1,6 +1,6 @@
 # Quick Start
 
-This guide walks through your first Humanbound security test end-to-end, in both local mode (no account, your own LLM provider) and platform mode (with login, persistent findings, and continuous monitoring). The local path covers configuring a provider, writing a `bot-config.json` for your agent, running `hb test`, and viewing the resulting posture score; the platform path covers `hb login`, `hb connect`, and `hb monitor enable`.
+This guide walks through your first Humanbound security test end-to-end, in both local mode (no account, your own LLM provider) and platform mode (with login, persistent findings, and continuous monitoring). The local path covers configuring a provider, writing a `bot-config.json` for your agent, running `hb test`, and viewing the resulting posture score; the platform path covers `hb login`, `hb connect`, and `hb monitor`.
 
 ## Local Testing (No Account Required)
 
@@ -183,7 +183,7 @@ hb test --wait
 
 ```bash
 hb posture                # Score with delta from previous scan
-hb posture --history      # Posture trends over time
+hb posture --trends       # Posture trends over time
 hb findings               # Finding lifecycle (open/stale/fixed/regressed)
 hb logs                   # Conversation logs
 hb report -o report.html  # Full report
@@ -192,7 +192,7 @@ hb report -o report.html  # Full report
 ### Step 5: Continuous Monitoring
 
 ```bash
-hb monitor enable --schedule daily    # Requires Pro
+hb monitor                            # Requires Pro
 ```
 
 

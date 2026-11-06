@@ -259,7 +259,7 @@ Source: https://docs.humanbound.ai/getting-started/quick-start/
 
 # Quick Start
 
-This guide walks through your first Humanbound security test end-to-end, in both local mode (no account, your own LLM provider) and platform mode (with login, persistent findings, and continuous monitoring). The local path covers configuring a provider, writing a `bot-config.json` for your agent, running `hb test`, and viewing the resulting posture score; the platform path covers `hb login`, `hb connect`, and `hb monitor enable`.
+This guide walks through your first Humanbound security test end-to-end, in both local mode (no account, your own LLM provider) and platform mode (with login, persistent findings, and continuous monitoring). The local path covers configuring a provider, writing a `bot-config.json` for your agent, running `hb test`, and viewing the resulting posture score; the platform path covers `hb login`, `hb connect`, and `hb monitor`.
 
 ## Local Testing (No Account Required)
 
@@ -442,7 +442,7 @@ hb test --wait
 
 ```bash
 hb posture                # Score with delta from previous scan
-hb posture --history      # Posture trends over time
+hb posture --trends       # Posture trends over time
 hb findings               # Finding lifecycle (open/stale/fixed/regressed)
 hb logs                   # Conversation logs
 hb report -o report.html  # Full report
@@ -451,7 +451,7 @@ hb report -o report.html  # Full report
 ### Step 5: Continuous Monitoring
 
 ```bash
-hb monitor enable --schedule daily    # Requires Pro
+hb monitor                            # Requires Pro
 ```
 
 
@@ -841,7 +841,7 @@ hb test --wait
 # Uses Humanbound's LLM provider — no HB_PROVIDER or HB_API_KEY needed
 ```
 
-You can still use your own provider on the platform by adding it via `hb providers add`.
+You can still use your own provider on the platform by adding it via `hb providers create`.
 
 
 ## Frequently asked questions
@@ -1298,7 +1298,7 @@ Any configured model provider can serve as the judge. The judge model is separat
 
 ```bash
 # Add a provider to use as judge
-hb providers add --name openai --api-key sk-...
+hb providers create --name openai --api-key sk-...
 
 # Set as default judge provider
 hb providers update <id> --default
@@ -3719,7 +3719,7 @@ When findings are assigned or their delegation status changes, webhook events ar
 Configure webhooks to route these to Slack, email, or your ticketing system:
 
 ```bash
-hb webhooks create --url https://slack.example.com/webhook --events finding.assigned,finding.resolution_verified
+hb webhooks add --url https://slack.example.com/webhook --events finding.assigned,finding.resolution_verified
 ```
 
 ## Connection to Posture
@@ -3984,19 +3984,19 @@ hb providers list
 ## Add Provider (Interactive)
 
 ```bash
-hb providers add -i
+hb providers create -i
 ```
 
 ## Add OpenAI Provider
 
 ```bash
-hb providers add --name openai --api-key sk-...
+hb providers create --name openai --api-key sk-...
 ```
 
 ## Add Azure OpenAI Provider
 
 ```bash
-hb providers add --name azureopenai \
+hb providers create --name azureopenai \
   --api-key ... \
   --endpoint https://your-resource.openai.azure.com
 ```
@@ -4004,7 +4004,7 @@ hb providers add --name azureopenai \
 ## Add Claude Provider
 
 ```bash
-hb providers add --name claude --api-key sk-ant-...
+hb providers create --name claude --api-key sk-ant-...
 ```
 
 ## Update Provider
@@ -4020,7 +4020,7 @@ hb providers update <id> --default
 ## Remove Provider
 
 ```bash
-hb providers remove <id>
+hb providers delete <id>
 ```
 
 ## Supported Providers
@@ -4123,7 +4123,7 @@ Anything not listed still requires `hb login`. Notably:
 - **`hb api-keys …`** — key management is deliberately interactive-only: you cannot mint,
   rotate, or revoke a key using a key.
 - **`hb orgs`, `hb members`, `hb projects`** — organisation and team administration.
-- **`hb providers add|update|delete`** — provider setup (listing works headlessly).
+- **`hb providers create|update|delete`** — provider setup (listing works headlessly).
 
 If a command isn't supported, it fails with a clear error rather than falling back to a
 browser login.
@@ -4242,7 +4242,7 @@ hb members invite dev@company.com --role developer
 hb members invite auditor@external.com --role expert
 
 # Remove
-hb members remove <member-id>
+hb members delete <member-id>
 ```
 
 ## Finding Delegation
@@ -4316,7 +4316,7 @@ Delegation events trigger webhooks — route them to Slack, email, or your ticke
 | `finding.resolution_verified` | Security lead verified the fix |
 
 ```bash
-hb webhooks create --url https://slack.example.com/webhook \
+hb webhooks add --url https://slack.example.com/webhook \
   --events finding.assigned,finding.resolution_verified
 ```
 
@@ -4358,7 +4358,7 @@ Organization
 # Organization management
 hb orgs list
 hb orgs current
-hb switch <org-id>
+hb orgs use <org-id>
 ```
 
 !!! note "Platform feature"
@@ -5409,7 +5409,7 @@ Source: https://docs.humanbound.ai/authentication/
 
 # Authentication & Context
 
-The `hb login` command authenticates against the Humanbound platform via OAuth, storing credentials at `~/.humanbound/`; `hb logout` revokes the session. Use `hb whoami` to see your current user, org, and project, `hb switch` to move between organisations, and `hb --base-url ... login` to authenticate against an on-prem deployment instead of the default platform.
+The `hb login` command authenticates against the Humanbound platform via OAuth, storing credentials at `~/.humanbound/`; `hb logout` revokes the session. Use `hb whoami` to see your current user, org, and project, `hb orgs use` to move between organisations, and `hb --base-url ... login` to authenticate against an on-prem deployment instead of the default platform.
 
 ## Version
 
@@ -5488,7 +5488,7 @@ Shows current user, active organisation, and active project.
 ## Switch Organisation
 
 ```bash
-hb switch <org-id>
+hb orgs use <org-id>
 ```
 
 ## Open Documentation
@@ -5523,7 +5523,7 @@ The complete `hb` CLI reference, organised into eight categories: global flags, 
 | `hb login` | Authenticate via OAuth browser flow |
 | `hb logout` | Clear local credentials and optionally revoke session |
 | `hb whoami` | Show current user, org, and project |
-| `hb switch <org-id>` | Switch active organisation context |
+| `hb orgs use <org-id>` | Switch active organisation context |
 | `hb orgs list` | List organisations you have access to |
 | `hb orgs current` | Show the currently selected organisation |
 | `hb orgs subscription` | Show subscription details (plan, quota, features) |
@@ -5632,9 +5632,9 @@ Run intentionally vulnerable agents locally, in Docker, and test them. None of t
 | Command | Description |
 |---|---|
 | `hb providers list` | List configured LLM providers |
-| `hb providers add` | Add new LLM provider configuration |
+| `hb providers create` | Add new LLM provider configuration |
 | `hb providers update <id>` | Update provider credentials or settings |
-| `hb providers remove <id>` | Remove provider configuration |
+| `hb providers delete <id>` | Remove provider configuration |
 | `hb api-keys list` | List API keys for programmatic access |
 | `hb api-keys create` | Create new API key (shown once) |
 | `hb api-keys update <id>` | Update key name or activation status |

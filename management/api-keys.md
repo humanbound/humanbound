@@ -80,7 +80,7 @@ Anything not listed still requires `hb login`. Notably:
 - **`hb api-keys …`** — key management is deliberately interactive-only: you cannot mint,
   rotate, or revoke a key using a key.
 - **`hb orgs`, `hb members`, `hb projects`** — organisation and team administration.
-- **`hb providers add|update|delete`** — provider setup (listing works headlessly).
+- **`hb providers create|update|delete`** — provider setup (listing works headlessly).
 
 If a command isn't supported, it fails with a clear error rather than falling back to a
 browser login.
