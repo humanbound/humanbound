@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- **`hb orchestrators` lists, creates and checks orchestrators.** `list` shows
+- **`hb orchestrators` lists, creates and checks orchestrators** (#207). `list` shows
   the built-in orchestrators with the short names `-t` accepts, and the custom
   ones in `~/.humanbound/orchestrators/` with the version and description from
   their `manifest.yaml`. `new <name>` creates a working custom orchestrator to
