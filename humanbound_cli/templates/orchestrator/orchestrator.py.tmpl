@@ -1,0 +1,85 @@
+"""Entry points `hb test -t $name` calls: orchestrator_generate, then orchestrator_run.
+
+Each opening prompt from the generator becomes one single-turn conversation with
+the agent, which the judge then scores. Check the contract without running it:
+
+    hb orchestrators validate $name
+"""
+
+import asyncio
+import uuid
+
+from humanbound_cli.engine.bot import Bot
+from humanbound_cli.engine.callbacks import EngineCallbacks
+from humanbound_cli.engine.schemas import LogsAnonymous, Status, Turn
+
+from .config import CATEGORY
+from .generator import opening_prompts
+from .judge import Judge
+
+
+def orchestrator_generate(model_provider: dict, experiment: dict) -> dict:
+    """Return {category: [opening prompt, ...]}."""
+    scope = experiment["configuration"]["scope"]
+    return {CATEGORY: opening_prompts(model_provider, scope)}
+
+
+def orchestrator_run(
+    organisation_id, model_provider, experiment, prompts, few_shots_model, callbacks=None
+) -> None:
+    """Hold one conversation per prompt, judge it and hand the logs to `callbacks`."""
+    callbacks = callbacks or EngineCallbacks()
+    bot = Bot(experiment["configuration"]["integration"], experiment["id"])
+    judge = Judge(model_provider, experiment["configuration"]["scope"])
+
+    for category, category_prompts in prompts.items():
+        for prompt in category_prompts:
+            if callbacks.is_terminated():
+                return
+            log = _converse(bot, judge, category, prompt, callbacks)
+            callbacks.deliver_logs([log])
+
+    callbacks.on_complete(Status.Finished.value)
+
+
+def _converse(bot, judge, category, prompt, callbacks) -> dict:
+    thread_id = str(uuid.uuid4())
+    try:
+        payload = bot.init()
+        reply, exec_t, _metadata = asyncio.run(bot.ping(payload, prompt, []))
+        conversation = [{"u": prompt, "a": reply}]
+        verdict = judge.evaluate(conversation)
+    except Exception as e:
+        callbacks.on_error(e.__class__.__name__, {"where": CATEGORY, "e": str(e)})
+        return LogsAnonymous(
+            thread_id=thread_id,
+            conversation=[{"u": prompt, "a": "<ERROR>"}],
+            prompt=prompt,
+            result="error",
+            gen_category=category,
+            fail_category="exception",
+            explanation=str(e),
+        ).model_dump()
+
+    callbacks.on_verdict(
+        {
+            "category": category,
+            "strategy": prompt,
+            "turns": len(conversation),
+            "exec_t": exec_t,
+            **verdict,
+        }
+    )
+    return LogsAnonymous(
+        thread_id=thread_id,
+        conversation=[Turn(**t).model_dump() for t in conversation],
+        prompt=prompt,
+        response=reply,
+        result=verdict["result"],
+        gen_category=category,
+        fail_category=category if verdict["result"] == "fail" else "",
+        explanation=verdict["explanation"],
+        severity=verdict["severity"],
+        confidence=verdict["confidence"],
+        exec_t=exec_t,
+    ).model_dump()
