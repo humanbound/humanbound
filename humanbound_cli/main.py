@@ -74,8 +74,8 @@ def cli(ctx, base_url: str):
       hb login                                            # Authenticate
       hb connect --endpoint ./config.json                 # Connect agent
       hb test --wait                                      # Run test
-      hb posture --history                                # Score trends
-      hb monitor enable --schedule daily                  # Continuous testing
+      hb posture --trends                                 # Score trends
+      hb monitor                                          # Continuous testing
 
     \b
     Docs: https://docs.humanbound.ai

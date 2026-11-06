@@ -80,7 +80,7 @@ def redteam_group(ctx, experiment_id, name, endpoint):
             providers = client.list_providers()
             if not providers:
                 console_err.print("[red]No providers configured.[/red]")
-                console_err.print("Use 'hb providers add' to configure a model provider first.")
+                console_err.print("Use 'hb providers create' to configure a model provider first.")
                 raise SystemExit(1)
             provider = next((p for p in providers if p.get("is_default")), providers[0])
             provider_id = provider.get("id")

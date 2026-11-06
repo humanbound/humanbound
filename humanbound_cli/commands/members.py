@@ -44,7 +44,7 @@ def _list_members(as_json: bool):
 
     if not client.organisation_id:
         console.print("[yellow]No organisation selected.[/yellow]")
-        console.print("Use 'hb switch <id>' to select one first.")
+        console.print("Use 'hb orgs use <id>' to select one first.")
         raise SystemExit(1)
 
     try:
@@ -116,7 +116,7 @@ def invite_member(email: str, role: str):
 
     if not client.organisation_id:
         console.print("[yellow]No organisation selected.[/yellow]")
-        console.print("Use 'hb switch <id>' to select one first.")
+        console.print("Use 'hb orgs use <id>' to select one first.")
         raise SystemExit(1)
 
     try:
@@ -152,7 +152,7 @@ def remove_member(member_id: str, force: bool):
 
     if not client.organisation_id:
         console.print("[yellow]No organisation selected.[/yellow]")
-        console.print("Use 'hb switch <id>' to select one first.")
+        console.print("Use 'hb orgs use <id>' to select one first.")
         raise SystemExit(1)
 
     try:

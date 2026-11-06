@@ -27,7 +27,7 @@ The complete `hb` CLI reference, organised into eight categories: global flags, 
 | `hb login` | Authenticate via OAuth browser flow |
 | `hb logout` | Clear local credentials and optionally revoke session |
 | `hb whoami` | Show current user, org, and project |
-| `hb switch <org-id>` | Switch active organisation context |
+| `hb orgs use <org-id>` | Switch active organisation context |
 | `hb orgs list` | List organisations you have access to |
 | `hb orgs current` | Show the currently selected organisation |
 | `hb orgs subscription` | Show subscription details (plan, quota, features) |
@@ -146,9 +146,9 @@ List, create and check the orchestrators `hb test -t` runs on the local engine. 
 | Command | Description |
 |---|---|
 | `hb providers list` | List configured LLM providers |
-| `hb providers add` | Add new LLM provider configuration |
+| `hb providers create` | Add new LLM provider configuration |
 | `hb providers update <id>` | Update provider credentials or settings |
-| `hb providers remove <id>` | Remove provider configuration |
+| `hb providers delete <id>` | Remove provider configuration |
 | `hb api-keys list` | List API keys for programmatic access |
 | `hb api-keys create` | Create new API key (shown once) |
 | `hb api-keys update <id>` | Update key name or activation status |

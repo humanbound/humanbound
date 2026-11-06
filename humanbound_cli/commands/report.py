@@ -60,7 +60,7 @@ def report_command(org: bool, assessment_id: str, output: str, as_json: bool):
         if org:
             if not client.organisation_id:
                 console.print("[yellow]No organisation selected.[/yellow]")
-                console.print("Use 'hb switch <id>' to select an organisation.")
+                console.print("Use 'hb orgs use <id>' to select an organisation.")
                 raise SystemExit(1)
 
             default_output = f"org-report.{'json' if as_json else 'html'}"
