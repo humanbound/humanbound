@@ -125,10 +125,14 @@ cli.add_command(telemetry_cmd.telemetry_group)
 
 # Convenience aliases at top level
 @cli.command("login")
+@click.option("--port", default=8085, help="Local callback port (default: 8085)")
+@click.option(
+    "--force", "-f", is_flag=True, help="Force re-authentication even if already logged in"
+)
 @click.pass_context
-def login_alias(ctx):
+def login_alias(ctx, port, force):
     """Authenticate with Humanbound (alias for 'auth login')."""
-    ctx.invoke(auth.login, base_url=ctx.obj.get("base_url"))
+    ctx.invoke(auth.login, base_url=ctx.obj.get("base_url"), port=port, force=force)
 
 
 @cli.command("logout")
