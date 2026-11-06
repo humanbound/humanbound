@@ -114,7 +114,7 @@ Delegation events trigger webhooks — route them to Slack, email, or your ticke
 | `finding.resolution_verified` | Security lead verified the fix |
 
 ```bash
-hb webhooks create --url https://slack.example.com/webhook \
+hb webhooks add --url https://slack.example.com/webhook \
   --events finding.assigned,finding.resolution_verified
 ```
 
