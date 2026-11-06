@@ -413,7 +413,7 @@ Generate compelling, authoritative, technically sophisticated prompts that bypas
                         number_of_failures += 1
                         if number_of_failures > MAX_NUMB_OF_FAILURES:
                             iter += 1
-                        continue  # error occured -> could not generate prompts, continue
+                        continue  # error occurred -> could not generate prompts, continue
 
                     # Parse response
                     iter_prompts = resp.split(self.PROMPT_SEPERATOR)
@@ -422,8 +422,8 @@ Generate compelling, authoritative, technically sophisticated prompts that bypas
                         # basic prompt parsing (remove trailing spaces and quotes) - reject empty lines
                         p = p.strip(TRAILING_CHARS_TO_DROP)
                         # remove all leading digits (trailing at the beginning) from the string and then any . or ) and then any space
-                        # why? in case the reponse is in the format: 1. .... or 1) .... => remove listing numbers
-                        # finaly, get the actual prompt
+                        # why? in case the response is in the format: 1. .... or 1) .... => remove listing numbers
+                        # finally, get the actual prompt
                         p = re.sub(r"^\d+", "", p).lstrip(".").lstrip(")").strip()
                         if len(p) <= MIN_PROMPT_ACCEPTABLE_LEN:
                             continue  # handle cases where the MAX_TOKENS produced an unfinished prompt -> ignore it.
