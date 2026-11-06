@@ -90,7 +90,7 @@ def posture_command(project: str, as_json: bool, trends: bool, org: bool, covera
             org_id = client.organisation_id
             if not org_id:
                 console.print("[yellow]No organisation selected.[/yellow]")
-                console.print("Use 'hb switch <id>' to select an organisation.")
+                console.print("Use 'hb orgs use <id>' to select an organisation.")
                 raise SystemExit(1)
 
             with console.status("Calculating organisation posture..."):

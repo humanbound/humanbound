@@ -73,7 +73,7 @@ def _list_projects(page: int, size: int):
 
     except ValidationError as e:
         console.print(f"[yellow]{e}[/yellow]")
-        console.print("Use 'hb switch <id>' to select an organisation first.")
+        console.print("Use 'hb orgs use <id>' to select an organisation first.")
         raise SystemExit(1)
     except NotAuthenticatedError:
         telemetry.fire_gated_command_hit()

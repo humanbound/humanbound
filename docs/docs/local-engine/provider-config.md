@@ -130,6 +130,6 @@ hb test --wait
 # Uses Humanbound's LLM provider — no HB_PROVIDER or HB_API_KEY needed
 ```
 
-You can still use your own provider on the platform by adding it via `hb providers add`.
+You can still use your own provider on the platform by adding it via `hb providers create`.
 
 <!-- faq -->

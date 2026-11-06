@@ -52,7 +52,7 @@ Any configured model provider can serve as the judge. The judge model is separat
 
 ```bash
 # Add a provider to use as judge
-hb providers add --name openai --api-key sk-...
+hb providers create --name openai --api-key sk-...
 
 # Set as default judge provider
 hb providers update <id> --default

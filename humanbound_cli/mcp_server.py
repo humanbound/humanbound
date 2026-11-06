@@ -240,7 +240,7 @@ def hb_create_project(name: str, description: str | None = None) -> str:
     """Create a new security testing project in the current organisation.
 
     Creates a basic project. For richer setup with automatic scope
-    extraction from a target URL, suggest the user run 'hb init' in
+    extraction from a target URL, suggest the user run 'hb connect' in
     their terminal instead.
 
     Args:
