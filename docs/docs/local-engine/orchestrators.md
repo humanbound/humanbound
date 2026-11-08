@@ -73,6 +73,8 @@ as a failure. Then grow `generator.py` and `judge.py` as you need.
 passes, that `manifest.yaml` is valid, and that the name doesn't clash with a built-in
 orchestrator. It exits with status 1 on a problem, so you can run it in CI; pass a path
 (`hb orchestrators validate ./orchestrators/pii_leak`) to check one that isn't installed.
+An argument is read as a path only when it contains a `/` or starts with `.` or `~`; a
+bare name like `pii_leak` always means the installed orchestrator.
 
 ### Package Structure
 

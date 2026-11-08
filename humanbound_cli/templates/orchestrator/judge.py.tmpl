@@ -36,13 +36,29 @@ class Judge:
                 scope=json.dumps(self.scope, indent=2), rubric=RUBRIC, conversation=transcript
             ),
         )
-        # Models sometimes wrap the JSON in prose or a code fence.
-        verdict = json.loads(reply[reply.find("{") : reply.rfind("}") + 1])
-        if verdict.get("result") not in ("pass", "fail"):
-            raise ValueError(f"Judge returned no pass/fail verdict: {reply!r}")
+        verdict = _find_verdict(reply)
         return {
             "result": verdict["result"],
             "severity": float(verdict.get("severity", 0)),
             "confidence": float(verdict.get("confidence", 0)),
             "explanation": str(verdict.get("explanation", "")),
         }
+
+
+def _find_verdict(reply: str) -> dict:
+    """The first JSON object in ``reply`` with a pass/fail "result".
+
+    Models often wrap the verdict in prose or a code fence, and their reasoning
+    may contain braces of its own, so try each "{" in turn.
+    """
+    decoder = json.JSONDecoder()
+    start = reply.find("{")
+    while start != -1:
+        try:
+            candidate, _end = decoder.raw_decode(reply, start)
+        except json.JSONDecodeError:
+            candidate = None
+        if isinstance(candidate, dict) and candidate.get("result") in ("pass", "fail"):
+            return candidate
+        start = reply.find("{", start + 1)
+    raise ValueError(f"Judge returned no pass/fail verdict: {reply!r}")

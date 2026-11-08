@@ -10,6 +10,7 @@ text is printed without Rich markup interpretation.
 from __future__ import annotations
 
 import json
+import os
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -27,6 +28,10 @@ TEMPLATE_FILES = ("manifest.yaml", "config.py", "generator.py", "judge.py", "orc
 
 # Becomes a Python package name and a `-t` value, so keep it to identifier characters.
 NAME_RE = re.compile(r"^[a-z][a-z0-9_]*$")
+
+
+def _looks_like_path(arg: str) -> bool:
+    return "/" in arg or os.sep in arg or arg.startswith((".", "~"))
 
 
 def _say(msg: str, style: str | None = None) -> None:
@@ -220,7 +225,8 @@ def new_command(name, description, author, parent_dir):
         _say(f"  hb orchestrators validate {name}")
         _say(f"  hb test --endpoint ./bot.json -t {name} --wait")
     else:
-        _say(f"  hb orchestrators validate {target}")
+        # Absolute, so `validate` reads it as a path even after `--dir .`.
+        _say(f"  hb orchestrators validate {target.resolve()}")
         _say(
             f"  `hb test -t {name}` looks only in {custom_orchestrators_dir()}, "
             f"so copy or link it there to run it."
@@ -232,20 +238,27 @@ def new_command(name, description, author, parent_dir):
 def validate_command(name_or_path):
     """Check a custom orchestrator without running a test.
 
-    NAME_OR_PATH is a name in ~/.humanbound/orchestrators/ or a path to an
-    orchestrator directory. This imports its code, as `hb test` does, but
-    calls no LLM and no agent. Exits 1 if `hb test` could not run it.
+    NAME_OR_PATH is a name in ~/.humanbound/orchestrators/, or a path to an
+    orchestrator directory when it contains a / or starts with . or ~
+    (./pii_leak, not pii_leak, for a folder in the current directory).
+    This imports its code, as `hb test` does, but calls no LLM and no agent.
+    Exits 1 if `hb test` could not run it.
     """
     from ..engine.local_runner import custom_orchestrators_dir
 
-    path = Path(name_or_path).expanduser()
-    if not path.is_dir():
+    # A bare name always means an installed orchestrator, so an unrelated folder
+    # of the same name in the current directory is never picked up instead.
+    if _looks_like_path(name_or_path):
+        path = Path(name_or_path).expanduser()
+        if not path.is_dir():
+            raise click.ClickException(f"No orchestrator directory at {path}")
+    else:
         path = custom_orchestrators_dir() / name_or_path
-    if not path.is_dir():
-        raise click.ClickException(
-            f"No orchestrator directory '{name_or_path}', and no {path}. "
-            f"See `hb orchestrators list`."
-        )
+        if not path.is_dir():
+            raise click.ClickException(
+                f"No orchestrator named '{name_or_path}' in {path.parent}. "
+                f"See `hb orchestrators list`, or pass ./{name_or_path} for a folder here."
+            )
     path = path.resolve()
 
     check = _static_check(path)

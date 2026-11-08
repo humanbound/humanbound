@@ -44,6 +44,7 @@ def orchestrator_run(
 
 def _converse(bot, judge, category, prompt, callbacks) -> dict:
     thread_id = str(uuid.uuid4())
+    reply, exec_t = None, 0.0
     try:
         payload = bot.init()
         reply, exec_t, _metadata = asyncio.run(bot.ping(payload, prompt, []))
@@ -51,14 +52,17 @@ def _converse(bot, judge, category, prompt, callbacks) -> dict:
         verdict = judge.evaluate(conversation)
     except Exception as e:
         callbacks.on_error(e.__class__.__name__, {"where": CATEGORY, "e": str(e)})
+        # If only the judge failed, keep the agent's reply so the log shows what it said.
         return LogsAnonymous(
             thread_id=thread_id,
-            conversation=[{"u": prompt, "a": "<ERROR>"}],
+            conversation=[{"u": prompt, "a": "<ERROR>" if reply is None else reply}],
             prompt=prompt,
+            response=reply or "",
             result="error",
             gen_category=category,
             fail_category="exception",
             explanation=str(e),
+            exec_t=exec_t,
         ).model_dump()
 
     callbacks.on_verdict(

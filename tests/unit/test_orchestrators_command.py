@@ -218,6 +218,47 @@ def test_validate_unknown_name(orchestrators_dir):
     assert "hb orchestrators list" in result.output
 
 
+def test_validate_bare_name_ignores_a_folder_of_that_name_here(
+    orchestrators_dir, tmp_path, monkeypatch
+):
+    _write(orchestrators_dir / "pii_leak", VALID_ORCHESTRATOR, "name: pii_leak\n")
+    here = tmp_path / "project"
+    (here / "pii_leak").mkdir(parents=True)  # unrelated, no orchestrator.py
+    monkeypatch.chdir(here)
+
+    result = _hb("validate", "pii_leak")
+
+    assert result.exit_code == 0, result.output
+    assert "run it with -t pii_leak" in result.output
+
+
+def test_validate_dot_slash_name_is_a_folder_here(orchestrators_dir, tmp_path, monkeypatch):
+    here = tmp_path / "project"
+    _write(here / "pii_leak", VALID_ORCHESTRATOR, "name: pii_leak\n")
+    monkeypatch.chdir(here)
+
+    assert _hb("validate", "pii_leak").exit_code == 1
+    result = _hb("validate", "./pii_leak")
+    assert result.exit_code == 0, result.output
+    assert "Copy or link it into" in result.output
+
+
+def test_validate_command_printed_after_new_dir_dot_works(orchestrators_dir, tmp_path, monkeypatch):
+    here = tmp_path / "project"
+    here.mkdir()
+    monkeypatch.chdir(here)
+
+    result = _hb("new", "pii_leak", "--dir", ".")
+    assert result.exit_code == 0, result.output
+    printed = next(
+        line.strip() for line in result.output.splitlines() if "hb orchestrators validate" in line
+    )
+    args = printed.split("hb orchestrators validate ", 1)[1]
+
+    result = _hb("validate", args)
+    assert result.exit_code == 0, result.output
+
+
 # ── the scaffold runs ──
 
 
@@ -247,7 +288,9 @@ def test_scaffold_runs_and_its_logs_feed_the_presenter(orchestrators_dir, monkey
 
     verdicts = [
         'Sure: {"result": "fail", "severity": 80, "confidence": 90, "explanation": "leaked"}',
-        '{"result": "pass", "severity": 0, "confidence": 95, "explanation": "refused"}',
+        # Braces in the reasoning before the verdict.
+        'It used {placeholders} and {"a": 1}, then: ```json\n'
+        '{"result": "pass", "severity": 0, "confidence": 95, "explanation": "refused"}\n```',
         "not json at all",
     ]
     monkeypatch.setattr(module, "Bot", _FakeBot)
@@ -276,12 +319,41 @@ def test_scaffold_runs_and_its_logs_feed_the_presenter(orchestrators_dir, monkey
     assert logs[0]["severity"] == 80
     assert logs[0]["conversation"][0]["a"].startswith("echo: ")
     assert logs[1]["fail_category"] == ""
-    assert errors == ["JSONDecodeError"]
+    assert logs[1]["explanation"] == "refused"
+    # Only the judge failed, so the agent's reply is kept.
+    assert logs[2]["conversation"][0]["a"].startswith("echo: ")
+    assert logs[2]["response"].startswith("echo: ")
+    assert errors == ["ValueError"]
     assert [v["result"] for v in judged] == ["fail", "pass"]
 
     results = presenter_run(None, logs, test_category="pii_leak")
     assert results["stats"]["fail"] == 1
     json.dumps(results)  # what LocalTestRunner writes to meta.json
+
+
+def test_scaffold_logs_an_error_when_the_agent_fails(orchestrators_dir, monkeypatch):
+    assert _hb("new", "pii_leak").exit_code == 0
+    module = _load_orchestrator("pii_leak")
+
+    class _DownBot(_FakeBot):
+        async def ping(self, base_payload, u_prompt, conversation=None):
+            raise ConnectionError("agent down")
+
+    monkeypatch.setattr(module, "Bot", _DownBot)
+    monkeypatch.setattr(
+        sys.modules[module.__package__ + ".judge"], "get_llm_pinger", lambda p: _FakeLLM([])
+    )
+
+    logs = []
+    experiment = {"id": "exp-1", "configuration": {"scope": {}, "integration": {}}}
+    prompts = module.orchestrator_generate({"name": "openai"}, experiment)
+    module.orchestrator_run(
+        None, {"name": "openai"}, experiment, prompts, None, EngineCallbacks(on_logs=logs.extend)
+    )
+
+    assert {log["result"] for log in logs} == {"error"}
+    assert logs[0]["conversation"][0]["a"] == "<ERROR>"
+    assert logs[0]["explanation"] == "agent down"
 
 
 def test_scaffold_stops_when_terminated(orchestrators_dir, monkeypatch):
