@@ -14,7 +14,7 @@ keywords:
 
 # Authentication & Context
 
-The `hb login` command authenticates against the Humanbound platform via OAuth, storing credentials at `~/.humanbound/`; `hb logout` revokes the session. Use `hb whoami` to see your current user, org, and project, `hb switch` to move between organisations, and `hb --base-url ... login` to authenticate against an on-prem deployment instead of the default platform.
+The `hb login` command authenticates against the Humanbound platform via OAuth, storing credentials at `~/.humanbound/`; `hb logout` revokes the session. Use `hb whoami` to see your current user, org, and project, `hb orgs use` to move between organisations, and `hb --base-url ... login` to authenticate against an on-prem deployment instead of the default platform.
 
 ## Version
 
@@ -93,7 +93,7 @@ Shows current user, active organisation, and active project.
 ## Switch Organisation
 
 ```bash
-hb switch <org-id>
+hb orgs use <org-id>
 ```
 
 ## Open Documentation

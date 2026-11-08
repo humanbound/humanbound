@@ -166,7 +166,7 @@ model, it's retried with another, and a separate model grades the results, so th
 wrote an attack never judges it.
 
 Sign up, run `hb login` and `hb connect`, and `hb test` runs on the Platform with hosted attack
-models, unless you add your own provider with `hb providers add`. Practice agents and
+models, unless you add your own provider with `hb providers create`. Practice agents and
 `hb test --local` always use your own model.
 
 [**Start free on app.humanbound.ai →**](https://app.humanbound.ai/?utm_source=github&utm_medium=readme&utm_content=platform_cta)

@@ -40,7 +40,7 @@ hb members invite dev@company.com --role developer
 hb members invite auditor@external.com --role expert
 
 # Remove
-hb members remove <member-id>
+hb members delete <member-id>
 ```
 
 ## Finding Delegation
@@ -114,7 +114,7 @@ Delegation events trigger webhooks — route them to Slack, email, or your ticke
 | `finding.resolution_verified` | Security lead verified the fix |
 
 ```bash
-hb webhooks create --url https://slack.example.com/webhook \
+hb webhooks add --url https://slack.example.com/webhook \
   --events finding.assigned,finding.resolution_verified
 ```
 
@@ -156,7 +156,7 @@ Organization
 # Organization management
 hb orgs list
 hb orgs current
-hb switch <org-id>
+hb orgs use <org-id>
 ```
 
 !!! note "Platform feature"

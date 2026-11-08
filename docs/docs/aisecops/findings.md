@@ -128,7 +128,7 @@ When findings are assigned or their delegation status changes, webhook events ar
 Configure webhooks to route these to Slack, email, or your ticketing system:
 
 ```bash
-hb webhooks create --url https://slack.example.com/webhook --events finding.assigned,finding.resolution_verified
+hb webhooks add --url https://slack.example.com/webhook --events finding.assigned,finding.resolution_verified
 ```
 
 ## Connection to Posture

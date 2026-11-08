@@ -523,7 +523,7 @@ def test_command(
                 providers = client.list_providers()
             if not providers:
                 console.print("[red]No providers configured.[/red]")
-                console.print("Use 'hb providers add' to configure a model provider first.")
+                console.print("Use 'hb providers create' to configure a model provider first.")
                 raise SystemExit(1)
             provider = next((p for p in providers if p.get("is_default")), providers[0])
             provider_id = provider.get("id")
