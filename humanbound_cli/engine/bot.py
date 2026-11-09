@@ -334,7 +334,7 @@ class Bot(ResponseExtractor):
             # remove x-humanbound-auth-schema info, no need to send it to the api
             del headers["x-humanbound-auth-schema"]
         elif "access_token" in payload and isinstance(payload["access_token"], str):
-            # deafault authorization schema - bearer token
+            # default authorization schema - bearer token
             headers["authorization"] = f"Bearer {payload['access_token']}"
 
         # parse the rest of the headers for any $<custom_key> placeholders
