@@ -67,7 +67,7 @@
   <meta property="og:image:alt" content="Manage Humanbound authentication, organisation context, and access scopes for the CLI, MCP server, and API." />
   <meta name="twitter:image:alt" content="Manage Humanbound authentication, organisation context, and access scopes for the CLI, MCP server, and API." />
   
-  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/authentication/#article","headline":"Authentication","description":"Manage Humanbound authentication, organisation context, and access scopes for the CLI, MCP server, and API.","url":"https://docs.humanbound.ai/authentication/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-11-06T21:54:03+02:00","keywords":"humanbound authentication, hb login, hb logout, hb whoami, OAuth authentication, on-prem login, organisation context, humanbound credentials"}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/authentication/#article","headline":"Authentication","description":"Manage Humanbound authentication, organisation context, and access scopes for the CLI, MCP server, and API.","url":"https://docs.humanbound.ai/authentication/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-11-09T13:39:41+02:00","keywords":"humanbound authentication, hb login, hb logout, hb whoami, OAuth authentication, on-prem login, organisation context, humanbound credentials"}]}</script>
   
 
   
@@ -2423,8 +2423,8 @@
 <a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="c1"># On-prem: login against a custom API endpoint</span>
 <a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>hb<span class="w"> </span>--base-url<span class="w"> </span>https://my-server.com/api<span class="w"> </span>login
 <a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="c1"># Use a custom callback port (default: 8085)</span>
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>hb<span class="w"> </span>login<span class="w"> </span>--port<span class="w"> </span><span class="m">9090</span>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="c1"># Use another callback port if 8085 is busy (8085–8090)</span>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>hb<span class="w"> </span>login<span class="w"> </span>--port<span class="w"> </span><span class="m">8086</span>
 </code></pre></div>
 <p>Opens your browser for OAuth authentication. Credentials are stored locally at <code>~/.humanbound/</code>. When using <code>--base-url</code>, the custom endpoint is persisted for subsequent commands.</p>
 <table>
@@ -2441,7 +2441,7 @@
 </tr>
 <tr>
 <td><code>--port</code></td>
-<td>Local OAuth callback port (default: 8085)</td>
+<td>Local OAuth callback port (default: 8085). Ports 8085–8090 are accepted.</td>
 </tr>
 <tr>
 <td><code>--base-url</code></td>

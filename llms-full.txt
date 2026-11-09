@@ -364,7 +364,6 @@ hb test --endpoint ./config.json --wait --debug
 | `-l, --testing-level` | Depth: `unit` (~20 min), `system` (~45 min), `acceptance` (~90 min). Omit to use the default. |
 | `--deep` | Shortcut for `-l system` |
 | `--full` | Shortcut for `-l acceptance` |
-| `--qa` | Shortcut for `-t behavioral` |
 | `--lang` | Test language. Accepts codes (en, de, es) or full names. Omit to use the default. |
 | `--context` | Extra context for the judge (string or .txt file) |
 | `--wait` | Wait for completion (automatic in local mode) |
@@ -966,7 +965,7 @@ Installed with `pip install humanbound`:
 |---|---|---|
 | **OWASP Agentic** (default) | `-t owasp_agentic` | Multi-turn adversarial testing. Score-guided attack escalation, cross-conversation intelligence, canary planting. |
 | **OWASP Single-Turn** | `-t owasp_single_turn` | Single-prompt attacks at maximum strength. Fast, high-volume. |
-| **Behavioral QA** | `-t behavioral` or `--qa` | Intent boundary validation, response quality, functional correctness. |
+| **Behavioral QA** | `-t behavioral` | Intent boundary validation, response quality, functional correctness. |
 
 ```bash
 # Default: multi-turn adversarial
@@ -976,7 +975,7 @@ hb test --endpoint ./config.json --scope ./scope.json --wait
 hb test --endpoint ./config.json --scope ./scope.json -t owasp_single_turn --wait
 
 # Behavioral/QA testing
-hb test --endpoint ./config.json --scope ./scope.json --qa --wait
+hb test --endpoint ./config.json --scope ./scope.json -t behavioral --wait
 ```
 
 `hb orchestrators list` shows every orchestrator `-t` accepts: the built-in ones, their
@@ -5456,8 +5455,8 @@ hb login --force
 # On-prem: login against a custom API endpoint
 hb --base-url https://my-server.com/api login
 
-# Use a custom callback port (default: 8085)
-hb login --port 9090
+# Use another callback port if 8085 is busy (8085–8090)
+hb login --port 8086
 ```
 
 Opens your browser for OAuth authentication. Credentials are stored locally at `~/.humanbound/`. When using `--base-url`, the custom endpoint is persisted for subsequent commands.
@@ -5465,7 +5464,7 @@ Opens your browser for OAuth authentication. Credentials are stored locally at `
 | Option | Description |
 |---|---|
 | `--force, -f` | Force re-authentication even if already logged in |
-| `--port` | Local OAuth callback port (default: 8085) |
+| `--port` | Local OAuth callback port (default: 8085). Ports 8085–8090 are accepted. |
 | `--base-url` | API base URL for on-prem deployments |
 
 ## Headless (API key)

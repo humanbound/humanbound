@@ -10,7 +10,7 @@ Installed with `pip install humanbound`:
 |---|---|---|
 | **OWASP Agentic** (default) | `-t owasp_agentic` | Multi-turn adversarial testing. Score-guided attack escalation, cross-conversation intelligence, canary planting. |
 | **OWASP Single-Turn** | `-t owasp_single_turn` | Single-prompt attacks at maximum strength. Fast, high-volume. |
-| **Behavioral QA** | `-t behavioral` or `--qa` | Intent boundary validation, response quality, functional correctness. |
+| **Behavioral QA** | `-t behavioral` | Intent boundary validation, response quality, functional correctness. |
 
 ```bash
 # Default: multi-turn adversarial
@@ -20,7 +20,7 @@ hb test --endpoint ./config.json --scope ./scope.json --wait
 hb test --endpoint ./config.json --scope ./scope.json -t owasp_single_turn --wait
 
 # Behavioral/QA testing
-hb test --endpoint ./config.json --scope ./scope.json --qa --wait
+hb test --endpoint ./config.json --scope ./scope.json -t behavioral --wait
 ```
 
 `hb orchestrators list` shows every orchestrator `-t` accepts: the built-in ones, their

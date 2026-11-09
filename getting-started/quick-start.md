@@ -105,7 +105,6 @@ hb test --endpoint ./config.json --wait --debug
 | `-l, --testing-level` | Depth: `unit` (~20 min), `system` (~45 min), `acceptance` (~90 min). Omit to use the default. |
 | `--deep` | Shortcut for `-l system` |
 | `--full` | Shortcut for `-l acceptance` |
-| `--qa` | Shortcut for `-t behavioral` |
 | `--lang` | Test language. Accepts codes (en, de, es) or full names. Omit to use the default. |
 | `--context` | Extra context for the judge (string or .txt file) |
 | `--wait` | Wait for completion (automatic in local mode) |
