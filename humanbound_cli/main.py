@@ -28,6 +28,7 @@ from .commands import (
     mcp,
     members,
     monitor,
+    orchestrators,
     orgs,
     posture,
     projects,
@@ -107,6 +108,7 @@ cli.add_command(guardrails.guardrails_command)
 cli.add_command(docs.docs_command)
 cli.add_command(config_cmd.config_group)
 cli.add_command(arena.arena_group)
+cli.add_command(orchestrators.orchestrators_group)
 
 # MCP server (optional — requires mcp SDK)
 if mcp is not None:

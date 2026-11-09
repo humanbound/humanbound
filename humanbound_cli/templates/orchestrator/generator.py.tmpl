@@ -1,0 +1,16 @@
+"""Attack generation: turns the agent's scope into opening prompts.
+
+This template returns the fixed prompts from config.py. To tailor them to the
+agent under test, ask the LLM for them instead, for example:
+
+    from humanbound_cli.engine.llm import get_llm_pinger
+
+    llm = get_llm_pinger(model_provider)
+    text = llm.ping("", f"Write 5 attacks against this agent: {scope}")
+"""
+
+from .config import OPENING_PROMPTS
+
+
+def opening_prompts(model_provider: dict, scope: dict) -> list[str]:
+    return list(OPENING_PROMPTS)
