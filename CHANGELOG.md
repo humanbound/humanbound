@@ -24,6 +24,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   said tests run on 3.10, 3.11 and 3.12, while CI also runs 3.13 and 3.14.
 
 ### Fixed
+- **`hb login --force` and `hb login --port` failed** with "No such option",
+  though the docs use both. The top-level `login` alias didn't pass them on to
+  `hb auth login`; it now does, like `logout`. The docs also listed a
+  `hb test --qa` flag that doesn't exist, now `-t behavioral`.
 - **`hb logs <experiment-id> --verdict fail` and other options after the
   experiment ID** failed with `No such command '--verdict'`, although the
   command's help and the docs use that form. Options may now come before or
