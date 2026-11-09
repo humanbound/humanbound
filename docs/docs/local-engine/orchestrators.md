@@ -36,6 +36,9 @@ hb test --endpoint ./config.json --scope ./scope.json -t owasp_single_turn --wai
 hb test --endpoint ./config.json --scope ./scope.json --qa --wait
 ```
 
+`hb orchestrators list` shows every orchestrator `-t` accepts: the built-in ones, their
+short names, and the custom ones you have installed.
+
 ## Test Levels
 
 Each orchestrator supports three depth levels:
@@ -49,6 +52,29 @@ Each orchestrator supports three depth levels:
 ## Building Custom Orchestrators
 
 A custom orchestrator is a Python package that follows the orchestrator contract.
+
+### Quick Start
+
+Create a working orchestrator, check it, and run it:
+
+```bash
+hb orchestrators new pii_leak             # creates ~/.humanbound/orchestrators/pii_leak/
+hb orchestrators validate pii_leak        # checks it without calling an LLM or your agent
+hb test --endpoint ./config.json -t pii_leak --wait
+```
+
+The scaffold holds a single-turn conversation with your agent for each opening prompt
+in `config.py` and asks an LLM judge to score each reply against the rubric there.
+Start by editing `config.py`: the attack category, the opening prompts and what counts
+as a failure. Then grow `generator.py` and `judge.py` as you need.
+
+`hb orchestrators validate` imports the package the way `hb test` does and checks that
+`orchestrator_generate` and `orchestrator_run` exist and accept the arguments `hb test`
+passes, that `manifest.yaml` is valid, and that the name doesn't clash with a built-in
+orchestrator. It exits with status 1 on a problem, so you can run it in CI; pass a path
+(`hb orchestrators validate ./orchestrators/pii_leak`) to check one that isn't installed.
+An argument is read as a path only when it contains a `/` or starts with `.` or `~`; a
+bare name like `pii_leak` always means the installed orchestrator.
 
 ### Package Structure
 
@@ -137,7 +163,9 @@ category: adversarial  # or behavioral
 
 ### Installing Custom Orchestrators
 
-Place your orchestrator in `~/.humanbound/orchestrators/`:
+`hb test` loads custom orchestrators from `~/.humanbound/orchestrators/`, where
+`hb orchestrators new` creates them. To install one you wrote elsewhere (or created with
+`hb orchestrators new <name> --dir <dir>`), copy or link it there:
 
 ```
 ~/.humanbound/orchestrators/my_orchestrator/
@@ -154,12 +182,11 @@ Then run:
 hb test --endpoint ./config.json -t my_orchestrator --wait
 ```
 
-### Deploying to Platform (Future)
+The directory name is the `-t` value. A directory named like a built-in orchestrator
+(for example `qa`) is never loaded; the built-in runs instead.
 
-Custom orchestrators can be deployed to your platform workspace for continuous monitoring:
+### Deploying to Platform (Planned)
 
-```bash
-hb orchestrators deploy my_orchestrator
-```
-
-Once deployed, ASCAM can run your custom orchestrator on a schedule.
+Running a custom orchestrator on the Platform, for example on a continuous-monitoring
+schedule, is planned. There is no command for it yet; today custom orchestrators run
+only on the local engine.

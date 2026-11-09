@@ -13,6 +13,7 @@ import threading
 import time
 import traceback
 import uuid
+from dataclasses import dataclass
 from pathlib import Path
 
 from humanbound_cli.config import write_secure_config_file
@@ -30,6 +31,50 @@ DEFAULT_MODELS = {"openai": "gpt-4.1", "ollama": "llama3.1:8b"}
 # What a custom orchestrator must define: the functions the runner calls.
 # compute_quota is part of the built-in contract but `hb test` does not call it.
 CUSTOM_ORCHESTRATOR_FUNCTIONS = ("orchestrator_generate", "orchestrator_run")
+
+
+@dataclass(frozen=True)
+class BuiltinOrchestrator:
+    name: str  # package under engine/orchestrators/
+    category: str  # full test category, as `hb test -t` shows it
+    aliases: tuple[str, ...]  # other short names `-t` accepts
+    description: str
+
+
+BUILTIN_ORCHESTRATORS = (
+    BuiltinOrchestrator(
+        "owasp_agentic",
+        "humanbound/adversarial/owasp_agentic",
+        ("owasp_agentic_multi_turn",),
+        "Multi-turn adversarial attacks mapped to the OWASP LLM and Agentic Top 10 (default)",
+    ),
+    BuiltinOrchestrator(
+        "owasp_single_turn",
+        "humanbound/adversarial/owasp_single_turn",
+        (),
+        "Single-prompt attacks at maximum strength; fast and high-volume",
+    ),
+    BuiltinOrchestrator(
+        "behavioral_qa",
+        "humanbound/behavioral/qa",
+        ("qa", "behavioral"),
+        "Intent boundaries, response quality and functional correctness",
+    ),
+)
+
+
+def custom_orchestrators_dir() -> Path:
+    """Where `hb test` looks for custom orchestrators (resolved per call, so HOME is honoured)."""
+    return Path.home() / ".humanbound" / "orchestrators"
+
+
+def find_builtin_orchestrator(test_category: str) -> BuiltinOrchestrator | None:
+    """The built-in orchestrator a `-t` value selects, or None for a custom one."""
+    short = test_category.lower().strip("/").split("/")[-1]
+    for builtin in BUILTIN_ORCHESTRATORS:
+        if short == builtin.name or short in builtin.aliases:
+            return builtin
+    return None
 
 
 def _ensure_private_dir(path: Path) -> None:
@@ -533,37 +578,27 @@ def _load_orchestrator(test_category: str):
 
     Returns module with orchestrator_generate, orchestrator_run, compute_quota.
     """
-    # Normalize category name
-    cat = test_category.lower().strip("/")
-    short = cat.split("/")[-1] if "/" in cat else cat
+    import importlib
 
-    if short in ("owasp_agentic", "owasp_agentic_multi_turn"):
-        from .orchestrators.owasp_agentic import orchestrator
+    builtin = find_builtin_orchestrator(test_category)
+    if builtin is not None:
+        return importlib.import_module(f"{__package__}.orchestrators.{builtin.name}.orchestrator")
 
-        return orchestrator
-    elif short in ("owasp_single_turn",):
-        from .orchestrators.owasp_single_turn import orchestrator
+    # Try loading from ~/.humanbound/orchestrators/ (custom)
+    short = test_category.lower().strip("/").split("/")[-1]
+    custom_path = custom_orchestrators_dir() / short
+    if (custom_path / "orchestrator.py").is_file():
+        return _load_custom_orchestrator(short, custom_path)
 
-        return orchestrator
-    elif short in ("qa", "behavioral"):
-        from .orchestrators.behavioral_qa import orchestrator
-
-        return orchestrator
-    else:
-        # Try loading from ~/.humanbound/orchestrators/ (custom)
-        custom_path = Path.home() / ".humanbound" / "orchestrators" / short
-        if (custom_path / "orchestrator.py").is_file():
-            return _load_custom_orchestrator(short, custom_path)
-
-        raise ValueError(
-            f"Unknown orchestrator: {test_category}\n\n"
-            f"Available orchestrators:\n"
-            f"  humanbound/adversarial/owasp_agentic      (default)\n"
-            f"  humanbound/adversarial/owasp_single_turn\n"
-            f"  humanbound/behavioral/qa\n\n"
-            f"Custom orchestrators are loaded from "
-            f"~/.humanbound/orchestrators/<name>/orchestrator.py"
-        )
+    available = "\n".join(f"  {b.category}" for b in BUILTIN_ORCHESTRATORS)
+    raise ValueError(
+        f"Unknown orchestrator: {test_category}\n\n"
+        f"Available orchestrators:\n{available}\n\n"
+        f"Custom orchestrators are loaded from "
+        f"~/.humanbound/orchestrators/<name>/orchestrator.py\n"
+        f"Run `hb orchestrators list` to see what is installed, "
+        f"or `hb orchestrators new <name>` to create one."
+    )
 
 
 def _load_custom_orchestrator(short: str, custom_path: Path):

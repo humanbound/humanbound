@@ -88,6 +88,16 @@ Run intentionally vulnerable agents locally, in Docker, and test them. None of t
 | `hb arena config set/get/unset` | Manage the keys agents receive |
 | `hb arena serve [--host H] [--port P]` | Run the gateway in the foreground |
 
+## Orchestrators
+
+List, create and check the orchestrators `hb test -t` runs on the local engine. None of these commands needs a login. See [Orchestrators](../local-engine/orchestrators.md).
+
+| Command | Description |
+|---|---|
+| `hb orchestrators list` | List the built-in orchestrators and the custom ones in `~/.humanbound/orchestrators/` |
+| `hb orchestrators new <name> [--dir DIR] [--description TEXT] [--author TEXT]` | Create a working custom orchestrator to start from |
+| `hb orchestrators validate <name\|path>` | Check a custom orchestrator's code and manifest without running a test; exits 1 if `hb test` could not run it |
+
 ## Results
 
 | Command | Description |
