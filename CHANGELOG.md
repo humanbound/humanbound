@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **`hb orchestrators` lists, creates and checks orchestrators** (#207). `list` shows
+  the built-in orchestrators with the short names `-t` accepts, and the custom
+  ones in `~/.humanbound/orchestrators/` with the version and description from
+  their `manifest.yaml`. `new <name>` creates a working custom orchestrator to
+  start from: single-turn attacks from `config.py`, scored by an LLM judge.
+  `validate <name|path>` imports one as `hb test` does and checks its entry
+  points, their arguments and its manifest, without calling an LLM or the
+  agent; it exits 1 on a problem, so it can run in CI.
+- `-t behavioral_qa` selects the Behavioral QA orchestrator, as `qa` and
+  `behavioral` already did.
+
 ### Changed
 - **`CONTRIBUTING.md` lists every Python version CI tests on** (#185). It
   said tests run on 3.10, 3.11 and 3.12, while CI also runs 3.13 and 3.14.
