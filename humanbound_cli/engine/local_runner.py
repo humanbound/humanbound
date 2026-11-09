@@ -574,7 +574,7 @@ def _load_orchestrator(test_category: str):
     Supports:
     - humanbound/adversarial/owasp_agentic (or just owasp_agentic)
     - humanbound/adversarial/owasp_single_turn (or just owasp_single_turn)
-    - humanbound/behavioral/qa (or just behavioral, or --qa flag)
+    - humanbound/behavioral/qa (or just behavioral)
 
     Returns module with orchestrator_generate, orchestrator_run, compute_quota.
     """

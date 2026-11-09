@@ -34,8 +34,8 @@ hb login --force
 # On-prem: login against a custom API endpoint
 hb --base-url https://my-server.com/api login
 
-# Use a custom callback port (default: 8085)
-hb login --port 9090
+# Use another callback port if 8085 is busy (8085–8090)
+hb login --port 8086
 ```
 
 Opens your browser for OAuth authentication. Credentials are stored locally at `~/.humanbound/`. When using `--base-url`, the custom endpoint is persisted for subsequent commands.
@@ -43,7 +43,7 @@ Opens your browser for OAuth authentication. Credentials are stored locally at `
 | Option | Description |
 |---|---|
 | `--force, -f` | Force re-authentication even if already logged in |
-| `--port` | Local OAuth callback port (default: 8085) |
+| `--port` | Local OAuth callback port (default: 8085). Ports 8085–8090 are accepted. |
 | `--base-url` | API base URL for on-prem deployments |
 
 ## Headless (API key)
