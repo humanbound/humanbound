@@ -67,7 +67,7 @@
   <meta property="og:image:alt" content="Orchestrators generate attacks, run conversations, and evaluate responses — Humanbound ships three built-in engines and lets you author your own." />
   <meta name="twitter:image:alt" content="Orchestrators generate attacks, run conversations, and evaluate responses — Humanbound ships three built-in engines and lets you author your own." />
   
-  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/local-engine/orchestrators/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Orchestrators","item":"https://docs.humanbound.ai/local-engine/orchestrators/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/local-engine/orchestrators/#article","headline":"Orchestrators","description":"Orchestrators generate attacks, run conversations, and evaluate responses \u2014 Humanbound ships three built-in engines and lets you author your own.","url":"https://docs.humanbound.ai/local-engine/orchestrators/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-10-22T15:12:41+03:00","keywords":"test orchestrator, OWASP agentic testing, OWASP single-turn, behavioral QA testing, custom orchestrator, orchestrator SDK, test levels, custom bot integration"}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/local-engine/orchestrators/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Orchestrators","item":"https://docs.humanbound.ai/local-engine/orchestrators/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/local-engine/orchestrators/#article","headline":"Orchestrators","description":"Orchestrators generate attacks, run conversations, and evaluate responses \u2014 Humanbound ships three built-in engines and lets you author your own.","url":"https://docs.humanbound.ai/local-engine/orchestrators/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-11-09T09:34:32+02:00","keywords":"test orchestrator, OWASP agentic testing, OWASP single-turn, behavioral QA testing, custom orchestrator, orchestrator SDK, test levels, custom bot integration"}]}</script>
   
 
   
@@ -657,6 +657,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#quick-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Start
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#package-structure" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -734,10 +745,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#deploying-to-platform-future" class="md-nav__link">
+  <a href="#deploying-to-platform-planned" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Deploying to Platform (Future)
+        Deploying to Platform (Planned)
       
     </span>
   </a>
@@ -2497,6 +2508,8 @@
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="c1"># Behavioral/QA testing</span>
 <a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>hb<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--endpoint<span class="w"> </span>./config.json<span class="w"> </span>--scope<span class="w"> </span>./scope.json<span class="w"> </span>--qa<span class="w"> </span>--wait
 </code></pre></div>
+<p><code>hb orchestrators list</code> shows every orchestrator <code>-t</code> accepts: the built-in ones, their
+short names, and the custom ones you have installed.</p>
 <h2 id="test-levels">Test Levels</h2>
 <p>Each orchestrator supports three depth levels:</p>
 <table>
@@ -2531,41 +2544,58 @@
 </table>
 <h2 id="building-custom-orchestrators">Building Custom Orchestrators</h2>
 <p>A custom orchestrator is a Python package that follows the orchestrator contract.</p>
+<h3 id="quick-start">Quick Start</h3>
+<p>Create a working orchestrator, check it, and run it:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>hb<span class="w"> </span>orchestrators<span class="w"> </span>new<span class="w"> </span>pii_leak<span class="w">             </span><span class="c1"># creates ~/.humanbound/orchestrators/pii_leak/</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>hb<span class="w"> </span>orchestrators<span class="w"> </span>validate<span class="w"> </span>pii_leak<span class="w">        </span><span class="c1"># checks it without calling an LLM or your agent</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>hb<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--endpoint<span class="w"> </span>./config.json<span class="w"> </span>-t<span class="w"> </span>pii_leak<span class="w"> </span>--wait
+</code></pre></div>
+<p>The scaffold holds a single-turn conversation with your agent for each opening prompt
+in <code>config.py</code> and asks an LLM judge to score each reply against the rubric there.
+Start by editing <code>config.py</code>: the attack category, the opening prompts and what counts
+as a failure. Then grow <code>generator.py</code> and <code>judge.py</code> as you need.</p>
+<p><code>hb orchestrators validate</code> imports the package the way <code>hb test</code> does and checks that
+<code>orchestrator_generate</code> and <code>orchestrator_run</code> exist and accept the arguments <code>hb test</code>
+passes, that <code>manifest.yaml</code> is valid, and that the name doesn't clash with a built-in
+orchestrator. It exits with status 1 on a problem, so you can run it in CI; pass a path
+(<code>hb orchestrators validate ./orchestrators/pii_leak</code>) to check one that isn't installed.
+An argument is read as a path only when it contains a <code>/</code> or starts with <code>.</code> or <code>~</code>; a
+bare name like <code>pii_leak</code> always means the installed orchestrator.</p>
 <h3 id="package-structure">Package Structure</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>my_orchestrator/
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    manifest.yaml       # metadata
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    config.py           # attack templates and evaluation metrics
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    generator.py        # attack generation logic
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    judge.py            # evaluation logic
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    orchestrator.py     # generate + run + compute_quota
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>my_orchestrator/
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    manifest.yaml       # metadata
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    config.py           # attack templates and evaluation metrics
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    generator.py        # attack generation logic
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    judge.py            # evaluation logic
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    orchestrator.py     # generate + run + compute_quota
 </code></pre></div>
 <p>The directory is imported as a package, so <code>orchestrator.py</code> reaches its sibling
 modules with relative imports (<code>from .generator import ...</code>, <code>from .judge import ...</code>).
 An <code>__init__.py</code> is optional.</p>
 <h3 id="required-interface">Required Interface</h3>
 <p>Your <code>orchestrator.py</code> must expose <code>orchestrator_generate</code> and <code>orchestrator_run</code>. <code>compute_quota</code> is optional — <code>hb test</code> does not call it today:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">orchestrator_generate</span><span class="p">(</span><span class="n">model_provider</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">experiment</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="sd">"""Generate attack/test prompts.</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="sd">    Returns dict mapping category → list of opening prompts.</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="sd">    """</span>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="k">def</span><span class="w"> </span><span class="nf">orchestrator_run</span><span class="p">(</span>
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>    <span class="n">organisation_id</span><span class="p">,</span> <span class="n">model_provider</span><span class="p">,</span> <span class="n">experiment</span><span class="p">,</span> <span class="n">prompts</span><span class="p">,</span> <span class="n">few_shots_model</span><span class="p">,</span> <span class="n">callbacks</span><span class="o">=</span><span class="kc">None</span>
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">    </span><span class="sd">"""Execute the test. Emit logs via callbacks.on_logs()."""</span>
-<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>
-<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>
-<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="k">def</span><span class="w"> </span><span class="nf">compute_quota</span><span class="p">(</span><span class="n">testing_level</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">dataset_len</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="w">    </span><span class="sd">"""Estimate total conversation count."""</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">orchestrator_generate</span><span class="p">(</span><span class="n">model_provider</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">experiment</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span><span class="sd">"""Generate attack/test prompts.</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="sd">    Returns dict mapping category → list of opening prompts.</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="sd">    """</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="k">def</span><span class="w"> </span><span class="nf">orchestrator_run</span><span class="p">(</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>    <span class="n">organisation_id</span><span class="p">,</span> <span class="n">model_provider</span><span class="p">,</span> <span class="n">experiment</span><span class="p">,</span> <span class="n">prompts</span><span class="p">,</span> <span class="n">few_shots_model</span><span class="p">,</span> <span class="n">callbacks</span><span class="o">=</span><span class="kc">None</span>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="w">    </span><span class="sd">"""Execute the test. Emit logs via callbacks.on_logs()."""</span>
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>
+<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>
+<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="k">def</span><span class="w"> </span><span class="nf">compute_quota</span><span class="p">(</span><span class="n">testing_level</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">dataset_len</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="w">    </span><span class="sd">"""Estimate total conversation count."""</span>
 </code></pre></div>
 <h3 id="available-sdk">Available SDK</h3>
 <p>Your orchestrator imports from the engine SDK:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">humanbound_cli.engine.bot</span><span class="w"> </span><span class="kn">import</span> <span class="n">Bot</span><span class="p">,</span> <span class="n">Telemetry</span>  <span class="c1"># HTTP/WebSocket bot client</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">humanbound_cli.engine.llm</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_llm_pinger</span>  <span class="c1"># LLM provider factory</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">humanbound_cli.engine.schemas</span><span class="w"> </span><span class="kn">import</span> <span class="n">LogsAnonymous</span>  <span class="c1"># log format</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">humanbound_cli.engine.callbacks</span><span class="w"> </span><span class="kn">import</span> <span class="n">EngineCallbacks</span>  <span class="c1"># I/O abstraction</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">humanbound_cli.engine.bot</span><span class="w"> </span><span class="kn">import</span> <span class="n">Bot</span><span class="p">,</span> <span class="n">Telemetry</span>  <span class="c1"># HTTP/WebSocket bot client</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">humanbound_cli.engine.llm</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_llm_pinger</span>  <span class="c1"># LLM provider factory</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">humanbound_cli.engine.schemas</span><span class="w"> </span><span class="kn">import</span> <span class="n">LogsAnonymous</span>  <span class="c1"># log format</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">humanbound_cli.engine.callbacks</span><span class="w"> </span><span class="kn">import</span> <span class="n">EngineCallbacks</span>  <span class="c1"># I/O abstraction</span>
 </code></pre></div>
 <h3 id="callbacks">Callbacks</h3>
 <p>The <code>callbacks</code> parameter abstracts I/O. Your orchestrator should:</p>
@@ -2577,41 +2607,44 @@ An <code>__init__.py</code> is optional.</p>
 </ul>
 <h3 id="custom-bot-response-formats">Custom Bot Response Formats</h3>
 <p>The <code>Bot</code> class handles standard response formats (<code>content</code>, <code>text</code>, <code>response</code>, <code>answer</code> fields). If your bot returns responses in a non-standard format, override <code>extract_custom_response()</code>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">humanbound_cli.engine.bot</span><span class="w"> </span><span class="kn">import</span> <span class="n">Bot</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="k">class</span><span class="w"> </span><span class="nc">MyBot</span><span class="p">(</span><span class="n">Bot</span><span class="p">):</span>
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">extract_custom_response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chunk</span><span class="p">):</span>
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">        </span><span class="sd">"""Handle my bot's custom response format."""</span>
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">chunk</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">"data"</span> <span class="ow">in</span> <span class="n">chunk</span><span class="p">:</span>
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>            <span class="k">return</span> <span class="n">chunk</span><span class="p">[</span><span class="s2">"data"</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"message"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"text"</span><span class="p">)</span>
-<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>        <span class="k">return</span> <span class="kc">None</span>  <span class="c1"># fall back to default extraction</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">humanbound_cli.engine.bot</span><span class="w"> </span><span class="kn">import</span> <span class="n">Bot</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="k">class</span><span class="w"> </span><span class="nc">MyBot</span><span class="p">(</span><span class="n">Bot</span><span class="p">):</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">extract_custom_response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chunk</span><span class="p">):</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">        </span><span class="sd">"""Handle my bot's custom response format."""</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">chunk</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">"data"</span> <span class="ow">in</span> <span class="n">chunk</span><span class="p">:</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>            <span class="k">return</span> <span class="n">chunk</span><span class="p">[</span><span class="s2">"data"</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"message"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"text"</span><span class="p">)</span>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>        <span class="k">return</span> <span class="kc">None</span>  <span class="c1"># fall back to default extraction</span>
 </code></pre></div>
 <p>Pass your custom bot class to the orchestrator via the <code>Bot</code> constructor — it accepts the same endpoint config format.</p>
 <h3 id="manifestyaml">manifest.yaml</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my-custom-orchestrator</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0.0</span>
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Custom security test for my domain</span>
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="nt">author</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Your Name</span>
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="nt">category</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">adversarial</span><span class="w">  </span><span class="c1"># or behavioral</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my-custom-orchestrator</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0.0</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Custom security test for my domain</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="nt">author</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Your Name</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="nt">category</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">adversarial</span><span class="w">  </span><span class="c1"># or behavioral</span>
 </code></pre></div>
 <h3 id="installing-custom-orchestrators">Installing Custom Orchestrators</h3>
-<p>Place your orchestrator in <code>~/.humanbound/orchestrators/</code>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>~/.humanbound/orchestrators/my_orchestrator/
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>    manifest.yaml
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>    config.py
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    generator.py
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    judge.py
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>    orchestrator.py
+<p><code>hb test</code> loads custom orchestrators from <code>~/.humanbound/orchestrators/</code>, where
+<code>hb orchestrators new</code> creates them. To install one you wrote elsewhere (or created with
+<code>hb orchestrators new &lt;name&gt; --dir &lt;dir&gt;</code>), copy or link it there:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>~/.humanbound/orchestrators/my_orchestrator/
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>    manifest.yaml
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>    config.py
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>    generator.py
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>    judge.py
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>    orchestrator.py
 </code></pre></div>
 <p>Then run:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>hb<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--endpoint<span class="w"> </span>./config.json<span class="w"> </span>-t<span class="w"> </span>my_orchestrator<span class="w"> </span>--wait
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>hb<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--endpoint<span class="w"> </span>./config.json<span class="w"> </span>-t<span class="w"> </span>my_orchestrator<span class="w"> </span>--wait
 </code></pre></div>
-<h3 id="deploying-to-platform-future">Deploying to Platform (Future)</h3>
-<p>Custom orchestrators can be deployed to your platform workspace for continuous monitoring:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>hb<span class="w"> </span>orchestrators<span class="w"> </span>deploy<span class="w"> </span>my_orchestrator
-</code></pre></div>
-<p>Once deployed, ASCAM can run your custom orchestrator on a schedule.</p>
+<p>The directory name is the <code>-t</code> value. A directory named like a built-in orchestrator
+(for example <code>qa</code>) is never loaded; the built-in runs instead.</p>
+<h3 id="deploying-to-platform-planned">Deploying to Platform (Planned)</h3>
+<p>Running a custom orchestrator on the Platform, for example on a continuous-monitoring
+schedule, is planned. There is no command for it yet; today custom orchestrators run
+only on the local engine.</p>
 
 
 
