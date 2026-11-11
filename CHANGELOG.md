@@ -24,6 +24,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   said tests run on 3.10, 3.11 and 3.12, while CI also runs 3.13 and 3.14.
 
 ### Fixed
+- **`hb status --interval` failed** with "No such option". The `status`
+  alias didn't have it and always polled every 10s; it now passes it on to
+  `hb experiments status`.
 - **`hb login --force` and `hb login --port` failed** with "No such option",
   though the docs use both. The top-level `login` alias didn't pass them on to
   `hb auth login`; it now does, like `logout`. The docs also listed a

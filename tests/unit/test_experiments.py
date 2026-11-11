@@ -249,3 +249,11 @@ class TestOutputFormat:
         result = runner.invoke(cli, ["experiments", "list"])
         assert_exit_ok(result)
         assert "exp-789" in result.output
+
+
+def test_status_alias_passes_interval():
+    with patch("humanbound_cli.commands.experiments.experiment_status.callback") as status:
+        result = runner.invoke(cli, ["status", "exp-1", "--watch", "--interval", "3"])
+
+    assert result.exit_code == 0, result.output
+    assert status.call_args.kwargs["interval"] == 3
