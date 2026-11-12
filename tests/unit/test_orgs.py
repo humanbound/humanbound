@@ -95,8 +95,69 @@ class TestHappyPath:
         MockClient.return_value = mock
         result = runner.invoke(cli, ["orgs", "subscription"])
         assert result.exit_code == 0
-        # The subscription command shows plan info
-        assert "pro" in result.output.lower() or "Subscription" in result.output
+        assert "Community" in result.output
+        assert "active" in result.output
+
+    @patch(PATCH_TARGET)
+    def test_subscription_unpaid_shows_read_only(self, MockClient):
+        mock = _make_client()
+        mock.list_organisations.return_value = [MOCK_ORG]
+        mock.get_subscription.return_value = [
+            {**MOCK_SUBSCRIPTION, "plan_level": "team", "status": "unpaid"}
+        ]
+        MockClient.return_value = mock
+        result = runner.invoke(cli, ["orgs", "subscription"])
+        assert result.exit_code == 0
+        assert "unpaid" in result.output
+        assert "Read-only" in result.output
+
+    @patch(PATCH_TARGET)
+    def test_subscription_scheduled_switch(self, MockClient):
+        mock = _make_client()
+        mock.list_organisations.return_value = [MOCK_ORG]
+        mock.get_subscription.return_value = [
+            {
+                **MOCK_SUBSCRIPTION,
+                "plan_level": "team",
+                "scheduled_plan_level": "community",
+                "current_period_end": 1796947200,  # 11 Dec 2026 UTC
+            }
+        ]
+        MockClient.return_value = mock
+        result = runner.invoke(cli, ["orgs", "subscription"])
+        assert result.exit_code == 0
+        assert "Switches to Community on 2026-12-11" in result.output
+
+    @patch(PATCH_TARGET)
+    def test_subscription_features_and_quota_readable(self, MockClient):
+        mock = _make_client()
+        mock.list_organisations.return_value = [MOCK_ORG]
+        mock.get_subscription.return_value = [
+            {
+                **MOCK_SUBSCRIPTION,
+                "plan_level": "enterprise",
+                "quota": {"credits": 198163544, "members": None},
+                "features": {
+                    "webhooks": True,
+                    "siem_integration": False,
+                    "sso": "oauth",
+                    "forensic_window_days": 90,
+                    "monitoring_cadence": None,
+                },
+            }
+        ]
+        MockClient.return_value = mock
+        result = runner.invoke(cli, ["orgs", "subscription"])
+        assert result.exit_code == 0
+        out = result.output
+        assert "credits: 198,163,544" in out
+        assert "members: unlimited" in out
+        assert "webhooks: enabled" in out
+        assert "siem_integration: disabled" in out
+        assert "sso: oauth" in out
+        assert "forensic_window_days: 90" in out
+        assert "monitoring_cadence: custom" in out
+        assert "None" not in out
 
 
 # ---------------------------------------------------------------------------

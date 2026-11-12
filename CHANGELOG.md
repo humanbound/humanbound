@@ -20,6 +20,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `behavioral` already did.
 
 ### Changed
+- **`hb orgs subscription` shows the subscription status** (`active`,
+  `past_due`, `unpaid` or `canceled`), so you can see why `hb test` is refused:
+  `unpaid` and `canceled` are read-only until the open invoice is paid. It also
+  shows a pending plan switch with its date, e.g. "Switches to Community on
+  2026-12-11". Features print by type: on/off ones as enabled/disabled, the
+  rest as their value (`sso: oauth`, `forensic_window_days: 90`) instead of
+  all showing "enabled". Unlimited quota prints as `unlimited` instead of
+  `None`, and credits get thousands separators.
+- The README calls the free plan by its new name, Community.
 - **`CONTRIBUTING.md` lists every Python version CI tests on** (#185). It
   said tests run on 3.10, 3.11 and 3.12, while CI also runs 3.13 and 3.14.
 
