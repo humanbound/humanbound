@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.15.0] — 2026-11-12
+
 ### Added
 - **`hb orchestrators` lists, creates and checks orchestrators** (#207). `list` shows
   the built-in orchestrators with the short names `-t` accepts, and the custom
@@ -1116,7 +1118,8 @@ Last release as `humanbound-cli`. See the
 [old release](https://pypi.org/project/humanbound-cli/1.1.0/) on PyPI for
 notes — that history is preserved there and is not re-documented here.
 
-[Unreleased]: https://github.com/humanbound/humanbound/compare/v2.14.0...HEAD
+[Unreleased]: https://github.com/humanbound/humanbound/compare/v2.15.0...HEAD
+[2.15.0]: https://github.com/humanbound/humanbound/releases/tag/v2.15.0
 [2.14.0]: https://github.com/humanbound/humanbound/releases/tag/v2.14.0
 [2.13.0]: https://github.com/humanbound/humanbound/releases/tag/v2.13.0
 [2.12.0]: https://github.com/humanbound/humanbound/releases/tag/v2.12.0
