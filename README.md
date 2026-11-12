@@ -141,7 +141,7 @@ No API key, or your model refuses to write attacks? Test your agent on the Platf
 Log in and the same CLI sends its runs to the
 [Humanbound Platform](https://app.humanbound.ai/?utm_source=github&utm_medium=readme&utm_content=platform_heading).
 Your findings and score are kept across runs, and the Platform can keep testing your agent on a
-schedule (`hb monitor`). The free plan needs no card.
+schedule (`hb monitor`). The Community plan needs no card.
 
 ```bash
 hb login

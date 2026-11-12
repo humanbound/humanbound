@@ -2,6 +2,8 @@
 # Copyright (c) 2024-2026 Humanbound
 """Organisation commands."""
 
+from datetime import datetime, timezone
+
 import click
 from rich.console import Console
 from rich.panel import Panel
@@ -12,6 +14,35 @@ from ..client import HumanboundClient
 from ..exceptions import APIError, NotAuthenticatedError
 
 console = Console()
+
+# Read-only statuses: starting a test returns 402 until the open invoice is paid
+_READ_ONLY_STATUSES = {"unpaid", "canceled"}
+_STATUS_STYLES = {"active": "green", "past_due": "yellow"}
+
+
+def _plan_name(level: str) -> str:
+    return level.replace("_", " ").title()
+
+
+def _format_date(epoch: int) -> str:
+    return datetime.fromtimestamp(epoch, tz=timezone.utc).strftime("%Y-%m-%d")
+
+
+def _format_quota(val: int | str | None) -> str:
+    if val is None:
+        return "unlimited"
+    if isinstance(val, int):
+        return f"{val:,}"
+    return str(val)
+
+
+def _format_feature(val: bool | int | str | None) -> str:
+    # Booleans are on/off switches; everything else is a setting with a value
+    if isinstance(val, bool):
+        return "[green]enabled[/green]" if val else "[dim]disabled[/dim]"
+    if val is None:
+        return "custom"
+    return str(val)
 
 
 @click.group("orgs", invoke_without_command=True)
@@ -162,15 +193,28 @@ def subscription_details():
         # Response is a list with one item
         sub = response[0] if isinstance(response, list) else response
 
-        plan_level = sub.get("plan_level", "N/A")
-        plan_freq = sub.get("plan_freq", "N/A")
+        plan_level = sub.get("plan_level") or "N/A"
+        plan_freq = sub.get("plan_freq") or "N/A"
+        status = sub.get("status")
 
-        quota = sub.get("quota", {})
-        features = sub.get("features", {})
+        quota = sub.get("quota") or {}
+        features = sub.get("features") or {}
+
+        lines = [f"Plan: [bold]{_plan_name(plan_level)}[/bold] ({plan_freq})"]
+        if status:
+            style = _STATUS_STYLES.get(status, "red")
+            lines.append(f"Status: [{style}]{status}[/{style}]")
+        if status in _READ_ONLY_STATUSES:
+            lines.append("[dim]Read-only: pay the open invoice in billing to continue.[/dim]")
+        scheduled = sub.get("scheduled_plan_level")
+        period_end = sub.get("current_period_end")
+        if scheduled and period_end:
+            lines.append(f"Switches to {_plan_name(scheduled)} on {_format_date(period_end)}")
+        lines.append(f"[dim]ID: {sub_id}[/dim]")
 
         console.print(
             Panel(
-                f"Plan: [bold]{plan_level}[/bold] ({plan_freq})\n[dim]ID: {sub_id}[/dim]",
+                "\n".join(lines),
                 title="Subscription",
                 border_style="blue",
                 padding=(1, 2),
@@ -181,14 +225,13 @@ def subscription_details():
         if quota:
             console.print("\n[bold]Quota:[/bold]")
             for key, val in quota.items():
-                console.print(f"  {key}: {val}")
+                console.print(f"  {key}: {_format_quota(val)}")
 
         # Features
         if features:
             console.print("\n[bold]Features:[/bold]")
             for key, val in features.items():
-                status = "[green]enabled[/green]" if val else "[dim]disabled[/dim]"
-                console.print(f"  {key}: {status}")
+                console.print(f"  {key}: {_format_feature(val)}")
         else:
             console.print("\n[dim]No features enabled.[/dim]")
 

@@ -151,6 +151,7 @@ class TestErrorCases:
         result = runner.invoke(cli, ["test"])
 
         assert_exit_error(result)
+        assert "Quota exceeded" in result.output
 
 
 # ─────────────────────────────────────────────────────────────────────────

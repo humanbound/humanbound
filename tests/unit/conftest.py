@@ -391,9 +391,13 @@ MOCK_GUARDRAILS = {
 
 MOCK_SUBSCRIPTION = {
     "id": "sub-1",
-    "plan": "pro",
+    "plan_level": "community",
+    "plan_freq": "monthly",
     "status": "active",
-    "limits": {"experiments_per_month": 100},
+    "quota": {"credits": 10000000, "members": 3, "organisations": 1},
+    "features": {"webhooks": False, "models": "managed"},
+    "scheduled_plan_level": None,
+    "current_period_end": None,
 }
 
 
