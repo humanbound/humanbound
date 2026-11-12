@@ -156,11 +156,12 @@ def whoami_alias(ctx):
 @cli.command("status")
 @click.argument("experiment_id", required=False)
 @click.option("--watch", "-w", is_flag=True, help="Watch status until completion")
+@click.option("--interval", default=10, help="Polling interval in seconds (with --watch)")
 @click.option(
     "--all", "show_all", is_flag=True, help="Show all project experiments (polls every 60s)"
 )
 @click.pass_context
-def status_alias(ctx, experiment_id: str, watch: bool, show_all: bool):
+def status_alias(ctx, experiment_id: str, watch: bool, interval: int, show_all: bool):
     """Check experiment status (alias for 'experiments status').
 
     If no experiment_id is provided, shows the most recent experiment.
@@ -200,7 +201,7 @@ def status_alias(ctx, experiment_id: str, watch: bool, show_all: bool):
         experiments.experiment_status,
         experiment_id=experiment_id,
         watch=watch,
-        interval=10,
+        interval=interval,
         show_all=False,
     )
 
