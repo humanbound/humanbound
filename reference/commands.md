@@ -19,7 +19,7 @@ The complete `hb` CLI reference, organised into eight categories: global flags, 
 | `hb orgs use <org-id>` | Switch active organisation context |
 | `hb orgs list` | List organisations you have access to |
 | `hb orgs current` | Show the currently selected organisation |
-| `hb orgs subscription` | Show subscription details (plan, quota, features) |
+| `hb orgs subscription` | Show subscription details: plan, status (`active`, `past_due`, `unpaid`, `canceled`), a pending plan switch, quota and features |
 
 ## Projects
 
