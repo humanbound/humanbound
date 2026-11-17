@@ -57,6 +57,7 @@ The `--endpoint / -e` flag on `hb connect` accepts a JSON config file (or inline
 - **`$PROMPT`** -- The placeholder in the payload that gets replaced with each test prompt at runtime.
 - **`$CONVERSATION`** -- Placeholder replaced with the prior turns of the conversation. Use it for stateless agents that expect the full history in every request. (If the payload has no `$PROMPT` at all, the OpenAI-style fallback described below already includes prior turns in its `messages` array.)
 - **`streaming`** -- Transport: `null` (REST, default), `"websocket"`, or `"sse"`. Leave `null` if your agent returns a single JSON response per request.
+- **`chat_completion.response`** (optional) -- Where the reply text is and, for streams, which message ends the reply. See [Response Rules](#response-rules-optional) below.
 - **`telemetry`** (optional) -- Enables white-box agentic testing by collecting tool calls, memory operations, and resource usage from your observability platform. See [Telemetry](#telemetry-optional) below.
 
 !!! info "Note"
@@ -113,6 +114,84 @@ The `--endpoint / -e` flag on `hb connect` accepts a JSON config file (or inline
 
 !!! info "Tip"
     Save your config file as `bot-config.json` (or `agent-config.json`) in your project root and use `hb connect -n "My Agent" -e ./bot-config.json` to connect with the integration pre-configured.
+
+## Response Rules (Optional)
+
+By default Humanbound finds the reply under one of the standard keys above, and a
+WebSocket or SSE stream ends when a `{"type": "end"}` message arrives. If your agent
+uses its own message format, describe it in a `response` block inside `chat_completion`:
+
+- **`complete_when`** -- An object of `{"dot.path": value}`. The first stream message
+  that matches all of them ends the reply. Use it when your agent never sends
+  `{"type": "end"}`; otherwise the engine waits until the agent closes the connection.
+- **`text_path`** -- Dot path to the reply text, e.g. `"data.reply"` or
+  `"choices.0.message.content"` (numbers index lists). On a stream, the text of every
+  message that has this path is joined, up to and including the completing message,
+  and messages without it are ignored. On REST it is read from the whole response
+  body, falling back to the standard keys if it is not there.
+- **`ignore_when`** -- An object of `{"dot.path": value}`. Stream messages that match
+  all of them are skipped: they add no text and don't end the reply. Use it for
+  messages that look like a reply but aren't one, such as a greeting.
+
+All three are optional and independent. `{"type": "end"}` still ends a stream.
+
+## WebSocket Options (Optional)
+
+A `websocket` block inside `chat_completion` (used with `"streaming": "websocket"`):
+
+- **`keep_open`** -- `true` keeps one connection for the whole conversation instead of
+  opening one per message. Use it when the agent keeps the conversation in the
+  connection, so it remembers earlier turns. If the agent closes the connection
+  mid-conversation, the engine reconnects and logs a warning, since the agent may
+  have lost the earlier turns.
+- **`auto_reply`** -- A list of `{"when": {"dot.path": value}, "send": {...}}`. When a
+  message matching `when` arrives, `send` goes back at once, e.g. a `pong` for a
+  keep-alive `ping`. A `"$dot.path"` value in `send` is filled from the received
+  message.
+
+### Example: ElevenLabs Conversational AI (WebSocket)
+
+ElevenLabs keeps the conversation in the connection, sends the reply in one
+`agent_response` message among other events, never sends `{"type": "end"}`, sends
+keep-alive pings, and answers the first message with its greeting before the reply.
+The greeting is the `agent_response` that answers no user message
+(`in_response_to_ids` is empty):
+
+```json
+{
+  "streaming": "websocket",
+  "thread_init": {
+    "endpoint": "https://api.elevenlabs.io/v1/convai/conversation/get-signed-url?agent_id=<agent_id>",
+    "headers": { "xi-api-key": "<api_key>" }
+  },
+  "chat_completion": {
+    "endpoint": "$signed_url",
+    "payload": { "type": "user_message", "text": "$PROMPT" },
+    "response": {
+      "complete_when": { "type": "agent_response" },
+      "text_path": "agent_response_event.agent_response",
+      "ignore_when": {
+        "type": "agent_response",
+        "agent_response_event.in_response_to_ids": []
+      }
+    },
+    "websocket": {
+      "keep_open": true,
+      "auto_reply": [
+        {
+          "when": { "type": "ping" },
+          "send": { "type": "pong", "event_id": "$ping_event.event_id" }
+        }
+      ]
+    }
+  }
+}
+```
+
+`thread_init` fetches a signed URL once per conversation, so the API key never goes
+over the WebSocket. For a public agent, use
+`wss://api.elevenlabs.io/v1/convai/conversation?agent_id=<agent_id>` as the endpoint
+and drop `thread_init`.
 
 ## Hosted-Platform Connector
 

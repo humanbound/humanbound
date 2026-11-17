@@ -361,7 +361,11 @@ Analyze agent's latest response and adapt:
 
             except Exception as e:
                 conversation.clear()
+                await self.clientbot.close(payload)
                 raise e
+
+        # the conversation is over: close its kept-open agent connection, if any
+        await self.clientbot.close(payload)
 
         # Fetch telemetry after conversation completes (mode-agnostic)
         telemetry_data = None

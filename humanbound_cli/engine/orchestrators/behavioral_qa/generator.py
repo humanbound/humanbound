@@ -133,29 +133,35 @@ Generate the next user message:
         # Per-turn telemetry metadata, standardized once the conversation ends
         accumulated_metadata = []
 
-        for turn in range(self.conversation_depth):
-            # 1. Generate the next user message
-            u_prompt = self.llmp.ping(
-                system_p="",
-                user_p=basic_p.replace("<CONVERSATION_HISTORY>", conversation_str),
-                max_tokens=DATA_GENERATION_TOKENS,
-                temperature=DATA_GENERATION_TEMPERATURE,
-            )
-            # 2. Ping the assistant with the generated user message
-            a_response, exec_t_turn, turn_metadata = await self.clientbot.ping(
-                payload, u_prompt, conversation
-            )
+        try:
+            for turn in range(self.conversation_depth):
+                # 1. Generate the next user message
+                u_prompt = self.llmp.ping(
+                    system_p="",
+                    user_p=basic_p.replace("<CONVERSATION_HISTORY>", conversation_str),
+                    max_tokens=DATA_GENERATION_TOKENS,
+                    temperature=DATA_GENERATION_TEMPERATURE,
+                )
+                # 2. Ping the assistant with the generated user message
+                a_response, exec_t_turn, turn_metadata = await self.clientbot.ping(
+                    payload, u_prompt, conversation
+                )
 
-            # 3. Append the turn to the conversation
-            conversation.append({"u": u_prompt, "a": a_response})
-            if turn_metadata:
-                accumulated_metadata.append({"turn": len(conversation), "metadata": turn_metadata})
-            conversation_str += f"**User:** {u_prompt}\n**AI Agent:** {a_response}\n"
+                # 3. Append the turn to the conversation
+                conversation.append({"u": u_prompt, "a": a_response})
+                if turn_metadata:
+                    accumulated_metadata.append(
+                        {"turn": len(conversation), "metadata": turn_metadata}
+                    )
+                conversation_str += f"**User:** {u_prompt}\n**AI Agent:** {a_response}\n"
 
-            # 4. Accumulate execution time
-            exec_t += exec_t_turn
+                # 4. Accumulate execution time
+                exec_t += exec_t_turn
 
-            time.sleep(1)  # wait to prevent RATE LIMITING
+                time.sleep(1)  # wait to prevent RATE LIMITING
+        finally:
+            # the conversation is over: close its kept-open agent connection, if any
+            await self.clientbot.close(payload)
 
         # Fetch telemetry after conversation completes
         telemetry_data = None
