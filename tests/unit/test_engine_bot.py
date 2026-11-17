@@ -750,3 +750,384 @@ def test_conversation_id_placeholder_is_stable_within_a_conversation():
     one, _ = bot._Bot__parse_payload_item({"c": "$humanbound_conversation_id"}, base, "x", [])
     two, _ = bot._Bot__parse_payload_item({"c": "$humanbound_conversation_id"}, base, "y", [])
     assert one["c"] == two["c"] == base["humanbound_conversation_id"]
+
+
+# ────────────────────────────────────────────────────────────────
+# chat_completion.response — configurable reply completion / text path
+# (event-based WebSocket agents such as ElevenLabs)
+# ────────────────────────────────────────────────────────────────
+
+_ELEVENLABS_STREAM = [
+    {
+        "type": "conversation_initiation_metadata",
+        "conversation_initiation_metadata_event": {"conversation_id": "c1"},
+    },
+    {"type": "ping", "ping_event": {"event_id": 1, "ping_ms": None}},
+    {"type": "agent_chat_response_part", "text_response_part": {"text": "noise", "type": "delta"}},
+    {"type": "agent_response", "agent_response_event": {"agent_response": "Hello there"}},
+]
+
+
+def _ws_config(response=None):
+    cc = {
+        "endpoint": "wss://agent.example/convai",
+        "payload": {"type": "user_message", "text": "$PROMPT"},
+    }
+    if response is not None:
+        cc["response"] = response
+    return {"streaming": "websocket", "chat_completion": cc}
+
+
+class _FakeSocket:
+    """Yields the scripted messages, then behaves like a server that closes the
+    socket for inactivity (what ElevenLabs does when the client keeps waiting).
+
+    `replies` maps a sent message's text to the messages the server sends back,
+    so multi-turn conversations can be scripted. A "WAIT" entry makes recv()
+    block (no message arrives), which lets tests exercise the greeting timeout."""
+
+    def __init__(self, messages, replies=None, idle_close=True):
+        import json as _json
+
+        self._json = _json
+        self._queue = list(messages)
+        self._replies = replies or {}
+        self._idle_close = idle_close
+        self.sent = []
+        self.recv_calls = 0
+        self.closed = False
+
+    @property
+    def state(self):
+        from websockets.protocol import State
+
+        return State.CLOSED if self.closed else State.OPEN
+
+    async def send(self, data):
+        self.sent.append(data)
+        text = self._json.loads(data).get("text")
+        self._queue.extend(self._replies.get(text, []))
+
+    async def recv(self):
+        self.recv_calls += 1
+        if self._queue and self._queue[0] == "WAIT":
+            self._queue.pop(0)
+            await asyncio.sleep(3600)
+        if not self._queue:
+            if not self._idle_close:
+                await asyncio.sleep(3600)
+            raise RuntimeError("received 1002 (protocol error) No user message received")
+        return self._json.dumps(self._queue.pop(0))
+
+    async def close(self):
+        self.closed = True
+
+
+def _fake_connect(*socks):
+    """Patch target for websockets connect(): each call returns the next socket."""
+    queue = list(socks)
+    calls = []
+
+    async def connect(endpoint, **kwargs):
+        calls.append(endpoint)
+        return queue.pop(0)
+
+    connect.calls = calls
+    return connect
+
+
+def _run_ws(config, messages):
+    import websockets.asyncio.client as wsc
+
+    sock = _FakeSocket(messages)
+    with patch.object(wsc, "connect", _fake_connect(sock)):
+        text, _, _ = asyncio.run(Bot(config, "e1")._Bot__stream({}, "hi"))
+    return text, sock
+
+
+def test_ws_stops_on_complete_when_and_reads_text_path():
+    cfg = _ws_config(
+        {
+            "complete_when": {"type": "agent_response"},
+            "text_path": "agent_response_event.agent_response",
+        }
+    )
+    text, sock = _run_ws(cfg, _ELEVENLABS_STREAM)
+    assert text == "Hello there"
+    assert sock.recv_calls == len(_ELEVENLABS_STREAM)  # never waits past the reply
+    assert '"type": "user_message"' in sock.sent[0]
+
+
+def test_ws_without_completion_rule_keeps_waiting_and_fails():
+    # the reported bug: no {"type": "end"} ever arrives, so the server times us out
+    with pytest.raises(Exception, match="No user message received"):
+        _run_ws(_ws_config(), _ELEVENLABS_STREAM)
+
+
+def test_ws_legacy_end_message_still_stops():
+    text, _ = _run_ws(_ws_config(), [{"content": "a"}, {"content": "b"}, {"type": "end"}])
+    assert text == "ab"
+
+
+def test_ws_complete_when_without_text_path_uses_default_keys():
+    msgs = [{"type": "delta", "content": "Hi "}, {"type": "done", "content": "you"}]
+    text, _ = _run_ws(_ws_config({"complete_when": {"type": "done"}}), msgs)
+    assert text == "Hi you"
+
+
+def test_ws_text_path_accumulates_deltas_until_completion():
+    msgs = [
+        {"event": "delta", "data": {"chunk": "Hel"}},
+        {"event": "delta", "data": {"chunk": "lo"}},
+        {"event": "finished", "data": {}},
+    ]
+    cfg = _ws_config({"complete_when": {"event": "finished"}, "text_path": "data.chunk"})
+    text, _ = _run_ws(cfg, msgs)
+    assert text == "Hello"
+
+
+def test_complete_when_matches_nested_path_and_all_conditions():
+    b = Bot(_ws_config({"complete_when": {"meta.final": True, "type": "msg"}}), "e1")
+    assert b._Bot__process_chunk({"type": "msg", "meta": {"final": False}}, "")[1] is False
+    assert b._Bot__process_chunk({"type": "msg", "meta": {"final": True}}, "")[1] is True
+
+
+def test_rest_text_path_extracts_reply():
+    cfg = {
+        "streaming": None,
+        "chat_completion": {
+            "endpoint": "https://agent.example/chat",
+            "payload": {"q": "$PROMPT"},
+            "response": {"text_path": "result.messages.1.body"},
+        },
+    }
+    body = {"result": {"messages": [{"body": "ignored"}, {"body": "the reply"}]}, "text": "x"}
+    with patch("humanbound_cli.engine.bot.requests.post", return_value=_mock_post(payload=body)):
+        text, _, _ = asyncio.run(Bot(cfg, "e1").ping({}, "hi"))
+    assert text == "the reply"
+
+
+@pytest.mark.parametrize(
+    "response, match",
+    [
+        ({"complete_when": "agent_response"}, "complete_when"),
+        ({"complete_when": {}}, "complete_when"),
+        ({"text_path": 5}, "text_path"),
+        ({"ignore_when": []}, "ignore_when"),
+        ("oops", "response"),
+    ],
+)
+def test_invalid_response_rules_fail_clearly(response, match):
+    with pytest.raises(Exception, match=match):
+        _run_ws(_ws_config(response), _ELEVENLABS_STREAM)
+
+
+# ────────────────────────────────────────────────────────────────
+# chat_completion.websocket — one connection per conversation, greeting,
+# automatic replies (ElevenLabs keeps the conversation in the connection)
+# ────────────────────────────────────────────────────────────────
+
+_GREETING = {
+    "type": "agent_response",
+    "agent_response_event": {"agent_response": "Hello!", "in_response_to_ids": []},
+}
+_META = {"type": "conversation_initiation_metadata", "conversation_initiation_metadata_event": {}}
+
+
+def _say(text, in_response_to=("u",)):
+    return {
+        "type": "agent_response",
+        "agent_response_event": {
+            "agent_response": text,
+            "in_response_to_ids": list(in_response_to),
+        },
+    }
+
+
+def _session_config(**ws):
+    cfg = _ws_config(
+        {
+            "complete_when": {"type": "agent_response"},
+            "text_path": "agent_response_event.agent_response",
+            "ignore_when": {
+                "type": "agent_response",
+                "agent_response_event.in_response_to_ids": [],
+            },
+        }
+    )
+    cfg["chat_completion"]["websocket"] = ws
+    return cfg
+
+
+def _conversation(config, socks, prompts):
+    """Run one conversation (init + several turns) on a single event loop."""
+    import websockets.asyncio.client as wsc
+
+    connect = _fake_connect(*socks)
+
+    async def run():
+        bot = Bot(config, "e1")
+        base = bot.init()
+        replies = [(await bot.ping(base, p))[0] for p in prompts]
+        await bot.close(base)
+        return replies
+
+    with patch.object(wsc, "connect", connect):
+        replies = asyncio.run(run())
+    return replies, connect.calls
+
+
+def test_ignore_when_skips_the_greeting_sent_after_the_first_message():
+    # ElevenLabs: the greeting is triggered by the first user message and answers
+    # nothing (in_response_to_ids == []); the real reply follows it
+    sock = _FakeSocket([_META], replies={"hi": [_GREETING, _say("real answer", ["u1"])]})
+    replies, _ = _conversation(_session_config(), [sock], ["hi"])
+    assert replies == ["real answer"]
+
+
+def test_without_ignore_when_the_greeting_is_taken_as_the_reply():
+    # documents the bug seen against ElevenLabs
+    sock = _FakeSocket([_META], replies={"hi": [_GREETING, _say("real answer", ["u1"])]})
+    cfg = _session_config()
+    del cfg["chat_completion"]["response"]["ignore_when"]
+    replies, _ = _conversation(cfg, [sock], ["hi"])
+    assert replies == ["Hello!"]
+
+
+def test_keep_open_with_greeting_keeps_every_turn_aligned():
+    sock = _FakeSocket(
+        [_META],
+        replies={
+            "one": [_GREETING, _say("first", ["u1"])],
+            "two": [_say("second", ["u2"])],
+        },
+        idle_close=False,
+    )
+    replies, calls = _conversation(_session_config(keep_open=True), [sock], ["one", "two"])
+    assert replies == ["first", "second"]
+    assert len(calls) == 1
+
+
+def test_keep_open_uses_one_connection_for_the_whole_conversation():
+    sock = _FakeSocket(
+        [_META],
+        replies={
+            "one": [_GREETING, _say("first")],
+            "two": [_say("second")],
+            "three": [_say("third")],
+        },
+        idle_close=False,
+    )
+    cfg = _session_config(keep_open=True)
+    replies, calls = _conversation(cfg, [sock], ["one", "two", "three"])
+    assert replies == ["first", "second", "third"]
+    assert len(calls) == 1  # one connection = one ElevenLabs conversation
+    assert len(sock.sent) == 3
+    assert sock.closed  # closed when the conversation ends
+
+
+def test_without_keep_open_each_turn_opens_and_closes_a_connection():
+    socks = [
+        _FakeSocket([], replies={"one": [_say("first")]}),
+        _FakeSocket([], replies={"two": [_say("second")]}),
+    ]
+    replies, calls = _conversation(_session_config(), socks, ["one", "two"])
+    assert replies == ["first", "second"]
+    assert len(calls) == 2
+    assert all(s.closed for s in socks)
+
+
+def test_keep_open_reconnects_when_the_agent_closed_the_connection():
+    first = _FakeSocket([], replies={"one": [_say("first")]}, idle_close=False)
+    second = _FakeSocket([], replies={"two": [_say("second")]}, idle_close=False)
+
+    import websockets.asyncio.client as wsc
+
+    connect = _fake_connect(first, second)
+
+    async def run():
+        bot = Bot(_session_config(keep_open=True), "e1")
+        base = bot.init()
+        out = [(await bot.ping(base, "one"))[0]]
+        first.closed = True  # agent hung up between turns
+        out.append((await bot.ping(base, "two"))[0])
+        await bot.close(base)
+        return out
+
+    with patch.object(wsc, "connect", connect):
+        assert asyncio.run(run()) == ["first", "second"]
+    assert len(connect.calls) == 2
+
+
+def test_keep_open_conversations_do_not_share_a_connection():
+    a = _FakeSocket([], replies={"a": [_say("A")]}, idle_close=False)
+    b = _FakeSocket([], replies={"b": [_say("B")]}, idle_close=False)
+
+    import websockets.asyncio.client as wsc
+
+    connect = _fake_connect(a, b)
+
+    async def run():
+        bot = Bot(_session_config(keep_open=True), "e1")
+        one, two = bot.init(), bot.init()
+        out = [(await bot.ping(one, "a"))[0], (await bot.ping(two, "b"))[0]]
+        await bot.close(one)
+        await bot.close(two)
+        return out
+
+    with patch.object(wsc, "connect", connect):
+        assert asyncio.run(run()) == ["A", "B"]
+    assert a.sent and b.sent and len(a.sent) == len(b.sent) == 1
+
+
+def test_keep_open_falls_back_to_a_new_connection_on_another_event_loop():
+    # callers that asyncio.run() each turn (e.g. the scope probe) still work
+    import websockets.asyncio.client as wsc
+
+    first = _FakeSocket([], replies={"one": [_say("first")]}, idle_close=False)
+    second = _FakeSocket([], replies={"two": [_say("second")]}, idle_close=False)
+    connect = _fake_connect(first, second)
+    bot = Bot(_session_config(keep_open=True), "e1")
+    base = bot.init()
+    with patch.object(wsc, "connect", connect):
+        assert asyncio.run(bot.ping(base, "one"))[0] == "first"
+        assert asyncio.run(bot.ping(base, "two"))[0] == "second"
+    assert len(connect.calls) == 2
+
+
+def test_auto_reply_answers_pings_with_values_from_the_message():
+    ping = {"type": "ping", "ping_event": {"event_id": 7, "ping_ms": 50}}
+    sock = _FakeSocket([_META, ping], replies={"hi": [ping, _GREETING, _say("answer")]})
+    cfg = _session_config(
+        keep_open=True,
+        auto_reply=[
+            {"when": {"type": "ping"}, "send": {"type": "pong", "event_id": "$ping_event.event_id"}}
+        ],
+    )
+    replies, _ = _conversation(cfg, [sock], ["hi"])
+    import json as _json
+
+    sent = [_json.loads(m) for m in sock.sent]
+    assert replies == ["answer"]
+    assert sent == [
+        {"type": "user_message", "text": "hi"},
+        {"type": "pong", "event_id": 7},  # the ping that came on connect
+        {"type": "pong", "event_id": 7},  # the ping during the reply
+    ]
+
+
+@pytest.mark.parametrize(
+    "ws, match",
+    [
+        ("yes", "websocket"),
+        ({"keep_open": "yes"}, "keep_open"),
+        ({"auto_reply": {"when": {}}}, "auto_reply"),
+        ({"auto_reply": [{"when": {}, "send": {}}]}, "auto_reply"),
+        ({"auto_reply": [{"when": {"type": "ping"}}]}, "auto_reply"),
+    ],
+)
+def test_invalid_websocket_options_fail_clearly(ws, match):
+    cfg = _ws_config()
+    cfg["chat_completion"]["websocket"] = ws
+    with pytest.raises(ValueError, match=match):
+        Bot(cfg, "e1")
