@@ -67,7 +67,7 @@
   <meta property="og:image:alt" content="Run security tests locally with no login or network calls — full isolation with your own LLM provider, or offline mode with ollama." />
   <meta name="twitter:image:alt" content="Run security tests locally with no login or network calls — full isolation with your own LLM provider, or offline mode with ollama." />
   
-  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/local-engine/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Overview","item":"https://docs.humanbound.ai/local-engine/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/local-engine/#article","headline":"Overview","description":"Run security tests locally with no login or network calls \u2014 full isolation with your own LLM provider, or offline mode with ollama.","url":"https://docs.humanbound.ai/local-engine/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-09-24T23:00:14+03:00","keywords":"local engine, local security testing, offline testing isolation, humanbound local mode, no-login testing, ollama isolation, local vs platform"}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://humanbound.ai/#org","name":"Humanbound","url":"https://humanbound.ai"},{"@type":"WebSite","@id":"https://docs.humanbound.ai/#website","url":"https://docs.humanbound.ai","name":"Humanbound Docs","description":"Humanbound documentation \u2014 AI security testing, continuous monitoring, and defense for LLM agents.","publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en"},{"@type":"BreadcrumbList","@id":"https://docs.humanbound.ai/local-engine/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://docs.humanbound.ai"},{"@type":"ListItem","position":2,"name":"Overview","item":"https://docs.humanbound.ai/local-engine/"}]},{"@type":"TechArticle","@id":"https://docs.humanbound.ai/local-engine/#article","headline":"Overview","description":"Run security tests locally with no login or network calls \u2014 full isolation with your own LLM provider, or offline mode with ollama.","url":"https://docs.humanbound.ai/local-engine/","isPartOf":{"@id":"https://docs.humanbound.ai/#website"},"about":{"@id":"https://humanbound.ai/#product"},"publisher":{"@id":"https://humanbound.ai/#org"},"inLanguage":"en","dateModified":"2026-11-18T13:06:50+02:00","keywords":"local engine, local security testing, offline testing isolation, humanbound local mode, no-login testing, ollama isolation, local vs platform"}]}</script>
   
 
   
@@ -2387,14 +2387,16 @@
 
 
 <h1 id="local-engine">Local Engine</h1>
-<p>Run security tests <strong>locally</strong> — no login, no account, no network calls to Humanbound. Full isolation with your own LLM provider or <a href="https://ollama.com">ollama</a> for completely offline testing. The engine runs the same orchestrators, attack strategies, judge, and posture formula as the hosted platform; the only difference is that results stay on your machine in <code>.humanbound/results/</code>.</p>
+<p>Run security tests <strong>locally</strong> with the open-source <code>hb</code> CLI — no login, no account, no network calls to Humanbound. Full isolation with your own LLM provider or <a href="https://ollama.com">ollama</a> for completely offline testing. The engine runs the same orchestrators, attack strategies, judge, and posture formula as the hosted platform; the only difference is that results stay on your machine in <code>.humanbound/results/</code>.</p>
 <h2 id="how-it-works">How It Works</h2>
 <p>The local engine runs the same orchestrator, attack strategies, judge, and posture formula as the platform. The only difference: results stay on your machine.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>hb test --endpoint ./config.json --scope ./scope.json --wait
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>  ✓ Experiment created
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>  ✓ Posture: 64/100 (Grade C)
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>  ✓ Results saved to .humanbound/results/
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"humanbound[engine]"</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>hb test --endpoint ./config.json --scope ./scope.json --wait
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>  ✓ Experiment created
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>  ✓ Posture: 64/100 (Grade C)
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>  ✓ Results saved to .humanbound/results/
 </code></pre></div>
 <h2 id="architecture">Architecture</h2>
 <p><img alt="Humanbound CLI engine architecture" src="../images/architecture.png" /></p>
@@ -2477,25 +2479,25 @@ results under <code>.humanbound/results/</code>.</p>
 </tbody>
 </table>
 <h2 id="quick-start-local">Quick Start (Local)</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Install</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"humanbound[engine]"</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="c1"># Configure LLM provider</span>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HB_PROVIDER</span><span class="o">=</span>openai
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HB_API_KEY</span><span class="o">=</span>sk-...
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="c1"># Or use ollama (full isolation)</span>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HB_PROVIDER</span><span class="o">=</span>ollama
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HB_MODEL</span><span class="o">=</span>llama3.1:8b
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="c1"># Run test</span>
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>hb<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--endpoint<span class="w"> </span>./bot-config.json<span class="w"> </span>--scope<span class="w"> </span>./scope.json<span class="w"> </span>--wait
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="c1"># View results</span>
-<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>hb<span class="w"> </span>posture
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>hb<span class="w"> </span>logs
-<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>hb<span class="w"> </span>report<span class="w"> </span>-o<span class="w"> </span>report.html
-<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>hb<span class="w"> </span>guardrails<span class="w"> </span>-o<span class="w"> </span>rules.json
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Install</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"humanbound[engine]"</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1"># Configure LLM provider</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HB_PROVIDER</span><span class="o">=</span>openai
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HB_API_KEY</span><span class="o">=</span>sk-...
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="c1"># Or use ollama (full isolation)</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HB_PROVIDER</span><span class="o">=</span>ollama
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HB_MODEL</span><span class="o">=</span>llama3.1:8b
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="c1"># Run test</span>
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>hb<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--endpoint<span class="w"> </span>./bot-config.json<span class="w"> </span>--scope<span class="w"> </span>./scope.json<span class="w"> </span>--wait
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>
+<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="c1"># View results</span>
+<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>hb<span class="w"> </span>posture
+<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>hb<span class="w"> </span>logs
+<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>hb<span class="w"> </span>report<span class="w"> </span>-o<span class="w"> </span>report.html
+<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>hb<span class="w"> </span>guardrails<span class="w"> </span>-o<span class="w"> </span>rules.json
 </code></pre></div>
 <h2 id="when-to-use-local-vs-platform">When to Use Local vs Platform</h2>
 <p><strong>Use local when:</strong></p>

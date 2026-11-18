@@ -644,11 +644,15 @@ Source: https://docs.humanbound.ai/local-engine/
 
 # Local Engine
 
-Run security tests **locally** — no login, no account, no network calls to Humanbound. Full isolation with your own LLM provider or [ollama](https://ollama.com) for completely offline testing. The engine runs the same orchestrators, attack strategies, judge, and posture formula as the hosted platform; the only difference is that results stay on your machine in `.humanbound/results/`.
+Run security tests **locally** with the open-source `hb` CLI — no login, no account, no network calls to Humanbound. Full isolation with your own LLM provider or [ollama](https://ollama.com) for completely offline testing. The engine runs the same orchestrators, attack strategies, judge, and posture formula as the hosted platform; the only difference is that results stay on your machine in `.humanbound/results/`.
 
 ## How It Works
 
 The local engine runs the same orchestrator, attack strategies, judge, and posture formula as the platform. The only difference: results stay on your machine.
+
+```bash
+pip install "humanbound[engine]"
+```
 
 ```
 hb test --endpoint ./config.json --scope ./scope.json --wait
