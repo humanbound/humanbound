@@ -1453,7 +1453,15 @@ Source: https://docs.humanbound.ai/methodology/adversarial-engine/
 
 # Adversarial Testing Engine
 
-Humanbound's adversarial engine generates multi-turn attacks against your agent in real time — each message is crafted in response to what the agent said in the previous turn, with the engine adapting strategy and escalating pressure as the conversation develops. The sections below explain the attack lifecycle, the strategies the engine uses, and how it scores progress toward an exploit.
+Humanbound's adversarial engine ships in the open-source `hb` CLI and can run locally against your agent's endpoint. It generates adaptive multi-turn attacks in real time, and a judge model grades every conversation. In local mode you don't need a Humanbound account, only an LLM provider key or a local [ollama](https://ollama.com) model.
+
+```bash
+pip install "humanbound[engine]"
+export HB_PROVIDER=openai HB_API_KEY=<your-provider-key>
+hb test --endpoint ./bot-config.json --scope ./scope.yaml --quick --wait
+```
+
+`bot-config.json` tells the engine how to reach your agent — see [Agent Configuration](../getting-started/agent-config.md). The sections below explain the attack lifecycle, the strategies the engine uses, and how it scores progress toward an exploit.
 
 ## How Attacks Work
 
