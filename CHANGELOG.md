@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Documentation
+- **The Adversarial Testing Engine page says what the engine is and how to run
+  it** (#219): part of the open-source `hb` CLI, with an install-and-run block
+  and a link to Agent Configuration.
 - **The docs home installs the engine extra** (#220). Its code block ran local
   `hb test` after a plain `pip install humanbound`; it now shows
   `pip install "humanbound[engine]"`, and the line under the tagline says in a
