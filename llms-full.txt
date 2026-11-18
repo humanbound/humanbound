@@ -4809,13 +4809,14 @@ Action; on **GitLab** and other systems, run the `hb` CLI directly.
 1. **Your pipeline boots the agent** (or points at a running one) and hands its endpoint to Humanbound.
 2. **Humanbound attacks it** — multi-turn adversarial conversations (OWASP-aligned prompt injection, tool misuse, data exfiltration, and more).
 3. **An LLM judge scores every response** and records findings with severities.
-4. **The result gates your build** — exit `0` on a clean pass, `1` when `fail-on` matches, and `2` when the scan itself failed (run `Failed`, or every conversation errored — a broken scan can never read as green). On GitHub, findings also land in the Security tab as SARIF, with a severity summary on the run page.
+4. **The result gates your build** — exit `0` on a clean pass, `1` when `fail-on` matches, and `2` when the scan itself failed (run `Failed`, or every conversation errored — a broken scan can never read as green). On GitHub, the Action also writes the findings as SARIF, which an upload step sends to the Security tab, and puts a severity summary on the run page.
 
 ## GitHub Actions
 
 Use the [`humanbound/actions`](https://github.com/marketplace/actions/humanbound-ai-agent-security-testing)
 Marketplace Action — it installs the CLI, runs the scan, gates the build, writes a severity
-summary to the run page, and uploads findings to the **Security tab** as SARIF.
+summary to the run page, and writes a SARIF file; the `github/codeql-action/upload-sarif` step
+below uploads it to the **Security tab** (needs `security-events: write`).
 
 ```yaml
 # .github/workflows/security-test.yml
@@ -4825,10 +4826,14 @@ on: [pull_request]
 jobs:
   security:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write # required to upload SARIF
     steps:
       - run: docker compose up -d agent # boot your agent, reachable on localhost
 
       - uses: humanbound/actions@v1
+        id: hb
         with:
           # Your agent's config — inline here; a file or a build step also work.
           endpoint: |
@@ -4843,10 +4848,17 @@ jobs:
           provider-api-key: ${{ secrets.OPENAI_API_KEY }}
           model: gpt-4.1
           fail-on: high # fail the build on high-severity findings
+
+      - uses: github/codeql-action/upload-sarif@v3
+        # the != '' check matters: on an early failure the Action has no SARIF to
+        # output, and upload-sarif hard-fails on an empty sarif_file input
+        if: always() && steps.hb.outputs.sarif-file != ''
+        with:
+          sarif_file: ${{ steps.hb.outputs.sarif-file }}
 ```
 
-Findings gate the build via `fail-on`, land in **Security → Code scanning** as SARIF, and are
-summarized on the workflow run page.
+Findings gate the build via `fail-on`, land in **Security → Code scanning** through the
+upload step, and are summarized on the workflow run page.
 
 ### Local mode vs platform mode
 
@@ -4973,7 +4985,7 @@ jobs:
 ## Frequently asked questions
 
 ??? question "Is there a GitHub Action for Humanbound?"
-    Yes. The official [`humanbound/actions`](https://github.com/marketplace/actions/humanbound-ai-agent-security-testing) Action wraps `hb test` — it installs the CLI, runs the scan, gates the build with `fail-on`, and uploads findings to the GitHub Security tab as SARIF. Reference it as `uses: humanbound/actions@v1`.
+    Yes. The official [`humanbound/actions`](https://github.com/marketplace/actions/humanbound-ai-agent-security-testing) Action wraps `hb test` — it installs the CLI, runs the scan, gates the build with `fail-on`, and writes the findings as a SARIF file; add a `github/codeql-action/upload-sarif` step to show them in the GitHub Security tab. Reference it as `uses: humanbound/actions@v1`.
 
 ??? question "What does the --fail-on flag do in CI/CD?"
     The `--fail-on` flag causes the `hb test` command to exit with a non-zero status code when vulnerabilities at or above the specified severity are found. Thresholds are `critical`, `high`, `medium`, `low`, and `any`, allowing you to configure how strict your security gate is.
