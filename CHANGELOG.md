@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Documentation
+- **The docs home installs the engine extra** (#220). Its code block ran local
+  `hb test` after a plain `pip install humanbound`; it now shows
+  `pip install "humanbound[engine]"`, and the line under the tagline says in a
+  full sentence what Humanbound is.
 - **The CI/CD page no longer says the GitHub Action uploads SARIF** (#222). The
   Action writes the SARIF file; the GitHub example now adds the
   `github/codeql-action/upload-sarif` step with the `security-events: write`

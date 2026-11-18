@@ -17,10 +17,10 @@ lint_skip: [first_paragraph]
 
 **Find vulnerabilities in your AI agents before attackers do.**
 
-AI agent security testing platform. Automated adversarial and behavioral testing, LLM-as-a-Judge evaluation, runtime firewall, OWASP-aligned attack scenarios, posture scoring, and guardrails export -- from your terminal to your CI/CD pipeline.
+Humanbound is an open-source CLI and SDK that runs adversarial and behavioral tests against an AI agent's endpoint, locally with your own LLM provider or on the Humanbound platform. It adds LLM-as-a-Judge evaluation, a runtime firewall, OWASP-aligned attack scenarios, posture scoring, and guardrails export -- from your terminal to your CI/CD pipeline.
 
 ```bash
-pip install humanbound
+pip install "humanbound[engine]"
 
 # Local (no login required)
 $ hb test --endpoint ./bot-config.json --scope ./scope.yaml --wait
