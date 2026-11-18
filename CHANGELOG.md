@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Documentation
+- **The CI/CD page no longer says the GitHub Action uploads SARIF** (#222). The
+  Action writes the SARIF file; the GitHub example now adds the
+  `github/codeql-action/upload-sarif` step with the `security-events: write`
+  permission, as the Action's README does.
+
 ## [2.15.0] — 2026-11-12
 
 ### Added
