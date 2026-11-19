@@ -7,7 +7,6 @@ import json
 import logging
 import re
 import ssl
-import threading
 import time
 import traceback
 import uuid
@@ -16,6 +15,9 @@ from urllib.parse import urlparse
 import certifi
 import httpx
 import requests
+
+from .dot_path import get_path
+from .streaming import KeptOpenConnections, StreamRules, WebSocketOptions, close_quietly
 
 logger = logging.getLogger("humanbound.engine.bot")
 
@@ -55,121 +57,6 @@ def truncate(match):
     if len(url) > MIN_URL_LENGTH:
         return url[:MIN_URL_LENGTH] + "..."
     return url
-
-
-_MISSING = object()
-
-
-def _get_path(data, path):
-    """Value at a dot path ("a.b.0.c": dict keys, list indexes), or _MISSING."""
-    current = data
-    for part in path.split("."):
-        if isinstance(current, dict) and part in current:
-            current = current[part]
-        elif isinstance(current, list) and part.lstrip("-").isdigit():
-            try:
-                current = current[int(part)]
-            except IndexError:
-                return _MISSING
-        else:
-            return _MISSING
-    return current
-
-
-def _conditions_ok(value):
-    return isinstance(value, dict) and value and all(isinstance(k, str) and k for k in value)
-
-
-def _response_rules(bot_config):
-    """Validated `chat_completion.response` block -> (text_path, complete_when, ignore_when).
-
-    - text_path: dot path to the reply text inside a response / stream message.
-    - complete_when: {dot_path: value, ...}; a stream message matching all of them
-      ends the reply (for agents that never send {"type": "end"}, e.g. ElevenLabs).
-    - ignore_when: {dot_path: value, ...}; a stream message matching all of them is
-      skipped entirely, e.g. an unprompted greeting that would otherwise be taken
-      as the reply.
-    """
-    rules = (bot_config.get("chat_completion") or {}).get("response")
-    if rules is None:
-        return None, None, None
-    if not isinstance(rules, dict):
-        raise ValueError("'chat_completion.response' must be an object.")
-    text_path = rules.get("text_path")
-    if text_path is not None and (not isinstance(text_path, str) or not text_path.strip()):
-        raise ValueError("'chat_completion.response.text_path' must be a dot path string.")
-    for field in ("complete_when", "ignore_when"):
-        if rules.get(field) is not None and not _conditions_ok(rules[field]):
-            raise ValueError(
-                f"'chat_completion.response.{field}' must be a non-empty object of "
-                '{"dot.path": value}, e.g. {"type": "agent_response"}.'
-            )
-    return text_path, rules.get("complete_when"), rules.get("ignore_when")
-
-
-# A kept-open conversation connection unused for this long is closed (safety net
-# for orchestrators that never call Bot.close()).
-SESSION_IDLE_CLOSE = 300
-
-
-def _matches(message, conditions):
-    """The message has every {dot_path: value} of `conditions`."""
-    return isinstance(message, dict) and all(
-        _get_path(message, k) == v for k, v in conditions.items()
-    )
-
-
-def _fill_reply(template, message):
-    """Copy of `template` with each "$dot.path" string replaced by that value of
-    `message` (type kept, e.g. an int event id). Unknown paths stay as written."""
-    if isinstance(template, dict):
-        return {k: _fill_reply(v, message) for k, v in template.items()}
-    if isinstance(template, list):
-        return [_fill_reply(v, message) for v in template]
-    if isinstance(template, str) and template.startswith("$") and len(template) > 1:
-        value = _get_path(message, template[1:])
-        return template if value is _MISSING else value
-    return template
-
-
-def _websocket_options(bot_config):
-    """Validated `chat_completion.websocket` block -> (keep_open, auto_reply).
-
-    - keep_open: one connection per conversation instead of per turn (agents that
-      keep the conversation in the connection, e.g. ElevenLabs).
-    - auto_reply: [{"when": {dot_path: value}, "send": message}], answered as soon
-      as a matching message arrives (e.g. ping -> pong); "$dot.path" values in
-      `send` are filled from the received message.
-    """
-    opts = (bot_config.get("chat_completion") or {}).get("websocket")
-    if opts is None:
-        return False, []
-    if not isinstance(opts, dict):
-        raise ValueError("'chat_completion.websocket' must be an object.")
-    if not isinstance(opts.get("keep_open", False), bool):
-        raise ValueError("'chat_completion.websocket.keep_open' must be true or false.")
-    auto_reply = opts.get("auto_reply") or []
-    bad = ValueError(
-        "'chat_completion.websocket.auto_reply' must be a list of "
-        '{"when": {"dot.path": value}, "send": {...}}, e.g. '
-        '{"when": {"type": "ping"}, "send": {"type": "pong", "event_id": "$ping_event.event_id"}}.'
-    )
-    if not isinstance(auto_reply, list):
-        raise bad
-    for rule in auto_reply:
-        if (
-            not isinstance(rule, dict)
-            or not isinstance(rule.get("when"), dict)
-            or not rule["when"]
-            or not isinstance(rule.get("send"), (dict, list, str))
-        ):
-            raise bad
-    return opts.get("keep_open", False), auto_reply
-
-
-def _is_open(socket):
-    state = getattr(socket, "state", None)
-    return getattr(state, "name", None) == "OPEN"
 
 
 def _is_loopback(url):
@@ -251,14 +138,10 @@ class Bot(ResponseExtractor):
             )
         self.bot_config = bot_config
         self.e_id = e_id
-        # optional chat_completion.response rules; validated up front so a bad
-        # config fails with its own message instead of a generic stream error
-        self.__text_path, self.__complete_when, self.__ignore_when = _response_rules(bot_config)
-        self.__keep_open, self.__auto_reply = _websocket_options(bot_config)
-        # keep_open connections: conversation id -> [socket, event loop, last used].
-        # Orchestrator threads share this Bot, each running its own event loop.
-        self.__sessions = {}
-        self.__sessions_lock = threading.Lock()
+        # validated up front, so a bad config fails with its own message
+        self.__rules = StreamRules.from_config(bot_config)
+        self.__ws_options = WebSocketOptions.from_config(bot_config)
+        self.__connections = KeptOpenConnections()
 
     # Recursively find the first known content key whose value is a string.
     def __find_content(self, obj):
@@ -291,35 +174,27 @@ class Bot(ResponseExtractor):
             return custom
         return str(chunk)
 
-    # Text a stream message contributes to the reply ("" if none).
-    # With text_path set, only that path is read; other messages are ignored.
+    # Text a stream message adds to the reply ("" if none). With text_path set,
+    # only that path is read.
     def __chunk_text(self, chunk):
-        if self.__text_path:
-            value = _get_path(chunk, self.__text_path)
+        if self.__rules.text_path:
+            value = get_path(chunk, self.__rules.text_path)
             return value if isinstance(value, str) else ""
         if self.__is_ai_response_chunk(chunk):
             return self.__extract_ai_response(chunk)
         return ""
 
-    def __is_complete(self, chunk):
-        if chunk.get("type") == "end":
-            return True
-        if not self.__complete_when:
-            return False
-        return _matches(chunk, self.__complete_when)
-
     # Shared by __listen (WS) and __stream_sse (SSE). {"type":"end"}, or a message
-    # matching chat_completion.response.complete_when, ends the reply; the completing
-    # message's own text is kept (ElevenLabs sends the whole reply in it). Messages
-    # matching ignore_when are skipped.
+    # matching response.complete_when, ends the reply; the completing message's own
+    # text is kept. Messages matching response.ignore_when are skipped.
     def __process_chunk(self, chunk, buffer):
         if not isinstance(chunk, dict):
             return buffer, False, None
         if chunk.get("type") == "end":
             return buffer, True, None
-        if self.__ignore_when and _matches(chunk, self.__ignore_when):
+        if self.__rules.skips(chunk):
             return buffer, False, None
-        return buffer + self.__chunk_text(chunk), self.__is_complete(chunk), None
+        return buffer + self.__chunk_text(chunk), self.__rules.completes(chunk), None
 
     # extract metadata from a single turn's response (for per-turn telemetry mode)
     def __extract_turn_metadata(self, response):
@@ -637,14 +512,8 @@ class Bot(ResponseExtractor):
             # c. extract turn metadata if per-turn telemetry mode is enabled
             turn_metadata = self.__extract_turn_metadata(last_msg)
 
-            # d. a configured text_path (read from the whole response) wins;
-            # if it does not resolve, fall back to the default key search
-            reply = _get_path(messages, self.__text_path) if self.__text_path else None
-            if not isinstance(reply, str):
-                reply = self.__extract_ai_response(last_msg)
-
             return (
-                reply,
+                self.__extract_ai_response(last_msg),
                 exec_t,
                 turn_metadata,
             )
@@ -671,17 +540,6 @@ class Bot(ResponseExtractor):
             )
 
     # WebSocket streaming.
-
-    # Answer a message matching an auto_reply rule (e.g. ping -> pong).
-    async def __auto_reply_to(self, socket, chunk):
-        for rule in self.__auto_reply:
-            if _matches(chunk, rule["when"]):
-                reply = _fill_reply(rule["send"], chunk)
-                data = reply if isinstance(reply, str) else json.dumps(reply, ensure_ascii=False)
-                await socket.send(data)
-                return True
-        return False
-
     async def __listen(self, socket):
         async def read_complete_message():
             buffer, t_start = "", time.time()
@@ -691,7 +549,7 @@ class Bot(ResponseExtractor):
                     chunk = json.loads(raw_data)
                 except Exception:
                     break
-                if await self.__auto_reply_to(socket, chunk):
+                if await self.__ws_options.answer(socket, chunk):
                     continue
                 buffer, stop, _ = self.__process_chunk(chunk, buffer)
                 if stop:
@@ -703,20 +561,6 @@ class Bot(ResponseExtractor):
         except Exception:
             await asyncio.wait_for(socket.close(), REQUESTS_TIMEOUT)
             raise
-
-    # Between turns of a kept-open connection: answer what arrived meanwhile
-    # (pings), drop the rest, so the next reply starts clean.
-    async def __drain(self, socket):
-        while True:
-            try:
-                raw_data = await asyncio.wait_for(socket.recv(), 0.05)
-            except (asyncio.TimeoutError, TimeoutError):
-                return
-            try:
-                chunk = json.loads(raw_data)
-            except Exception:
-                continue
-            await self.__auto_reply_to(socket, chunk)
 
     async def __connect(self, endpoint, headers):
         try:
@@ -751,52 +595,19 @@ class Bot(ResponseExtractor):
             ) from e
         return socket
 
-    @staticmethod
-    async def __close_quietly(socket):
-        try:
-            await asyncio.wait_for(socket.close(), 5)
-        except Exception:
-            pass
-
-    # keep_open: this conversation's connection on the running event loop, opened
-    # (or reopened, if the agent closed it) as needed.
-    async def __session_socket(self, conv_id, endpoint, headers):
-        loop = asyncio.get_running_loop()
-        now = time.monotonic()
-        stale = []
-        with self.__sessions_lock:
-            entry = self.__sessions.pop(conv_id, None)
-            # safety net: close this loop's connections left open by conversations
-            # that ended without Bot.close()
-            for cid, (sock, sock_loop, used) in list(self.__sessions.items()):
-                if sock_loop is loop and now - used > SESSION_IDLE_CLOSE:
-                    stale.append(self.__sessions.pop(cid)[0])
-        for sock in stale:
-            await self.__close_quietly(sock)
-
-        if entry and entry[1] is loop and _is_open(entry[0]):
-            socket = entry[0]
-            await self.__drain(socket)
-        else:
-            if entry and entry[1] is loop:
-                logger.warning(
-                    "WebSocket connection of conversation %s was closed by the agent; "
-                    "reconnecting, so the agent may not remember earlier turns.",
-                    conv_id,
-                )
-            socket = await self.__connect(endpoint, headers)
-        with self.__sessions_lock:
-            self.__sessions[conv_id] = [socket, loop, now]
-        return socket
-
-    async def close(self, base_payload):
-        """End a conversation: close its kept-open WebSocket connection, if any.
-        Safe to call for any transport or conversation."""
-        conv_id = (base_payload or {}).get("humanbound_conversation_id")
-        with self.__sessions_lock:
-            entry = self.__sessions.pop(conv_id, None) if conv_id else None
-        if entry and entry[1] is asyncio.get_running_loop():
-            await self.__close_quietly(entry[0])
+    # keep_open: the conversation's idle connection on this event loop, or a new one.
+    async def __conversation_socket(self, conv_id, endpoint, headers):
+        socket = self.__connections.take(conv_id)
+        if socket is not None and await self.__ws_options.drain(socket):
+            return socket
+        if socket is not None:
+            logger.warning(
+                "WebSocket connection of conversation %s was closed by the agent; "
+                "reconnecting, so the agent may not remember earlier turns.",
+                conv_id,
+            )
+            await close_quietly(socket)
+        return await self.__connect(endpoint, headers)
 
     async def __stream(self, base_payload, u_prompt, conversation=None):
         try:
@@ -806,22 +617,21 @@ class Bot(ResponseExtractor):
             payload = self.__prepare_payload(payload, base_payload, u_prompt, conversation)
 
             conv_id = (base_payload or {}).get("humanbound_conversation_id")
-            keep_open = self.__keep_open and conv_id
+            keep_open = self.__ws_options.keep_open and conv_id
             if keep_open:
-                websocket = await self.__session_socket(conv_id, endpoint, headers)
+                websocket = await self.__conversation_socket(conv_id, endpoint, headers)
             else:
                 websocket = await self.__connect(endpoint, headers)
             try:
                 await websocket.send(json.dumps(payload, ensure_ascii=False))
                 message, exec_t = await self.__listen(websocket)
             except BaseException:
-                if keep_open:
-                    with self.__sessions_lock:
-                        self.__sessions.pop(conv_id, None)
-                await self.__close_quietly(websocket)
+                await close_quietly(websocket)
                 raise
-            if not keep_open:
-                await self.__close_quietly(websocket)
+            if keep_open:
+                self.__connections.put(conv_id, websocket)
+            else:
+                await close_quietly(websocket)
 
             # NOTE: Streaming mode doesn't support per-turn metadata extraction
             # since chunks are processed incrementally and final response object isn't available
@@ -1844,49 +1654,6 @@ class Telemetry:
             return None
 
     @staticmethod
-    def __navigate_path(data, path):
-        """Navigate nested dict/list structure using dot notation path"""
-        if not path or data is None:
-            return None
-
-        try:
-            parts = path.split(".")
-            current = data
-
-            for part in parts:
-                # Handle array notation like "items[*]" or "items[0]"
-                if "[" in part and "]" in part:
-                    key = part.split("[")[0]
-                    index_part = part.split("[")[1].split("]")[0]
-
-                    if isinstance(current, dict) and key in current:
-                        current = current[key]
-                    else:
-                        return None
-
-                    # Handle wildcard [*] - return the list itself for iteration
-                    if index_part == "*":
-                        return current if isinstance(current, list) else None
-                    # Handle specific index
-                    else:
-                        idx = int(index_part)
-                        if isinstance(current, list) and 0 <= idx < len(current):
-                            current = current[idx]
-                        else:
-                            return None
-                else:
-                    # Regular dict navigation
-                    if isinstance(current, dict) and part in current:
-                        current = current[part]
-                    else:
-                        return None
-
-            return current
-
-        except Exception:
-            return None
-
-    @staticmethod
     def standardize_accumulated_metadata(accumulated_metadata, extraction_map):
         """
         Standardize per-turn metadata into common telemetry format
@@ -1924,7 +1691,7 @@ class Telemetry:
                 # Extract tool executions
                 tool_path = extraction_map.get("tool_executions")
                 if tool_path:
-                    tool_items = Telemetry.__navigate_path(metadata, tool_path)
+                    tool_items = get_path(metadata, tool_path)
 
                     if isinstance(tool_items, list):
                         for tool_item in tool_items:
@@ -1932,19 +1699,19 @@ class Telemetry:
 
                             # Extract tool fields using configured paths
                             name_field = extraction_map.get("tool_executions.tool_name", "name")
-                            tool_exec["tool_name"] = Telemetry.__navigate_path(
+                            tool_exec["tool_name"] = get_path(
                                 tool_item, name_field
                             ) or tool_item.get("name", "")
 
                             params_field = extraction_map.get(
                                 "tool_executions.parameters", "parameters"
                             )
-                            tool_exec["parameters"] = Telemetry.__navigate_path(
+                            tool_exec["parameters"] = get_path(
                                 tool_item, params_field
                             ) or tool_item.get("parameters", {})
 
                             result_field = extraction_map.get("tool_executions.result", "result")
-                            tool_exec["result"] = Telemetry.__navigate_path(
+                            tool_exec["result"] = get_path(
                                 tool_item, result_field
                             ) or tool_item.get("result", "")
 
@@ -1953,7 +1720,7 @@ class Telemetry:
                 # Extract memory operations
                 memory_path = extraction_map.get("memory_operations")
                 if memory_path:
-                    memory_items = Telemetry.__navigate_path(metadata, memory_path)
+                    memory_items = get_path(metadata, memory_path)
 
                     if isinstance(memory_items, list):
                         for mem_item in memory_items:
@@ -1962,23 +1729,23 @@ class Telemetry:
                             op_type_field = extraction_map.get(
                                 "memory_operations.operation_type", "operation_type"
                             )
-                            mem_op["operation_type"] = Telemetry.__navigate_path(
+                            mem_op["operation_type"] = get_path(
                                 mem_item, op_type_field
                             ) or mem_item.get("operation_type", "")
 
                             content_field = extraction_map.get(
                                 "memory_operations.content", "content"
                             )
-                            mem_op["content"] = Telemetry.__navigate_path(
-                                mem_item, content_field
-                            ) or mem_item.get("content", "")
+                            mem_op["content"] = get_path(mem_item, content_field) or mem_item.get(
+                                "content", ""
+                            )
 
                             standardized["memory_operations"].append(mem_op)
 
                 # Extract resource usage (accumulate across turns)
                 tokens_path = extraction_map.get("resource_usage.tokens_used")
                 if tokens_path:
-                    tokens = Telemetry.__navigate_path(metadata, tokens_path)
+                    tokens = get_path(metadata, tokens_path)
                     if isinstance(tokens, (int, float)):
                         total_tokens += int(tokens)
 

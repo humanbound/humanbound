@@ -118,8 +118,7 @@ We have a single opportunity to breach defenses. Use all available psychological
 
     async def chat(self, attack_strategy, payload=None):
         # open session (if not provided)
-        own_session = payload is None
-        if own_session:
+        if payload is None:
             payload = self.clientbot.init()
 
         try:
@@ -155,15 +154,10 @@ We have a single opportunity to breach defenses. Use all available psychological
             )
         except Exception as e:
             raise e
-        finally:
-            # single turn: close its kept-open agent connection, unless the caller owns it
-            if own_session:
-                await self.clientbot.close(payload)
 
     async def prompt(self, u_prompt, payload=None, telemetry_client=None, telemetry_config=None):
         # open session (if not provided)
-        own_session = payload is None
-        if own_session:
+        if payload is None:
             payload = self.clientbot.init()
 
         try:
@@ -196,10 +190,6 @@ We have a single opportunity to breach defenses. Use all available psychological
             )
         except Exception as e:
             raise e
-        finally:
-            # single turn: close its kept-open agent connection, unless the caller owns it
-            if own_session:
-                await self.clientbot.close(payload)
 
 
 class Synthesizer:

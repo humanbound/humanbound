@@ -8,22 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- **WebSocket agents that keep the conversation in the connection can be
-  tested**, e.g. ElevenLabs Conversational AI (an example config is in the agent
-  config docs). Before, the engine waited after the reply for a `{"type": "end"}`
-  that never came, until the agent closed the socket (`1002 ... No user message
-  received for a long period of time`); and it opened a new connection, so a new
-  conversation, for every turn. New optional settings in `chat_completion`:
-  - `response.complete_when`: the message that ends the reply, e.g.
-    `{"type": "agent_response"}`. Also for SSE.
-  - `response.text_path`: where the reply text is, e.g.
-    `"agent_response_event.agent_response"`. Also for SSE and REST.
-  - `response.ignore_when`: messages to skip, e.g. a greeting that would
-    otherwise be taken as the reply.
+- **WebSocket and SSE agents with their own event format can be tested.** Before,
+  a reply only ended on a `{"type": "end"}` message, so with an agent that never
+  sends one the engine waited until the agent closed the connection; and a
+  WebSocket agent got a new connection, so a new conversation, on every turn.
+  New optional settings in `chat_completion` (see Stream Rules in the agent
+  config docs):
+  - `response.complete_when`: the message that ends the reply.
+  - `response.text_path`: where the reply text is in each message.
+  - `response.ignore_when`: messages to skip, e.g. an unprompted greeting.
   - `websocket.keep_open`: one connection for the whole conversation.
   - `websocket.auto_reply`: answer messages such as keep-alive pings.
 
-  Configs without them behave as before.
+  Configs without them behave as before. Local engine only for now: runs on the
+  platform (`hb connect`, logged-in `hb test`) ignore these settings.
 
 ## [2.15.0] — 2026-11-12
 
