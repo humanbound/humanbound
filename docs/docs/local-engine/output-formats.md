@@ -56,7 +56,18 @@ hb logs --format json -o logs.json
 
 # Interactive HTML
 hb logs -f html -o logs.html
+
+# JUnit XML, for CI test reports
+hb logs --format junit -o humanbound-junit.xml
 ```
+
+The JUnit report covers one experiment and always includes every log. Each
+conversation is a `<testcase>`, grouped into one `<testsuite>` per attack
+category. A `fail` verdict becomes a `<failure>` whose message carries the
+severity and the judge's explanation; an `error` verdict (the conversation
+could not be run or judged) becomes an `<error>`, so it never reads as a pass.
+The transcript goes in `<system-out>`. `--verdict fail` keeps only the
+failures.
 
 ## Reports
 

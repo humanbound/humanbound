@@ -158,13 +158,23 @@ security-test:
     HB_MODEL: gpt-4.1
   script:
     - pip install "humanbound[engine]"
-    - hb test --local --endpoint ./agent-config.json --wait --fail-on high
+    # Keep the exit code, so the reports below are written even when the gate trips.
+    - hb test --local --endpoint ./agent-config.json --wait --fail-on high || HB_EXIT=$?
+    - hb logs --format junit -o humanbound-junit.xml
     - hb logs --format json -o security-results.json
+    - exit ${HB_EXIT:-0}
   artifacts:
+    reports:
+      junit: humanbound-junit.xml
     paths:
       - security-results.json
     when: always
 ```
+
+`--format junit` writes a JUnit XML report that GitLab shows in the merge request's
+**Test summary**: one test case per attack conversation, grouped by attack category, with each
+failure's severity and the judge's explanation. Jenkins, Azure DevOps, CircleCI and Buildkite
+read the same file.
 
 The same pattern works on Jenkins, CircleCI, and others — install `humanbound[engine]`, run
 `hb test --local --endpoint <config> --wait --fail-on <severity>`, then export results with

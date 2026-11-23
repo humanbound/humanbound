@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **`hb logs --format junit`** writes a JUnit XML test report of an
+  experiment, so CI systems show a red-team run next to the unit tests
+  (GitLab merge requests, Jenkins, Azure DevOps, CircleCI, Buildkite). Each
+  conversation is a test case, grouped into one test suite per attack
+  category. A `fail` verdict is a failure carrying the severity and the
+  judge's explanation, an `error` verdict is an error so it never reads as a
+  pass, and the transcript goes in `system-out`. Works in local and platform
+  mode, always exports every log (no paging), and honours `--verdict`.
+
 ### Documentation
 - **The Adversarial Testing Engine page says what the engine is and how to run
   it** (#219): part of the open-source `hb` CLI, with an install-and-run block
@@ -24,6 +34,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **The API Keys page uses placeholders in the scoped key example** (#230).
   `--org` and `--projects` now show `<org-id>` and `<project-id>` instead of
   literal UUIDs.
+- **The GitLab CI example writes its reports when the gate fails.** With
+  `--fail-on` tripped, GitLab stopped the script before the export ran; it now
+  keeps the exit code, writes the reports, then exits with it.
 
 ## [2.15.0] — 2026-11-12
 
