@@ -21,6 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Action writes the SARIF file; the GitHub example now adds the
   `github/codeql-action/upload-sarif` step with the `security-events: write`
   permission, as the Action's README does.
+- **The API Keys page uses placeholders in the scoped key example** (#230).
+  `--org` and `--projects` now show `<org-id>` and `<project-id>` instead of
+  literal UUIDs.
 
 ## [2.15.0] — 2026-11-12
 
