@@ -4100,8 +4100,8 @@ hb api-keys create --name "CI Key"
 # Scoped: read-only, one org, one project, expires at a fixed time
 hb api-keys create --name "CI Key" \
   --scope read \
-  --org 2ab8ff03-2325-4f95-b22e-9262c09682c3 \
-  --projects 68c7169a-6cb1-4f61-825f-bf1fd195ad7d \
+  --org <org-id> \
+  --projects <project-id> \
   --expires 1767225600
 ```
 
