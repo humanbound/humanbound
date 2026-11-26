@@ -111,7 +111,7 @@ List, create and check the orchestrators `hb test -t` runs on the local engine. 
 | `hb logs --from DATE --until DATE` | Filter by date range (ISO 8601); requires login |
 | `hb logs --days N` | Shorthand for last N days; requires login |
 | `hb logs --last N` | Show logs from last N experiments; requires login |
-| `hb logs --format json\|html\|table` | Output format (default: table) |
+| `hb logs --format json\|html\|junit\|table` | Output format (default: table). `junit` writes a JUnit XML test report of one experiment for CI |
 | `hb logs -o FILE` | Save output to file |
 | `hb logs upload <file>` | Upload conversation logs for evaluation |
 | `hb posture` | View security posture score and grade |

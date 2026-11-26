@@ -64,7 +64,7 @@ class _LogsGroup(click.Group):
     "--format",
     "-f",
     "output_format",
-    type=click.Choice(["table", "json", "html"]),
+    type=click.Choice(["table", "json", "html", "junit"]),
     default="table",
     help="Output format",
 )
@@ -125,6 +125,13 @@ def logs_group(
       hb logs --finding ghi789                   # Finding evidence
       hb logs --last 5 --format json -o logs.json
       hb logs --days 7 --category adversarial
+      hb logs --format junit -o humanbound.xml   # CI test report (latest run)
+
+    \b
+    JUnit export (--format junit) covers a single experiment and always
+    includes every log. Each conversation is a test case, grouped into one
+    test suite per attack category: fail verdicts are failures, error
+    verdicts are errors.
     """
     if ctx.invoked_subcommand is not None:
         return
@@ -170,6 +177,13 @@ def logs_group(
         raise SystemExit(1)
     if days and from_date:
         console_err.print("[red]Cannot combine --days with --from.[/red]")
+        raise SystemExit(1)
+
+    if output_format == "junit" and (assessment_id or finding_id or scope_flags):
+        console_err.print(
+            "[red]--format junit exports a single experiment.[/red] "
+            "Pass an experiment ID, or omit it for the most recent one."
+        )
         raise SystemExit(1)
 
     # --days → --from
@@ -228,6 +242,8 @@ def logs_group(
 
             if output_format == "html":
                 _export_html(client, experiment_id, output)
+            elif output_format == "junit":
+                _export_junit(client, experiment_id, output, verdict)
             elif output_format == "json":
                 _export_json(client, experiment_id, output, verdict, fetch_all, page, size)
             else:
@@ -244,6 +260,8 @@ def logs_group(
 
             if output_format == "html":
                 _export_html(client, experiment_id, output)
+            elif output_format == "junit":
+                _export_junit(client, experiment_id, output, verdict)
             elif output_format == "json":
                 _export_json(client, experiment_id, output, verdict, fetch_all, page, size)
             else:
@@ -708,6 +726,41 @@ def _export_html(client: HumanboundClient, experiment_id: str, output: str):
     console.print(f"[green]HTML report exported to:[/green] {filename}")
 
 
+def _fetch_all_experiment_logs(client: HumanboundClient, experiment_id: str, result_filter=None):
+    """Fetch every log page for one experiment."""
+    all_logs = []
+    current_page = 1
+    while True:
+        response = client.get_experiment_logs(
+            experiment_id, page=current_page, size=100, result=result_filter
+        )
+        all_logs.extend(response.get("data", []))
+        if not response.get("has_next_page"):
+            break
+        current_page += 1
+    return all_logs
+
+
+def _write_junit(xml: str, output: str | None, total: int) -> None:
+    """Write a JUnit report to a file, or to stdout with nothing else on it."""
+    if output:
+        write_secure_file(output, xml)
+        console_err.print(f"[green]JUnit report ({total} test cases) exported to:[/green] {output}")
+    else:
+        print(xml, end="")
+
+
+def _export_junit(client: HumanboundClient, experiment_id: str, output: str, verdict: str):
+    """Export every log of an experiment as a JUnit XML report."""
+    from ..junit import logs_to_junit
+
+    result_filter = None if verdict == "all" else verdict
+    all_logs = _fetch_all_experiment_logs(client, experiment_id, result_filter)
+    experiment = client.get_experiment(experiment_id)
+    xml = logs_to_junit(all_logs, suite_name=experiment.get("name") or experiment_id)
+    _write_junit(xml, output, len(all_logs))
+
+
 # ---------------------------------------------------------------------------
 # Local mode handler (reads from .humanbound/results/)
 # ---------------------------------------------------------------------------
@@ -753,7 +806,14 @@ def _local_logs(experiment_id, output_format, output, verdict, page, size, fetch
     start = (page - 1) * size
     page_logs = logs if fetch_all and output_format == "json" else logs[start : start + size]
 
-    if output_format == "json":
+    if output_format == "junit":
+        from ..junit import logs_to_junit
+
+        meta_file = exp_dirs[0] / "meta.json"
+        meta = _json.loads(meta_file.read_text()) if meta_file.exists() else {}
+        xml = logs_to_junit(logs, suite_name=meta.get("name") or exp_dirs[0].name)
+        _write_junit(xml, output, len(logs))
+    elif output_format == "json":
         json_output = _json.dumps({"logs": page_logs, "total": len(logs)}, indent=2, default=str)
         if output:
             write_secure_file(output, json_output)
